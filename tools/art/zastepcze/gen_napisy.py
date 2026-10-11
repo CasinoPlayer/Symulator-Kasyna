@@ -12,7 +12,7 @@ from __future__ import annotations
 import math
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 import biblioteka as B
 
@@ -209,7 +209,6 @@ def g_font_cyfry():
     for i, z in enumerate(znaki):
         r, c = divmod(i, 5)
         im = Image.new("L", (400, asc + desc + 20), 0)
-        from PIL import ImageDraw
         d = ImageDraw.Draw(im)
         d.text((40, 10), z, font=B.font_dla("cinzel900", 300, z), fill=255)
         m = np.asarray(im, np.float32) / 255
@@ -348,9 +347,7 @@ def skrzydlaty_dysk(szer: int, gra="s2") -> np.ndarray:
                                                          (w / 2 + h * 0.3) * s, h * 0.78 * s], fill=255))
     pioro = B.zloty_napis(np.maximum(ms, dysk), faza=4, glebokosc=4, kontur=3, gra=gra, wypuklosc=0.1,
                           wkladki=[(B.rozmyj(B.erozja(dysk > 0.5, int(h * 0.06)).astype(np.float32), 1), "emalia",
-                                    "#C8321E", "kopula"),
-                                   (B.rozmyj((ms > 0.5).astype(np.float32) * B.erozja(ms > 0.5, 3), 0.8) * 0.0,
-                                    "emalia", "#1B3FA0", "plaski")])
+                                    "#C8321E", "kopula")])
     return pioro
 
 

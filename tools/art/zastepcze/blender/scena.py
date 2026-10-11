@@ -452,9 +452,6 @@ def walec(nazwa, r=0.5, h=0.2, poz=(0, 0, 0), rot=(0, 0, 0), seg=96, mat=None, f
         mod.segments = 4
         mod.limit_method = "ANGLE"
     bpy.ops.object.shade_smooth()
-    ob.data.shade_smooth()
-    if faza:
-        ob.modifiers.new("ws", "WEIGHTED_NORMAL") if hasattr(bpy.types, "WeightedNormalModifier") else None
     if mat:
         przypisz(ob, mat)
     return ob

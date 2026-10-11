@@ -78,12 +78,15 @@ def etap_blendera(python_bpy: str, od_nowa: bool, tylko: str | None) -> None:
         cmd += ["--tylko", tylko]
     print("Etap 1 — Blender:", " ".join(cmd), flush=True)
     t = time.time()
-    proc = subprocess.run(cmd, capture_output=True, text=True)
-    for linia in proc.stdout.splitlines():
+    # wypisujemy postęp na bieżąco (render jednego modelu trwa kilka–kilkadziesiąt sekund)
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+    ogon = []
+    for linia in proc.stdout:
+        ogon = (ogon + [linia])[-60:]
         if linia.startswith("RENDER"):
-            print("  " + linia)
-    if proc.returncode != 0:
-        print(proc.stdout[-3000:], proc.stderr[-3000:])
+            print("  " + linia.rstrip(), flush=True)
+    if proc.wait() != 0:
+        print("".join(ogon))
         raise SystemExit("Etap Blendera zakończony błędem")
     print(f"  rendery gotowe ({time.time() - t:.0f} s)")
 

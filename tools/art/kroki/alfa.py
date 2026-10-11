@@ -377,7 +377,8 @@ def usun_pylki(rgba: np.ndarray) -> tuple[np.ndarray, int]:
 
 
 def miara_obwodki(rgba: np.ndarray) -> float:
-    """Q09: średnia jasność L* pierścienia krawędzi złożonego na #07060F minus jasność 3–6 px w głąb."""
+    """Q09: o ile jaśniejszy (L*) jest pierścień krawędzi złożony na #07060F od „idealnej” krawędzi, czyli koloru
+    wnętrza obiektu zmieszanego z tłem w tej samej proporcji alfy. > +8 = jasna obwódka, < −12 = ciemna."""
     a = rgba[..., 3]
     pierscien = (a > 0.1) & (a < 0.9)
     pelne = a > 0.98
@@ -387,12 +388,9 @@ def miara_obwodki(rgba: np.ndarray) -> float:
     tlo = np.array([7, 6, 15], dtype=np.float32) / 255
     zlozone = rgba[..., :3] * a[..., None] + tlo * (1 - a[..., None])
     L = rgb_do_lab(zlozone)[..., 0]
-    L_obj = rgb_do_lab(rgba[..., :3])[..., 0]
-    # porównujemy z „idealną” krawędzią: kolor wnętrza zmieszany z tłem w tej samej proporcji
-    idealne = float(L_obj[wnetrze].mean())
     sr_a = float(a[pierscien].mean())
-    oczekiwane = rgb_do_lab(np.array([[rgba[..., :3][wnetrze].mean(0) * sr_a + tlo * (1 - sr_a)]]))[0, 0, 0]
-    del idealne
+    oczekiwany_kolor = rgba[..., :3][wnetrze].mean(0) * sr_a + tlo * (1 - sr_a)
+    oczekiwane = float(rgb_do_lab(oczekiwany_kolor[None, None, :])[0, 0, 0])
     return float(L[pierscien].mean() - oczekiwane)
 
 
@@ -428,6 +426,11 @@ def napraw_alfe(rgba: np.ndarray, rola: str = "obiekt", pylki: bool = True) -> W
                 wynik.metoda = "jednolite"
                 wynik.uwagi.append(("info", "Q06", "usunięto jednolite tło (brak prawdziwej przezroczystości)"))
     out = progi_alfy(out)
+    obw = miara_obwodki(out)
+    if obw > 8:
+        wynik.uwagi.append(("ostrzezenie", "Q09", f"jasna obwódka na krawędzi (+{obw:.0f} L*) — sprawdź na ciemnym tle"))
+    elif obw < -12:
+        wynik.uwagi.append(("ostrzezenie", "Q09", f"ciemna obwódka na krawędzi ({obw:.0f} L*)"))
     if pylki:
         out, n = usun_pylki(out)
         if n:

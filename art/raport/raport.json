@@ -1,7 +1,7 @@
 {
  "podsumowanie": {
   "pipeline": "1.0.0",
-  "uruchomienie": "2026-10-11T14:25:54Z",
+  "uruchomienie": "2026-10-11T14:30:58Z",
   "bledy": 0,
   "ostrzezenia": 0,
   "chatgpt": 0,
@@ -14,18 +14,18 @@
    "limit": 3000000
   },
   "s1": {
-   "desktop": 2221884,
-   "telefon": 1661434,
+   "desktop": 2218186,
+   "telefon": 1657736,
    "limit": 6000000
   },
   "s2": {
-   "desktop": 2443916,
-   "telefon": 1729850,
+   "desktop": 2448176,
+   "telefon": 1734110,
    "limit": 6000000
   },
   "s3": {
-   "desktop": 2464344,
-   "telefon": 1777822,
+   "desktop": 2505328,
+   "telefon": 1818872,
    "limit": 6000000
   }
  },
@@ -868,12 +868,12 @@
    "id": "s1_ramka",
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s1/s1_ramka.png",
-   "rozmiar": "1146×1142 okno 769×769",
-   "waga": 40102,
-   "waga_desktop": 40102,
-   "waga_telefon": 40102,
+   "rozmiar": "1050×1044 okno 769×769",
+   "waga": 36404,
+   "waga_desktop": 36404,
+   "waga_telefon": 36404,
    "pliki": {
-    "s1/s1_ramka.webp": 40102
+    "s1/s1_ramka.webp": 36404
    },
    "uwagi": [
     [
@@ -1286,18 +1286,18 @@
    "id": "s2_ramka",
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s2/s2_ramka.png",
-   "rozmiar": "1168×766 okno 962×577",
-   "waga": 31836,
-   "waga_desktop": 31836,
-   "waga_telefon": 31836,
+   "rozmiar": "1210×806 okno 961×576",
+   "waga": 36096,
+   "waga_desktop": 36096,
+   "waga_telefon": 36096,
    "pliki": {
-    "s2/s2_ramka.webp": 31836
+    "s2/s2_ramka.webp": 36096
    },
    "uwagi": [
     [
      "info",
      "Q20",
-     "bez @2x (wymagałoby powiększenia ×1.56)"
+     "bez @2x (wymagałoby powiększenia ×1.79)"
     ]
    ],
    "metoda_alfy": "alfa"
@@ -1428,18 +1428,18 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s3/s3_sym_ametyst.png",
    "rozmiar": "144×144 +@2x",
-   "waga": 29094,
-   "waga_desktop": 22036,
-   "waga_telefon": 13778,
+   "waga": 26576,
+   "waga_desktop": 20260,
+   "waga_telefon": 12068,
    "pliki": {
-    "s3/s3_sym_ametyst.webp": 4326,
-    "s3/s3_sym_ametyst@2x.webp": 9390,
-    "s3/s3_sym_ametyst.ruch1.webp": 3006,
-    "s3/s3_sym_ametyst.syl.webp": 1270,
-    "s3/s3_sym_ametyst.glow.webp": 1348,
-    "s3/s3_sym_ametyst.cien.webp": 1096,
-    "s3/s3_sym_ametyst.mini.webp": 2732,
-    "s3/s3_sym_ametyst.mini@2x.webp": 5926
+    "s3/s3_sym_ametyst.webp": 3808,
+    "s3/s3_sym_ametyst@2x.webp": 9000,
+    "s3/s3_sym_ametyst.ruch1.webp": 2644,
+    "s3/s3_sym_ametyst.syl.webp": 972,
+    "s3/s3_sym_ametyst.glow.webp": 1184,
+    "s3/s3_sym_ametyst.cien.webp": 952,
+    "s3/s3_sym_ametyst.mini.webp": 2508,
+    "s3/s3_sym_ametyst.mini@2x.webp": 5508
    },
    "uwagi": [],
    "metoda_alfy": "alfa"
@@ -1648,18 +1648,18 @@
    "id": "s3_ramka",
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s3/s3_ramka.png",
-   "rozmiar": "1052×992 okno 864×721",
-   "waga": 136064,
-   "waga_desktop": 136064,
-   "waga_telefon": 136064,
+   "rozmiar": "1090×1080 okno 865×721",
+   "waga": 178824,
+   "waga_desktop": 178824,
+   "waga_telefon": 178824,
    "pliki": {
-    "s3/s3_ramka.webp": 136064
+    "s3/s3_ramka.webp": 178824
    },
    "uwagi": [
     [
      "info",
      "Q20",
-     "bez @2x (wymagałoby powiększenia ×2.11)"
+     "bez @2x (wymagałoby powiększenia ×2.41)"
     ]
    ],
    "metoda_alfy": "alfa"

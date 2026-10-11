@@ -6,8 +6,6 @@ warstwą), SCATTER = pryzmat „Serce Jaskini” z wachlarzem tęczy i tabliczk�
 
 from __future__ import annotations
 
-import math
-
 import numpy as np
 
 import biblioteka as B

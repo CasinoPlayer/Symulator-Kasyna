@@ -9,8 +9,6 @@ Uruchamiane po wygenerowaniu symboli, logotypów i teł (orkiestrator robi to w 
 
 from __future__ import annotations
 
-import math
-
 import numpy as np
 
 import biblioteka as B
@@ -194,8 +192,7 @@ def s2_wild_rozszerzony():
     for y, odwr in ((y0 + 30, False), (y1 - 30, True)):
         zw = B.maska_rysunku(kw + 40, 80, lambda d, s: (d.rounded_rectangle([0, 20 * s, (kw + 39) * s, 60 * s], radius=20 * s, fill=255),
                                                         d.ellipse([((kw + 40) / 2 - 40) * s, 0, ((kw + 40) / 2 + 40) * s, 80 * s], fill=255)))
-        img = B.zloty_napis(zw, faza=8, glebokosc=8, kontur=4, gra="s2",
-                            wkladki=[(B.rozmyj(B.erozja(zw > 0.5, 12).astype(np.float32), 1) * 0.0 + 0, "emalia", "#1B3FA0", "plaski")])
+        img = B.zloty_napis(zw, faza=8, glebokosc=8, kontur=4, gra="s2")
         B.nakladaj_srodek(out, img[::-1].copy() if odwr else img, W / 2, y)
     rel = B.przytnij_alfa(B.render("s2_relikwia"))
     rel = B.skaluj(rel, int(rel.shape[1] * 700 / rel.shape[0]), 700)

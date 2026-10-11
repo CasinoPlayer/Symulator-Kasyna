@@ -1,0 +1,3 @@
+numpy>=2.0
+# opcjonalnie: tylko spektrogramy PNG w sprawdz.py --spektrogramy
+pillow>=10

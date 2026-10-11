@@ -16,7 +16,6 @@ from __future__ import annotations
 import math
 
 import numpy as np
-from PIL import Image
 
 import biblioteka as B
 
@@ -50,15 +49,30 @@ def strefa_bebnow(W, H, pion):
     return B.smoothstep(1.25 - d, 0.0, 0.6)
 
 
+def ekspozycja(rgb, cel_L=15.0):
+    """Dobiera jasność całego tła tak, by średnie L* (CIELAB) wynosiło ~15 (01 § 6.1: 12–22). Mnożymy w świetle
+    liniowym (barwy się nie zmieniają); współczynnik szukamy bisekcją na zmniejszonej kopii (szybko)."""
+    maly = rgb[::4, ::4]
+    lin = B.srgb_do_liniowego(maly)
+    lo, hi = 0.5, 8.0
+    for _ in range(14):
+        k = (lo + hi) / 2
+        L = float(B.rgb_do_lab(B.liniowy_do_srgb(lin * k))[..., 0].mean())
+        lo, hi = (k, hi) if L < cel_L else (lo, k)
+    k = (lo + hi) / 2
+    return B.liniowy_do_srgb(B.srgb_do_liniowego(rgb) * k)
+
+
 def wykoncz(rgb, W, H, pion, ciemny_srodek=0.55, panel=True, seed=1):
-    """Wspólne wykończenie: ciemniejsza strefa bębnów, gradient pod panel, winieta, ziarno."""
-    rgb = rgb * (1 - ciemny_srodek * strefa_bebnow(W, H, pion))[..., None]
+    """Wspólne wykończenie: ciemniejsza strefa bębnów, gradient pod panel, winieta, ekspozycja, ziarno."""
+    rgb = rgb * (1 - ciemny_srodek * 0.75 * strefa_bebnow(W, H, pion))[..., None]
     if panel:
         y0 = 0.66 if pion else 0.8
         yy = np.linspace(0, 1, H, dtype=np.float32)[:, None, None]
         t = B.smoothstep(yy, y0 - 0.06, 1.0)
-        rgb = rgb * (1 - 0.85 * t) + B.kol("bg0") * 0.85 * t
-    rgb = B.winieta(rgb, 0.4, 1.8)
+        rgb = rgb * (1 - 0.75 * t) + B.kol("bg0") * 0.75 * t
+    rgb = B.winieta(rgb, 0.3, 1.8)
+    rgb = ekspozycja(np.clip(rgb, 0, 1), 15.0 if ciemny_srodek > 0.2 else 17.0)
     return B.ziarno(np.clip(rgb, 0, 1), 0.01, seed)
 
 
@@ -539,7 +553,6 @@ def jaskinia(W, H, pion, fs=False, ciemny=None):
         x = W / 2 + strona * (0.4 if not pion else 0.4) * W
         y = (0.62 if not pion else 0.78) * H
         B.nakladaj_srodek(warstwa, kr, x, y)
-        B.nakladaj_srodek(warstwa, B.poswiata(B.z_maska(kr[..., 3] * 0, "#000000"), 1, "#000000", 0), x, y)
     rgb = warstwa[..., :3]
     # lewitujące kryształy (komnata FS): świecące, rozmyte głębią drzazgi
     if fs:

@@ -27,7 +27,8 @@ NARZEDZIA = Path(__file__).resolve().parents[1]          # tools/art
 REPO = NARZEDZIA.parents[1]
 sys.path.insert(0, str(NARZEDZIA))
 
-from kroki.obraz import dylatacja, erozja, hex_do_rgb, rozmyj, smoothstep  # noqa: E402,F401
+from kroki.obraz import (dylatacja, erozja, hex_do_rgb, liniowy_do_srgb, rgb_do_lab, rozmyj,  # noqa: E402,F401
+                         smoothstep, srgb_do_liniowego)
 
 ZASTEPCZE = REPO / "art" / "zastepcze"
 RENDERY = ZASTEPCZE / "_render"           # pośrednie rendery Blendera (też generowane, też w .gitignore)

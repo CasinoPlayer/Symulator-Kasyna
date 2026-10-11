@@ -1,0 +1,6 @@
+# Pipeline grafiki (tools/art/przetworz.py) i generatory grafiki zastępczej (tools/art/zastepcze)
+# Python >= 3.11
+Pillow>=11.2
+numpy>=2.0
+# opcjonalnie, tylko do odtworzenia renderów 3D grafiki zastępczej (duży pakiet, ~400 MB):
+# bpy==5.2.*

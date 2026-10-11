@@ -1,5 +1,5 @@
 {
- "version": "2026-10-11T14:25:54Z",
+ "version": "2026-10-11T14:30:58Z",
  "pipeline": "1.0.0",
  "images": {
   "g_logo": {
@@ -1283,9 +1283,9 @@
    "source": "zastepcze",
    "blend": "normal",
    "src": "s1/s1_ramka.webp",
-   "w": 1146,
-   "h": 1142,
-   "hash": "9f112b71"
+   "w": 1050,
+   "h": 1044,
+   "hash": "136025c9"
   },
   "s1_logo": {
    "source": "zastepcze",
@@ -2003,9 +2003,9 @@
    "source": "zastepcze",
    "blend": "normal",
    "src": "s2/s2_ramka.webp",
-   "w": 1168,
-   "h": 766,
-   "hash": "ed1b438b"
+   "w": 1210,
+   "h": 806,
+   "hash": "85f0cd00"
   },
   "s2_logo": {
    "source": "zastepcze",
@@ -2228,7 +2228,7 @@
    "src": "s3/s3_sym_ametyst.webp",
    "w": 144,
    "h": 144,
-   "hash": "cddfc922",
+   "hash": "2fae1faf",
    "src2x": "s3/s3_sym_ametyst@2x.webp",
    "variants": {
     "ruch1": {
@@ -2260,7 +2260,7 @@
      "h": 96
     }
    },
-   "tint": "#A64DFF"
+   "tint": "#C77DFF"
   },
   "s3_sym_topaz": {
    "source": "zastepcze",
@@ -2615,9 +2615,9 @@
    "source": "zastepcze",
    "blend": "normal",
    "src": "s3/s3_ramka.webp",
-   "w": 1052,
-   "h": 992,
-   "hash": "c43761cb"
+   "w": 1090,
+   "h": 1080,
+   "hash": "d7698ecf"
   },
   "s3_logo": {
    "source": "zastepcze",
@@ -2904,44 +2904,44 @@
  "frames": {
   "s1_ramka": {
    "window": {
-    "x": 0.1646,
-    "y": 0.2029,
-    "w": 0.6709,
-    "h": 0.673
+    "x": 0.1339,
+    "y": 0.1692,
+    "w": 0.7323,
+    "h": 0.7365
    },
    "nineSlice": {
-    "left": 189,
-    "top": 232,
-    "right": 189,
-    "bottom": 142
+    "left": 141,
+    "top": 177,
+    "right": 141,
+    "bottom": 99
    }
   },
   "s2_ramka": {
    "window": {
-    "x": 0.0884,
-    "y": 0.1286,
-    "w": 0.8233,
-    "h": 0.7531
+    "x": 0.1027,
+    "y": 0.143,
+    "w": 0.7939,
+    "h": 0.7151
    },
    "nineSlice": {
-    "left": 103,
-    "top": 98,
-    "right": 103,
-    "bottom": 91
+    "left": 124,
+    "top": 115,
+    "right": 125,
+    "bottom": 114
    }
   },
   "s3_ramka": {
    "window": {
-    "x": 0.0892,
-    "y": 0.1309,
-    "w": 0.8216,
-    "h": 0.7266
+    "x": 0.1029,
+    "y": 0.1652,
+    "w": 0.7931,
+    "h": 0.6674
    },
    "nineSlice": {
-    "left": 94,
-    "top": 130,
-    "right": 94,
-    "bottom": 141
+    "left": 112,
+    "top": 178,
+    "right": 113,
+    "bottom": 181
    }
   }
  },

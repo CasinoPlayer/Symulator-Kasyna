@@ -442,10 +442,12 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
 @keyframes rise { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
 
 /* Bankrut: panel ratunku zastępuje przyciski „Graj teraz / Historia gry” (grać i tak się nie da),
-   a na telefonie chowamy też akapit reklamowy — przycisk bonusu ma być widoczny bez przewijania. */
+   a na telefonie chowamy też akapit reklamowy i medalion z maskotką powitalną (panel ma własną maskotkę
+   „bankrut”) — przycisk bonusu ma być widoczny bez przewijania także na 320 × 640 z obrazem logo. */
 .hero.is-bankrupt .hero__cta { display: none; }
 @media (max-width: 480px) {
-  .hero.is-bankrupt .hero__lead { display: none; }
+  .hero.is-bankrupt .hero__lead,
+  .hero.is-bankrupt .hero__visual { display: none; }
 }
 @media (min-width: 481px) {
   .rescue { grid-template-columns: auto minmax(0, 1fr); padding: 18px 20px; gap: 14px 18px; }

@@ -19,7 +19,7 @@ from mathutils import Vector
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from scena import (bryla_z_obrysu, chrom, emalia, emisja, kadruj, kamera, klejnot, krzywa, kula, lin, matowy,  # noqa: E402
-                   nowa_scena, obrys_funkcji, obrys_okregu, profil_cebuli, przypisz, prostopadloscian, szklo,
+                   nowa_scena, obrys_funkcji, obrys_okregu, profil_cebuli, przypisz, szklo,
                    tlo_dla_szkla, tokarka, torus, walec, wygladz, z_bmesh, zloto, zloto_satyna, _principled)
 
 ZASTEPCZE = Path(__file__).resolve().parents[1]
@@ -505,10 +505,8 @@ def m_emblemat():
 # ================================================================================================
 # S2 „Złoty Faraon”: relikwia cebuli (WILD), piramida (SCATTER)
 # ================================================================================================
-def _paski_lapis(mat_zl, n=8):
+def _paski_lapis(n=8):
     """Złoto z pionowymi pasami lapis lazuli wzdłuż żeber (kąt wokół osi → wybór materiału)."""
-    lap = emalia("#1B3FA0", 0.22, nazwa="lapis")
-    p_l = next(nn for nn in lap.node_tree.nodes if nn.type == "BSDF_PRINCIPLED")
     m = bpy.data.materials.new("relikwia")
     m.use_nodes = True
     nt = m.node_tree
@@ -552,7 +550,6 @@ def _paski_lapis(mat_zl, n=8):
     nt.links.new(z1.outputs[0], mixs.inputs[1])
     nt.links.new(l1.outputs[0], mixs.inputs[2])
     nt.links.new(mixs.outputs[0], out.inputs[0])
-    del mat_zl, p_l
     return m
 
 
@@ -560,7 +557,7 @@ def m_s2_relikwia():
     nowa_scena((512, 512), 48, "s2")
     c = tokarka("kopula", profil_cebuli(0.55, 1.2), zebra=8, glebokosc_zeber=0.12)
     wygladz(c, 1)
-    przypisz(c, _paski_lapis(None, 8))
+    przypisz(c, _paski_lapis(8))
     c.location.z = 0.18
     c.rotation_euler = (0, 0, math.radians(22.5))
     krzywa("czubek", [(0, 0, 1.3), (0.0, 0, 1.45), (0.04, 0, 1.55)], 0.04, [1, 0.6, 0.3], mat=zloto())

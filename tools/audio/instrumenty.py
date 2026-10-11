@@ -164,7 +164,7 @@ def czynele_palcowe(f=2350.0, dlugosc=1.0, tau=0.25, rng=None):
 _GONG_STOSUNKI = [1, 1.52, 2.03, 2.48, 2.97, 3.53, 4.11, 4.75, 5.42, 6.20, 7.10, 8.30]
 
 
-def gong(f0=73.42, dlugosc=3.5, rng=None, skala_zanikow=1.0, stereo_wyj=True, jasnosc=1.0):
+def gong(f0=73.42, dlugosc=3.5, rng=None, skala_zanikow=1.0, stereo_wyj=True, jasnosc=1.0, blask=True):
     """Wielki gong świątynny (doc 05 § 3.5): 12 parcjałów, zaniki 4,0 → 1,2 s (wyższe krócej), ROZKWIT
     (parcjały od 5. narastają 100–400 ms po uderzeniu — cecha prawdziwego gongu), dryft wysokości −15 c
     w 2 s, dudnienia (każdy parcjał jako para sinusów odstrojonych o 0,3–1,5 Hz), pałka (szum LP 300 Hz),
@@ -190,6 +190,16 @@ def gong(f0=73.42, dlugosc=3.5, rng=None, skala_zanikow=1.0, stereo_wyj=True, ja
             x += amp * sig * env
         palka = dsp.lp(dsp.szum(len(t), rng), 300) * np.exp(-t / 0.03) * 1.2
         x += palka
+        if blask:
+            # „blask” wielkiego gongu: gęste, nieharmoniczne parcjały 0,7–5,5 kHz, które też rozkwitają po uderzeniu
+            # (bez nich 12 parcjałów z przepisu kończy się na ~600 Hz i gong brzmi głucho), plus szum „szumu blachy”
+            for f in np.exp(rng.uniform(np.log(700), np.log(5500), 28)):
+                tau = rng.uniform(0.35, 1.1) * skala_zanikow
+                t_rozk = rng.uniform(0.12, 0.5)
+                env = (1 - np.exp(-t / (t_rozk / 2.5))) * np.exp(-t / tau)
+                x += 0.16 * (700.0 / f) ** 0.6 * np.sin(dsp.DWA_PI * (dsp.faza(f * dryf, len(t)) + rng.random())) * env
+            szum_blachy = dsp.bp(dsp.szum(len(t), rng), 2600, 0.7)
+            x += 0.05 * szum_blachy * (1 - np.exp(-t / 0.1)) * np.exp(-t / (0.9 * skala_zanikow))
         x *= np.clip(t / 0.002, 0, 1)
         kanaly.append(x)
     return np.vstack(kanaly) if stereo_wyj else kanaly[0]

@@ -165,7 +165,7 @@ def s2_sym_anubis():
     gm = _m(lambda d, s: d.polygon([(x * s, y * s) for x, y in glowa_pts], fill=255))
     ucho1 = _m(lambda d, s: d.polygon([(560 * s, 120 * s), (630 * s, 300 * s), (540 * s, 290 * s)], fill=255))
     ucho2 = _m(lambda d, s: d.polygon([(445 * s, 140 * s), (495 * s, 290 * s), (450 * s, 300 * s)], fill=255))
-    zl_ucha = np.clip(_pas(np.maximum(ucho1, ucho2) * 0 + _w(B.dylatacja(np.maximum(ucho1, ucho2) > 0.5, 10)), 0, 10), 0, 1)
+    zl_ucha = _pas(_w(B.dylatacja(np.maximum(ucho1, ucho2) > 0.5, 10)), 0, 10)     # złota obwódka uszu
     oko = _m(lambda d, s: d.polygon([(400 * s, 400 * s), (470 * s, 380 * s), (490 * s, 405 * s), (420 * s, 418 * s)], fill=255))
     obw_oka = np.clip(_w(B.dylatacja(oko > 0.5, 8)) - oko, 0, 1)
     szczeka = _m(lambda d, s: d.line([(230 * s, 488 * s), (400 * s, 515 * s), (470 * s, 630 * s)], fill=255, width=int(10 * s)))

@@ -148,11 +148,18 @@ async function topbarProblems(page) {
   });
 }
 
+/**
+ * Loguje i czeka, aż serwer odpowie (w pasku pojawi się saldo) oraz skończy się sekwencja bonusu.
+ * Uwaga: samo waitForSelector('.reward', {state: 'detached'}) kończy się od razu, jeśli zasłona jeszcze
+ * nie powstała — wtedy kolejne kroki testu startowały w trakcie logowania.
+ */
 async function login(page, nick) {
   await page.click('#btn-zaloguj');
   await page.waitForSelector('#modal-logowanie.is-open');
   await page.fill('#nick', nick);
   await page.keyboard.press('Enter');
+  await page.waitForSelector('#topbar-gracz:not([hidden])', { timeout: 8000 });
+  await page.waitForSelector('.reward', { state: 'detached', timeout: 12_000 });
 }
 
 async function main() {
@@ -363,7 +370,6 @@ async function main() {
     const { context, page } = await newPage(browser, { width: 390, height: 844 }, 'bankructwo');
     await waitForLobby(page);
     await login(page, `Bankrut_${suffix}`);
-    await page.waitForSelector('.reward', { state: 'detached', timeout: 10_000 }).catch(() => {});
     const devOk = await page.evaluate(async () => {
       const r = await fetch('api/dev/gracz', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ balance: 0, rescueCooldownSeconds: 0, demoHistory: 14 }) });
       return r.ok;

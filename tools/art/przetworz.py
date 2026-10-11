@@ -882,10 +882,16 @@ def main(argv=None) -> int:
     for w in wyniki:
         brak.update(w["brak"])
         wiersze.update(w["wiersze"])
+    nowe_klucze = {k for w in wyniki for k in w["images"]}
     for a in wybrane:
         if a.id in brak:
             if a.id not in stary.get("images", {}) and f"{a.id}__0" not in stary.get("images", {}):
                 wiersze[a.id].uwagi.append(["ostrzezenie", "Q01", "brak też poprzedniego wyniku"])
+            continue
+        if not any(k == a.id or k.startswith(a.id + "__") for k in nowe_klucze):
+            # obróbka się nie udała (np. nie znaleziono okna ramki) — lepiej zostawić poprzedni, działający wynik
+            if a.id in wiersze:
+                wiersze[a.id].uwagi.append(["blad", "Q00", "nie powstał nowy wynik — w manifeście zostaje poprzedni"])
             continue
         usun_wpisy(nowy, a)
     for w in wyniki:
@@ -905,9 +911,6 @@ def main(argv=None) -> int:
 
     # --- kontrola spójności (Q30) ---
     if not wzorce:
-        for a in katalog.ASSETY:
-            if a.id not in wiersze:
-                continue
         osierocone = sieroty(kat_img, nowy)
         if osierocone:
             if arg.sprzataj:
