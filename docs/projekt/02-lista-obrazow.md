@@ -223,8 +223,8 @@ Jeśli generator narysuje okno innej wielkości, zmieni się tylko `s` (i ewentu
 * **@2x** = dwa razy więcej pikseli; ładowane, gdy efektywna gęstość (skala sceny × rozdzielczość renderowania)
   przekracza **1,15**. Na poziomie jakości **Low** zawsze ładujemy @1x.
 * **Telefon zwykle ma dość @1x.** Pole S1 na telefonie ma 100–120 px CSS; przy DPR ograniczonym do 2 (poziom High)
-  to 200–240 px fizycznych — mniej niż 256 px tekstury @1x. Dzięki temu atlasy na telefonach mieszczą się
-  w limicie 2048 px.
+  to 200–240 px fizycznych — mniej niż 256 px tekstury @1x. Dzięki temu telefon pobiera ok. 4× mniej pikseli,
+  a po wdrożeniu atlasów ([plan], § 5.9) ich strony na telefonach zmieszczą się w limicie 2048 px.
 * **Limit powiększania (sprite'y, wersja 1.0.0):** `s` = skala @1x względem źródła. Plik **@2x powstaje tylko,
   gdy `2·s ≤ 1,25`**, czyli gdy wymaga powiększenia źródła najwyżej ×1,25 (Lanczos + lekkie wyostrzenie). W przeciwnym
   razie @2x nie ma wcale, a `src2x` nie występuje w manifeście — zgodnie z 09: „@2x, gdy źródło na to pozwala”
