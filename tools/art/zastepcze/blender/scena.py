@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import math
 
+import bpy  # noqa: I001 — bpy musi być pierwszy (ładuje bmesh i mathutils)
 import bmesh
-import bpy
 from mathutils import Vector
 
 # ------------------------------------------------------------------------------------------------
