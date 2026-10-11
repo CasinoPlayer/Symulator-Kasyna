@@ -42,6 +42,12 @@
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- Profil prod (opcjonalnie): trwała baza PostgreSQL przez zmienne SPRING_DATASOURCE_*; domyślnie H2 -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 
         <!-- LAB 05: REST API (konsola H2 też potrzebuje serwera WWW) -->
         <dependency>
