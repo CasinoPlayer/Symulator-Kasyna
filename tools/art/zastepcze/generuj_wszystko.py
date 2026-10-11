@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import importlib
 import os
+import re
 import subprocess
 import sys
 import time
@@ -83,8 +84,9 @@ def etap_blendera(python_bpy: str, od_nowa: bool, tylko: str | None) -> None:
     ogon = []
     for linia in proc.stdout:
         ogon = (ogon + [linia])[-60:]
-        if linia.startswith("RENDER"):
-            print("  " + linia.rstrip(), flush=True)
+        # komunikaty Cycles (bufor stdio w C) mogą wpaść w środek linii — szukamy wzorca, nie początku linii
+        for m in re.finditer(r"RENDER \S+: [\d.]+ s", linia):
+            print("  " + m.group(0), flush=True)
     if proc.wait() != 0:
         print("".join(ogon))
         raise SystemExit("Etap Blendera zakończony błędem")
