@@ -191,8 +191,10 @@ function changeBet(step) {
 // --------------------------------------------------------------------------------------------- sterowanie
 
 function bindControls() {
-  const unlock = () => audio.unlock();
-  document.addEventListener('pointerdown', unlock, { once: true });
+  // Dźwięk odblokowuje pierwszy dowolny gest (pointerup / klawisz / klik — na dotyku samo pointerdown nie wystarcza,
+  // 05 § 2.3). Potem wczytujemy dźwięki UI i „krytyczne” dla gry (05 § 2.4), żeby SPIN i zakład grały od razu.
+  // Pełne ładowanie pakietów gry (z paskiem postępu i przyciskiem „Graj”) dochodzi razem z runtime gier.
+  audio.unlockOnGesture(() => audio.preloadPack('ui', 'gry-krytyczne').then(() => audio.preloadPack('gry-dalsze')));
 
   el.betMinus.addEventListener('click', () => changeBet(-1));
   el.betPlus.addEventListener('click', () => changeBet(1));

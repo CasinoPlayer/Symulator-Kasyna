@@ -36,13 +36,16 @@ MB = 1024 * 1024
 
 
 def strony(wpis: dict) -> list[str]:
-    """Na których stronach silnik pobiera dany dźwięk (według pakietów ładowania, doc 05 § 2.4)."""
+    """Na których stronach silnik pobiera dany dźwięk (reguły pakietów, doc 05 § 2.4): lobby — pakiety `ui`
+    i `lobby`; strona gry N — `ui`, `gry-krytyczne`, `gry-dalsze` albo `sN`, ale NIE wpisy z pakietem innej gry
+    (np. `mus_s2_fs` ma ["s2", "gry-dalsze"] i nie liczy się do strony S3)."""
     p = set(wpis.get("packs") or [wpis.get("pack", "gry-dalsze")])
     wynik = []
     if p & {"ui", "lobby"}:
         wynik.append("lobby")
     for g in ("s1", "s2", "s3"):
-        if p & {"ui", "gry-krytyczne", "gry-dalsze", g}:
+        inne = {"s1", "s2", "s3"} - {g}
+        if p & {"ui", "gry-krytyczne", "gry-dalsze", g} and not p & inne:
             wynik.append(g)
     return wynik
 
@@ -90,23 +93,31 @@ def main(argv=None) -> int:
         for nazwa, d in (("webm", dw), ("m4a", dm)):
             roz = d.shape[-1] - n_wav
             r[f"roznica_{nazwa}"] = roz
-            if abs(roz) > n_probek_ms(5):
+            # AAC: dekoder ffmpeg nie odcina dopełnienia ostatniej ramki (1024 próbki) mimo listy edycji — na końcu
+            # zostaje < 1024 próbek ciszy (doc 05 § 7.3). To nie błąd, jeśli dopełnienie jest ciche; pętle i tak
+            # grają między loopStart a loopEnd, więc cisza za loopEnd nie trafia do szwu.
+            if nazwa == "m4a" and 0 < roz < 1024 and (petla or analiza.rms_db(d[..., n_wav:]) < analiza.rms_db(x) - 40):
+                r["uwagi"].append(f"m4a +{roz} próbek dopełnienia ramki AAC" + (" (za loopEnd)" if petla else ""))
+            elif abs(roz) > n_probek_ms(5):
                 bledy.append(f"A03 {id_}: {nazwa} ma {roz:+d} próbek względem WAV")
             elif roz != 0:
                 r["uwagi"].append(f"{nazwa} {roz:+d} próbek")
         if abs(w["duration"] - n_wav / SR) > 0.005:
             bledy.append(f"A03 {id_}: duration w manifeście {w['duration']} ≠ {n_wav / SR:.4f} s")
         p = przepisy.get(id_)
-        if p and w.get("source") == "synteza" and abs(p["dlugosc"] - n_wav / SR) > 0.005 and not w.get("loopStart"):
-            bledy.append(f"A03 {id_}: długość {n_wav / SR:.3f} s ≠ przepis {p['dlugosc']} s")
+        dl_wlasciwa = (w["loopEnd"] - w["loopStart"]) if petla else n_wav / SR
+        if p and w.get("source") == "synteza" and abs(p["dlugosc"] - dl_wlasciwa) > 0.005:
+            bledy.append(f"A03 {id_}: długość {dl_wlasciwa:.3f} s ≠ przepis {p['dlugosc']} s")
+        ls, le = (n_probek_s(w.get("loopStart", 0.0)), n_probek_s(w.get("loopEnd", w["duration"]))) if petla \
+            else (0, n_wav)
         # A04 — szczyt prawdziwy
         r["tp_wav"], r["tp_webm"], r["tp_m4a"] = analiza.dbtp(x), analiza.dbtp(dw), analiza.dbtp(dm)
         for nazwa in ("tp_wav", "tp_webm", "tp_m4a"):
             if r[nazwa] > -1.0 + 0.005:
                 (bledy if nazwa != "tp_m4a" else ostrz).append(f"A04 {id_}: {nazwa} = {r[nazwa]:.2f} dBTP > −1")
         # A05 — LUFS (pętle i muzyka) — własny pomiar + ffmpeg ebur128 na WAV
-        r["lufs"] = analiza.lufs(x, okresowy=petla)
-        r["lufs_webm"] = analiza.lufs(dw, okresowy=petla)
+        r["lufs"] = analiza.lufs(x[..., ls:le], okresowy=petla)          # pętla: sam fragment loopStart…loopEnd,
+        r["lufs_webm"] = analiza.lufs(dw[..., ls:le], okresowy=petla)    # powielony do ≥ 4 s
         ff = eksport.ebur128(wav_p if wav_p.exists() else webm)
         r["lufs_ffmpeg"], r["tp_ffmpeg"] = ff["I"], ff["TP"]
         r["chwilowa"] = analiza.glosnosc_chwilowa_max(x)
@@ -118,8 +129,8 @@ def main(argv=None) -> int:
                 and n_wav / SR > 3:
             ostrz.append(f"A05 {id_}: pomiar własny {r['lufs']:.1f} vs ffmpeg {r['lufs_ffmpeg']:.1f} LUFS")
         # A06 — składowa stała, RMS
-        r["dc"] = analiza.dc_db(x)
-        r["rms"] = analiza.rms_db(x)
+        r["dc"] = analiza.dc_db(x[..., ls:le])           # pętla: średnia z pełnego okresu (bez zakładek)
+        r["rms"] = analiza.rms_db(x[..., ls:le])
         if r["dc"] > -60:
             ostrz.append(f"A06 {id_}: składowa stała {r['dc']:.1f} dBFS")
         # A07 — cisza na początku (jednorazowe, poza zamierzonym narastaniem przed syncPoint)
@@ -132,7 +143,6 @@ def main(argv=None) -> int:
                 ostrz.append(f"A07 {id_}: cisza na początku {start * 1000:.1f} ms")
         # A08 — szew pętli: WAV i pliki zdekodowane (fragment loopStart…loopEnd)
         if petla:
-            ls, le = (n_probek_s(w.get("loopStart", 0.0)), n_probek_s(w.get("loopEnd", w["duration"])))
             szwy = {}
             for nazwa, d in (("wav", x), ("webm", dw), ("m4a", dm)):
                 szwy[nazwa] = analiza.szew_petli(d[..., ls:min(le, d.shape[-1])])

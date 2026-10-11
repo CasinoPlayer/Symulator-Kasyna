@@ -115,7 +115,20 @@ let currentBoard = 'biggest-win';
 
 async function init() {
   fx = new FxLite(el.fxCanvas, { coinSrc: COIN_FALLBACK });
-  counter = new BalanceCounter(el.pill, { onTick: () => audio.play('sfx_licznik_tik', { volume: 0.35 }) });
+  // sfx_licznik_tik to PĘTLA (manifest: loop) — startuje raz na początku liczenia i gaśnie, gdy licznik stanie
+  let tickLoop = null;
+  counter = new BalanceCounter(el.pill, {
+    onCountStart: () => { tickLoop = audio.play('sfx_licznik_tik'); },
+    onCountEnd: () => { tickLoop?.stop(60); tickLoop = null; },
+  });
+
+  // Dźwięk: pierwszy dowolny gest odblokowuje kontekst audio i wczytuje pakiety „ui” i „lobby” (05 § 2.3–2.4),
+  // żeby dźwięki okna logowania i bonusu powitalnego były gotowe, zanim będą potrzebne. Zalogowany gracz
+  // (np. po powrocie z gry) słyszy wtedy muzykę lobby z wejściem 1,5 s.
+  audio.unlockOnGesture(() => {
+    audio.preloadPack('ui', 'lobby');
+    if (store.loggedIn) audio.playMusic('mus_lobby', { fadeMs: 1500 });
+  });
 
   bindTopbar();
   bindRewardTopbar();
@@ -251,7 +264,7 @@ function toggleMenu(open = el.menu.hidden) {
   el.menu.hidden = !open;
   el.menuBtn.setAttribute('aria-expanded', String(open));
   if (open) {
-    audio.play('ui_otworz', { volume: 0.6 });
+    audio.play('ui_otworz');
     el.menu.querySelector('[role^="menuitem"]')?.focus();
   }
 }
@@ -349,7 +362,7 @@ function openLogin({ game } = {}) {
     initialFocus: el.nickInput,
     onClose: (reason) => {
       if (reason !== 'success') pendingGame = null;
-      audio.play('ui_zamknij', { volume: 0.6 });
+      audio.play('ui_zamknij');
     },
   });
   audio.play('ui_otworz');
@@ -665,7 +678,7 @@ function bindTile(tile, slot) {
   tile.addEventListener('pointerenter', (e) => {
     if (e.pointerType !== 'mouse') return;
     tile.style.transitionDuration = '160ms';
-    audio.play('ui_hover', { volume: 0.4 });
+    audio.play('ui_hover');
     playVideo(tile);
   });
   tile.addEventListener('pointermove', (e) => {
@@ -888,7 +901,7 @@ function selectBoard(tab) {
   });
   el.board.setAttribute('aria-labelledby', tab.id);
   currentBoard = tab.dataset.type;
-  audio.play('ui_klik', { volume: 0.5 });
+  audio.play('ui_klik');
   loadBoard(currentBoard);
 }
 
@@ -945,7 +958,7 @@ function openHistory() {
   if (!store.loggedIn) return openLogin();
   historyPage = 0;
   el.historyList.replaceChildren(...Array.from({ length: 4 }, () => Object.assign(document.createElement('div'), { className: 'skeleton skeleton-row' })));
-  openModal(el.historyModal, { onClose: () => audio.play('ui_zamknij', { volume: 0.6 }) });
+  openModal(el.historyModal, { onClose: () => audio.play('ui_zamknij') });
   audio.play('ui_otworz');
   loadHistory();
 }

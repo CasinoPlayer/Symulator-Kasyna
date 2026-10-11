@@ -350,10 +350,16 @@ def _moneta_przepis(f0, nuta, dl):
     return przepis
 
 
+def key_track(nuta: str):
+    """keyTrack dla pliku jednonutowego (doc 05 § 1.2): nuty D i A w S2 przesuwamy o +100 c (D → E♭, A → B♭),
+    bo +200 c dałoby E i B spoza hidżazu; pozostałe nuty — transpozycja kontekstu (true)."""
+    return {"s2": 100} if nuta[0] in "DA" else True
+
+
 for _i, (_f0, _nuta, _dl) in enumerate(((1900, "C7", 0.22), (2100, "D7", 0.21), (2300, "E7", 0.20),
                                         (2500, "G7", 0.19), (2700, "A7", 0.18)), start=1):
     dzwiek(f"sfx_moneta_{_i}", gain_db=-14, priority=1, dlugosc=_dl, packs=["lobby", "gry-krytyczne"],
-           group="moneta", maxVoices=6, cooldownMs=25, pitchCents=5, gainJitterDb=1, keyTrack=True)(
+           group="moneta", maxVoices=6, cooldownMs=25, pitchCents=5, gainJitterDb=1, keyTrack=key_track(_nuta))(
         _moneta_przepis(_f0, _nuta, _dl))
 
 
@@ -363,7 +369,7 @@ def sfx_licznik_tik(rng):
     L = 0.5
     x = _bufor(L)
     for k in range(8):
-        nuta = "A6" if k % 2 == 0 else "E7"
+        nuta = "G6" if k % 2 == 0 else "C7"           # tylko C/E/G — jedna transpozycja pasuje też do S2
         tik = dsp.dzwon_fm(hz(nuta), 0.06, r=3.5, i0=1.5, i1=0.2, tau=0.015, atak=0.0006)
         t = czas(0.06)
         tik += 0.35 * dsp.hp(dsp.szum(len(t), rng) * (t < 0.001), 2500)
@@ -392,7 +398,7 @@ def sfx_licznik_koniec(rng):
 def sfx_saldo_puls(rng):
     d = 0.18
     t = czas(d)
-    x = dsp.sinus(dsp.przemiatanie(hz("E5"), hz("A5"), d, 0.04), len(t)) * dsp.atak_zanik(d, 0.004, 0.11)
+    x = dsp.sinus(dsp.przemiatanie(hz("E5"), hz("G5"), d, 0.04), len(t)) * dsp.atak_zanik(d, 0.004, 0.11)
     x = dsp.lp(x, 3000)
     x += db(-24) * dsp.hp(dsp.szum(len(t), rng), 5000) * dsp.atak_zanik(d, 0.002, 0.02) * (t < 0.06)
     return x
@@ -443,7 +449,7 @@ def sfx_przejscie_whoosh(rng):
     sz = dsp.szum(n, rng, "rozowy")
     pkt = [(0.0, 300.0), (0.38, 3500.0), (0.65, 1000.0)]
     y = dsp.przemiataj(sz, "bp", 0, 0, q=1.5, punkty=pkt)
-    y *= dsp.obwiednia([(0, 0), (0.3, 0.8), (0.38, 1.0), (0.65, 0.0)], d, "lin") ** 1.5
+    y *= dsp.obwiednia([(0, 0.3), (0.3, 0.8), (0.38, 1.0), (0.65, 0.0)], d, "lin") ** 1.5
     pan = dsp.obwiednia([(0, -0.7), (0.65, 0.7)], d)
     x = dsp.panorama(y, pan)
     t = czas(d)
@@ -522,30 +528,33 @@ def _stop_przepis(nuta):
         klak = dsp.bp(dsp.szum(n, rng) * (t < 0.012) * np.exp(-t / 0.004), 1800, 2.0) * 1.6
         zatrzask = dsp.hp(dsp.szum(n, rng) * (t < 0.002), 3000) * 0.5
         ping = db(-10) * dsp.dzwon_fm(hz(nuta), d, r=2.0, i0=1.5, i1=0.0, tau=0.12, tau_i=0.08 / 2.3) * 1.6
-        korpus = 0.25 * dsp.sinus(250, n) * dsp.atak_zanik(d, 0.001, 0.025)
+        korpus = 0.35 * dsp.lp(dsp.szum(n, rng), 350) * dsp.atak_zanik(d, 0.001, 0.02)
         return tunk + 0.5 * klak + zatrzask + ping + korpus
     return przepis
 
 
 for _k, _nuta in _NUTY_STOPOW.items():
-    dzwiek(f"sfx_beben_stop_{_k}", gain_db=-7, priority=4, dlugosc=0.28, packs=["gry-krytyczne"], keyTrack=True,
+    dzwiek(f"sfx_beben_stop_{_k}", gain_db=-7, priority=4, dlugosc=0.28, packs=["gry-krytyczne"],
+           keyTrack=key_track(_nuta),
            pitchCents=5, gainJitterDb=1, group="beben_stop", maxVoices=3)(_stop_przepis(_nuta))
 
 
 @dzwiek("sfx_antycypacja_narastanie", gain_db=-6, priority=4, stereo=True, dlugosc=1.2,
-        packs=["gry-dalsze"], wyjscie_ms=3)
+        packs=["gry-dalsze"], wyjscie_ms=3, keyTrack=True, syncPoint=1.2)
 def sfx_antycypacja_narastanie(rng):
+    """Narastanie kończące się DOKŁADNIE na końcu pliku (syncPoint = 1,2 s = stop antycypowanego bębna).
+    Klaster smyczków to pusta kwinta C3–G3–C4 — po transpozycji T: C–G (S1), D–A (S2, bordun hidżazu), E–B (S3)."""
     d = 1.2
     n = n_probek(d)
     t = np.arange(n) / SR
     narast = db(-12 + 12 * (t / d) ** 1.5)                     # +12 dB w czasie pliku
     sz = dsp.przemiataj(dsp.szum(n, rng, "rozowy"), "bp", 400, 6000, d, q=4.0)
     x = dsp.panorama(sz * 0.6, 0) * np.array([[1.0], [1.0]])
-    # klaster „smyczków” z tremolo 8 → 16 Hz
+    # klaster „smyczków” (6 pił: po 2 na nutę C3, G3, C4, ±20 c) z tremolo 8 → 16 Hz
     tremolo_f = 8 + 8 * (t / d)
     trem = 0.5 + 0.5 * np.sin(dsp.DWA_PI * dsp.faza(tremolo_f, n))
-    for i, nu in enumerate(("E3", "B3", "E4", "G#3", "B4", "E5")):
-        s = dsp.pila(dsp.centy(hz(nu), rng.uniform(-20, 20)), n, rng.random())
+    for i, (nu, c) in enumerate((("C3", -20), ("C3", 20), ("G3", -20), ("G3", 20), ("C4", -20), ("C4", 20))):
+        s = dsp.pila(dsp.centy(hz(nu), c * rng.uniform(0.6, 1.0)), n, rng.random())
         s = dsp.przemiataj(s, "bp", 1000, 3000, d, q=0.8)
         wstaw(x, dsp.panorama(s * trem * 0.35, (i % 2 * 2 - 1) * 0.5), 0)
     shep = ins.ton_sheparda(d, okres=1.6, f_baza=40, glosy=8, srodek=700, sigma_okt=1.0)
@@ -566,8 +575,8 @@ def sfx_bicie_serca(rng):
         s = dsp.sinus(dsp.przemiatanie(f0, f1, d, 0.08), len(t)) * dsp.atak_zanik(d, 0.004, 0.09)
         s += 0.3 * dsp.lp(dsp.szum(len(t), rng), 150) * dsp.atak_zanik(d, 0.002, 0.03)
         wstaw(x, s * g, start, zawijaj=True)
-    x = dsp.lp(x, 200, okresowy=True)
-    return dsp.nasycenie(x * 1.4, 3.0)
+    x = dsp.lp(x, 200, okresowy=True)                    # LP PRZED nasyceniem — harmoniczne 90–420 Hz zostają
+    return dsp.nasycenie(x * 1.4, 3.0, asymetria=0.3)
 
 
 def _scatter_przepis(nr):
@@ -585,10 +594,10 @@ def _scatter_przepis(nr):
             wstaw(x, b * 0.6, sync)
         elif nr == 2:
             b = dsp.dzwon_fm(hz("E6"), d - sync, r=3.5, i0=4.0, i1=0.5, tau=0.6)
-            b += 0.7 * dsp.dzwon_fm(hz("A5"), d - sync, r=3.5, i0=3.0, i1=0.4, tau=0.6)
+            b += 0.7 * dsp.dzwon_fm(hz("G5"), d - sync, r=3.5, i0=3.0, i1=0.4, tau=0.6)
             b += db(-8) * dsp.dzwon_fm(hz("E7"), d - sync, r=3.5, i0=2.0, i1=0.3, tau=0.35)
             t = czas(d - sync)
-            b += 0.6 * dsp.nasycenie(dsp.sinus(65, len(t)) * dsp.atak_zanik(d - sync, 0.003, 0.3), 1.8)
+            b += 0.6 * dsp.nasycenie(dsp.sinus(hz("C2"), len(t)) * dsp.atak_zanik(d - sync, 0.003, 0.3), 1.8, 0.2)
             wstaw(x, b * 0.5, sync)
         else:
             for i, nu in enumerate(("C6", "E6", "G6", "C7")):
@@ -649,7 +658,7 @@ for _nr, (_nuty, _dl, _i0) in enumerate(((("C5", "E5", "G5"), 0.7, 1.2), (("E5",
 def sfx_wygrana_medium(rng):
     d = 1.6
     x = _bufor(d)
-    for i, nu in enumerate(("C5", "D5", "E5", "G5", "C6")):
+    for i, nu in enumerate(("C5", "E5", "G5", "C6", "E6")):
         b = dsp.dzwon_fm(hz(nu), d - 0.04 * i, r=2.0, i0=2.0, i1=0.2, tau=0.5 if i < 4 else 0.9)
         wstaw(x, 0.4 * b, 0.04 * i)
     dl = 0.6
@@ -657,9 +666,9 @@ def sfx_wygrana_medium(rng):
     ss = dsp.lp(ss, 3000, rzad=2) * dsp.adsr(dl, 0.01, 0.15, 0.6, 0.25, gate=0.3) * 0.12
     wstaw(x, ss, 0.2)
     t = czas(0.6)
-    wstaw(x, 0.6 * dsp.nasycenie(dsp.sinus(60, len(t)) * dsp.atak_zanik(0.6, 0.003, 0.2), 2.0), 0.2)
+    wstaw(x, 0.6 * dsp.nasycenie(dsp.sinus(hz("C2"), len(t)) * dsp.atak_zanik(0.6, 0.003, 0.2), 2.0, 0.2), 0.2)
     for k in range(6):
-        nuta = PENTA_MONET[rng.integers(0, 5)]
+        nuta = ("C7", "E7", "G7")[rng.integers(0, 3)]      # tylko C/E/G — jedna transpozycja (§ 1.2)
         wstaw(x, 0.18 * moneta(rng.uniform(2000, 2800), nuta, rng, 0.2), 0.25 + k * 0.08 + rng.uniform(0, 0.03))
     return _wybrzmienie(_poglos_mono(x, 1.8, 0.22), 1.1)
 
@@ -706,7 +715,7 @@ def sfx_bigwin_wejscie(rng):
     return _wybrzmienie(y, 1.7)
 
 
-@dzwiek("sfx_poziom_w_gore", gain_db=-4, priority=5, dlugosc=1.4, packs=["gry-dalsze"], syncPoint=0.25)
+@dzwiek("sfx_poziom_w_gore", gain_db=-4, priority=5, dlugosc=1.4, packs=["gry-dalsze"], syncPoint=0.25, maxVoices=1)
 def sfx_poziom_w_gore(rng):
     d = 1.4
     sync = 0.25
@@ -744,7 +753,8 @@ def sfx_bigwin_koniec(rng):
     wstaw(x, c * 0.55, 0.18)
     wstaw(x, dzwony_akord(["C6", "D6", "E6", "G6"], d - 0.18, r=2.0, i0=2.5, tau=0.9, odstep=0.02) * 0.3, 0.18)
     t = czas(1.2)
-    wstaw(x, dsp.stereo(dsp.nasycenie(dsp.sinus(55, len(t)) * dsp.atak_zanik(1.2, 0.005, 0.4), 2.0)) * 0.6, 0.18)
+    wstaw(x, dsp.stereo(dsp.nasycenie(dsp.sinus(hz("C2"), len(t)) * dsp.atak_zanik(1.2, 0.005, 0.4), 2.0, 0.2)) * 0.6,
+          0.18)
     for k in range(20):
         start = 0.2 + k * 0.05 + rng.uniform(0, 0.02)
         m = moneta(rng.uniform(1900, 2900), PENTA_MONET[rng.integers(0, 5)], rng, 0.22)
@@ -769,14 +779,15 @@ def sfx_blysk(rng):
     return _wybrzmienie(_poglos_mono(x, 1.0, 0.3, jasnosc=0.8), 0.3)
 
 
-@dzwiek("sfx_uderzenie_basu", gain_db=-5, priority=4, dlugosc=1.0, packs=["lobby", "gry-dalsze"], pitchCents=30)
+@dzwiek("sfx_uderzenie_basu", gain_db=-5, priority=4, dlugosc=1.0, packs=["lobby", "gry-dalsze"], pitchCents=30,
+        maxVoices=2)
 def sfx_uderzenie_basu(rng):
     d = 1.0
     t = czas(d)
     n = len(t)
-    sub = dsp.sinus(dsp.przemiatanie(60, 32, d, 0.25), n) * dsp.atak_zanik(d, 0.002, 0.4)
-    sub = dsp.nasycenie(sub, 3.0)
-    klik = dsp.lp(dsp.szum(n, rng) * (t < 0.002), 2000) * 1.5
+    sub = dsp.sinus(dsp.przemiatanie(60, 32, d, 0.25), n) * dsp.atak_zanik(d, 0.004, 0.4)
+    sub = dsp.nasycenie(sub, 3.0, asymetria=0.3)       # asym.: także parzyste harmoniczne 120, 240 Hz…
+    klik = dsp.lp(dsp.szum(n, rng) * (t < 0.002), 2000) * 0.8
     return dsp.lp(sub + klik, 4000)
 
 
@@ -822,16 +833,22 @@ def sfx_free_spins_koniec(rng):
     sw = szum_przemiatany(dl, "bp", 6000, 400, 1.5, rng)
     sw *= dsp.obwiednia([(0, 0.2), (0.1, 1), (dl, 0)], dl)
     wstaw(x, dsp.panorama(sw * 0.6, dsp.obwiednia([(0, 0.5), (dl, -0.3)], dl)), 0.0)
-    for nuty, start, dl, gate in ((("F3", "A3", "C4", "F4"), 0.1, 0.9, 0.3), (("C3", "G3", "C4", "E4", "G4"), 0.4, 2.0, 0.9)):
-        pad = _bufor(dl, True)
-        for i, nu in enumerate(nuty):
-            p = ins.pad_nuta(hz(nu), dl, atak=0.05, wybrzmienie=0.6, rng=rng, gate=gate)
-            wstaw(pad, dsp.panorama(p, (i / (len(nuty) - 1) * 2 - 1) * 0.6), 0)
-        wstaw(x, dsp.lp(pad, 2200, rzad=2) * 0.2, start)
-        wstaw(x, dzwony_akord([nu[:-1] + str(int(nu[-1]) + 2) for nu in nuty[1:]], dl, r=2.0, i0=2.0, tau=0.6,
-                              odstep=0.03) * 0.25, start)
+    # Bez kadencji F → C (po T akord F byłby G-dur w S2 i A-dur w S3 — obce skalom gier): dzwony opadają po
+    # dźwiękach C-dur G6–E6–C6–G5 co 120 ms i lądują na trzymanym akordzie C-dur (pad + dzwony, 900 ms).
+    for i, nu in enumerate(("G6", "E6", "C6", "G5")):
+        b = dsp.dzwon_fm(hz(nu), 1.2, r=2.0, i0=2.2, i1=0.2, tau=0.45)
+        wstaw(x, dsp.panorama(b * 0.3, 0.45 - 0.3 * i), 0.15 + 0.12 * i)
+    start, dl = 0.15 + 0.12 * 4, 2.4 - 0.63
+    pad = _bufor(dl, True)
+    nuty = ("C3", "G3", "C4", "E4", "G4")
+    for i, nu in enumerate(nuty):
+        p = ins.pad_nuta(hz(nu), dl, atak=0.08, wybrzmienie=0.8, rng=rng, gate=0.9)
+        wstaw(pad, dsp.panorama(p, (i / (len(nuty) - 1) * 2 - 1) * 0.6), 0)
+    wstaw(x, dsp.lp(pad, 2200, rzad=2) * 0.2, start)
+    wstaw(x, dzwony_akord(["C5", "E5", "G5", "C6"], dl, r=2.0, i0=2.0, tau=0.7, odstep=0.025) * 0.28, start)
     t = czas(1.5)
-    wstaw(x, dsp.stereo(dsp.nasycenie(dsp.sinus(55, len(t)) * dsp.atak_zanik(1.5, 0.01, 0.5), 2.0)) * 0.5, 0.4)
+    sub = dsp.sinus(hz("C2"), len(t)) * dsp.atak_zanik(1.5, 0.01, 0.5)
+    wstaw(x, dsp.stereo(dsp.nasycenie(sub, 2.0, 0.2)) * 0.5, start)
     y = dsp.poglos(x, 2.0, 0.25)
     return _wybrzmienie(y, 1.7)
 
@@ -885,9 +902,9 @@ def sfx_s1_jackpot(rng):
     # 300 ms: uderzenie
     wstaw(x, dsp.stereo(uderzenie(1.5, 45, 30, 0.4, 0.5, rng, trzask=1.0, nas=3.0)) * 0.8, sync)
     # 350–850 ms: 8-bitowy podbieg (kwadrat 25%, C–E–G w górę, po 31 ms)
-    bieg = ["C4", "E4", "G4", "C5", "E5", "G5", "C6", "E6", "C5", "E5", "G5", "C6", "E6", "G6", "C7", "E7"]
+    bieg = ["C4", "E4", "G4", "C5", "E5", "G5", "C6", "C5", "E5", "G5", "C6", "E6", "G6", "C7"]
     for i, nu in enumerate(bieg):
-        nn = n_probek(0.031)
+        nn = n_probek(0.031 if i < len(bieg) - 1 else 0.85 - 0.35 - 0.031 * i)
         s = dsp.kwadrat(hz(nu), nn, 0.25) * dsp.adsr(nn, 0.001, 0.01, 0.9, 0.004)
         s = dsp.redukcja_bitow(s * 0.5, 8, 22050)
         wstaw(x, dsp.panorama(s * 0.5, 0.2 * np.sin(i)), 0.35 + i * 0.031)
@@ -963,7 +980,7 @@ def sfx_s2_wild_rozszerzenie(rng):
 def sfx_s2_gong(rng):
     d = 3.5
     g = ins.gong(73.42, d, rng, skala_zanikow=1.0, stereo_wyj=True)
-    # delikatny „szum pałki” i powietrze sali
+    g = dsp.szerokosc(g, 0.5)                            # L i P mają różne dudnienia — zwężamy dla mono-zgodności
     y = dsp.poglos(g, 2.8, 0.15, jasnosc=0.4, odbicia_ms=(25, 41, 67))
     return _wybrzmienie(y, 2.8)
 
@@ -976,10 +993,11 @@ def _pekniecie_przepis(nr, dl, f_min, f_max, odlamki):
         x = _bufor(dl)
         t = czas(dl)
         n = len(t)
-        x += dsp.hp(dsp.szum(n, rng) * (t < 0.003), 3000) * 1.4
+        # trzask celowo umiarkowany: przy normalizacji szczytem zbyt ostry transjent ścisza „ciało” pęknięcia
+        x += dsp.hp(dsp.szum(n, rng) * (t < 0.003) * np.exp(-t / 0.001), 3000) * 0.5
         fr = np.exp(rng.uniform(np.log(f_min), np.log(f_max), 10))
         taus = rng.uniform(0.04, 0.2, 10)
-        x += 0.5 * dsp.parcjaly(1.0, fr, taus, dl, rng.uniform(0.3, 1.0, 10), rng=rng)
+        x += 0.9 * dsp.parcjaly(1.0, fr, taus, dl, rng.uniform(0.3, 1.0, 10), rng=rng)
         for k in range(odlamki):
             u = (k / odlamki) ** 1.6                          # malejąca gęstość odłamków w czasie
             start = 0.08 + u * 0.37 + rng.uniform(-0.01, 0.01)
@@ -987,7 +1005,7 @@ def _pekniecie_przepis(nr, dl, f_min, f_max, odlamki):
             f = rng.uniform(4000, 10000)
             g = dsp.parcjaly(f, [1, 1.53, 2.21], [dd / 3, dd / 4, dd / 6], dd, rng=rng)
             g += 0.3 * dsp.hp(dsp.szum(n_probek(dd), rng), 5000) * np.exp(-czas(dd) / 0.003)
-            wstaw(x, g * 0.3 * (1 - 0.7 * u) * rng.uniform(0.5, 1.0), start)
+            wstaw(x, g * 0.5 * (1 - 0.7 * u) * rng.uniform(0.5, 1.0), start)
         x += 0.5 * dsp.sinus(180, n) * dsp.atak_zanik(dl, 0.001, 0.03)
         return _wybrzmienie(_poglos_mono(x, 0.9, 0.15, jasnosc=0.8), dl * 0.75)
     return przepis
@@ -1007,7 +1025,7 @@ def sfx_s3_opad(rng):
     sw = szum_przemiatany(dl, "bp", 3000, 800, 1.6, rng, d_przem=0.4)
     sw *= dsp.obwiednia([(0, 0), (0.08, 1), (0.3, 0.6), (dl, 0)], dl) * 0.7
     wstaw(x, sw, 0.0)
-    for i, nu in enumerate(("C#7", "B6", "G#6", "F#6", "E6", "B6")):
+    for i, nu in enumerate(("E7", "C#7", "B6", "G#6", "F#6", "E6")):
         p = dsp.dzwon_fm(hz(nu), 0.25, r=3.5, i0=1.8, i1=0.3, tau=0.025 * 2.5, atak=0.0008)
         wstaw(x, p * 0.35 * (1 - 0.08 * i), 0.4 + i * 0.055 + rng.uniform(0, 0.01))
     return _wybrzmienie(_poglos_mono(x, 1.4, 0.25, jasnosc=0.8), 0.6)

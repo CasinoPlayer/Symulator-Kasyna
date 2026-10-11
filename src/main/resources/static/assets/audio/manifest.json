@@ -1,5 +1,5 @@
 {
-  "version": "f4d82fd320d0",
+  "version": "58b8a682f860",
   "sounds": {
     "ui_hover": {
       "webm": "ui_hover.webm",
@@ -166,14 +166,14 @@
       "webm": "sfx_monety_fontanna.webm",
       "m4a": "sfx_monety_fontanna.m4a",
       "loop": true,
-      "duration": 2.0,
+      "duration": 2.2,
       "bus": "sfx",
       "channels": 2,
       "gainDb": -10,
       "priority": 2,
       "maxVoices": 1,
-      "loopStart": 0.0,
-      "loopEnd": 2.0,
+      "loopStart": 0.1,
+      "loopEnd": 2.1,
       "pack": "lobby",
       "packs": [
         "lobby",
@@ -217,7 +217,9 @@
       "cooldownMs": 25,
       "pitchCents": 5,
       "gainJitterDb": 1,
-      "keyTrack": true,
+      "keyTrack": {
+        "s2": 100
+      },
       "pack": "lobby",
       "packs": [
         "lobby",
@@ -283,7 +285,9 @@
       "cooldownMs": 25,
       "pitchCents": 5,
       "gainJitterDb": 1,
-      "keyTrack": true,
+      "keyTrack": {
+        "s2": 100
+      },
       "pack": "lobby",
       "packs": [
         "lobby",
@@ -295,15 +299,15 @@
       "webm": "sfx_licznik_tik.webm",
       "m4a": "sfx_licznik_tik.m4a",
       "loop": true,
-      "duration": 0.5,
+      "duration": 0.7,
       "bus": "sfx",
       "channels": 1,
       "gainDb": -16,
       "priority": 2,
       "maxVoices": 1,
       "keyTrack": true,
-      "loopStart": 0.0,
-      "loopEnd": 0.5,
+      "loopStart": 0.1,
+      "loopEnd": 0.6,
       "pack": "lobby",
       "packs": [
         "lobby",
@@ -404,14 +408,14 @@
       "webm": "sfx_beben_petla_s1.webm",
       "m4a": "sfx_beben_petla_s1.m4a",
       "loop": true,
-      "duration": 1.0,
+      "duration": 1.2,
       "bus": "sfx",
       "channels": 1,
       "gainDb": -16,
       "priority": 2,
       "maxVoices": 1,
-      "loopStart": 0.0,
-      "loopEnd": 1.0,
+      "loopStart": 0.1,
+      "loopEnd": 1.1,
       "pack": "s1",
       "packs": [
         "s1"
@@ -422,14 +426,14 @@
       "webm": "sfx_beben_petla_s2.webm",
       "m4a": "sfx_beben_petla_s2.m4a",
       "loop": true,
-      "duration": 1.2,
+      "duration": 1.4,
       "bus": "sfx",
       "channels": 1,
       "gainDb": -16,
       "priority": 2,
       "maxVoices": 1,
-      "loopStart": 0.0,
-      "loopEnd": 1.2,
+      "loopStart": 0.1,
+      "loopEnd": 1.3,
       "pack": "s2",
       "packs": [
         "s2"
@@ -469,7 +473,9 @@
       "maxVoices": 3,
       "pitchCents": 5,
       "gainJitterDb": 1,
-      "keyTrack": true,
+      "keyTrack": {
+        "s2": 100
+      },
       "pack": "gry-krytyczne",
       "packs": [
         "gry-krytyczne"
@@ -529,7 +535,9 @@
       "maxVoices": 3,
       "pitchCents": 5,
       "gainJitterDb": 1,
-      "keyTrack": true,
+      "keyTrack": {
+        "s2": 100
+      },
       "pack": "gry-krytyczne",
       "packs": [
         "gry-krytyczne"
@@ -565,6 +573,8 @@
       "channels": 2,
       "gainDb": -6,
       "priority": 4,
+      "keyTrack": true,
+      "syncPoint": 1.2,
       "pack": "gry-dalsze",
       "packs": [
         "gry-dalsze"
@@ -575,14 +585,14 @@
       "webm": "sfx_bicie_serca.webm",
       "m4a": "sfx_bicie_serca.m4a",
       "loop": true,
-      "duration": 0.6,
+      "duration": 0.8,
       "bus": "sfx",
       "channels": 1,
       "gainDb": -8,
       "priority": 4,
       "maxVoices": 1,
-      "loopStart": 0.0,
-      "loopEnd": 0.6,
+      "loopStart": 0.1,
+      "loopEnd": 0.7,
       "pack": "gry-dalsze",
       "packs": [
         "gry-dalsze"
@@ -785,6 +795,7 @@
       "channels": 1,
       "gainDb": -4,
       "priority": 5,
+      "maxVoices": 1,
       "syncPoint": 0.25,
       "pack": "gry-dalsze",
       "packs": [
@@ -837,6 +848,7 @@
       "channels": 1,
       "gainDb": -5,
       "priority": 4,
+      "maxVoices": 2,
       "pitchCents": 30,
       "pack": "lobby",
       "packs": [
@@ -1074,14 +1086,14 @@
       "webm": "mus_lobby.webm",
       "m4a": "mus_lobby.m4a",
       "loop": true,
-      "duration": 40.0,
+      "duration": 40.5,
       "bus": "music",
       "channels": 2,
       "gainDb": 0.0,
       "bpm": 96,
       "beatsPerBar": 4,
-      "loopStart": 0.0,
-      "loopEnd": 40.0,
+      "loopStart": 0.25,
+      "loopEnd": 40.25,
       "pack": "lobby",
       "packs": [
         "lobby"
@@ -1092,14 +1104,14 @@
       "webm": "mus_s1.webm",
       "m4a": "mus_s1.m4a",
       "loop": true,
-      "duration": 32.0,
+      "duration": 32.5,
       "bus": "music",
       "channels": 2,
       "gainDb": 0.0,
       "bpm": 120,
       "beatsPerBar": 4,
-      "loopStart": 0.0,
-      "loopEnd": 32.0,
+      "loopStart": 0.25,
+      "loopEnd": 32.25,
       "pack": "s1",
       "packs": [
         "s1"
@@ -1110,14 +1122,14 @@
       "webm": "mus_s2.webm",
       "m4a": "mus_s2.m4a",
       "loop": true,
-      "duration": 38.4,
+      "duration": 38.9,
       "bus": "music",
       "channels": 2,
       "gainDb": 0.0,
       "bpm": 100,
       "beatsPerBar": 4,
-      "loopStart": 0.0,
-      "loopEnd": 38.4,
+      "loopStart": 0.25,
+      "loopEnd": 38.65,
       "pack": "s2",
       "packs": [
         "s2"
@@ -1128,17 +1140,18 @@
       "webm": "mus_s2_fs.webm",
       "m4a": "mus_s2_fs.m4a",
       "loop": true,
-      "duration": 38.4,
+      "duration": 38.9,
       "bus": "music",
       "channels": 2,
       "gainDb": 0.0,
       "bpm": 100,
       "beatsPerBar": 4,
-      "loopStart": 0.0,
-      "loopEnd": 38.4,
+      "loopStart": 0.25,
+      "loopEnd": 38.65,
       "pack": "s2",
       "packs": [
-        "s2"
+        "s2",
+        "gry-dalsze"
       ],
       "source": "synteza"
     },
@@ -1146,14 +1159,14 @@
       "webm": "mus_s3.webm",
       "m4a": "mus_s3.m4a",
       "loop": true,
-      "duration": 32.0,
+      "duration": 32.5,
       "bus": "music",
       "channels": 2,
       "gainDb": 0.0,
       "bpm": 90,
       "beatsPerBar": 4,
-      "loopStart": 0.0,
-      "loopEnd": 32.0,
+      "loopStart": 0.25,
+      "loopEnd": 32.25,
       "pack": "s3",
       "packs": [
         "s3"
@@ -1164,17 +1177,18 @@
       "webm": "mus_s3_fs.webm",
       "m4a": "mus_s3_fs.m4a",
       "loop": true,
-      "duration": 32.0,
+      "duration": 32.5,
       "bus": "music",
       "channels": 2,
       "gainDb": 0.0,
       "bpm": 90,
       "beatsPerBar": 4,
-      "loopStart": 0.0,
-      "loopEnd": 32.0,
+      "loopStart": 0.25,
+      "loopEnd": 32.25,
       "pack": "s3",
       "packs": [
-        "s3"
+        "s3",
+        "gry-dalsze"
       ],
       "source": "synteza"
     },
@@ -1182,14 +1196,14 @@
       "webm": "mus_bigwin.webm",
       "m4a": "mus_bigwin.m4a",
       "loop": true,
-      "duration": 15.0,
+      "duration": 15.5,
       "bus": "music",
       "channels": 2,
-      "gainDb": 0.0,
+      "gainDb": 4,
       "bpm": 128,
       "beatsPerBar": 4,
-      "loopStart": 0.0,
-      "loopEnd": 15.0,
+      "loopStart": 0.25,
+      "loopEnd": 15.25,
       "pack": "gry-dalsze",
       "packs": [
         "gry-dalsze"
@@ -1200,12 +1214,12 @@
       "webm": "mus_napiecie.webm",
       "m4a": "mus_napiecie.m4a",
       "loop": true,
-      "duration": 8.0,
+      "duration": 8.5,
       "bus": "music",
       "channels": 2,
       "gainDb": -6,
-      "loopStart": 0.0,
-      "loopEnd": 8.0,
+      "loopStart": 0.25,
+      "loopEnd": 8.25,
       "pack": "gry-dalsze",
       "packs": [
         "gry-dalsze"

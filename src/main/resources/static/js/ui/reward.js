@@ -89,7 +89,7 @@ export function playReward({ amount, from, to, eyebrow, sub, fx, counter, target
     skip.focus({ preventScroll: true });
 
     audio.play('sfx_skrzynia_otwarcie');
-    audio.play('sfx_blysk', { volume: 0.7 });
+    audio.play('sfx_blysk');
 
     // kwota w środku ekranu liczy się od 0 do bonusu
     const countStart = performance.now() + 250;
@@ -109,7 +109,7 @@ export function playReward({ amount, from, to, eyebrow, sub, fx, counter, target
       fx.ring({ ...origin, radius: Math.min(window.innerWidth, 560) * 0.45 });
       fx.burst({ ...origin, count: 44, colors: ['gold', 'white', 'magenta', 'cyan'], speed: 640 });
       audio.play('sfx_uderzenie_basu');
-      fountainLoop = audio.play('sfx_monety_fontanna', { loop: true, volume: 0.8 });
+      fountainLoop = audio.play('sfx_monety_fontanna');
       fx.fountain({
         ...origin,
         count: 24,
@@ -117,7 +117,7 @@ export function playReward({ amount, from, to, eyebrow, sub, fx, counter, target
         onArrive: (n, total) => {
           counter.set(from + Math.round((amount * n) / total), { duration: 240 });
           if (n % 3 === 0 || n === total) counter.pulse();
-          audio.playVariant('sfx_moneta_', 5, { volume: 0.55, rate: 0.94 + Math.random() * 0.12 });
+          audio.playVariant('sfx_moneta_', 5); // wysokość i głośność różnicuje manifest (pitchCents, gainJitterDb)
         },
         onDone: finish,
       });

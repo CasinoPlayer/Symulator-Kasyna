@@ -609,3 +609,14 @@ def wiersze_napisu(wiersze: list[str], font: str, wys_litery: int, odstep_liter=
         out[y:y + m.shape[0], x:x + m.shape[1]] = np.maximum(out[y:y + m.shape[0], x:x + m.shape[1]], m)
         y += m.shape[0] + odst
     return out
+
+
+def wysrodkuj_rgba(obraz: np.ndarray, maska: np.ndarray) -> np.ndarray:
+    """Kładzie przycięty obraz części (np. wynik ``zloty_napis``) z powrotem w miejscu jej maski na płótnie
+    o rozmiarze maski — tak składamy reliefy z kilku części (skrzydła, ciało, dysk skarabeusza)."""
+    ys, xs = np.nonzero(maska > 0.5)
+    out = np.zeros(maska.shape + (4,), np.float32)
+    if len(xs) == 0:
+        return out
+    cx, cy = (xs.min() + xs.max()) / 2, (ys.min() + ys.max()) / 2
+    return nakladaj_srodek(out, obraz, cx, cy + 0.0)

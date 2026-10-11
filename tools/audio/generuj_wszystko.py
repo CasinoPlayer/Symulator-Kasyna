@@ -19,7 +19,11 @@ Przykłady:
     python3 tools/audio/generuj_wszystko.py --tylko sfx_wild mus_s2  # wybrane ID (reszta manifestu zostaje)
     python3 tools/audio/generuj_wszystko.py --tylko sfx_moneta       # prefiks: wszystkie warianty monet
     python3 tools/audio/generuj_wszystko.py --bez-kodowania          # tylko WAV do odsłuchu
-    python3 tools/audio/generuj_wszystko.py --zakladki               # pętle z zakładkami (silnik z loopStart/loopEnd)
+    python3 tools/audio/generuj_wszystko.py --bez-zakladek           # pętle bez zakładek (pętla = cały plik)
+
+Pętle mają domyślnie zakładki (doc 05 § 7.3): 0,1 s (efekty) / 0,25 s (muzyka) końca pętli przed nią i początku
+za nią, a manifest podaje loopStart / loopEnd. Powód: AAC po dekodowaniu ma na końcu dopełnienie ostatniej ramki
+(do 1023 próbek ciszy, typowo ~10,7 ms), a Safari dostaje .m4a — zapętlenie całego bufora dałoby przerwę.
 
 Kody wyjścia: 0 — w porządku, 1 — ostrzeżenia kontroli, 2 — błędy.
 """
@@ -52,6 +56,9 @@ ZAKLADKA_MUZYKA = 0.25
 POLA_META = ("group", "maxVoices", "cooldownMs", "pitchCents", "gainJitterDb", "keyTrack", "syncPoint", "bpm",
              "beatsPerBar")
 ROZSZERZENIA_ZRODEL = (".wav", ".flac", ".mp3", ".m4a", ".ogg", ".opus", ".webm", ".aif", ".aiff")
+SUFIT_M4A = 0.0             # AAC (długie bloki 2048) „podbija” szczyty przy nagłych startach basu bardziej niż Opus;
+                            # doc 05 A04: M4A > −1 dBTP to ostrzeżenie — sufit obniżamy dopiero, gdy M4A przekroczyłby
+                            # pełną skalę (Web Audio liczy w float, ale nie zakładamy tego o każdym dekoderze)
 
 
 def znajdz_zrodlo(id_: str, katalogi) -> Path | None:
@@ -120,7 +127,7 @@ def przetworz(id_: str, ust: dict) -> dict:
         tp_w = analiza.dbtp(eksport.dekoduj(webm, kanaly))
         tp_m = analiza.dbtp(eksport.dekoduj(m4a, kanaly))
         proby.append((round(sufit, 2), round(tp_w, 2), round(tp_m, 2)))
-        nad = max(tp_w, tp_m) - mastering.CEL_DBTP
+        nad = max(tp_w - mastering.CEL_DBTP, tp_m - SUFIT_M4A)
         if nad <= 0.0:
             break
         sufit -= nad + 0.08          # szczyt po kodowaniu za wysoko → niższy sufit i ponowne kodowanie
@@ -147,7 +154,10 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--tylko", nargs="*", help="ID albo prefiksy ID do wygenerowania")
     ap.add_argument("--bez-kodowania", action="store_true", help="tylko WAV (bez ffmpeg i manifestu)")
-    ap.add_argument("--zakladki", action="store_true", help="pętle z zakładkami (loopStart/loopEnd ≠ 0/duration)")
+    ap.add_argument("--zakladki", action="store_true", default=True,
+                    help="pętle z zakładkami (domyślnie włączone; opcja zostaje dla zgodności z doc 05 § 8.5)")
+    ap.add_argument("--bez-zakladek", dest="zakladki", action="store_false",
+                    help="pętla = cały plik (loopStart 0, loopEnd = duration)")
     ap.add_argument("--wav", default=str(katalog.KATALOG_BUDOWY / "wav"), help="katalog plików pośrednich WAV")
     ap.add_argument("--wyj", default=str(katalog.KATALOG_AUDIO), help="katalog wynikowy assets/audio")
     ap.add_argument("-j", "--procesy", type=int, default=min(4, os.cpu_count() or 1))

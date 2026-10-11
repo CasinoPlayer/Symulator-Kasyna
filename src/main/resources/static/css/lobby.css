@@ -510,9 +510,11 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
 .js [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out); transition-delay: calc(var(--i, 0) * 90ms); }
 .js [data-reveal].is-visible { opacity: 1; transform: none; }
 
-/* Intro strony (E01): elementy wjeżdżają kaskadowo po załadowaniu (body.is-ready). */
+/* Intro strony (E01): elementy wjeżdżają kaskadowo po załadowaniu (body.is-ready).
+   Krótko (600 ms, co 70 ms): przeglądarka liczy LCP dopiero, gdy akapit skończy się pojawiać — przy 800 ms
+   i odstępach 90 ms tekst sekcji powitalnej „istniał” dla LCP ok. 0,3 s później. */
 .js .intro { opacity: 0; transform: translateY(16px); }
-.js body.is-ready .intro { opacity: 1; transform: none; transition: opacity 800ms var(--ease-out), transform 800ms var(--ease-out); transition-delay: calc(var(--i, 0) * 90ms); }
+.js body.is-ready .intro { opacity: 1; transform: none; transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out); transition-delay: calc(var(--i, 0) * 70ms); }
 .js body.is-ready .hero__shine { animation: shine-window 2600ms var(--ease-in-out) 500ms 1 both; }
 .js body.is-ready .hero__shine > span { animation: shine-text 2600ms var(--ease-in-out) 500ms 1 both; }
 @keyframes shine-window { from { transform: translateX(-100%); } to { transform: translateX(100%); } }

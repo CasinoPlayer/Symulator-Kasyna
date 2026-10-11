@@ -36,9 +36,14 @@ def koduj(wav: Path, katalog: Path, id_: str, kanaly: int) -> tuple[Path, Path]:
     webm = katalog / f"{id_}.webm"
     m4a = katalog / f"{id_}.m4a"
     katalog.mkdir(parents=True, exist_ok=True)
-    _ffmpeg(["-i", str(wav), "-c:a", "libopus", "-b:a", f"{opus}k", "-vbr", "on", "-compression_level", "10",
+    # VBR „constrained”: koder nadal zmienia przepływność ramka po ramce, ale średnia trzyma się celu
+    # (zwykłe VBR dawało na gęstej muzyce do ~130 kb/s zamiast 96 i przekraczało budżet stron S2/S3)
+    _ffmpeg(["-i", str(wav), "-c:a", "libopus", "-b:a", f"{opus}k", "-vbr", "constrained", "-compression_level", "10",
              "-application", "audio", "-frame_duration", "20", *WSPOLNE, str(webm)])
-    _ffmpeg(["-i", str(wav), "-c:a", "aac", "-b:a", f"{aac}k", "-movflags", "+faststart", *WSPOLNE, str(m4a)])
+    # AAC: koder „fast” zamiast domyślnego „twoloop” — sprawdzone na wszystkich 67 plikach: twoloop potrafił podbić
+    # szczyt o 3,4 dB (glitch na nagłym starcie basu) i miał średnio większy błąd (−21,6 vs −25,4 dB względem WAV)
+    _ffmpeg(["-i", str(wav), "-c:a", "aac", "-aac_coder", "fast", "-b:a", f"{aac}k", "-movflags", "+faststart",
+             *WSPOLNE, str(m4a)])
     return webm, m4a
 
 

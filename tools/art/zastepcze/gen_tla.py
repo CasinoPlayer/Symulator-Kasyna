@@ -98,7 +98,7 @@ def perspektywa_y(t, horyzont, dol):
 # ------------------------------------------------------------------------------------------------
 # Lobby kasyna
 # ------------------------------------------------------------------------------------------------
-def lobby(W, H, pion):
+def lobby(W, H, pion, ciemny=None):
     """Luksusowe wnętrze kasyna nocą: łuki, kolumny z czarnego marmuru, żyrandole (złoty bokeh), rzędy automatów
     (bokeh magenta/cyjan), błyszcząca posadzka z chodnikiem prowadzącym w głąb, ciemny korytarz w środku."""
     rgb = B.gradient_pionowy(H, W, [(0, "#2A1A58"), (0.3, "#1A1040"), (0.6, "#0E0A26"), (1, "#07060F")])
@@ -192,7 +192,7 @@ def lobby(W, H, pion):
     rgb = swiec(rgb, brzegi * (yy > y_pod), "#F5C542", 0.4)
     s, k = snopy_swiatla(W, H, 0.15 * W, -0.05 * H, 62, 0.035 * W, 1.0 * H, 3, "#FFE2B0", 0.12, 9)
     rgb = swiec(rgb, s, k)
-    return wykoncz(rgb, W, H, pion, 0.45)
+    return wykoncz(rgb, W, H, pion, 0.45 if ciemny is None else ciemny)
 
 
 # ------------------------------------------------------------------------------------------------
@@ -218,7 +218,7 @@ def _palma(W, H, x, y_dol, wys, strona, s):
     return maska(W, H, rys)
 
 
-def vegas(W, H, pion):
+def vegas(W, H, pion, ciemny=None):
     hor = (0.24 if pion else 0.5) * H
     rgb = B.gradient_pionowy(H, W, [(0, "#0B0624"), (hor / H * 0.55, "#1B0A4A"), (hor / H * 0.9, "#3A0CA3"),
                                     (hor / H, "#7A1E8E"), (min(1, hor / H + 0.02), "#0B0624"), (1, "#07060F")])
@@ -305,7 +305,7 @@ def vegas(W, H, pion):
     duzy[max(0, y0):y0 + obrys_c.shape[0], max(0, x0):x0 + obrys_c.shape[1]] = obrys_c[max(0, -y0):, max(0, -x0):][:H - max(0, y0), :W - max(0, x0)]
     rgb = swiec(rgb, duzy, "#FFF3D1", 0.7)
     rgb = swiec(rgb, B.rozmyj(duzy, 7), "#F5C542", 1.0)
-    return wykoncz(rgb, W, H, pion, 0.45)
+    return wykoncz(rgb, W, H, pion, 0.45 if ciemny is None else ciemny)
 
 
 # ------------------------------------------------------------------------------------------------
@@ -345,7 +345,7 @@ def _ogien(W, H, cx, cy, r, seed):
     return plomien
 
 
-def skarbiec(W, H, pion):
+def skarbiec(W, H, pion, ciemny=None):
     rgb = B.gradient_pionowy(H, W, [(0, "#1A1008"), (0.5, "#120C08"), (1, "#07060F")])
     kam = B.szum(H, W, 40, 4, 31)
     rgb = rgb * (0.75 + 0.5 * kam[..., None])
@@ -415,10 +415,10 @@ def skarbiec(W, H, pion):
     rgb = warstwa[..., :3]
     s, k = snopy_swiatla(W, H, 0.18 * W, -0.05 * H, 64, 0.035 * W, 1.0 * H, 4, "#FFC889", 0.16, 12)
     rgb = swiec(rgb, s, k)
-    return wykoncz(rgb, W, H, pion, 0.55)
+    return wykoncz(rgb, W, H, pion, 0.55 if ciemny is None else ciemny)
 
 
-def piramidy_noc(W, H, pion):
+def piramidy_noc(W, H, pion, ciemny=None):
     hor = (0.62 if not pion else 0.58) * H
     rgb = B.gradient_pionowy(H, W, [(0, "#050A22"), (hor / H * 0.7, "#0A1030"), (hor / H, "#16244E"), (1, "#05070F")])
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
@@ -472,13 +472,13 @@ def piramidy_noc(W, H, pion):
              ((ox + ow * 0.7) * s, (hor - 0.14 * H) * s), ((ox + ow) * s, H * s)], fill=255))
         rgb = maluj(rgb, om, "#070B1C", 0.95)
         rgb = swiec(rgb, om * (xx < ox) * 0.6, "#2A4A8A", 0.3)
-    return wykoncz(rgb, W, H, pion, 0.45)
+    return wykoncz(rgb, W, H, pion, 0.45 if ciemny is None else ciemny)
 
 
 # ------------------------------------------------------------------------------------------------
 # S3: kryształowa jaskinia i komnata z zorzą
 # ------------------------------------------------------------------------------------------------
-def jaskinia(W, H, pion, fs=False):
+def jaskinia(W, H, pion, fs=False, ciemny=None):
     rgb = B.gradient_pionowy(H, W, [(0, "#0D1638"), (0.5, "#070A1F"), (1, "#05060F")])
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     skala = B.szum(H, W, 70, 5, 71)
@@ -495,7 +495,7 @@ def jaskinia(W, H, pion, fs=False):
             fala = (y0 + amp * np.sin(xx[0] / W * 5.5 + k * 1.7) + 0.02 * np.sin(xx[0] / W * 17 + k)) * H
             d = yy - fala[None, :]
             dl = (0.1 + 0.05 * k) * H
-            zaslona = np.where(d > 0, np.exp(-d / dl), np.exp(d / (0.006 * H))) * (d > -0.02 * H)
+            zaslona = np.where(d > 0, np.exp(-np.maximum(d, 0) / dl), np.exp(np.minimum(d, 0) / (0.006 * H))) * (d > -0.02 * H)
             prazki = 0.55 + 0.45 * np.sin(xx / W * 140 + B.szum(H, W, 60, 2, 80 + k) * 4) ** 2
             zorza = zaslona * prazki * sila
             t = np.clip(d / dl, 0, 1)[..., None]
@@ -579,7 +579,7 @@ def jaskinia(W, H, pion, fs=False):
         w_ = np.linspace(0.55, 0.15, h)[:, None, None]
         przejscie = B.smoothstep(np.arange(h, dtype=np.float32), 0, 6)[:, None, None]
         rgb[tafla_y:tafla_y + h] = rgb[tafla_y:tafla_y + h] * (1 - 0.45 * przejscie) + odb[:h] * w_ * przejscie
-    return wykoncz(rgb, W, H, pion, 0.5 if not fs else 0.42)
+    return wykoncz(rgb, W, H, pion, (0.5 if not fs else 0.42) if ciemny is None else ciemny)
 
 
 # ------------------------------------------------------------------------------------------------

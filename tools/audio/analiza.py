@@ -90,8 +90,10 @@ def szew_petli(x: np.ndarray, okno: float = 0.02) -> dict:
     e = zszyte[:, 2:] - 2 * zszyte[:, 1:-1] + zszyte[:, :-2]       # błąd predykcji liniowej (2. różnica)
     idx_szwu = w - 2                                               # e[k] przewiduje próbkę k+2 → x[0] to k = w−2
     e_szew = np.abs(e[:, idx_szwu]).max()
-    e_tlo = np.percentile(np.abs(np.delete(e, [idx_szwu - 1, idx_szwu, idx_szwu + 1], axis=1)), 99)
     rms = np.sqrt(np.mean(x ** 2)) + 1e-12
+    # tło: 99. percentyl błędów predykcji wokół szwu, ale nie mniej niż −60 dB względem RMS — dla bardzo
+    # gładkich sygnałów (bicie serca 45–70 Hz) błąd predykcji jest znikomy i sam szum kodeka dawałby fałszywy alarm
+    e_tlo = max(np.percentile(np.abs(np.delete(e, [idx_szwu - 1, idx_szwu, idx_szwu + 1], axis=1)), 99), 1e-3 * rms)
     skok = np.abs(x[:, 0] - x[:, -1]).max()
     okno_h = np.hanning(w)
 

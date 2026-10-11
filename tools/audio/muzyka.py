@@ -356,7 +356,7 @@ def mus_s2(rng):
     return u.miks(s) + mokry
 
 
-@utwor("mus_s2_fs", bpm=100, takty=16, packs=["s2"])
+@utwor("mus_s2_fs", bpm=100, takty=16, packs=["s2", "gry-dalsze"])
 def mus_s2_fs(rng):
     u = Utwor("mus_s2_fs", 100, 16, ziarno=104)
     m = u.miara
@@ -479,7 +479,7 @@ def mus_s3(rng):
         f0 = u.rng.uniform(900, 1500)
         u.dodaj("krople", ins.kropla(u.rng, f0, f0 * 0.42), 1, 0, pan=u.rng.uniform(-0.8, 0.8), przesuniecie_s=t0)
     s = {n: u.zawin(n) for n in u.sciezki}
-    s["pad"] = dsp.chorus(dsp.lp(s["pad"], 1800, okresowy=True), 0.2, 3.0, 15, 0.5, okresowy=True)
+    s["pad"] = dsp.chorus(dsp.lp(s["pad"], 1800, okresowy=True), 6 / u.dlugosc, 3.0, 15, 0.5, okresowy=True)
     poziomy = {"dzwonki": -10, "celesta": -6, "kalimba": -9, "pad": -11, "sub": -9, "stopa": -8, "tiki": -24,
                "krople": -18}
     s = wyrownaj({k: (v, poziomy[k]) for k, v in s.items()})
@@ -488,7 +488,7 @@ def mus_s3(rng):
     return u.miks(s) + mokry
 
 
-@utwor("mus_s3_fs", bpm=90, takty=12, packs=["s3"])
+@utwor("mus_s3_fs", bpm=90, takty=12, packs=["s3", "gry-dalsze"])
 def mus_s3_fs(rng):
     u = Utwor("mus_s3_fs", 90, 12, ziarno=106)
     m = u.miara
@@ -519,7 +519,7 @@ def mus_s3_fs(rng):
         x = dsp.sinus(f, 0.06) * dsp.atak_zanik(0.06, 0.001, 0.015)
         u.dodaj("iskry", x, 1, 0, pan=u.rng.uniform(-0.8, 0.8), przesuniecie_s=u.rng.uniform(0, u.dlugosc))
     s = {n: u.zawin(n) for n in u.sciezki}
-    s["pad"] = dsp.chorus(dsp.lp(s["pad"], 1800, okresowy=True), 0.2, 3.0, 15, 0.5, okresowy=True)
+    s["pad"] = dsp.chorus(dsp.lp(s["pad"], 1800, okresowy=True), 6 / u.dlugosc, 3.0, 15, 0.5, okresowy=True)
     pomp = u.pompowanie(3.0)
     s["bas"] = dsp.lp(s["bas"], 1200, okresowy=True) * pomp
     s["pad"] = s["pad"] * pomp
@@ -540,7 +540,7 @@ SIATKA_BW = [
 ]
 
 
-@utwor("mus_bigwin", bpm=128, takty=8, packs=["gry-dalsze"])
+@utwor("mus_bigwin", bpm=128, takty=8, packs=["gry-dalsze"], gain_db=4)
 def mus_bigwin(rng):
     u = Utwor("mus_bigwin", 128, 8, ziarno=107)
     m = u.miara

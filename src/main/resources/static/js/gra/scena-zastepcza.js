@@ -105,26 +105,56 @@ export async function createScene(container, slot, onProgress) {
     });
   }
 
-  layout();
-  // napis nad planszą pokazuje się po zniknięciu ekranu ładowania → przeliczamy układ, gdy zmieni się `hidden`
-  const noteWatcher = new MutationObserver(layout);
-  noteWatcher.observe(container, { attributes: true, subtree: true, attributeFilter: ['hidden'] });
+  /** Przelicza układ i — gdy pętla animacji już stoi — rysuje jedną klatkę (render na żądanie). */
+  function relayout() {
+    layout();
+    if (!app.ticker.started) app.render();
+  }
+
+  // Rest = jasność komórek w spoczynku. Po wczytaniu przez planszę przechodzi JEDNA fala światła (od lewej
+  // do prawej), a potem pętla animacji staje: podgląd jest statyczny, więc rysowanie 60 razy na sekundę
+  // tylko grzałoby telefon (na urządzeniach bez akceleracji WebGL każda klatka to dziesiątki ms pracy CPU).
+  // Później klatkę rysujemy tylko przy zmianie rozmiaru sceny. Prawdziwy runtime gry ma własną pętlę.
+  const REST = 0.65;
+  const SPEED = 2;          // rad/s — szybkość fali
+  const STEP = 0.6;         // przesunięcie fazy między bębnami
+  const waveEnd = (Math.PI + (reels - 1) * STEP) / SPEED;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let t = 0;
-  // Lekka „fala” jasności po komórkach — żeby było widać, że scena żyje i renderuje się płynnie.
-  app.ticker.add((ticker) => {
+  const wave = (ticker) => {
     if (app.screen.width !== lastW || app.screen.height !== lastH) layout();
     t += ticker.deltaMS / 1000;
-    cellGraphics.forEach((g, i) => {
-      const col = i % reels;
-      g.alpha = 0.65 + 0.35 * Math.max(0, Math.sin(t * 2 - col * 0.6));
-    });
-  });
+    for (let i = 0; i < cellGraphics.length; i++) {
+      const phase = t * SPEED - (i % reels) * STEP;
+      cellGraphics[i].alpha = REST + 0.35 * (phase > 0 && phase < Math.PI ? Math.sin(phase) : 0);
+    }
+    if (t >= waveEnd) {
+      app.ticker.remove(wave);
+      app.ticker.stop();
+      app.render();
+    }
+  };
+
+  layout();
+  cellGraphics.forEach((g) => { g.alpha = REST; });
+  if (reduced) {
+    app.ticker.stop();
+    app.render();
+  } else {
+    app.ticker.add(wave);
+  }
+  // zmiana rozmiaru okna (Pixi sam dopasowuje płótno — resizeTo) → nowy układ i klatka
+  app.renderer.on('resize', relayout);
+  // napis nad planszą pokazuje się po zniknięciu ekranu ładowania → przeliczamy układ, gdy zmieni się `hidden`
+  const noteWatcher = new MutationObserver(relayout);
+  noteWatcher.observe(container, { attributes: true, subtree: true, attributeFilter: ['hidden'] });
   onProgress?.(1);
 
   return {
     app,
     destroy() {
       noteWatcher.disconnect();
+      app.renderer.off('resize', relayout);
       app.destroy(true, { children: true });
     },
   };
