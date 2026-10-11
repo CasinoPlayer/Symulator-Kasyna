@@ -370,6 +370,9 @@ async function main() {
     const { context, page } = await newPage(browser, { width: 390, height: 844 }, 'bankructwo');
     await waitForLobby(page);
     await login(page, `Bankrut_${suffix}`);
+    // POST /api/dev/gracz ma tylko atrapa (tools/dev/mock-api.mjs); prawdziwy backend odpowie 404, a przeglądarka
+    // zapisze to w konsoli jako błąd — to sprawdzenie możliwości serwera, a nie błąd strony
+    expectedHttp.push(/\/api\/dev\/gracz$/);
     const devOk = await page.evaluate(async () => {
       const r = await fetch('api/dev/gracz', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ balance: 0, rescueCooldownSeconds: 0, demoHistory: 14 }) });
       return r.ok;

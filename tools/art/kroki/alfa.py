@@ -251,6 +251,8 @@ def usun_jednolite_tlo(rgba: np.ndarray, rola: str) -> tuple[np.ndarray, list]:
     wybor = sk.brzeg.copy()
     skala = (H * W) / (1024 * 1024)
     jasne_tlo = float(rgb_do_lab(np.asarray(kolor_tla, np.float32)[None, None, :])[0, 0, 0]) > 50
+    pas = pas_brzegowy(H, W, max(4, int(round(0.03 * min(H, W)))))
+    szum_tla = float(dE[pas].mean())          # ile „drga” samo tło (szum, kompresja) — tolerancja dla dziur
     wyciete, watpliwe = [], []
     for k in np.flatnonzero(~sk.brzeg):
         if k == 0:
@@ -265,19 +267,20 @@ def usun_jednolite_tlo(rgba: np.ndarray, rola: str) -> tuple[np.ndarray, list]:
             wybor[k] = True                                   # okno ramki na białym/czarnym tle
         elif udzial >= 0.01 and sredni < 2:
             wybor[k] = True                                   # duża, idealnie zgodna z tłem dziura
-        elif udzial >= (0.003 if jasne_tlo else 0.006) and sredni < 1.5 and _ostra_krawedz(dE, sk, k):
-            # Średnia dziura (pętla anchu, przestrzeń między ogonkami wiśni, ucho dzwonka): wnętrze idealnie
-            # w kolorze tła i OSTRE przejście do innego koloru tuż za brzegiem. Odblask na złocie przy białym
-            # tle zwykle tak nie wygląda — wokół niego jasność opada łagodnie. Na ciemnym tle próg pola jest
-            # wyższy, bo czarne źrenice i szczeliny łatwiej pomylić z tłem.
+        elif udzial >= (0.003 if jasne_tlo else 0.006) and sredni < szum_tla + 1.0 and _ostra_krawedz(dE, sk, k):
+            # Średnia dziura (pętla anchu, przestrzeń między ogonkami wiśni, ucho dzwonka): wnętrze w kolorze
+            # tła z dokładnością do szumu tła i OSTRE przejście do innego koloru tuż za brzegiem. Odblask na
+            # złocie zwykle tak nie wygląda — jest lekko kremowy albo jasność wokół niego opada łagodnie. Ostry,
+            # idealnie biały odblask na białym tle jest jednak nie do odróżnienia od dziury, dlatego to zawsze
+            # ostrzeżenie do obejrzenia w raporcie. Na ciemnym tle próg pola jest wyższy (czarne źrenice).
             wybor[k] = True
             wyciete.append(udzial)
         elif udzial >= 0.001 and sredni < 3:
             watpliwe.append(udzial)
     tlo = sk.maska(wybor)
     if wyciete:
-        uwagi.append(("info", "Q06", "wycięto dziury w kolorze tła wewnątrz obiektu: "
-                                     + ", ".join(f"{u:.1%}" for u in wyciete) + " kadru — sprawdź w raporcie"))
+        uwagi.append(("ostrzezenie", "Q06", "wycięto dziury w kolorze tła wewnątrz obiektu: "
+                                     + ", ".join(f"{u:.1%}" for u in wyciete) + " kadru — sprawdź w raporcie, czy to nie odblask"))
     if watpliwe:
         uwagi.append(("ostrzezenie", "Q06", f"{len(watpliwe)} obszar(y) w kolorze tła wewnątrz obiektu zostały "
                                             "kryjące (dziura czy odblask?) — najlepiej wygenerować obraz "
