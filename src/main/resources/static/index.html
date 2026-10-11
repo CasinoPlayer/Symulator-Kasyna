@@ -55,6 +55,8 @@
             <img class="coin" src="icons/moneta.svg" data-asset="g_moneta_przod" alt="" width="32" height="32">
             <span class="balance-pill__value num">0</span>
             <span class="sr-only balance-pill__unit">cebulionów</span>
+            <!-- stan „bankrut” słowami (czerwona kropka to tylko kolor — WCAG 1.4.1) -->
+            <span class="sr-only" id="saldo-stan"></span>
           </div>
           <div class="user-menu">
             <button type="button" class="user-menu__button" id="btn-menu" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-gracza">
@@ -75,7 +77,7 @@
                 <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#historia"/></svg>Historia gry
               </button>
               <button type="button" class="menu__item menu__item--switch" role="menuitemcheckbox" aria-checked="true" id="menu-dzwiek">
-                <span style="display:flex;align-items:center;gap:12px"><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#dzwiek_wl"/></svg>Dźwięk</span>
+                <span class="menu__label"><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#dzwiek_wl"/></svg>Dźwięk</span>
                 <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
               </button>
               <div class="menu__sep" role="separator"></div>
@@ -98,27 +100,29 @@
           <span class="chip hero__eyebrow intro" style="--i:0"><span class="dot" aria-hidden="true"></span>Symulator kasyna · waluta bez wartości</span>
           <h1 class="hero__title intro" id="hero-tytul" style="--i:1">
             <img class="hero__title-logo" data-asset="g_logo" data-asset-show hidden alt="Cebulion Casino">
-            <span class="hero__brand">CEBULION</span>
+            <!-- Połysk (E01) to kopia napisu w „okienku” przesuwanym samym transform — bez przemalowywania tekstu. -->
+            <span class="hero__brand-wrap"><span class="hero__brand">CEBULION</span><span class="hero__shine" aria-hidden="true"><span>CEBULION</span></span></span>
             <span class="hero__casino">CASINO</span>
           </h1>
           <p class="hero__tagline intro" style="--i:2">Graj bez ryzyka. Wygrywaj z klasą.</p>
           <p class="hero__lead intro" style="--i:3">Trzy automaty, <b>10&nbsp;000 cebulionów</b> na start i wynik każdego spinu liczony uczciwie przez serwer w&nbsp;Javie. Bez wpłat i bez wypłat — sama gra.</p>
+
+          <!-- Bankructwo (E09): saldo poniżej minimalnego zakładu → bonus ratunkowy (E10).
+               Panel stoi PRZED przyciskami i na czas bankructwa je zastępuje, żeby na telefonie był widoczny bez przewijania. -->
+          <div class="rescue" id="ratunek" role="region" aria-labelledby="ratunek-tytul" hidden>
+            <img class="rescue__art" src="icons/emblemat.svg" data-asset="g_maskotka_bankrut" alt="">
+            <div class="rescue__copy">
+              <p class="rescue__title" id="ratunek-tytul">Kieszenie puste? Bywa.</p>
+              <p class="rescue__text" id="ratunek-opis">Pan Cebulion stawia: 10&nbsp;000 cebulionów na koszt firmy.</p>
+            </div>
+            <span class="rescue__cta"><button type="button" class="btn btn--primary rescue__btn" id="btn-ratunek"><span>Odbierz 10&nbsp;000 cebulionów</span></button></span>
+          </div>
 
           <div class="hero__cta intro" style="--i:4">
             <button type="button" class="btn btn--primary btn--lg" id="cta-glowne">
               <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#prezent"/></svg><span>Odbierz 10&nbsp;000 na start</span>
             </button>
             <a class="btn btn--secondary btn--lg" id="cta-drugie" href="#automaty">Zobacz automaty</a>
-          </div>
-
-          <!-- Bankructwo (E09): saldo poniżej minimalnego zakładu → bonus ratunkowy (E10) -->
-          <div class="rescue" id="ratunek" hidden>
-            <img class="rescue__art" src="icons/emblemat.svg" data-asset="g_maskotka_bankrut" alt="">
-            <div>
-              <p class="rescue__title">Kieszenie puste? Bywa.</p>
-              <p class="rescue__text" id="ratunek-opis">Pan Cebulion stawia: 10&nbsp;000 cebulionów na koszt firmy.</p>
-            </div>
-            <button type="button" class="btn btn--primary rescue__btn" id="btn-ratunek"><span>Odbierz 10&nbsp;000 cebulionów</span></button>
           </div>
 
           <ul class="hero__stats intro" style="--i:5" role="list">
@@ -220,8 +224,13 @@
 
           <article class="card about-card" data-reveal>
             <h3><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#korona"/></svg>Dla kogo</h3>
-            <blockquote class="persona__quote">„Lubię sloty. Chcę sprawdzać strategie zakładów i przeżywać emocje wygranej, nie ryzykując własnych pieniędzy.”</blockquote>
-            <p class="persona__who"><b>Kamil</b>, student, lubi gry slotowe i chce sprawdzać strategie zakładów i przeżywać emocje wygranej, nie ryzykując własnych pieniędzy.</p>
+            <blockquote class="persona__quote">Lubię sloty. Chcę sprawdzać strategie zakładów i przeżywać emocje wygranej, nie ryzykując własnych pieniędzy.</blockquote>
+            <p class="persona__who"><b>Kamil</b>, student, gra na telefonie między zajęciami.</p>
+            <ul class="persona__needs" role="list">
+              <li>wejście bez rejestracji i bez hasła — wystarczy nazwa gracza,</li>
+              <li>uczciwy wynik, którego nie da się podmienić w przeglądarce,</li>
+              <li>historia i statystyki, żeby sprawdzić, czy strategia działa.</li>
+            </ul>
           </article>
 
           <article class="card about-card" data-reveal>
@@ -242,7 +251,7 @@
                 <p>Nazwa projektu <code>kasyno</code> (pakiet <code>pl.wsb.kasyno</code>, klasa <code>KasynoApplication</code>,
                   <code>artifactId</code> <code>wdtb-2026-backend-kasyno</code>), wersja z numerami indeksów zespołu,
                   konta zespołu w <code>data.sql</code>, ta wizytówka oraz plan projektu (<code>docs/plan-projektu.md</code>).</p></li>
-              <li><span class="timeline__tag">LAB 01</span>
+              <li><span class="timeline__tag timeline__tag--next">Przed LAB 02</span>
                 <p>Lobby kasyna i logowanie: strona główna z trzema automatami, logowanie samą nazwą gracza z bonusem
                   powitalnym 10&nbsp;000 cebulionów, bonus ratunkowy po bankructwie, ranking i ostatnie duże wygrane,
                   wspólny wygląd (design system) w kolorach marki.</p></li>
@@ -252,7 +261,7 @@
 
           <article class="card about-card about-tech" data-reveal>
             <h3><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#serwer"/></svg>Dane i moduły</h3>
-            <div style="overflow-x:auto">
+            <div class="kv-scroll">
               <table class="kv">
                 <thead><tr><th scope="col">Moduł</th><th scope="col">Dane</th></tr></thead>
                 <tbody>
@@ -266,7 +275,8 @@
             <h3><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#baza"/></svg>Baza danych H2</h3>
             <table class="kv kv--stack">
               <tbody>
-                <tr><td>JDBC URL</td><td><code>jdbc:h2:file:./data/wdtb</code></td></tr>
+                <!-- Dokładnie ten sam adres co spring.datasource.url w application.properties (konsola H2 wymaga zgodnych ustawień). -->
+                <tr><td>JDBC URL</td><td><code>jdbc:h2:file:./data/wdtb;DATABASE_TO_LOWER=TRUE;AUTO_SERVER=TRUE</code></td></tr>
                 <tr><td>Użytkownik</td><td><code>sa</code></td></tr>
                 <tr><td>Hasło</td><td>(puste)</td></tr>
               </tbody>

@@ -102,13 +102,23 @@ linie) komponujemy w C, z nut pentatoniki. Silnik transponuje je do tonacji muzy
 |---|---|---|---|
 | Lobby | a-moll | 0 centów | a-moll i C-dur mają te same dźwięki |
 | S1 „Cebulowy 777” | a-moll | 0 centów | jw. |
-| S2 „Złoty Faraon” | D hidżaz (frygijska dominantowa: D E♭ F♯ G A B♭ C) | **+200** (C → D) | akord D-dur (D F♯ A) należy do skali hidżaz |
-| S3 „Kryształowa Kaskada” | E lidyjska (E F♯ G♯ A♯ B C♯ D♯) | **+400** (C → E) | akord E-dur (E G♯ B) należy do skali lidyjskiej |
+| S2 „Złoty Faraon” | D hidżaz (frygijska dominantowa: D E♭ F♯ G A B♭ C) | **+200** (C → D), ale nuty **D i A tylko +100** (D → E♭, A → B♭) | akord D-dur (D F♯ A) należy do skali hidżaz; E i B (wynik +200 dla D i A) — nie |
+| S3 „Kryształowa Kaskada” | E lidyjska (E F♯ G♯ A♯ B C♯ D♯) | **+400** (C → E) | cała pentatonika E (E F♯ G♯ B C♯) należy do skali lidyjskiej |
 | Sekwencja big win (każda gra) | C-dur (`mus_bigwin`) | 0 centów | efekty big win grają razem z `mus_bigwin` |
 
 **Dlaczego pentatonika:** w pentatonice nie ma półtonów, więc dowolna kombinacja nut brzmi konsonansowo.
 Pięć losowych monet naraz, trzy stopy bębnów nachodzące na dźwięk wygranej — nic nie „fałszuje”, nawet gdy
-kolejność i nakładanie się dźwięków są przypadkowe.
+kolejność i nakładanie się dźwięków są przypadkowe. (Z muzyką też zwykle współbrzmią, ale nie z każdym akordem —
+np. moneta E7 nad akordem B♭maj7 w lobby daje na chwilę tarcie; to krótkie i ciche dźwięki, więc akceptujemy.)
+
+**Wyjątek S2 — mapa nut zamiast jednej transpozycji.** Pentatonika C przesunięta o +200 c to D E F♯ A B, a skala
+hidżaz ma E♭ i B♭ — dwa z pięciu dźwięków stopów i monet fałszowałyby z udem i akordami E♭ / Gm / Cm. Żadna
+transpozycja pentatoniki nie mieści się w hidżazie (każda pięciodźwiękowa podskala hidżazu zawiera półton), więc
+w S2 silnik przesuwa **każdy plik osobno** (`keyTrack` z wyjątkiem dla `s2`, § 7.5): pliki na nutach C, E, G o +200 c,
+pliki na nutach D i A o +100 c. Stopy bębnów S2 grają wtedy D – E♭ – F♯ – A – B♭ (z charakterystycznymi krokami
+hidżazu: półton D–E♭ i półtora tonu E♭–F♯ — brzmi „egipsko”), monety D7 E♭7 F♯7 A7 B♭7. Półtony D–E♭ i A–B♭ są tymi samymi, które słychać w melodii udu, więc nie
+brzmią jak błąd. Warunek: plik z `keyTrack` ma albo **jedną** nutę, albo tylko nuty C, E, G (akord C-dur → D-dur);
+plik mieszający D/A z C/E/G nie da się przesunąć jedną wartością — dlatego przepisy w § 3 go unikają.
 
 ### 1.3. Styl każdej części
 
@@ -186,8 +196,10 @@ zanim przeczyta napis.
    wysokości i głośności (§ 2.6). Ucho męczy się powtarzalnością szybciej niż głośnością.
 5. **Oszczędzamy pasmo 2–5 kHz.** Tam ucho jest najczulsze i najszybciej się męczy. Muzyka ma w tym paśmie
    wycięcie −3 dB, a pasmo zostaje dla dźwięków niosących informację (wygrane, scattery).
-6. **Bas słyszalny na telefonie.** Głośnik telefonu nie odtwarza niczego poniżej ~150 Hz. Każde uderzenie basu ma
-   warstwę harmonicznych 120–400 Hz (nasycenie), inaczej na telefonie po prostu zniknie.
+6. **Bas słyszalny na telefonie.** Głośnik telefonu praktycznie nie odtwarza niczego poniżej ok. 200–300 Hz
+   (zależnie od modelu). Każde uderzenie basu ma warstwę harmonicznych w paśmie ok. 150–600 Hz (nasycenie), inaczej
+   na telefonie po prostu zniknie. **Dlaczego to działa:** efekt „brakującej podstawy” — ucho, słysząc szereg
+   harmonicznych 150, 200, 250 Hz…, „dopowiada” sobie bas 50 Hz, którego głośnik fizycznie nie zagrał.
 7. **Bez nagrań z prawdziwych kasyn, cudzej muzyki i lektora.** Wszystko jest syntezowane naszym kodem albo
    pochodzi ze źródeł o sprawdzonej licencji (§ 11, § 12). Teksty („BIG WIN”) są na ekranie — syntezowany głos brzmi tanio.
 8. **Synchronizacja co do klatki.** Dźwięk zdarzenia startuje w tej samej klatce co obraz (tolerancja ±10 ms,
@@ -206,7 +218,7 @@ dochodzą z pipeline'u bez zmian w kodzie. Ten dokument opisuje wersję docelow�
 
 | Funkcja | Wersja 1 (jest) | Wersja docelowa (dochodzi) | Sekcja |
 |---|---|---|---|
-| Szyny `ui` / `sfx` / `music` → master | jest | + kompresor szyny `sfx`, limiter na sumie, węzeł duckingu i filtr muzyki, przełącznik mono | § 2.2, § 5 |
+| Szyny `ui` / `sfx` / `music` → master | jest | + kompresor efektów (suwak `sfx` za nim), limiter na sumie, węzeł duckingu i filtr muzyki, przełącznik mono | § 2.2, § 5 |
 | Odblokowanie gestem | `unlock()` przy „Zaloguj”, „Wejdź do kasyna”, kaflu, przełączniku dźwięku | + przycisk „Graj” na ekranie ładowania gry, poprawne zdarzenia na ekranach dotykowych, stan `interrupted` (Safari) | § 2.3 |
 | Manifest, format, dekodowanie | jest | + pakiety i priorytety ładowania, `gainDb`, `loopStart`/`loopEnd`, `syncPoint`, `keyTrack` | § 2.4, § 7.5 |
 | Limit głosów | brak | 24 głosy (Low: 16), 5 priorytetów, kradzież głosów, `maxVoices` i `cooldownMs` na dźwięk | § 2.5 |
@@ -229,11 +241,11 @@ flowchart LR
     MN["warstwa mus_napiecie"]
   end
   V -->|ui| BUI["szyna ui<br/>GainNode"]
-  V -->|sfx| BSFX["szyna sfx<br/>GainNode"]
+  V -->|sfx| BSFX["suma efektów<br/>GainNode 1,0"]
   MA --> BMUS["szyna music<br/>GainNode"]
   MB --> BMUS
   MN --> BMUS
-  BSFX --> KOMP["kompresor efektów<br/>DynamicsCompressorNode<br/>+ GainNode korekty"]
+  BSFX --> KOMP["kompresor efektów<br/>DynamicsCompressorNode<br/>+ GainNode: korekta × suwak sfx"]
   BMUS --> DUCK["ducking<br/>GainNode"]
   DUCK --> LPF["filtr muzyki<br/>BiquadFilterNode lowpass"]
   BUI --> SUMA["suma<br/>GainNode 1,0"]
@@ -249,8 +261,8 @@ flowchart LR
 | Węzeł | Typ Web Audio | Ustawienia startowe | Po co |
 |---|---|---|---|
 | głos | `AudioBufferSourceNode` → `GainNode` → `StereoPannerNode` | `gain` = `gainDb` z manifestu × losowa korekta; `pan` z pozycji bębna | jeden dźwięk; tworzony przy każdym odtworzeniu (węzły źródła są jednorazowe — tak działa Web Audio) |
-| szyna `ui` / `sfx` / `music` | `GainNode` | z ustawień gracza (§ 9): 0,6 / 0,85 / 0,45 | osobna głośność kategorii |
-| kompresor efektów | `DynamicsCompressorNode` + `GainNode` | próg −14 dB, kolano 6 dB, stosunek 2,5:1, atak 5 ms, zwolnienie 150 ms; korekta za nim −5 dB (§ 5.4) | „skleja” nakładające się efekty (monety + liczenie + fanfara), żeby nie przekraczały poziomu |
+| szyna `ui` / `sfx` / `music` | `GainNode` | z ustawień gracza (§ 9): 0,6 / 0,85 / 0,45 | osobna głośność kategorii; suwak `sfx` działa **za** kompresorem (w węźle korekty), `ui` i `music` — w swoich szynach |
+| kompresor efektów | suma efektów (`GainNode` 1,0) → `DynamicsCompressorNode` → `GainNode` | próg −8 dB, kolano 6 dB, stosunek 2,5:1, atak 5 ms, zwolnienie 150 ms; za nim korekta −2,9 dB × suwak `sfx` (§ 5.4) | „skleja” nakładające się efekty (monety + liczenie + fanfara), żeby nie przekraczały poziomu. Suwak za kompresorem, żeby kompresja nie zależała od ustawienia głośności efektów |
 | ducking | `GainNode` | 1,0 (0 dB); w chwili wygranej −3 / −6 dB (§ 5.3) | ścisza muzykę pod ważnymi efektami |
 | filtr muzyki | `BiquadFilterNode` `lowpass` | 20 000 Hz, Q 0,707 (praktycznie przezroczysty); antycypacja: 1 200 Hz | „przytłumienie” muzyki przy napięciu i otwartym oknie |
 | limiter | `DynamicsCompressorNode` + `GainNode` | próg −3 dB, kolano 0, stosunek 20:1, atak 1 ms, zwolnienie 100 ms; korekta za nim −1,7 dB (§ 5.4) | łapie rzadkie szczyty sumy; to bezpiecznik, nie narzędzie głośności |
@@ -260,7 +272,7 @@ flowchart LR
 **Dlaczego Web Audio, a nie `<audio>`:** element `<audio>` startuje z opóźnieniem rzędu dziesiątek–setek ms
 (zależnie od przeglądarki), nie pozwala zaplanować startu co do próbki, źle znosi wiele dźwięków naraz (szczególnie
 na iOS) i nie daje bezszwowych pętli. Web Audio planuje dźwięki na własnym zegarze (`AudioContext.currentTime`)
-z dokładnością do próbki (1/48 000 s), miksuje dowolnie wiele głosów i pozwala zmieniać wysokość, panoramę i filtry
+z dokładnością do próbki (1/48 000 s przy kontekście 48 kHz, 1/44 100 s przy 44,1 kHz), miksuje dowolnie wiele głosów i pozwala zmieniać wysokość, panoramę i filtry
 w czasie rzeczywistym.
 
 **Dlaczego pogłos jest „wypalony” w plikach, a nie liczony w przeglądarce:** `ConvolverNode` z odpowiedzią
@@ -276,8 +288,9 @@ Przeglądarki (polityka *autoplay*) pozwalają grać dźwięk dopiero po **geśc
 1. **Kontekst tworzymy i wznawiamy synchronicznie w obsłudze gestu** — `new AudioContext()` i `ctx.resume()` muszą
    paść, zanim kod obsługi zdarzenia odda sterowanie (przed pierwszym `await`). Wersja 1 robi to poprawnie w `unlock()`.
 2. **Zdarzenia, które liczą się jako gest** (specyfikacja HTML, „activation triggering input event”): `keydown`
-   (poza Esc), `mousedown`, `pointerdown` **tylko dla myszy**, `pointerup` dla dotyku i pióra, `touchend`, a w praktyce
-   też `click`. **Uwaga do kodu:** w `gra.js` nasłuch `pointerdown` z `{ once: true }` na ekranie dotykowym nie
+   (poza Esc i skrótami przeglądarki), `mousedown`, `pointerdown` **tylko dla myszy**, `pointerup` dla dotyku i
+   pióra, `touchend`. `click` sam nie jest na tej liście, ale przychodzi zaraz po `pointerup` / `mouseup`, gdy
+   aktywacja jest już przyznana, więc w jego obsłudze `resume()` działa. **Uwaga do kodu:** w `gra.js` nasłuch `pointerdown` z `{ once: true }` na ekranie dotykowym nie
    odblokuje dźwięku (dotyk aktywuje stronę dopiero przy `pointerup`), a słuchacz zostanie usunięty po pierwszym
    wywołaniu. Poprawka: nasłuchiwać `pointerup`, `keydown` i `click`, a słuchacze usuwać dopiero, gdy
    `ctx.state === 'running'`.
@@ -330,10 +343,13 @@ sequenceDiagram
   Siri). Obsługa: na zdarzenie `statechange` z `interrupted` lub `suspended` (gdy karta jest widoczna) dodajemy
   jednorazowych słuchaczy gestu, które wołają `resume()`.
 * Na iPhonie z włączonym **przełącznikiem wyciszenia** dźwięk Web Audio bywa niesłyszalny — to zachowanie systemu.
-  Nie obchodzimy go sztuczkami: gracz wyciszył telefon świadomie. W oknie ustawień jest podpowiedź „Na iPhonie
+  Nie obchodzimy go sztuczkami: gracz wyciszył telefon świadomie. Nowsze Safari mają niestandardowe API
+  `navigator.audioSession` (typ `playback` gra mimo przełącznika) — **świadomie go nie używamy**, bo symulator
+  kasyna nie powinien przebijać się przez wyciszony telefon. W oknie ustawień jest podpowiedź „Na iPhonie
   sprawdź przełącznik wyciszenia”.
-* Plan B dla bardzo starych iOS (sprzed 14.5): w obsłudze gestu odtworzyć bufor jednej cichej próbki. Nie wdrażamy
-  tego domyślnie — dodajemy tylko, jeśli test na takim urządzeniu pokaże problem.
+* Plan B dla bardzo starych iOS (sprzed 14.5, tylko `webkitAudioContext`): w obsłudze gestu odtworzyć bufor jednej
+  cichej próbki, a `decodeAudioData` wołać w wersji z funkcjami zwrotnymi (stara wersja nie zwraca obietnicy —
+  v1 zakłada obietnicę). Nie wdrażamy tego domyślnie — dodajemy tylko, jeśli test na takim urządzeniu pokaże problem.
 
 ### 2.4. Ładowanie i dekodowanie
 
@@ -342,17 +358,24 @@ w pamięci podręcznej (mapa ID → bufor). Dekodowanie odbywa się poza wątkie
 przeglądarki), więc nie blokuje animacji, ale zużywa CPU — dlatego planujemy je w odpowiednich momentach.
 
 **Wybór formatu** (już w kodzie): `canPlayType('audio/webm; codecs="opus"')` → plik `.webm`; w przeciwnym razie
-`.m4a` (AAC). Wynik sprawdzamy raz na stronę.
+`.m4a` (AAC). v1 pyta przy każdym pliku; wersja docelowa sprawdza raz na stronę i — jeśli `decodeAudioData`
+odrzuci `.webm` — przełącza się na `.m4a` do końca wizyty (§ 7.1). **Uwaga:** `decodeAudioData` przepróbkowuje
+plik do częstotliwości kontekstu (często 44,1 kHz zamiast naszych 48 kHz) — dlatego punkty pętli i `syncPoint`
+podajemy w sekundach, nie w próbkach.
 
-**Pakiety ładowania.** Każdy wpis manifestu ma pole `pack` (§ 7.5). Strona prosi tylko o swoje pakiety:
+**Pakiety ładowania.** Każdy wpis manifestu ma pole `pack` (§ 7.5) — nazwę pakietu albo **listę** pakietów, bo
+część dźwięków gra na obu stronach (np. monety, licznik, `sfx_przejscie_whoosh`). Dźwięki jednej gry mają dodatkowo
+pole `gra` (`s1` / `s2` / `s3`): strona gry ładuje z pakietu tylko wpisy bez pola `gra` albo z `gra` równym
+bieżącej grze. Strona prosi tylko o swoje pakiety:
 
 | Pakiet | Strona | Zawartość | Kiedy ładujemy |
 |---|---|---|---|
 | `ui` | lobby i gra | 8 dźwięków `ui_*` | od razu po odblokowaniu (łącznie ~10 KB) |
-| `lobby` | lobby | `sfx_logowanie`, `sfx_skrzynia_otwarcie`, `sfx_monety_fontanna`, monety, licznik, `sfx_saldo_puls`, `sfx_bankrut`, `sfx_przejscie_whoosh`, `sfx_blysk`, `sfx_uderzenie_basu`, `mus_lobby` | po odblokowaniu; `sfx_logowanie` i bonus — **w trakcie** żądania logowania (zdążą, zanim przyjdzie odpowiedź) |
-| `gry-krytyczne` | gra | `sfx_spin_start`, pętla bębnów danej gry, `sfx_beben_stop_1` … `_6`, wygrane small/medium, `sfx_linia`, licznik, `sfx_saldo_puls`, `sfx_wild`, `sfx_scatter_1` … `_3`, monety, muzyka bazowa gry | na ekranie ładowania (E20) — wliczone do paska postępu |
-| `gry-dalsze` | gra | big win (`sfx_bigwin_*`, `sfx_poziom_w_gore`, `mus_bigwin`, fontanna), antycypacja (`sfx_antycypacja_narastanie`, `sfx_bicie_serca`, `mus_napiecie`), free spins, `sfx_bankrut`, skrzynia | po intro, w tle, kolejno po jednym pliku, **nigdy w trakcie spinu** |
-| `s1` / `s2` / `s3` | gra | dźwięki specyficzne gry i jej muzyka free spins | `s1`, `s2`: krótkie efekty z pakietem krytycznym, `mus_s2_fs` / `mus_s3_fs` z dalszymi |
+| `lobby` | lobby | `sfx_logowanie`, `sfx_skrzynia_otwarcie`, `sfx_monety_fontanna`, monety, licznik (`sfx_licznik_tik`, `sfx_licznik_koniec`), `sfx_saldo_puls`, `sfx_bankrut`, `sfx_przejscie_whoosh`, `sfx_blysk`, `sfx_uderzenie_basu`, `mus_lobby` | po odblokowaniu; `sfx_logowanie` i bonus — **w trakcie** żądania logowania (zdążą, zanim przyjdzie odpowiedź) |
+| `gry-krytyczne` | gra | `sfx_spin_start`, pętla bębnów danej gry, `sfx_beben_stop_1` … `_6`, wygrane small/medium, `sfx_linia`, licznik, `sfx_saldo_puls`, `sfx_wild`, `sfx_scatter_1` … `_3`, monety, muzyka bazowa gry (`gra`), krótkie efekty gry: `sfx_s1_neon_bzyk`, `sfx_s2_gong`, `sfx_s3_opad`, `sfx_s3_pekniecie_*` | na ekranie ładowania (E20) — wliczone do paska postępu |
+| `gry-dalsze` | gra | big win (`sfx_bigwin_*`, `sfx_poziom_w_gore`, `mus_bigwin`, fontanna), antycypacja (`sfx_antycypacja_narastanie`, `sfx_bicie_serca`, `mus_napiecie`), free spins (`sfx_free_spins_*`, `mus_s2_fs` / `mus_s3_fs`), `sfx_blysk`, `sfx_uderzenie_basu`, `sfx_przejscie_whoosh`, `sfx_bankrut`, skrzynia, efekty funkcji gry: `sfx_s1_jackpot`, `sfx_s2_wild_rozszerzenie`, `sfx_s3_mnoznik`, `sfx_s3_mnoznik_zbior` | po intro, w tle, kolejno po jednym pliku, **nigdy w trakcie spinu** |
+
+Wpis bez pola `pack` trafia do `gry-dalsze` (wartość domyślna z § 7.5).
 
 **Ładowanie sterowane wynikiem.** Serwer zwraca cały wynik rundy od razu (brief § 0: jedna runda = jeden zakład,
 kaskady i darmowe spiny w tej samej odpowiedzi). Gdy odpowiedź zawiera np. darmowe spiny albo próg `big`, a potrzebne
@@ -421,11 +444,15 @@ a ucho i tak nie rozróżni więcej niż kilkunastu jednoczesnych efektów.
     if (!victim || v.priority < victim.priority ||
         (v.priority === victim.priority && v.startedAt < victim.startedAt)) victim = v; // najniższy, potem najstarszy
   }
-  if (!victim || victim.priority > prio) return false;    // wszystko, co gra, jest ważniejsze → pomijamy nowy dźwięk
-  victim.stop(0.012);                                     // 12 ms wyciszenia zamiast trzasku
+  if (!victim) return prio === 5;                         // grają same „nietykalne”: krytyczny i tak gra (limit +1)
+  if (victim.priority > prio) return false;               // wszystko, co gra, jest ważniejsze → pomijamy nowy dźwięk
+  victim.stop(12);                                        // 12 ms wyciszenia zamiast trzasku (stop przyjmuje ms)
   return true;
 }
 ```
+
+Krytyczny dźwięk (priorytet 5) może więc wyjątkowo przekroczyć limit o kilka głosów — to tańsze niż cisza w chwili
+wygranej. Gniazdo zwalnia się po zakończeniu dźwięku (`onended`).
 
 **Limity na dźwięk.** Oprócz limitu globalnego każdy dźwięk może mieć `maxVoices` (ile kopii naraz) i `cooldownMs`
 (minimalny odstęp między startami). Przekroczenie `maxVoices` kradnie najstarszą kopię tego samego dźwięku;
@@ -451,13 +478,21 @@ start w czasie `cooldownMs` jest pomijany.
 ```js
 #lastVariant = new Map();
 playVariant(prefix, count, options) {
-  const last = this.#lastVariant.get(prefix) ?? 0;
-  let n = 1 + Math.floor(Math.random() * (count - 1));   // 1 … count-1
-  if (n >= last) n += 1;                                  // przeskok nad ostatnim → nigdy dwa razy to samo
+  const last = this.#lastVariant.get(prefix);            // undefined przy pierwszym wywołaniu
+  let n;
+  if (last === undefined || count < 2) {
+    n = 1 + Math.floor(Math.random() * count);           // 1 … count — pierwszy raz każdy wariant równie możliwy
+  } else {
+    n = 1 + Math.floor(Math.random() * (count - 1));     // 1 … count-1
+    if (n >= last) n += 1;                               // przeskok nad ostatnim → nigdy dwa razy to samo
+  }
   this.#lastVariant.set(prefix, n);
   return this.play(`${prefix}${n}`, options);
 }
 ```
+
+(Pułapka, której unikamy: gdyby „brak ostatniego” zapisać jako 0, warunek `n >= 0` przesunąłby każdy pierwszy wybór
+o 1 i wariant 1 nigdy nie zagrałby jako pierwszy.)
 
 **Mikro-zmiany.** Każde odtworzenie dostaje losowe przesunięcie wysokości (`detune` w centach, 100 centów = półton)
 i głośności z zakresów zapisanych w manifeście (`pitchCents`, `gainJitterDb`):
@@ -473,14 +508,36 @@ i głośności z zakresów zapisanych w manifeście (`pitchCents`, `gainJitterDb
 wprowadzeniu tonalnych monet (§ 3.2) zakres trzeba zawęzić do ±5 centów (np. `detune` z manifestu zamiast `rate`).
 
 **Transpozycja do tonacji gry (`keyTrack`).** Dźwięki oznaczone w manifeście `"keyTrack": true` dostają dodatkowy
-`detune` = transpozycja kontekstu z § 1.2 (S1 0, S2 +200, S3 +400; w stanie BIG_WIN zawsze 0). Silnik ustawia ją
-metodą `audio.setKeyCents(c)` wywoływaną przez maszynę stanów muzyki (§ 4.4).
+`detune` = transpozycja kontekstu z § 1.2 (lobby 0, S1 0, S2 +200, S3 +400; w stanie BIG_WIN zawsze 0). Plik może
+nadpisać wartość dla konkretnego kontekstu: `"keyTrack": { "s2": 100 }` (pliki na nutach D i A — wyjątek S2 z § 1.2).
+Kontekst ustawia maszyna stanów muzyki (§ 4.4) metodą `audio.setKeyContext('s2')`:
+
+```js
+const TONACJE = { lobby: 0, s1: 0, s2: 200, s3: 400, bigwin: 0 };
+#keyDetune(entry) {
+  if (!entry.keyTrack) return 0;
+  const wyjatek = typeof entry.keyTrack === 'object' ? entry.keyTrack[this.#keyContext] : undefined;
+  return wyjatek ?? TONACJE[this.#keyContext] ?? 0;                 // w centach, dodawane do detune głosu
+}
+```
 
 **Ważne:** w `AudioBufferSourceNode` zmiana wysokości to zmiana prędkości odtwarzania
 (prędkość = `playbackRate` × 2^(`detune`/1200)). +400 centów = prędkość ×1,26, więc plik trwa o 21% krócej, a
 **punkty synchronizacji** w pliku (np. uderzenie w `sfx_free_spins_start` w 1 000 ms) przesuwają się. Silnik przelicza je:
 `czas_rzeczywisty = syncPoint / prędkość` (1 000 ms przy +400 centach → 794 ms) i uwzględnia to przy planowaniu startu.
-Transpozycję ograniczamy do ±400 centów — powyżej barwa zaczyna brzmieć nienaturalnie („efekt wiewiórki”).
+Tak samo liczy się długość pliku: dźwięk, który ma się skończyć w danej chwili (`sfx_antycypacja_narastanie`
+kończy się na stopie bębna), startuje `długość / prędkość` przed nią.
+
+**Limit przesunięcia.** Łączny `detune` (transpozycja T + mikro-zmiana + wariant zdarzenia) ograniczamy do
+**±400 centów** — powyżej barwa dźwięków tonalnych z pogłosem i „ciałem” zaczyna brzmieć nienaturalnie („efekt
+wiewiórki”), a plik skraca się o ponad 20%. Gdy wariant zdarzenia i T razem przekroczyłyby limit, wariant oddajemy
+głośnością (np. kolejne scattery w S3, § 6.1). Świadome wyjątki, bo nie mają wyraźnej wysokości ani barwy, którą
+dałoby się „zepsuć”:
+
+| Dźwięk | Maks. przesunięcie | Dlaczego wolno |
+|---|---|---|
+| `sfx_linia` (kolejne linie, kaskady S3) | +700 c (prędkość ×1,5, plik 340 → 227 ms) | przemiatanie sinusa i szumu bez stałej nuty; krótszy plik pasuje do szybszego rytmu kolejnych linii |
+| `sfx_licznik_tik` (przyspieszanie liczenia) | prędkość do 1,6 (≈ +814 c) | to zamierzone „narastanie”: 15-milisekundowe szklane impulsy słychać jako przyspieszające i jaśniejące tykanie (klasyczny zabieg slotów), nie jako fałszywą nutę; startuje zawsze w tonacji (T) |
 
 ### 2.7. Planowanie w czasie i synchronizacja z animacją
 
@@ -532,13 +589,13 @@ przesunięcia, dźwięki linii scalone w jeden `sfx_linia` na całą wygraną.
 |---|---|---|
 | `unlock()` | odblokowanie w obsłudze gestu | tak |
 | `preload(ids)` / `preloadPack(name)` | pobranie i dekodowanie z wyprzedzeniem | `preload` tak |
-| `play(id, { volume, rate, detune, loop, bus, delay, fadeIn, pan, offset, when })` → uchwyt `{ stop(fadeMs), setRate(r), setGain(db, ms), playing }` | odtworzenie; `when` = czas kontekstu (planista), `offset` = start od środka pliku | częściowo (bez `pan`, `offset`, `when`, `setGain`) |
+| `play(id, { volume, rate, detune, loop, bus, delay, fadeIn, pan, offset, when })` → uchwyt `{ stop(fadeMs), setRate(r), setGain(db, ms), playing }` | odtworzenie; `when` = czas kontekstu (planista), `offset` = start od środka pliku (w sekundach pliku); `fadeMs` w milisekundach | częściowo (bez `pan`, `offset`, `when`, `setGain`) |
 | `playVariant(prefix, count, opts)` | wariant bez powtórzeń | tak (z powtórzeniami) |
 | `schedule(timeline, t0)` / `cancelSchedule()` | oś czasu rundy dla planisty (§ 2.7) | nie |
 | `setMusicState(state, opts)` | przejście maszyny stanów muzyki (§ 4.4) | nie (jest `playMusic`) |
 | `duck(name, db, { attack, hold, release })` / `unduck(name)` | ducking nazwany (§ 5.3) | nie |
 | `setMusicFilter(hz, ms)` | filtr muzyki (antycypacja, okna) | nie |
-| `setKeyCents(c)` | transpozycja `keyTrack` | nie |
+| `setKeyContext(kontekst)` — `'lobby'`, `'s1'`, `'s2'`, `'s3'` albo `'bigwin'` | transpozycja `keyTrack` z wyjątkami per plik (§ 2.6) | nie |
 | `postepLicznika(u)` | postęp liczenia wygranej 0…1, przekazywany co klatkę przez licznik (04 § 2.17) → prędkość pętli `sfx_licznik_tik` (§ 3.2) | nie |
 | `wibruj(id)` (moduł `ui/haptyka.js`) | wzorzec wibracji `H_*` (§ 10) | nie |
 | `setQuality(poziom)` — `'high'`, `'medium'` albo `'low'` | limit głosów, panorama | nie |
@@ -562,22 +619,22 @@ przesunięcia, dźwięki linii scalone w jeden `sfx_linia` na całą wygraną.
 | **warianty** | liczba plików (grupa wariantów losowanych bez powtórzeń) i mikro-zmiany; **T** = `keyTrack` (transpozycja do tonacji gry, § 2.6); `syncPoint` = punkt synchronizacji w pliku (§ 2.6, § 2.7) |
 | **jak powstaje** | przepis syntezy w skrócie; pełny kod — funkcja o nazwie ID w `tools/audio/dzwieki.py` (§ 8) |
 
-**Słowniczek technik syntezy** (wszystkie są zaimplementowane w `tools/audio/dsp.py`, § 8.3):
+**Słowniczek technik syntezy** (wszystkie są zaimplementowane w `tools/audio/dsp.py` i `tools/audio/instrumenty.py`, § 8.3):
 
 | Skrót w przepisie | Technika | Jak brzmi |
 |---|---|---|
 | **dzwon FM r (I a → b), τ** | synteza FM: sinus nośny o częstotliwości f modulowany fazowo sinusem o częstotliwości f·r; indeks modulacji I maleje od a do b; obwiednia wykładnicza o stałej czasowej τ | r = 1 lub 2: ciepły, harmoniczny dzwon („złoto”); r = 3,5: szklany, nieharmoniczny („kryształ”). Malejący indeks = jasny atak, łagodniejące wybrzmienie, jak w prawdziwym dzwonie |
 | **parcjały** (synteza modalna / addytywna) | suma sinusów o podanych stosunkach częstotliwości, każdy z własnym zanikiem | gong, moneta, szkło — przedmioty, które drgają wieloma niezależnymi „modami” |
-| **Karplus–Strong (KS)** | krótki bufor szumu w pętli opóźnienia z uśredniającym filtrem | szarpana struna (ud, kalimba, „pluck”) |
-| **szum → BP / LP / HP f (Q)** | szum biały, różowy (−3 dB/okt.) lub brązowy (−6 dB/okt.) przez filtr pasmowy / dolno- / górnoprzepustowy (filtr zmiennych stanu, SVF); „f1 → f2” = przestrajanie w czasie | świsty, „whoosh”, szelest, trzaski, narastania |
+| **Karplus–Strong (KS)** | krótki bufor szumu w pętli opóźnienia z uśredniającym filtrem; okres ma całkowitą liczbę próbek, więc dokładny strój daje przepróbkowanie wyniku (bez tego błąd sięga 10–15 c przy C6) | szarpana struna (ud, kalimba, „pluck”) |
+| **szum → BP / LP / HP f (Q)** | szum biały, różowy (−3 dB/okt.) lub brązowy (−6 dB/okt.) przez filtr pasmowy / dolno- / górnoprzepustowy: o stałej częstotliwości — biquad (RBJ) liczony przez FFT; „f1 → f2” = przestrajanie w czasie — filtr w STFT (`przemiataj`), dla krótkich dźwięków także SVF | świsty, „whoosh”, szelest, trzaski, narastania |
 | **sinus f1 → f2** | sinus z wykładniczym glissandem | stopa basowa, uderzenie, „laser”, puls |
 | **supersaw n (±c)** | n pił odstrojonych o ±c centów, rozłożonych w stereo | szeroki, jasny akord syntezatorowy (synthwave, fanfary) |
 | **piła / kwadrat (PWM)** | fale z ograniczonym pasmem (bez aliasingu, § 8.3) | „analogowe” brzmienia, bas, „dęte” syntezatory po filtrze |
 | **τ** | stała czasowa zaniku: po τ głośność spada do 37% (−8,7 dB), po 3τ do 5% | |
 | **odwrócony pogłos** | pogłos dźwięku odwrócony w czasie i postawiony przed nim | „zasysające” narastanie przed uderzeniem |
-| **pogłos t s, mix m%** | splot z syntetyczną odpowiedzią impulsową (szum z zanikiem do −60 dB w t s, dekorelacja L/P) | przestrzeń: sala, jaskinia, skarbiec |
-| **echo t ms, sprzężenie s%** | linia opóźniająca ze sprzężeniem | echo synthwave'owe, „ping-pong” w stereo |
-| **nasycenie tanh ×k** | miękkie obcinanie `tanh(k·x)/tanh(k)` | dodaje harmoniczne: bas słyszalny na telefonie, „brud” dętych |
+| **pogłos t s, mix m%** | splot z syntetyczną odpowiedzią impulsową: szum niezależny w L i P, podzielony na 8 pasm, każde gaśnie do −60 dB we własnym czasie (t dla średnicy, góra szybciej — jak prawdziwa sala), opcjonalnie wczesne odbicia i opóźnienie wstępne; ścieżka mokra przez HP 150 Hz | przestrzeń: sala, jaskinia, skarbiec |
+| **echo t ms, sprzężenie s%** | linia opóźniająca ze sprzężeniem, każde powtórzenie przyciemnione LP 5 kHz (jak echo taśmowe) | echo synthwave'owe, „ping-pong” w stereo |
+| **nasycenie tanh ×k** | miękkie obcinanie `tanh(k·x)/tanh(k)` (`dsp.nasycenie`) | dodaje harmoniczne: bas słyszalny na telefonie, „brud” dętych. **Uwaga:** symetryczne tanh daje tylko harmoniczne **nieparzyste** (dla 60 Hz: 180, 300, 420 Hz…); wersja **asymetryczna** `tanh(k·(x+a)) − tanh(k·a)` (parametr `asymetria`) dodaje też parzyste (120, 240 Hz…) — w przepisach „nasycenie asym.” |
 | **redukcja bitów b, fs Hz** | kwantyzacja do b bitów i próbkowanie z fs | retro, 8-bit (S1) |
 
 **Nuty używane w przepisach** (strój równomiernie temperowany, A4 = 440 Hz):
@@ -600,8 +657,8 @@ przesunięcia, dźwięki linii scalone w jeden `sfx_linia` na całą wygraną.
 | `ui_zamknij` | lustrzane, opadające „zamknięcie” | 240 ms | nie | ui | −12 | 3 | 1 plik; ±30 c | jak `ui_otworz`, odwrotnie: BP 4 000 → 900 Hz, nuty B5 → E5; pogłos 0,4 s |
 | `ui_blad` | dwa tępe, łagodne tony w dół — „nie tak”, bez agresji | 260 ms | nie | ui | −8 | 4 | 1 plik | kwadrat C♯4 (277,18 Hz) 90 ms, przerwa 30 ms, C4 110 ms; LP 1 400 Hz; + „puknięcie” sinus 120 Hz, τ 25 ms; sucho, bez pogłosu (dźwięk „blisko ucha”) |
 | `ui_przelacznik` | mechaniczno-szklane „tik-tak” przełącznika | 100 ms | nie | ui | −10 | 3 | 1 plik; włączenie +200 c, wyłączenie −200 c | dwa kliki w odstępie 45 ms (warstwy 1–2 z `ui_klik`), drugi o 3 półtony wyżej |
-| `ui_zaklad_gora` | stuk żetonów + wznoszący dzwoneczek | 130 ms | nie | ui | −9 | 3 | 1 plik; +100 c × poziom zakładu (indeks przeskalowany do 0–6) | dwa szumy 8 ms → BP 2,2 kHz i 3,1 kHz (Q 6) w odstępie 18 ms („klak” żetonów) + dzwonek FM 1:2 (I 0,8) G5 z glissando +50 c, τ 80 ms |
-| `ui_zaklad_dol` | stuk żetonów + opadający dzwoneczek | 130 ms | nie | ui | −10 | 3 | 1 plik; +100 c × poziom zakładu | jak wyżej, dzwonek E5 z glissando −50 c |
+| `ui_zaklad_gora` | stuk żetonów + wznoszący dzwoneczek | 130 ms | nie | ui | −9 | 3 | 1 plik; (k − 3) × 100 c, gdzie k = indeks poziomu zakładu przeskalowany do 0–6 (−300 … +300 c, w limicie ±400 c z § 2.6) | dwa szumy 8 ms → BP 2,2 kHz i 3,1 kHz (Q 6) w odstępie 18 ms („klak” żetonów) + dzwonek FM 1:2 (I 0,8) G5 z glissando +50 c, τ 80 ms |
+| `ui_zaklad_dol` | stuk żetonów + opadający dzwoneczek | 130 ms | nie | ui | −10 | 3 | 1 plik; (k − 3) × 100 c jak wyżej | jak wyżej, dzwonek E5 z glissando −50 c |
 
 **Dlaczego wysokość zależy od zakładu:** gracz „słyszy” poziom stawki, nie patrząc na liczbę — wyżej = więcej.
 To drobiazg, który odróżnia dopracowany produkt od szablonu.
@@ -614,13 +671,13 @@ To drobiazg, który odróżnia dopracowany produkt od szablonu.
 | `sfx_skrzynia_otwarcie` | szczęk zatrzasku, skrzypnięcie drewna, „łup” wieka i magiczne rozbłyśnięcie złota | 1 300 ms | nie | sfx | −4 | 3 | 1 plik, stereo | 0 ms: 2 kliki zatrzasku (szum → BP 2,8 kHz Q 8, 4 ms, odstęp 35 ms); 40–340 ms: skrzypienie — szum przez filtr grzebieniowy z opóźnieniem 4 → 7 ms (sprzężenie 0,85); 250 ms: „łup” — szum LP 600 Hz, τ 60 ms + sinus 90 Hz; 250–1 300 ms: połysk — szum BP 1 → 8 kHz (Q 3) + akord C-dur (6 odstrojonych pił) przez LP otwierany 500 → 6 000 Hz; pogłos 1,5 s, mix 22% |
 | `sfx_monety_fontanna` | ciągły deszcz monet: gęsty, błyszczący, szeroki w stereo | 2 000 ms | **tak** | sfx | −10 | 2 | 1 plik, stereo; w big win +2 dB na każdy poziom | ~45 uderzeń monet na sekundę (ziarna z modelu monety, jak `sfx_moneta_*`, f0 losowo 1,9–2,9 kHz, 60–180 ms), losowa panorama ±0,8 i głośność −12…0 dB; + szum HP 4 kHz −26 dB („szelest metalu”); bezszwowość: ziarna wystające poza koniec zawijamy na początek (§ 7.3) |
 | `sfx_moneta_1` | pojedyncza moneta: krótki metaliczny „ting” na nucie C7 | 220 ms | nie | sfx | −14 | 1 | grupa 5 plików bez powtórzeń; ±5 c; T | uderzenie: szum 1 ms HP 3 kHz; ciało: 5 parcjałów f0 × {1; 1,47; 2,09; 2,56; 3,39}, τ {180; 120; 90; 60; 40} ms, f0 = 1 900 Hz; warstwa tonalna: dzwonek FM 1:2 na **C7**, τ 140 ms, −6 dB |
-| `sfx_moneta_2` | jw., nuta D7 | 210 ms | nie | sfx | −14 | 1 | jw. | jw., f0 = 2 100 Hz, nuta **D7** |
+| `sfx_moneta_2` | jw., nuta D7 | 210 ms | nie | sfx | −14 | 1 | jw.; w S2 T = +100 c (D7 → E♭7, § 1.2) | jw., f0 = 2 100 Hz, nuta **D7** |
 | `sfx_moneta_3` | jw., nuta E7 | 200 ms | nie | sfx | −14 | 1 | jw. | jw., f0 = 2 300 Hz, nuta **E7** |
 | `sfx_moneta_4` | jw., nuta G7 | 190 ms | nie | sfx | −14 | 1 | jw. | jw., f0 = 2 500 Hz, nuta **G7** |
-| `sfx_moneta_5` | jw., nuta A7 | 180 ms | nie | sfx | −14 | 1 | jw. | jw., f0 = 2 700 Hz, nuta **A7** |
-| `sfx_licznik_tik` | szybkie, równe „tik-tik-tik” liczenia, naprzemiennie na dwóch wysokościach | 500 ms | **tak** | sfx | −16 | 2 | 1 plik; prędkość według postępu liczenia `u` = 0…1: 1,0 + 0,3·u, +0,15 na każdy poziom eskalacji, maks. 1,6 (`audio.postepLicznika(u)`, § 2.9); T | 8 tików co 62,5 ms (16 na sekundę): dzwonek FM 1:3,5 (I 1,5), 15 ms, naprzemiennie A6 i E7; + klik szumu 1 ms; bez pogłosu |
+| `sfx_moneta_5` | jw., nuta A7 | 180 ms | nie | sfx | −14 | 1 | jw.; w S2 T = +100 c (A7 → B♭7) | jw., f0 = 2 700 Hz, nuta **A7** |
+| `sfx_licznik_tik` | szybkie, równe „tik-tik-tik” liczenia, naprzemiennie na dwóch wysokościach | 500 ms | **tak** | sfx | −16 | 2 | 1 plik; prędkość według postępu liczenia `u` = 0…1: 1,0 + 0,3·u, +0,15 na każdy poziom eskalacji, maks. 1,6 (`audio.postepLicznika(u)`, § 2.9) — razem z tempem rośnie wysokość (zamierzony wyjątek od limitu ±400 c, § 2.6); T | 8 tików co 62,5 ms (16 na sekundę): dzwonek FM 1:3,5 (I 1,5), 15 ms, naprzemiennie G6 i C7 (tylko nuty C/E/G — jedna transpozycja pasuje też do S2, § 1.2); + klik szumu 1 ms; bez pogłosu |
 | `sfx_licznik_koniec` | domknięcie liczenia: nuta E5 i jasny złoty akord | 800 ms | nie | sfx | −8 | 3 | 1 plik; ±5 c; T | E5 (110 ms) → akord C6 + E6 + G6, dzwony FM 1:2 (I 3 → 0 w 400 ms), τ 320 ms; miękkie uderzenie sinus 80 Hz, τ 60 ms; iskry 6 kHz; pogłos 1,2 s, mix 20% |
-| `sfx_saldo_puls` | miękki, okrągły „blup” pulsu salda | 180 ms | nie | sfx | −16 | 2 | 1 plik; ±5 c; T | sinus E5 → A5 (glissando 40 ms), τ 110 ms, LP 3 kHz; + powietrze: szum HP 5 kHz −24 dB, 60 ms |
+| `sfx_saldo_puls` | miękki, okrągły „blup” pulsu salda | 180 ms | nie | sfx | −16 | 2 | 1 plik; ±5 c; T | sinus E5 → G5 (glissando 40 ms; nuty C/E/G — § 1.2), τ 110 ms, LP 3 kHz; + powietrze: szum HP 5 kHz −24 dB, 60 ms |
 | `sfx_bankrut` | zabawny, ale z klasą „smutny” motyw: przytłumione dęte w dół, pusta kieszeń, wirująca moneta | 2 000 ms | nie | sfx | −6 | 5 | 1 plik | 0–900 ms: „dęte” (piła → LP 900 Hz, wibrato 5 Hz ±15 c): G4–F♯4–F4 po 200 ms i E4 trzymane 500 ms z wibratem narastającym do ±30 c; 300 ms: „klap” pustej kieszeni (szum LP 1,2 kHz, 50 ms); 900–2 000 ms: moneta wirująca na stole — uderzenia modelu monety coraz gęściej (odstęp 120 → 8 ms) i coraz ciszej, aż się położy |
 | `sfx_przejscie_whoosh` | powietrzne „przelecenie” z lewej do prawej, z głębią | 650 ms | nie | sfx | −8 | 3 | 1 plik, stereo; ±100 c | szum różowy → BP 300 → 3 500 Hz (0–380 ms) → 1 000 Hz (do 650 ms), Q 1,5; panorama −0,7 → +0,7; sub: sinus 50 → 35 Hz, −8 dB; ogon pogłosu 0,8 s |
 
@@ -633,36 +690,37 @@ wychodzi **melodyjny deszcz**, który nigdy nie fałszuje, a z muzyką lobby (a-
 | ID | Opis brzmienia | Długość | Pętla? | Szyna | Poziom dB | Prio | Warianty | Jak powstaje |
 |---|---|---|---|---|---|---|---|---|
 | `sfx_spin_start` | dotykowe „wciśnięcie i zwolnienie bębnów”: klik, mechaniczne „klunk”, krótki wznoszący świst | 380 ms | nie | sfx | −8 | 4 | 1 plik; ±5 c; T | klik jak `ui_klik`; 15 ms: „klunk” — szum LP 400 Hz, 40 ms + sinus 140 → 90 Hz; 40–260 ms: świst — szum BP 600 → 2 400 Hz (Q 2); tonalny „blip” kwadrat C5, 30 ms, −12 dB |
-| `sfx_beben_petla_s1` | szybki „terkot” symboli retro-automatu na tle elektrycznego buczenia | 1 000 ms (2 miary przy 120 BPM) | **tak** | sfx | −16 | 2 | 1 plik | kliki 24/s (szum 4 ms → BP 2 kHz Q 3, co 8. głośniejszy o 3 dB — „obrót taśmy”); buczenie: piła 55 Hz → LP 250 Hz; neonowy „wir”: kwadrat 110 Hz z PWM 0,3 Hz → LP 800 Hz, tremolo 12 Hz; całość zredukowana do 12 bitów |
-| `sfx_beben_petla_s2` | ciężka kamienno-złota zapadka, dudnienie i szelest piasku | 1 200 ms (2 miary przy 100 BPM) | **tak** | sfx | −16 | 2 | 1 plik | kliki 20/s (szum 6 ms → BP 1,2 kHz Q 3 + rezonans korpusu 320 Hz, τ 15 ms); dudnienie: szum brązowy → LP 180 Hz; piasek: szum HP 5 kHz −26 dB z wolną modulacją 0,5 Hz |
+| `sfx_beben_petla_s1` | szybki „terkot” symboli retro-automatu na tle elektrycznego buczenia | 1 000 ms (2 miary przy 120 BPM) | **tak** | sfx | −16 | 2 | 1 plik | kliki 24/s (szum 4 ms → BP 2 kHz Q 3, co 8. głośniejszy o 3 dB — „obrót taśmy”); buczenie: piła 55 Hz → LP 250 Hz; neonowy „wir”: kwadrat 110 Hz z PWM 1 Hz → LP 800 Hz, tremolo 12 Hz (wszystkie modulacje: całkowita liczba cykli na 1 s pętli, § 7.3); całość zredukowana do 12 bitów |
+| `sfx_beben_petla_s2` | ciężka kamienno-złota zapadka, dudnienie i szelest piasku | 1 200 ms (2 miary przy 100 BPM) | **tak** | sfx | −16 | 2 | 1 plik | kliki 20/s (szum 6 ms → BP 1,2 kHz Q 3 + rezonans korpusu 320 Hz, τ 15 ms); dudnienie: szum brązowy → LP 180 Hz; piasek: szum HP 5 kHz −26 dB z wolną modulacją 0,833 Hz (1 cykl na 1,2 s pętli — przy 0,5 Hz szew byłby słyszalny jako skok, § 7.3) |
 | `sfx_beben_stop_1` | stop bębna: głębokie, miękkie „tunk”, krótki klak i nuta C5 | 280 ms | nie | sfx | −7 | 4 | grupa stopów (`maxVoices` 3); ±5 c; T; panorama według bębna | (a) sinus 110 → 55 Hz w 60 ms, τ 70 ms, nasycenie tanh ×2; (b) klak: szum 12 ms → BP 1,8 kHz (Q 2); (c) nuta **C5**: dzwonek FM 1:2 (I 1,5 → 0 w 80 ms), τ 120 ms, −10 dB |
-| `sfx_beben_stop_2` | jw., nuta D5 | 280 ms | nie | sfx | −7 | 4 | jw. | jw., (c) **D5** |
+| `sfx_beben_stop_2` | jw., nuta D5 | 280 ms | nie | sfx | −7 | 4 | jw.; w S2 T = +100 c (D5 → E♭5, § 1.2) | jw., (c) **D5** |
 | `sfx_beben_stop_3` | jw., nuta E5 | 280 ms | nie | sfx | −7 | 4 | jw. | jw., (c) **E5** |
 | `sfx_beben_stop_4` | jw., nuta G5 (tylko S2, S3) | 280 ms | nie | sfx | −7 | 4 | jw. | jw., (c) **G5** |
-| `sfx_beben_stop_5` | jw., nuta A5 (tylko S2, S3) | 280 ms | nie | sfx | −7 | 4 | jw. | jw., (c) **A5** |
+| `sfx_beben_stop_5` | jw., nuta A5 (tylko S2, S3) | 280 ms | nie | sfx | −7 | 4 | jw.; w S2 T = +100 c (A5 → B♭5) | jw., (c) **A5** |
 | `sfx_beben_stop_6` | jw., nuta C6 (tylko S3 — szósta kolumna) | 280 ms | nie | sfx | −7 | 4 | jw. | jw., (c) **C6** |
-| `sfx_antycypacja_narastanie` | narastające napięcie: wznoszący szum, drżące smyczki, coraz szybsze tremolo aż do uderzenia | 1 200 ms | nie | sfx | −6 | 4 | 1 plik, stereo; start od przesunięcia, gdy antycypacja trwa krócej (S1, S3, turbo) | szum → BP 400 → 6 000 Hz (Q 4, krzywa wykładnicza); klaster „smyczków” (6 pił E3–B3–E4, ±20 c → BP 1–3 kHz) z tremolo 8 → 16 Hz; ton Sheparda w górę (§ 4.3.8); głośność +12 dB w czasie pliku; **ostre ucięcie w 1 200 ms** — bez ogona, bo w tej chwili gra stop bębna |
-| `sfx_bicie_serca` | „lub-dub” serca, głębokie, słyszalne też na telefonie | 600 ms (100 uderzeń/min — ten sam puls co bicie serca scatterów w 04) | **tak** | sfx | −8 | 4 | 1 plik; bez zmiany prędkości (zgodność z obrazem); każdy kolejny antycypowany bęben +2 dB | „lub”: sinus 70 → 45 Hz w 80 ms, τ 90 ms; „dub” w 150 ms: sinus 60 → 42 Hz, −4 dB; LP 200 Hz; nasycenie tanh ×3 (harmoniczne 120–240 Hz) |
-| `sfx_scatter_1` | pierwszy scatter: magiczny kryształowy „ting” z krótkim zasysającym narastaniem | 900 ms | nie | sfx | −6 | 4 | 1 plik; ±5 c; T; panorama według bębna; `syncPoint` 80 ms | 0–80 ms: odwrócony pogłos szumu (start 80 ms przed lądowaniem); 80 ms: dzwon FM 1:3,5 (I 4 → 0,5) **C6**, τ 500 ms + oktawa C7 −8 dB; pogłos 1,6 s, mix 30% |
-| `sfx_scatter_2` | drugi scatter: wyżej, pełniej, z basem — „coś się zbliża” | 1 100 ms | nie | sfx | −5 | 4 | jw. | jak `sfx_scatter_1`, nuta **E6** + A5 pod spodem, + sub sinus 65 Hz, τ 300 ms; pogłos 2,0 s |
-| `sfx_scatter_3` | trzeci (i każdy kolejny) scatter: akord-fanfara z chórem i uderzeniem — bonus! | 1 700 ms | nie | sfx | −3 | 5 | 1 plik; n-ty scatter (n ≥ 4): dodatkowo +100 c × (n − 3), maks. +300 c; T; `syncPoint` 80 ms | narastanie 80 ms; akord dzwonów FM C6–E6–G6–C7 rozłożony co 30 ms; chór: 6 odstrojonych pił przez dwa filtry formantowe (BP 700 Hz i 1 100 Hz — samogłoska „a”), atak 200 ms; sub 55 → 35 Hz; pogłos 2,4 s |
+| `sfx_antycypacja_narastanie` | narastające napięcie: wznoszący szum, drżące smyczki, coraz szybsze tremolo aż do uderzenia | 1 200 ms (po T: S2 1 069 ms, S3 952 ms) | nie | sfx | −6 | 4 | 1 plik, stereo; T; `syncPoint` 1 200 ms = koniec pliku (kończy się na stopie bębna); start od przesunięcia, gdy antycypacja trwa krócej (S1, S3, turbo) | szum → BP 400 → 6 000 Hz (Q 4, krzywa wykładnicza); klaster „smyczków” (6 pił C3–G3–C4, po 2 na nutę ±20 c → BP 1–3 kHz) z tremolo 8 → 16 Hz — pusta kwinta po T daje C–G w S1 (a-moll), D–A w S2 (bordun hidżazu), E–B w S3; ton Sheparda w górę (§ 4.3.8); głośność +12 dB w czasie pliku; **ostre ucięcie na końcu pliku** — bez ogona, bo w tej chwili gra stop bębna |
+| `sfx_bicie_serca` | „lub-dub” serca, głębokie, słyszalne też na telefonie | 600 ms (100 uderzeń/min — ten sam puls co bicie serca scatterów w 04) | **tak** | sfx | −8 | 4 | 1 plik; bez zmiany prędkości (zgodność z obrazem); każdy kolejny antycypowany bęben +2 dB | „lub”: sinus 70 → 45 Hz w 80 ms, τ 90 ms; „dub” w 150 ms: sinus 60 → 42 Hz, −4 dB; LP 200 Hz, **potem** nasycenie asym. ×3 (harmoniczne 2.–6., ok. 90–420 Hz — LP przed nasyceniem, inaczej usunąłby harmoniczne słyszalne na telefonie) |
+| `sfx_scatter_1` | pierwszy scatter (S3: pierwszy i drugi): magiczny kryształowy „ting” z krótkim zasysającym narastaniem | 900 ms | nie | sfx | −6 | 4 | 1 plik; ±5 c; T; panorama według bębna; `syncPoint` 80 ms | 0–80 ms: odwrócony pogłos szumu (start 80 ms przed lądowaniem); 80 ms: dzwon FM 1:3,5 (I 4 → 0,5) **C6**, τ 500 ms + oktawa C7 −8 dB; pogłos 1,6 s, mix 30% |
+| `sfx_scatter_2` | scatter o jeden przed bonusem (S2: drugi, S3: trzeci — próg antycypacji): wyżej, pełniej, z basem — „coś się zbliża” | 1 100 ms | nie | sfx | −5 | 4 | jw. | jak `sfx_scatter_1`, nuta **E6** + G5 pod spodem (nuty C/E/G — § 1.2), + sub sinus 65 Hz, τ 300 ms; pogłos 2,0 s |
+| `sfx_scatter_3` | scatter, który daje bonus (S2: trzeci, S3: czwarty) i każdy kolejny: akord-fanfara z chórem i uderzeniem — bonus! | 1 700 ms | nie | sfx | −3 | 5 | 1 plik; T; `syncPoint` 80 ms; każdy scatter ponad próg: S2 +100 c (maks. +200 c — razem z T +200 to limit ±400 c), S3 +1 dB (maks. +3 dB — T już wynosi +400 c) | narastanie 80 ms; akord dzwonów FM C6–E6–G6–C7 rozłożony co 30 ms; chór: 6 odstrojonych pił przez dwa filtry formantowe (BP 700 Hz i 1 100 Hz — samogłoska „a”), atak 200 ms; sub 55 → 35 Hz; pogłos 2,4 s |
 | `sfx_wild` | złote „łuuup” narastania, uderzenie i błyszczący akord | 1 000 ms | nie | sfx | −5 | 4 | 1 plik; ±5 c; T; `syncPoint` 150 ms | 0–150 ms: narastanie (odwrócony pogłos szumu i akordu) — start 150 ms przed lądowaniem; 150 ms: uderzenie (sinus 80 → 40 Hz + trzask szumu 5 ms); akord dzwonów FM 1:2 (I 2,5) C5–G5–C6–E6, τ 700 ms; 10 iskier 4–8 kHz; pogłos 1,8 s, mix 25% |
 | `sfx_wygrana_small_1` | skromne arpeggio dzwonka z szarpnięciem: C5–E5–G5 (najniżej) | 700 ms | nie | sfx | −9 | 4 | wariant według mnożnika m (jak w 04): `_1` dla m < 1 — gra o 6 dB ciszej, bez linii i bez tiku (§ 1.4); ±5 c, ±1 dB; T | 3 nuty co 60 ms: dzwonek FM 1:1 (I 1,2 → 0 — ciepły, harmoniczny) + Karplus–Strong oktawę niżej −8 dB; τ 350 ms; pogłos 1,2 s, mix 18% |
 | `sfx_wygrana_small_2` | jw., wyżej: E5–G5–C6 | 750 ms | nie | sfx | −9 | 4 | `_2` dla 1 ≤ m < 2,5; ±5 c, ±1 dB; T | jw. |
 | `sfx_wygrana_small_3` | jw., najwyżej i najjaśniej: G5–C6–E6 | 800 ms | nie | sfx | −9 | 4 | `_3` dla 2,5 ≤ m < 5; ±5 c, ±1 dB; T | jw., dzwonek z indeksem I 1,6 (jaśniejszy) |
-| `sfx_wygrana_medium` | jaśniejsza fanfara: szybki bieg, akord supersaw, garść monet, uderzenie | 1 600 ms | nie | sfx | −6 | 4 | 1 plik; ±5 c; T | bieg C5–D5–E5–G5–C6 co 40 ms (dzwonki FM 1:2); 200 ms: akord C-dur (supersaw 7 ±12 c → LP 3 kHz, 300 ms) + sub 60 Hz; 250–700 ms: 6 monet (ziarna modelu monety); ogon dzwonów i pogłos 1,8 s |
+| `sfx_wygrana_medium` | jaśniejsza fanfara: szybki bieg, akord supersaw, garść monet, uderzenie | 1 600 ms | nie | sfx | −6 | 4 | 1 plik; ±5 c; T | bieg C5–E5–G5–C6–E6 co 40 ms (dzwonki FM 1:2; same nuty akordu, bez D i A — jedna transpozycja pasuje też do S2, § 1.2); 200 ms: akord C-dur (supersaw 7 ±12 c → LP 3 kHz, 300 ms) + sub 60 Hz; 250–700 ms: 6 monet (ziarna modelu monety z warstwą tonalną na C7 / E7 / G7); ogon dzwonów i pogłos 1,8 s |
 | `sfx_linia` | „laserowe” przeciągnięcie linii — czyste, krótkie „ziiing” | 340 ms | nie | sfx | −12 | 3 | 1 plik; +100 c × numer pokazywanej linii (maks. +700 c) | sinus 800 → 1 600 Hz (wykładniczo, 120 ms), τ 150 ms + szum BP 4 kHz (Q 6) o tej samej obwiedni, −8 dB; echo 90 ms, sprzężenie 25%, echo w panoramie ±0,4. Celowo prawie bez wysokości dźwięku — kolejne linie wznoszą się chromatycznie i nie gryzą się z muzyką |
 | `sfx_bigwin_wejscie` | wejście BIG WIN: zasysające narastanie, potężne uderzenie, akord „dętych” i motyw Cebuliona jako fanfara | 2 400 ms | nie | sfx | −3 | 5 | 1 plik, stereo; `syncPoint` 300 ms | 0–300 ms: odwrócony talerz (szum HP 3 kHz, obwiednia rosnąca wykładniczo); 300 ms: uderzenie — sinus 55 → 30 Hz (600 ms) + trzask + akord C3–G3–C4–E4–G4–C5 („dęte”: piła + kwadrat oktawę wyżej, LP 400 → 8 000 Hz w 80 ms); 500–1 300 ms: motyw G4–C5–E5–G5 po 120 ms (ostatnia nuta trzymana); do 2 400 ms: trzymany akord, migotanie (iskry 5–9 kHz), pogłos sali 2,5 s |
 | `sfx_poziom_w_gore` | eskalacja poziomu: świst w górę i uderzenie z akordem kwintowym, za każdym razem o ton wyżej | 1 400 ms | nie | sfx | −4 | 5 | 1 plik; MEGA 0 c, EPIC +200 c, ULTRA +400 c; `syncPoint` 250 ms | 0–250 ms: świst w górę (szum BP 500 → 6 000 Hz + sinus 200 → 1 600 Hz); 250 ms: uderzenie (sub 60 → 32 Hz, trzask 4 ms) + akord kwintowy F (F2–C3–F3–C4: piły z nasyceniem tanh ×4 + „dęte” oktawę wyżej), LP 600 → 7 000 Hz w 60 ms, trzymany 600 ms z zanikiem; iskry; pogłos 2 s |
 | `sfx_bigwin_koniec` | domknięcie sekwencji: kadencja G → C, kaskada monet, długi błyszczący ogon | 2 200 ms | nie | sfx | −4 | 5 | 1 plik, stereo | 0 ms: akord G-dur („dęte”, 150 ms) → 180 ms: Cadd9 („dęte” + dzwony FM + sub 55 Hz) trzymany 800 ms; 200–1 200 ms: kaskada 20 monet (panorama ±0,8); ogon: pogłos 2,5 s + migotanie |
 | `sfx_blysk` | jasne, krótkie „szyng” błysku światła | 420 ms | nie | sfx | −12 | 3 | 1 plik; ±100 c | 30 ms odwróconego narastania; szum HP 5 kHz, atak 2 ms, τ 120 ms; sinusy 6,0 / 8,2 / 11,0 kHz, τ 200 ms, −10 dB; pogłos 1 s, mix 30% |
-| `sfx_uderzenie_basu` | głębokie, kinowe uderzenie basu z „mięsem” słyszalnym na telefonie | 1 000 ms | nie | sfx | −5 | 4 | 1 plik; ±30 c | sinus 60 → 32 Hz (wykładniczo, 250 ms), τ 400 ms; nasycenie tanh ×3 (harmoniczne 120–240 Hz); klik 2 ms (szum LP 2 kHz) na początku; LP 4 kHz |
+| `sfx_uderzenie_basu` | głębokie, kinowe uderzenie basu z „mięsem” słyszalnym na telefonie | 1 000 ms | nie | sfx | −5 | 4 | 1 plik; ±30 c | sinus 60 → 32 Hz (wykładniczo, 250 ms), τ 400 ms; nasycenie asym. ×3 (harmoniczne 2.–8.: 120–480 Hz na starcie, potem niżej razem z glissandem — to je słychać na telefonie, § 1.4); klik 2 ms (szum LP 2 kHz) na początku; LP 4 kHz |
 | `sfx_free_spins_start` | wielkie przejście do darmowych spinów: narastanie 1 s, uderzenie, epicki akord z chórem | 3 200 ms | nie | sfx | −3 | 5 | 1 plik, stereo; T; `syncPoint` 1 000 ms | 0–1 000 ms: narastanie (szum BP 300 → 8 000 Hz, ton Sheparda w górę, werbel szesnastkami z crescendo od −30 dB); 1 000 ms: uderzenie (sub 50 → 28 Hz, 800 ms, trzask, talerz: szum HP 4 kHz, τ 900 ms) + akord C-dur („dęte” + chór „a” + dzwony C6–E6–G6) narastający 600 ms; do 3 200 ms: wybrzmienie, pogłos 3 s |
-| `sfx_free_spins_koniec` | zamknięcie bonusu: opadające rozwiązanie, „zamykający się portal” | 2 400 ms | nie | sfx | −5 | 5 | 1 plik, stereo; T | szum BP 6 000 → 400 Hz (whoosh w dół, 600 ms); akordy F-dur (300 ms) → C-dur (900 ms) — pad + dzwony; sub 55 Hz; pogłos 2 s |
+| `sfx_free_spins_koniec` | zamknięcie bonusu: opadające rozwiązanie, „zamykający się portal” | 2 400 ms | nie | sfx | −5 | 5 | 1 plik, stereo; T | szum BP 6 000 → 400 Hz (whoosh w dół, 600 ms); dzwony opadają po dźwiękach C-dur G6–E6–C6–G5 (co 120 ms) i lądują na trzymanym akordzie C-dur (pad + dzwony, 900 ms); sub 55 Hz; pogłos 2 s. **Bez kadencji F → C:** po T akord F staje się G-dur w S2 (B nie należy do hidżazu) i A-dur w S3 (A nie należy do E lidyjskiej) — „rozwiązanie” daje ruch w dół na jednym akordzie |
 
 **Dlaczego stopy bębnów rosną (C5 → D5 → E5 → G5 → A5 → C6):** kolejne stopy budują frazę wznoszącą — po
 ostatnim bębnie ucho „czeka na rozwiązanie”, którym jest dźwięk wygranej albo cisza. To klasyczny zabieg slotów;
-dzięki pentatonice każdy stop współbrzmi z muzyką gry (po transpozycji T).
+dzięki pentatonice każdy stop współbrzmi z muzyką gry (po transpozycji T; w S2 stopy grają D–E♭–F♯–A–B♭ według
+mapy z § 1.2).
 
 **Dlaczego `sfx_poziom_w_gore` to akord kwintowy (bez tercji):** po transpozycji o +200 i +400 centów akord F
 staje się G i A. Akordy kwintowe F5, G5, A5 (F+C, G+D, A+E) składają się wyłącznie z dźwięków C-dur, więc każda
@@ -674,7 +732,7 @@ ostatni akord zawierałby C♯ i fałszowałby.
 | ID | Opis brzmienia | Długość | Pętla? | Szyna | Poziom dB | Prio | Warianty | Jak powstaje |
 |---|---|---|---|---|---|---|---|---|
 | `sfx_s1_neon_bzyk` | brzęczenie i trzaski zapalającej się świetlówki, z 8-bitowym „zapem” mocy na starcie | 650 ms | nie | sfx | −9 | 3 | 1 plik; ±20 c | buczenie 100 Hz (piła → BP 1–3 kHz) z obwiednią migotania **zgodną z animacją neonu w 04 (E50)**: zapalenie 0–40 ms, przygaszenie do 60% w 200–260 ms, drugie przygaszenie w 450–500 ms, potem stałe świecenie (jedna tablica czasów w kodzie gry dla obrazu i dźwięku); 0–150 ms: „zap” — kwadrat 220 → 880 Hz, redukcja do 8 bitów i 11 025 Hz; 6 trzasków (impulsy 0,5 ms) w chwilach przygaszeń; ogon buczenia do 650 ms (τ 200 ms) |
-| `sfx_s1_jackpot` | NEON JACKPOT: narastające przepięcie neonu, uderzenie, 8-bitowy podbieg i synthwave'owa fanfara w arpeggiach | 4 000 ms | nie | sfx | −3 | 5 | 1 plik, stereo; `syncPoint` 300 ms | 0–300 ms: narastające przepięcie (szum z rezonansem 2 kHz przestrajanym w górę + buczenie 100 Hz); 300 ms: uderzenie (sub 45 Hz + trzask) — w tej chwili `blysk_fs` w 04; 350–850 ms: 8-bitowy podbieg (kwadrat 25%, C–E–G–C w górę przez 2 oktawy, po 31 ms); 850–3 850 ms: fanfara 120 BPM — akordy C → F → G → C po 750 ms, arpeggia szesnastkami (125 ms) supersaw + werbel z bramkowanym pogłosem na 2 i 4; do 4 000 ms: trzymany C-dur, migotanie |
+| `sfx_s1_jackpot` | NEON JACKPOT: narastające przepięcie neonu, uderzenie, 8-bitowy podbieg i synthwave'owa fanfara w arpeggiach | 4 000 ms | nie | sfx | −3 | 5 | 1 plik, stereo; `syncPoint` 300 ms | 0–300 ms: narastające przepięcie (szum z rezonansem 2 kHz przestrajanym w górę + buczenie 100 Hz); 300 ms: uderzenie (sub 45 Hz + trzask) — w tej chwili `blysk_fs` w 04; 350–850 ms: 8-bitowy podbieg (kwadrat 25%, po 31 ms: arpeggio C–E–G od C4 do C6 — 7 nut — i to samo oktawę wyżej, C5–C7; razem 14 nut = 434 ms, ostatnie C7 trzymane do 850 ms); 850–3 850 ms: fanfara 120 BPM — akordy C → F → G → C po 750 ms, arpeggia szesnastkami (125 ms) supersaw + werbel z bramkowanym pogłosem na 2 i 4; do 4 000 ms: trzymany C-dur, migotanie |
 
 ### 3.5. S2 „Złoty Faraon” (2 dźwięki)
 
@@ -695,7 +753,7 @@ Dźwięki S3 komponujemy od razu w E lidyjskiej, bez transpozycji T.
 | `sfx_s3_pekniecie_2` | jw., inny układ rezonansów | 550 ms | nie | sfx | −10 | 3 | jw. | jw., 14 odłamków, inne ziarno losowania |
 | `sfx_s3_pekniecie_3` | jw., ciemniejszy, „grubszy” kryształ | 500 ms | nie | sfx | −10 | 3 | jw. | jw., parcjały 2–6 kHz, 12 odłamków |
 | `sfx_s3_pekniecie_4` | jw., najjaśniejszy, „cienkie szkło” | 650 ms | nie | sfx | −10 | 3 | jw. | jw., parcjały 4–10 kHz, 20 odłamków |
-| `sfx_s3_opad` | lekki, powietrzny świst w dół i ciche „plink” układających się klejnotów | 750 ms | nie | sfx | −12 | 3 | 1 plik; ±5 c | szum BP 3 000 → 800 Hz (0–400 ms); 400–750 ms: 6 „plinków” (dzwonek FM 1:3,5, 25 ms) na nutach E6–F♯6–G♯6–B6–C♯7 (1 318,5 / 1 480,0 / 1 661,2 / 1 975,5 / 2 217,5 Hz) |
+| `sfx_s3_opad` | lekki, powietrzny świst w dół i ciche „plink” układających się klejnotów | 750 ms | nie | sfx | −12 | 3 | 1 plik; ±5 c | szum BP 3 000 → 800 Hz (0–400 ms); 400–750 ms: 6 „plinków” (dzwonek FM 1:3,5, 25 ms) na nutach E6–F♯6–G♯6–B6–C♯7–E7 (1 318,5 / 1 480,0 / 1 661,2 / 1 975,5 / 2 217,5 / 2 637,0 Hz) |
 | `sfx_s3_mnoznik` | lądowanie kuli mnożnika: głęboki kryształowy dzwon z pulsującym „mmm” energii | 1 100 ms | nie | sfx | −7 | 4 | 1 plik; wysokość według wartości: ×2–×5 0 c, ×10–×25 +200 c, ×50–×100 +400 c i dodatkowo `sfx_blysk` (progi jak kolory kuli w 04) | dzwon FM 1:3,5 (I 5 → 0,8) E4 + E5, τ 800 ms; „mmm”: sinus 82,4 Hz (E2) z tremolo 6 Hz, atak 60 ms, τ 600 ms; szklany klik na początku; pogłos jaskini 3 s, mix 30% |
 | `sfx_s3_mnoznik_zbior` | kule lecą do licznika (świsty z wielu stron), łańcuch rozbłysków, potężne „zasilenie” mnożnika | 1 800 ms | nie | sfx | −4 | 5 | 1 plik, stereo; `syncPoint` 900 ms | 0–600 ms: 3 świsty (szum BP 1 → 5 kHz), panorama ±0,7 → 0; 600–900 ms: arpeggio E–G♯–B–D♯–F♯ (dzwony FM, po 60 ms); 900 ms: uderzenie (sub 41 → 30 Hz + trzask kryształu) + akord E–G♯–B–A♯ (dzwony + pad); pogłos 3 s |
 
@@ -725,13 +783,16 @@ a pozycja w stereo i tak zależy od miejsca zdarzenia na ekranie (bęben, kolumn
    przez kolejne powtórzenia, a kwantyzacja przejść (§ 4.6) działa bez liczenia reszty z dzielenia.
 2. **Ostatni takt prowadzi do pierwszego** (zwykle dominanta → tonika). Pętla nie ma „końca” — słuchacz nie
    zauważa szwu, bo harmonia go nie akcentuje.
-3. **Bez wyciszeń i bez ogona na końcu pliku.** Pogłos z końcówki pętli jest „zawijany” na jej początek (render
-   dwóch przebiegów i wycięcie środkowego, § 7.3), więc pierwszy takt brzmi tak samo za pierwszym i za setnym razem.
+3. **Bez wyciszeń i bez ogona na końcu pliku.** Pogłos z końcówki pętli jest „zawijany” na jej początek (nuty
+   wystające poza koniec dodajemy na początek, a pogłos i filtry liczymy splotem kołowym — § 7.3), więc pierwszy
+   takt brzmi tak samo za pierwszym i za setnym razem. Wyjątek: przy pierwszym starcie utworu nie ma „poprzedniego
+   przebiegu”, więc na początku słychać ogon pogłosu ostatniego taktu — przy wejściu 1 200–1 500 ms jest niesłyszalny.
 4. **Pary gra / free spins mają to samo tempo, tonację i siatkę akordów** (S2: 100 BPM, D hidżaz, 16 taktów;
    S3: 90 BPM, E lidyjska, 12 taktów). Różnią się aranżacją. Dlatego przejście FS → gra może nastąpić w takcie,
    z utworem gry wchodzącym w tym samym miejscu siatki (to tzw. pionowy remiks — technika z gier konsolowych).
 5. **Głośność:** każdy utwór znormalizowany do **−14 LUFS** (zintegrowana), szczyt prawdziwy ≤ −1 dBTP. W miksie
-   szyna `music` ma domyślnie 0,45 (≈ −7 dB), więc muzyka siedzi pod efektami (§ 5).
+   szyna `music` ma domyślnie 0,45 (≈ −7 dB), więc muzyka siedzi pod efektami (§ 5). Wyjątki w manifeście:
+   `mus_bigwin` `gainDb` **+4** (gra zawsze pod duckingiem −6 dB, § 4.3.7) i `mus_napiecie` −6 (§ 4.3.8).
 6. **Miejsce dla efektów:** w każdym utworze korektor wycina −3 dB w paśmie 2,5–4 kHz (filtr szczytowy, Q 1),
    filtr górnoprzepustowy 30 Hz; bez talerzy crash co takt (najwyżej co 8 taktów, cicho) — głośne akcenty muzyki
    myliłyby się z efektami gry.
@@ -831,7 +892,7 @@ Szew: D → D na bordunie, z ozdobnikiem E♭ → D w „udzie” na ostatniej m
 
 | Instrument | Technika | Rola | Poziom względny |
 |---|---|---|---|
-| bordun smyczków | 4 piły D2 A2 D3 A3, ±10 c → LP 1 500 Hz, tremolo 4 Hz (głębokość 10%) | tło przez cały utwór | −12 dB |
+| bordun smyczków | 4 piły D2 A2 D3 A3, ±10 c → LP 1 500 Hz, tremolo 5 Hz = ósemkowe triole przy 100 BPM (głębokość 10%; 192 cykle na pętlę — przy 4 Hz byłoby 153,6, czyli skok fazy na szwie) | tło przez cały utwór | −12 dB |
 | bęben ramowy / darbuka | „dum”: sinus 95 → 60 Hz, τ 150 ms + szum LP 300 Hz; „tek”: szum BP 3 kHz (Q 3), τ 30 ms + sinus 900 Hz, τ 10 ms; „ka”: tek −6 dB, ciemniejszy | rytm **maqsum** na ósemkach: D T _ T D _ T _ | −3 dB |
 | taiko | sinus 70 → 38 Hz, τ 300 ms + szum LP 500 Hz | „raz” taktów 1, 5, 9, 13 | −2 dB |
 | „ud” | Karplus–Strong z jasnym atakiem; na początku nuty wysokość −30 c → 0 w 40 ms (szarpnięcie) | frazy 2-taktowe w taktach 1–8, odpowiedzi w 9–16 | −6 dB |
@@ -874,7 +935,7 @@ Szew: B → Emaj9 (dominanta → tonika). Akord F♯ nad basem E to „podpis”
 | kryształowe dzwonki | dzwon FM 1:3,5 (I 3 → 0,6), τ 900 ms, panorama naprzemienna ±0,4 | ósemkowe arpeggio akordu (oktawy 5–6) | −10 dB |
 | celesta | dzwon FM 1:1 (I 2 → 0), τ 600 ms + parcjał ×4 −18 dB | melodia w taktach 5–12 (z A♯ jako „magiczną” nutą) | −6 dB |
 | kalimba | Karplus–Strong z krótkim buforem + sinus korpusu, τ 400 ms | 2-taktowe ostinato | −9 dB |
-| pad | 6 sinusów + 2 piły (−18 dB), ±6 c → LP 1 800 Hz, atak 1,2 s, chorus 0,2 Hz | całe takty | −11 dB |
+| pad | 6 sinusów + 2 piły (−18 dB), ±6 c → LP 1 800 Hz, atak 1,2 s, chorus 0,1875 Hz (okres = 2 takty, 6 cykli na pętlę) | całe takty | −11 dB |
 | sub bas | sinus | całe nuty prymy | −9 dB |
 | stopa | sinus 55 → 40 Hz, τ 220 ms | „raz” każdego taktu („bicie serca jaskini”) | −8 dB |
 | szklane tiki | dzwon FM 1:3,5, 10 ms, 7–9 kHz | ósemki | −24 dB |
@@ -890,7 +951,7 @@ Pogłos: jaskinia 3,5 s, opóźnienie wstępne 40 ms, mix 30%.
 |---|---|---|---|
 | bas pulsujący | piła → LP 600 Hz z obwiednią filtra | ósemki na prymie | −4 dB |
 | dzwonki | jak w `mus_s3` | szesnastkowe arpeggio przez 2 oktawy | −9 dB |
-| chór zorzy | piły przez formanty przechodzące z „a” (700 / 1 100 Hz) w „o” (450 / 800 Hz) w ciągu 4 taktów i z powrotem | całe takty | −8 dB |
+| chór zorzy | piły przez formanty przechodzące z „a” (700 / 1 100 Hz) w „o” (450 / 800 Hz) w ciągu 6 taktów i z powrotem (cykl 12 taktów = dokładnie 1 na pętlę; przy 4 + 4 taktach pętla kończyłaby się na „o”, a zaczynała na „a”) | całe takty | −8 dB |
 | stopa | jak w `mus_s3`, miękka | każda ćwierćnuta | −5 dB |
 | narastania | szum + ton Sheparda, 1 miara | ostatnia miara taktów 4, 8 i 12 | −12 dB |
 | migotanie | iskry 6–10 kHz | losowo ~4 na sekundę | −22 dB |
@@ -907,7 +968,9 @@ Pogłos: 4,0 s, mix 32%.
 | 1–8 | C | G/B | Am | F | C/G | F | Dm7 | G7 |
 
 Szew: G7 → C. Muzyka gra w sekwencji z duckingiem −6 dB (§ 5.3) — dlatego miks jest „zwarty” i jasny w średnicy,
-żeby przebijał się spod efektów, a energię niosą efekty na szynie `sfx`.
+żeby przebijał się spod efektów, a w manifeście ma `gainDb` **+4 dB**. **Dlaczego +4:** bez tego utwór świętowania
+grałby o 6 dB ciszej niż zwykła muzyka gry (≈ −27,8 LUFS) i brzmiałby „chudo” akurat w najważniejszym momencie;
+z +4 dB jest tylko 2 dB pod muzyką gry, a uderzenia, liczenie i fontanna i tak wychodzą na wierzch (§ 5.1).
 
 | Instrument | Technika | Rola | Poziom względny |
 |---|---|---|---|
@@ -932,7 +995,7 @@ ani określonej tonacji, a dają wrażenie **nieustannego wznoszenia** — ideal
 
 | Warstwa | Technika | Poziom względny |
 |---|---|---|
-| ton Sheparda–Risseta | 9 sinusów w odstępach oktawy; każdy wznosi się o oktawę w 8 s: f_i(t) = 27,5 Hz × 2^(i + t/8), i = 0…8; amplituda — okno Gaussa w skali logarytmicznej (środek 440 Hz, σ = 1,2 oktawy), więc najniższy i najwyższy sinus mają poziom ≈ −48 dB i są niesłyszalne. Po 8 s zestaw częstotliwości jest identyczny jak na starcie → **pętla idealna z definicji** (fazy dobrane jak w § 8.4) | 0 dB |
+| ton Sheparda–Risseta | 9 sinusów w odstępach oktawy; każdy wznosi się o oktawę w 8 s: f_i(t) = 27,5 Hz × 2^(i + t/8), i = 0…8; amplituda — okno Gaussa w skali logarytmicznej (środek 440 Hz, σ = 1,2 oktawy), więc na starcie najniższy i najwyższy sinus mają poziom ≈ −48 dB i są niesłyszalne. Po 8 s każdy sinus i stoi tam, gdzie na starcie stał sinus i+1 (różnią się tylko składowe na skrajach, ≤ −48 dB) → **pętla praktycznie idealna z definicji** (fazy dobrane jak w § 8.4; `instrumenty.ton_sheparda(..., petla=True)`) | 0 dB |
 | tremolo smyczków | szum różowy → BP 1–3 kHz (Q 2), amplituda modulowana 12 Hz (96 cykli na pętlę), głębokość 60% | −10 dB |
 | dudnienie | szum brązowy → LP 80 Hz, pulsowanie 0,25 Hz (2 cykle na pętlę) | −6 dB |
 
@@ -956,6 +1019,7 @@ stateDiagram-v2
   GRA : mus_s1 / mus_s2 / mus_s3
   NAPIECIE : muzyka gry przez filtr 1200 Hz + mus_napiecie
   FS : mus_s2_fs / mus_s3_fs (S1 nie ma FS)
+  NAPIECIE_FS : muzyka FS przez filtr 1200 Hz + mus_napiecie
   BIG_WIN : mus_bigwin, ducking -6 dB
   PODSUMOWANIE : muzyka FS -6 dB
   CISZA --> LOBBY : zalogowanie lub gest, wejście 1200-1500 ms
@@ -969,8 +1033,12 @@ stateDiagram-v2
   GRA --> BIG_WIN : E30, start na uderzeniu
   NAPIECIE --> BIG_WIN : E30
   FS --> BIG_WIN : E30 w free spins
+  FS --> NAPIECIE_FS : E27 w free spins (szansa na retrigger)
+  NAPIECIE_FS --> FS : brak retriggera albo E61 (bez zmiany utworu)
+  NAPIECIE_FS --> BIG_WIN : E30
   BIG_WIN --> GRA : E32, powrót od zapamiętanego taktu
   BIG_WIN --> FS : E32, gdy big win był w free spins
+  BIG_WIN --> PODSUMOWANIE : E32, gdy big win był sumą free spins (E37)
   FS --> PODSUMOWANIE : E37
   PODSUMOWANIE --> GRA : zamknięcie panelu, przenikanie 2000 ms w takcie
   GRA --> [*] : E12 do lobby, wyciszenie 220 ms
@@ -986,12 +1054,13 @@ stateDiagram-v2
 | 4 | CISZA → GRA | E21 intro gry (po odblokowaniu lub „Graj”) | utwór gry od `loopStart`, wejście; S2: start 300 ms po uderzeniu gongu | 1 500 ms | brak | S1: `sfx_s1_neon_bzyk`; S2: `sfx_s2_gong`; S3: `sfx_s3_opad` |
 | 5 | GRA → NAPIECIE | E27 antycypacja | `mus_napiecie` od `loopStart`, wejście; filtr muzyki 20 000 → 1 200 Hz (rampa wykładnicza); ducking „napięcie” −4 dB | 400 ms | **brak** — napięcie musi ruszyć razem z bębnem | `sfx_antycypacja_narastanie`, `sfx_bicie_serca` |
 | 6 | NAPIECIE → GRA | ostatni antycypowany bęben stanął bez bonusu | warstwa wyciszona; filtr 1 200 → 20 000 Hz; ducking zdjęty | 250 ms (warstwa), 600 ms (filtr) | brak | — |
+| 6a | FS ⇄ NAPIECIE_FS | E27 w darmowych spinach (S2: 2 scattery — szansa na retrigger) | jak przejścia 5 i 6, tylko na utworze FS; retrigger (E61) wraca do FS bez zmiany utworu (gong i `sfx_scatter_3` niosą moment) | jak 5 / 6 | brak | jak 5; przy E61 — § 6.1 |
 | 7 | GRA / NAPIECIE → FS | E35 start free spins | muzyka gry wyciszana od chwili 0 przez 800 ms; `mus_napiecie` ucięta w 100 ms w chwili uderzenia; utwór FS startuje od `loopStart` **dokładnie w chwili uderzenia stingera** (`syncPoint` 1 000 ms, po transpozycji 891 ms w S2 i 794 ms w S3 — § 2.6) | 800 ms | uderzenie stingera = „raz” nowego utworu | `sfx_free_spins_start` (+ na uderzeniu: `sfx_blysk`, S2: `sfx_s2_gong`, S3: `sfx_uderzenie_basu`) |
 | 8 | GRA / NAPIECIE / FS → BIG_WIN | E30 wygrana ≥ 15× | zapamiętanie pozycji bieżącego utworu; utwór wyciszany 400 ms; `mus_bigwin` od `loopStart` w chwili uderzenia (`syncPoint` 300 ms); ducking „big win” −6 dB | 400 ms | **brak** — nagroda ma być natychmiast | `sfx_bigwin_wejscie`; S1 jackpot (E51): `sfx_s1_jackpot`, `mus_bigwin` startuje w 1 820 ms (uderzenie banera BIG) |
 | 9 | BIG_WIN → GRA lub FS | E32 koniec lub pominięcie sekwencji | `mus_bigwin` wyciszana od najbliższej miary; utwór gry / FS wznawiany **od początku taktu, w którym go przerwano**, wejście startuje 800 ms po E32 | 600 ms (wyjście), 1 200 ms (wejście) | miara `mus_bigwin` (≤ 469 ms) | `sfx_bigwin_koniec` |
 | 10 | FS → PODSUMOWANIE | E37 | ducking „podsumowanie” −6 dB na muzyce FS | 300 ms | brak | `sfx_free_spins_koniec` |
 | 11 | PODSUMOWANIE → GRA | zamknięcie panelu podsumowania | przenikanie o stałej mocy FS → gra; utwór gry startuje **w tej samej pozycji siatki** co FS (to samo tempo i siatka akordów) | 2 000 ms | najbliższa kreska taktowa FS (≤ 2,4 s w S2, ≤ 2,67 s w S3) | — |
-| 12 | GRA → wyjście | E12 powrót do lobby | wyciszenie | 220 ms (jak w `gra.js`) | brak | `sfx_przejscie_whoosh` |
+| 12 | GRA → wyjście | E12 powrót do lobby | wyciszenie | 220 ms (tyle `gra.js` czeka ze zmianą strony) | brak | `sfx_przejscie_whoosh` |
 | 13 | dowolny → CISZA | wyciszenie przez gracza / ukrycie karty | master → 0 w 120 ms / `suspend()`; stan maszyny zostaje zapamiętany i po włączeniu dźwięku muzyka wraca do stanu | 120 ms | — | — |
 
 **Wznowienie od zapamiętanego taktu** (przejście 9): pozycja w pętli = `(t_przerwania − startedAt) mod długość_pętli`;
@@ -1034,6 +1103,11 @@ gainIn.gain.setValueCurveAtTime(fadeIn, t, dur);
 **Dlaczego stała moc, a nie liniowo:** przy liniowym przenikaniu dwóch niezależnych sygnałów w połowie przejścia
 łączna moc spada o 3 dB — słychać „dziurę”. Krzywe sin/cos utrzymują stałą sumę mocy (sin² + cos² = 1).
 
+**Pułapka:** krzywa zaczyna się od swojej pierwszej wartości (`fadeOut[0]` = 1). Jeśli utwór wychodzący grał w tej
+chwili ciszej (np. był w trakcie wejścia), wzmocnienie skoczy do 1 i słychać trzask. Dlatego krzywą wyjścia
+mnożymy przez bieżące wzmocnienie (`gainOut.gain.value` odczytane tuż przed planowaniem), a planowanie robimy
+z wyprzedzeniem `minLead`, żeby `t` nie wypadło w przeszłości.
+
 ---
 
 ## 5. Miks
@@ -1045,11 +1119,11 @@ Poziom każdego dźwięku w głośniku to suma (w dB) kolejnych stopni. Ustalamy
 | Stopień | Co ustala | Wartość |
 |---|---|---|
 | 1. normalizacja pliku | pipeline (§ 7.4) | jednorazowe: szczyt −1 dBTP; pętle efektów: −18 LUFS; muzyka: −14 LUFS |
-| 2. `gainDb` | manifest (tabele § 3) | −3 … −16 dB (muzyka 0 dB, `mus_napiecie` −6 dB) |
+| 2. `gainDb` | manifest (tabele § 3) | −3 … −16 dB (muzyka 0 dB, `mus_bigwin` +4 dB, `mus_napiecie` −6 dB) |
 | 3. kontekst | kod gry: `volume` w wywołaniu | np. autoplay −6 dB dla `sfx_spin_start` |
-| 4. szyna | suwak gracza (§ 9) | `ui` 0,6 (−4,4 dB), `sfx` 0,85 (−1,4 dB), `music` 0,45 (−6,9 dB) |
-| 5. ducking i filtr (tylko muzyka) | maszyna stanów, zdarzenia | 0 … −10 dB |
-| 6. kompresor efektów (tylko `sfx`) | § 5.4 | zwykle 0 dB, w gęstych momentach do −4 dB |
+| 4. kompresor efektów (tylko `sfx`) | § 5.4 | pojedyncze efekty ≈ 0 dB, najgłośniejsze i nałożenia 1–4 dB |
+| 5. szyna | suwak gracza (§ 9); dla `sfx` za kompresorem | `ui` 0,6 (−4,4 dB), `sfx` 0,85 (−1,4 dB), `music` 0,45 (−6,9 dB) |
+| 6. ducking i filtr (tylko muzyka) | maszyna stanów, zdarzenia | 0 … −10 dB |
 | 7. limiter | § 5.4 | zwykle 0 dB (bezpiecznik) |
 | 8. master | suwak główny | 0,9 (−0,9 dB) |
 
@@ -1061,10 +1135,11 @@ Przykłady przy ustawieniach domyślnych:
 | `sfx_bigwin_wejscie` | −1 dBTP − 3 − 1,4 − 0,9 | szczyt ≈ −6,3 dBFS |
 | `ui_klik` | −1 dBTP − 8 − 4,4 − 0,9 | szczyt ≈ −14,3 dBFS |
 | `mus_s2` (sama muzyka) | −14 LUFS + 0 − 6,9 − 0,9 | ≈ −21,8 LUFS |
-| `mus_bigwin` w sekwencji | −14 LUFS − 6,9 − 6 (ducking) − 0,9 | ≈ −27,8 LUFS — pod efektami, które niosą energię |
+| `mus_bigwin` w sekwencji | −14 LUFS + 4 (`gainDb`) − 6,9 − 6 (ducking) − 0,9 | ≈ −23,8 LUFS — 2 dB pod muzyką gry, pod uderzeniami i liczeniem |
 
 **Wniosek:** muzyka jest „dywanem” (−22 LUFS), a efekty wybijają się 8–15 dB ponad nią — tak jak w topowych slotach,
-gdzie informacja (stop, wygrana) jest zawsze czytelna.
+gdzie informacja (stop, wygrana) jest zawsze czytelna. (Szczyt w dBFS i głośność w LUFS to różne miary — porównanie
+jest orientacyjne; właściwy pomiar to nagranie sesji, § 5.7.)
 
 ### 5.2. Szyny
 
@@ -1072,7 +1147,7 @@ gdzie informacja (stop, wygrana) jest zawsze czytelna.
 |---|---|---|---|---|
 | master | 0,9 | −0,9 | wszystko, za limiterem | wyciszenie = rampa do 0 w 120 ms (jest w v1) |
 | `ui` | 0,6 | −4,4 | 8 dźwięków `ui_*` | w oknie ustawień sterowana suwakiem „Efekty” (`ui` = 0,7 × `sfx`, § 9) |
-| `sfx` | 0,85 | −1,4 | 51 efektów `sfx_*` | przez kompresor efektów |
+| `sfx` | 0,85 | −1,4 | 51 efektów `sfx_*` | suma efektów → kompresor → suwak (węzeł korekty, § 2.2) |
 | `music` | 0,45 | −6,9 | 8 pętli `mus_*` | przez ducking i filtr muzyki |
 
 ### 5.3. Ducking (ściszanie muzyki pod efektami)
@@ -1080,7 +1155,7 @@ gdzie informacja (stop, wygrana) jest zawsze czytelna.
 | Nazwa | Wyzwalacz | Głębokość | Atak | Trzymanie | Zwolnienie |
 |---|---|---|---|---|---|
 | `wygrana` | E28, E29 | **−3 dB** | 40 ms | czas dźwięku wygranej + liczenie | 500 ms |
-| `bigwin` | E30 → E32, także bonus E07 / E10 | **−6 dB** | 120 ms | cała sekwencja | 800 ms |
+| `bigwin` | E30 → E32, także bonus E07 / E10 | **−6 dB** (`mus_bigwin` ma za to `gainDb` +4, § 4.3.7) | 120 ms | cała sekwencja | 800 ms |
 | `napiecie` | E27 | −4 dB (+ filtr 1 200 Hz) | 400 ms | do rozstrzygnięcia | 600 ms |
 | `stinger` | E35, E51, E61 | −6 dB | 80 ms | do uderzenia stingera (dalej przejście stanu) | 400 ms |
 | `podsumowanie` | E37 | −6 dB | 300 ms | panel otwarty | 600 ms |
@@ -1118,18 +1193,25 @@ jest dokładniejsza (zaczyna się razem z efektem, a nie po wykryciu jego głoś
 
 | Parametr | Kompresor efektów (szyna `sfx`) | Limiter (suma) |
 |---|---|---|
-| `threshold` | −14 dB | −3 dB |
+| `threshold` | −8 dB | −3 dB |
 | `knee` | 6 dB | 0 dB |
 | `ratio` | 2,5 | 20 (maksimum w Web Audio) |
 | `attack` | 0,005 s | 0,001 s |
 | `release` | 0,15 s | 0,1 s |
-| korekta za węzłem | −5 dB | −1,7 dB |
+| korekta za węzłem | −2,9 dB (× suwak `sfx`) | −1,7 dB |
+
+**Dlaczego próg −8 dB:** na wejściu kompresora (przed suwakiem) szczyt pojedynczego efektu to −1 dBTP + `gainDb`,
+czyli od −4 dBFS (`gainDb` −3) do −17 dBFS. Przy progu −8 dB i miękkim kolanie (−11 … −5 dB) typowe efekty (stopy,
+linie, UI gry) przechodzą praktycznie bez kompresji, najgłośniejsze stingery dostają 1–2 dB, a nałożenia (fontanna +
+liczenie + eskalacja + monety) 2–4 dB — tak jak zakłada § 5.1. Przy progu −14 dB kompresor ściskałby niemal każdy
+efekt i spłaszczał różnice poziomów z tabel § 3. Suwak `sfx` stoi **za** kompresorem, więc zachowanie kompresora
+nie zależy od tego, jak głośno gracz ustawił efekty.
 
 **Uwaga: `DynamicsCompressorNode` sam dodaje wzmocnienie wyrównawcze (makeup gain).** Algorytm ze specyfikacji
 Web Audio liczy, o ile krzywa ścisza sygnał o poziomie 0 dBFS, i podnosi wyjście o 0,6 tej wartości (w dB).
-Kompresor efektów ścisza 0 dBFS do ≈ −8,4 dB (−14 + 14/2,5), więc dodaje ≈ +5 dB; limiter ścisza 0 dBFS do −2,85 dB,
-więc dodaje ≈ +1,7 dB. Bez korekty kompresor **pogłaśniałby** ciche efekty o 5 dB. Dlatego za każdym węzłem stoi
-`GainNode` z korektą. Wartości weryfikujemy pomiarem w trybie `?audioDebug=1`: sinus 1 kHz o poziomie −30 dBFS
+Kompresor efektów ścisza 0 dBFS do ≈ −4,8 dB (−8 + 8/2,5), więc dodaje ≈ +2,9 dB; limiter ścisza 0 dBFS do −2,85 dB,
+więc dodaje ≈ +1,7 dB. Bez korekty kompresor **pogłaśniałby** ciche efekty o prawie 3 dB. Dlatego za każdym węzłem
+stoi `GainNode` z korektą. Wartości weryfikujemy pomiarem w trybie `?audioDebug=1`: sinus 1 kHz o poziomie −30 dBFS
 (poniżej progu) musi wyjść z kompresora z korektą na tym samym poziomie ±0,5 dB. Jeśli przeglądarka liczy inaczej,
 korektę ustawiamy według pomiaru.
 
@@ -1163,7 +1245,7 @@ Dlatego głośność trzymamy przede wszystkim poziomami (§ 5.1) — limiter ty
 
 | Pasmo | Kto | Zasada |
 |---|---|---|
-| 30–80 Hz (sub) | `sfx_uderzenie_basu`, uderzenia big win i free spins, `sfx_bicie_serca`, stopa muzyki | zawsze z warstwą harmonicznych 120–400 Hz (nasycenie), inaczej znika na telefonie |
+| 30–80 Hz (sub) | `sfx_uderzenie_basu`, uderzenia big win i free spins, `sfx_bicie_serca`, stopa muzyki | zawsze z warstwą harmonicznych ok. 150–600 Hz (nasycenie asymetryczne, § 1.4 pkt 6), inaczej znika na telefonie |
 | 80–400 Hz | „tunk” stopów bębnów, bas muzyki, gong | bas muzyki ma „pompowanie” przy stopie, żeby nie zamulał |
 | 400 Hz – 2 kHz | ciało muzyki (pady, piano, ud), UI, chór | pady muzyki pod filtrem LP |
 | 2–5 kHz | **zarezerwowane dla informacji**: wygrane, scattery, WILD, `sfx_linia` | muzyka ma tu wycięcie −3 dB (§ 4.1) |
@@ -1173,9 +1255,10 @@ Dlatego głośność trzymamy przede wszystkim poziomami (§ 5.1) — limiter ty
 
 | Co | Cel | Jak mierzymy |
 |---|---|---|
-| plik efektu jednorazowego | szczyt ≤ −1,0 dBTP | `sprawdz.py` (nadpróbkowanie ×4) i `ffmpeg … ebur128=peak=true` |
-| pętla efektu | −18 LUFS ±0,5 | jw. |
+| plik efektu jednorazowego | szczyt ≤ −1,0 dBTP (WAV; tolerancja pomiaru 0,1 dB) | `analiza.py` (`dbtp`, nadpróbkowanie ×4 przez FFT) i niezależnie `ffmpeg … ebur128=peak=true` w `sprawdz.py` |
+| pętla efektu | −18 LUFS ±0,5 | `analiza.lufs(..., okresowy=True)` — pętlę mierzymy po powieleniu do ≥ 4 s (pętla 0,5 s to za mało na bloki 400 ms z bramkowaniem) |
 | utwór muzyczny | −14 LUFS ±0,5, szczyt ≤ −1,0 dBTP | jw. |
+| plik po zakodowaniu (Opus / AAC, zdekodowany) | szczyt ≤ −0,5 dBTP | ostrzeżenie: koder stratny przy 64–128 kb/s potrafi podnieść szczyty o 0,2–1 dB |
 | **sesja gry** (5 min typowego grania, ustawienia domyślne) | **−18 LUFS ±2** (zintegrowana), szczyt ≤ −1 dBTP | nagranie z trybu `?audioDebug=1` |
 | najgłośniejszy moment (ULTRA WIN) | ≤ −10 LUFS krótkoterminowo (okno 3 s) | jw. |
 | lobby (sama muzyka) | ≈ −22 LUFS | jw. |
@@ -1183,6 +1266,11 @@ Dlatego głośność trzymamy przede wszystkim poziomami (§ 5.1) — limiter ty
 **Dlaczego −18 LUFS, a nie −14 jak w serwisach muzycznych:** gra działa obok innych kart i aplikacji; głośna
 strona, która „krzyczy” po kliknięciu, jest odbierana jako tania. −18 LUFS z dynamiką ±6 dB pozwala wygranym
 naprawdę „wybuchać” ponad tło. Gracz zawsze może pogłośnić suwakiem.
+
+**Dlaczego szczyt po zakodowaniu ma luźniejszy próg:** `decodeAudioData` zwraca próbki float32, a Web Audio liczy
+cały graf we float — przekroczenie 0 dBFS w zdekodowanym pliku nie oznacza obcięcia. Obciąć może dopiero wyjście
+(`destination`), a przed nim są `gainDb` ≤ −3 dB, szyny, kompresor i limiter. Dlatego twardy próg −1 dBTP dotyczy
+WAV (to kontrolujemy w pipeline), a dla plików po kodowaniu wystarcza ostrzeżenie.
 
 **Tryb pomiarowy `?audioDebug=1`.** Silnik podpina pod master `MediaStreamAudioDestinationNode`, a `MediaRecorder`
 zapisuje strumień do pliku WebM (przycisk „Nagraj 5 min” w małym panelu debugowania). Plik mierzymy:
@@ -1215,7 +1303,7 @@ tutaj podajemy tylko, **który dźwięk** i **względem czego**.
 | **E04** `login_open` | `ui_otworz` | 0 ms | najpierw `unlock()` w tym samym kliknięciu |
 | **E05** `login_blad` | `ui_blad` | 0 ms (pokazanie błędu) | + wibracja (§ 10) |
 | **E06** `login_sukces` | `sfx_logowanie`, `mus_lobby`, `sfx_saldo_puls` | 0 ms; 0 ms (wejście 1 200 ms); +300 ms (puls salda) | stan muzyki CISZA → LOBBY |
-| **E07** `bonus_powitalny` | `sfx_skrzynia_otwarcie`, `sfx_blysk`, `sfx_uderzenie_basu`, `sfx_monety_fontanna`, `sfx_moneta_1` … `sfx_moneta_5`, `sfx_licznik_tik`, `sfx_licznik_koniec` | oś czasu § 6.7 | ducking `bigwin` −6 dB na `mus_lobby` przez całą sekwencję |
+| **E07** `bonus_powitalny` | `sfx_skrzynia_otwarcie`, `sfx_blysk`, `sfx_uderzenie_basu`, `sfx_monety_fontanna`, `sfx_moneta_1` … `sfx_moneta_5`, `sfx_licznik_tik`, `sfx_licznik_koniec`; `mus_lobby` (ściszona) | oś czasu § 6.7 | ducking `bigwin` −6 dB na `mus_lobby` przez całą sekwencję |
 | **E08** `saldo_zmiana` | `sfx_saldo_puls` | początek pulsu salda | tylko zalogowanie powracającego gracza (E06) i zaksięgowanie wygranej small (E28); przy medium, big+, E07, E10 i E37 saldo rośnie bez osobnego dźwięku (kwotę zamknął już `sfx_licznik_koniec`); spadek (zakład) — cisza, bo gra już `sfx_spin_start`; `cooldownMs` 150 |
 | **E09** `bankrut` | `sfx_bankrut` | 0 ms (pojawienie się `g_maskotka_bankrut`) | ducking `bankrut` −10 dB do odebrania bonusu lub zamknięcia panelu |
 | **E10** `bonus_ratunkowy` | jak E07 | jak E07 | ta sama oś czasu (wspólna funkcja `playReward` w `reward.js`) |
@@ -1228,22 +1316,22 @@ tutaj podajemy tylko, **który dźwięk** i **względem czego**.
 | **E24** `spin_start` | `sfx_spin_start` | 0 ms — wciśnięcie, **przed** odpowiedzią serwera | natychmiastowa reakcja na dotyk; autoplay −6 dB; w darmowych spinach nie gramy (gracz nic nie wcisnął) |
 | **E25** `bebny_obrot` | S1: `sfx_beben_petla_s1`; S2: `sfx_beben_petla_s2`; S3: `sfx_s3_opad` | S1, S2: +40 ms, wejście 60 ms; S3: 120 ms (start opadu nowej planszy, 04 § 2.15) | pętla gra do ostatniego stopu; głośność pętli maleje z każdym stopem (S1: 100 → 66 → 33%; S2: −20 punktów procentowych na bęben) |
 | **E26** `beben_stop` | `sfx_beben_stop_1` … `sfx_beben_stop_6` (numer = bęben / kolumna) | dokładnie w chwili lądowania bębna (planista, § 2.7) | panorama według pozycji (§ 5.5); po ostatnim stopie pętla gaśnie w 120 ms (turbo 60 ms); szybkie zatrzymanie: stopy co 40 ms, każdy −3 dB |
-| **E27** `antycypacja` | `sfx_antycypacja_narastanie`, `sfx_bicie_serca`, `mus_napiecie` | narastanie kończy się na stopie antycypowanego bębna; gdy wydłużenie jest krótsze niż 1 200 ms, start od przesunięcia: S1 900 ms (od 300 ms pliku), S3 700 ms na kolumnę (od 500 ms), turbo ×0,45; serce i warstwa: 0 ms od początku antycypacji | stan GRA → NAPIECIE; każdy kolejny antycypowany bęben: nowe narastanie, serce +2 dB; S1 (2 WILD na linii) — 3. bęben; S2 (2 scattery) — kolejne bębny; S3 (3 scattery) — pozostałe kolumny zrzutu; sukces: narastanie i serce gasną na rozładowaniu (E34 / E50), porażka: wyciszenie 250–600 ms |
+| **E27** `antycypacja` | `sfx_antycypacja_narastanie`, `sfx_bicie_serca`, `mus_napiecie` | narastanie kończy się na stopie antycypowanego bębna (`syncPoint` = koniec pliku); plik ma T, więc trwa 1 200 ms / prędkość (S2: 1 069 ms — gra w całości, startuje 131 ms po poprzednim stopie); gdy antycypacja trwa krócej, start od przesunięcia `offset = 1,2 s − czas_antycypacji × prędkość`: S1 900 ms (od 300 ms pliku), S3 700 ms na kolumnę (od 318 ms pliku, prędkość ×1,26), turbo ×0,45 (np. S2 540 ms → od 594 ms); serce i warstwa: 0 ms od początku antycypacji | stan GRA → NAPIECIE; każdy kolejny antycypowany bęben: nowe narastanie, serce +2 dB; S1 (2 WILD na linii) — 3. bęben; S2 (2 scattery) — kolejne bębny; S3 (3 scattery) — pozostałe kolumny zrzutu; sukces: narastanie i serce gasną na rozładowaniu (E34 / E50), porażka: wyciszenie 250–600 ms |
 | **E28** `wygrana_small` | `sfx_wygrana_small_1` … `sfx_wygrana_small_3`, `sfx_linia`, `sfx_licznik_tik`, `sfx_saldo_puls` | 0 ms (początek prezentacji); linie kolejno co 350 ms; tik, gdy liczenie trwa > 400 ms; puls przy zaksięgowaniu | wariant według mnożnika m: `_1` m < 1 (−6 dB, bez linii i tiku), `_2` 1 ≤ m < 2,5, `_3` 2,5 ≤ m < 5; ducking `wygrana` −3 dB; w późniejszym cyklu po liniach (co 900 ms) `sfx_linia` −8 dB |
 | **E29** `wygrana_medium` | `sfx_wygrana_medium`, `sfx_linia`, `sfx_moneta_1` … `sfx_moneta_5`, `sfx_licznik_tik`, `sfx_licznik_koniec` | 0 ms; linie co 350 ms; 6 monet w 50–400 ms (razem z cząsteczkami); tik przez czas liczenia; koniec na kwocie końcowej | ducking `wygrana` −3 dB |
 | **E30** `wygrana_big` | `sfx_bigwin_wejscie`, `mus_bigwin`, `sfx_blysk`, `sfx_licznik_tik`, `sfx_monety_fontanna` | oś czasu § 6.5 | stan → BIG_WIN; ducking `bigwin` −6 dB |
 | **E31** `eskalacja_poziomu` | `sfx_poziom_w_gore` (MEGA 0 c, EPIC +200 c, ULTRA +400 c), `sfx_uderzenie_basu`, `sfx_blysk` | `sfx_poziom_w_gore` 250 ms **przed** przekroczeniem progu (jego uderzenie = zmiana banera); bas i błysk na uderzeniu | tik +0,15 prędkości na poziom; fontanna +2 dB na poziom |
 | **E32** `wygrana_koniec` | `sfx_licznik_koniec`; `sfx_bigwin_koniec` (tylko big i wyżej); `sfx_przejscie_whoosh` | 0 ms (kwota końcowa albo pominięcie); whoosh przy odlocie banera po przytrzymaniu (BIG 1 500, MEGA 1 800, EPIC 2 100, ULTRA 2 600 ms — 04) | tik wyciszany 60 ms, fontanna 800 ms; przy pominięciu pozostałe efekty sekwencji gasną w 80 ms i gra ten sam koniec; stan → GRA / FS |
-| **E33** `wild_ladowanie` | `sfx_wild` | `syncPoint` 150 ms → start 150 ms przed lądowaniem | kilka WILD w jednym spinie: maks. 2 głosy, drugi +60 ms i +200 c |
-| **E34** `scatter_ladowanie` | `sfx_scatter_1` / `sfx_scatter_2` / `sfx_scatter_3` | `syncPoint` 80 ms → start 80 ms przed lądowaniem | numer = liczba scatterów do tej pory; 4. i kolejny: `sfx_scatter_3` z dodatkowym +100 c × (n − 3); panorama według bębna |
+| **E33** `wild_ladowanie` | `sfx_wild` | `syncPoint` 150 ms → start 150 ms przed lądowaniem | kilka WILD w jednym spinie: maks. 2 głosy, drugi +60 ms i −3 dB, bez zmiany wysokości (+200 c zrobiłoby z akordu C-dur akord D-dur z F♯, obcym dla a-moll S1, a w S2 — E-dur z G♯, obcym dla hidżazu) |
+| **E34** `scatter_ladowanie` | `sfx_scatter_1` / `sfx_scatter_2` / `sfx_scatter_3` | `syncPoint` 80 ms → start 80 ms przed lądowaniem | wariant według liczby n scatterów na planszy do tej pory i progu bonusu gry (S2: 3, S3: 4): `sfx_scatter_3` dla n ≥ progu, `sfx_scatter_2` dla n = próg − 1, `sfx_scatter_1` dla mniejszych (S3: 1. i 2.). **Dlaczego:** fanfara „bonus!” przy trzecim scatterze S3 obiecywałaby nagrodę, której nie ma (§ 1.4). Ponad próg: S2 +100 c na scatter (maks. +200 c), S3 +1 dB (maks. +3 dB) — limit ±400 c z § 2.6; panorama według bębna / kolumny |
 | **E35** `free_spins_start` | `sfx_free_spins_start`, muzyka FS, `sfx_blysk`; S2: `sfx_s2_gong`; S3: `sfx_uderzenie_basu`; `sfx_przejscie_whoosh` | oś czasu § 6.6 | stan → FS; banner `g_win_free_spins` ma szczyt skali dokładnie w chwili uderzenia stingera (`U` w 04) |
-| **E36** `free_spins_spin` | `sfx_saldo_puls` (+400 c, −4 dB), dalej jak E25–E26 | 0 ms (zmiana licznika spinów) | bez `sfx_spin_start` |
-| **E37** `free_spins_podsumowanie` | `sfx_free_spins_koniec`, `sfx_licznik_tik`, `sfx_licznik_koniec`, `ui_klik`, `sfx_przejscie_whoosh`; przy sumie ≥ 15× — najpierw sekwencja big win (E30–E32) | 0 ms; liczenie 600 → 1 800 ms (tik, potem koniec); klik „Dalej”; whoosh przy wyjściu | stan → PODSUMOWANIE → GRA (przenikanie 2 000 ms w takcie) |
+| **E36** `free_spins_spin` | `sfx_saldo_puls` (−4 dB), dalej jak E25–E26 | 0 ms (zmiana licznika spinów) | bez `sfx_spin_start`; bez dodatkowego przesunięcia wysokości (T już daje +200 / +400 c — dodatkowe +400 c przekroczyłoby limit z § 2.6); wygrane darmowych spinów trafiają do salda dopiero po podsumowaniu (E37), więc puls licznika spinów nie myli się z E08 |
+| **E37** `free_spins_podsumowanie` | `sfx_free_spins_koniec`, `sfx_licznik_tik`, `sfx_licznik_koniec`, `ui_klik`, `sfx_przejscie_whoosh`, po zamknięciu panelu `mus_s2` / `mus_s3`; przy sumie ≥ 15× — najpierw sekwencja big win (E30–E32) | 0 ms; liczenie 600 → 1 800 ms (tik, potem koniec); klik „Dalej”; whoosh przy wyjściu | stan → PODSUMOWANIE → GRA (przenikanie 2 000 ms w takcie) |
 | **E38** `autoplay` | `ui_przelacznik` (wł. +200 c, wył. −200 c); zatrzymanie przez warunek: `ui_zamknij` | 0 ms | w autoplay `sfx_spin_start` −6 dB i wygrane small −3 dB (mniej męczące w długiej serii) |
 | **E39** `turbo` | `ui_przelacznik` (±200 c) | 0 ms | oś czasu dźwięków ×0,45 (§ 2.7) |
-| **E40** `blad_sieci` | pętla bębnów — „zjazd taśmy”; `ui_blad`; `ui_klik` | pętla: 0 ms; `ui_blad`: 300 ms (pojawienie się okna); `ui_klik`: „Spróbuj ponownie” | pętla: prędkość 1,0 → 0,5 w 300 ms (`setRate`) i wyciszenie 300 ms; ducking `okno` −6 dB do ponowienia |
+| **E40** `blad_sieci` | pętla bębnów (`sfx_beben_petla_s1` / `sfx_beben_petla_s2`) — „zjazd taśmy”; `ui_blad`; `ui_klik` | pętla: 0 ms; `ui_blad`: 300 ms (pojawienie się okna); `ui_klik`: „Spróbuj ponownie” | pętla: prędkość 1,0 → 0,5 w 300 ms (`setRate`) i wyciszenie 300 ms; ducking `okno` −6 dB do ponowienia |
 | **E50** `s1_neon_mnoznik` | `sfx_s1_neon_bzyk`, `sfx_licznik_koniec` | bzyk: 0 ms (początek prezentacji linii z WILD — zapalenie „×2”); koniec: 400 ms (kwota linii podwaja się) | potem dźwięk progu wygranej całej rundy |
-| **E51** `s1_neon_jackpot` | `sfx_s1_jackpot`, `sfx_s1_neon_bzyk` → sekwencja big win | jackpot: 0 ms (uderzenie w pliku w 300 ms); bzyk: 1 500 ms; 1 820 ms (uderzenie banera BIG w 04): start `mus_bigwin` i dalej jak § 6.5 | `sfx_s1_jackpot` zastępuje `sfx_bigwin_wejscie`; ducking `stinger` do 1 820 ms |
+| **E51** `s1_neon_jackpot` | `sfx_s1_jackpot`, `sfx_s1_neon_bzyk`, `mus_bigwin` → sekwencja big win | jackpot: 0 ms (uderzenie w pliku w 300 ms); bzyk: 1 500 ms; 1 820 ms (uderzenie banera BIG w 04): start `mus_bigwin` i dalej jak § 6.5 | `sfx_s1_jackpot` zastępuje `sfx_bigwin_wejscie`; ducking `stinger` do 1 820 ms |
 | **E60** `s2_wild_rozszerzenie` | `sfx_s2_wild_rozszerzenie`, `sfx_uderzenie_basu` (−6 dB) | start 0 ms (wszystkie bębny stoją); `syncPoint` 600 ms = kolumna pełna; bas w 600 ms | kilka WILD: kolejne co 250 ms, maks. 2 naraz; bez błysku ekranu (budżet błysków w 04) |
 | **E61** `s2_retrigger` | `sfx_s2_gong`, `sfx_scatter_3`, `sfx_poziom_w_gore` (+200 c), `sfx_licznik_koniec` | 0 ms; 0 ms; 400 ms (baner „+10”); 900 ms (licznik FS 3 → 13) | ducking `stinger` −6 dB przez 1,5 s; +200 c daje akord kwintowy G (G+D), który należy do D hidżaz |
 | **E70** `s3_kaskada_pekniecie` | `sfx_linia`, `sfx_licznik_tik` (krótko), `sfx_s3_pekniecie_1` … `sfx_s3_pekniecie_4` | linia 0 ms (obrys klastra); tik 120–420 ms (kwota klastra); pęknięcia 280 ms, +30 i +60 ms (maks. 3 głosy, warianty bez powtórzeń) | panorama = środek klastra; linia +100 c × numer kaskady (maks. +700 c) — rosnąca „drabina” emocji; klaster ≥ 10 symboli: pierwszy głos zawsze `sfx_s3_pekniecie_4` (najjaśniejszy) |
@@ -1273,15 +1361,17 @@ tutaj podajemy tylko, **który dźwięk** i **względem czego**.
 | 1 600 | bęben 2 | `sfx_beben_stop_2` (pan −0,2); pętla 60% |
 | 1 720 | E34 | `sfx_scatter_2` |
 | 1 800 | bęben 3 + 2. scatter → E27 | `sfx_beben_stop_3` (pan 0); start `sfx_bicie_serca`, `mus_napiecie` (wejście 400 ms), filtr muzyki → 1 200 Hz; pętla 40% |
-| 2 000 | narastanie dla bębna 4 | `sfx_antycypacja_narastanie` (1 200 ms, do 3 200) |
+| 2 131 | narastanie dla bębna 4 | `sfx_antycypacja_narastanie` (T +200 c → 1 069 ms, do 3 200) |
 | 3 200 | bęben 4 bez scattera | `sfx_beben_stop_4` (pan +0,2); serce +2 dB |
-| 3 400 | narastanie dla bębna 5 | `sfx_antycypacja_narastanie` (do 4 600) |
+| 3 531 | narastanie dla bębna 5 | `sfx_antycypacja_narastanie` (do 4 600) |
 | 4 520 | E34 | `sfx_scatter_3` |
 | 4 600 | bęben 5 + 3. scatter | `sfx_beben_stop_5` (pan +0,4); pętla gaśnie; serce i warstwa napięcia czekają na uderzenie stingera |
 | ok. 4 700 | E35 | `sfx_free_spins_start` → § 6.6 |
 
 Czasy bębnów 4 i 5 wynikają z briefu (§ 4): każdy kolejny bęben w antycypacji +1 200 ms (2 000 + 1 200 = 3 200;
-2 200 + 2 × 1 200 = 4 600). Narastanie ma dokładnie 1 200 ms, więc w S2 gra w całości.
+2 200 + 2 × 1 200 = 4 600). Plik narastania ma 1 200 ms, ale z transpozycją S2 (+200 c, prędkość ×1,1225) trwa
+1 069 ms — gra w całości i startuje tak, by skończyć się dokładnie na stopie (planista liczy start z `syncPoint`
+= koniec pliku, § 2.6). W tej rundzie stop bębna 2 gra D5 → E♭5, a bębna 5 A5 → B♭5 (mapa S2, § 1.2).
 
 ### 6.4. Oś czasu: spin S3 z dwiema kaskadami
 

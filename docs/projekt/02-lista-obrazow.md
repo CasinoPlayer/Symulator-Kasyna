@@ -149,8 +149,8 @@ przyjmie plik, ale raport oznaczy go ostrzeżeniem Q03 (§ 8). Zamieniona orient
 | Typ | Co dostajemy z ChatGPT | Co robi pipeline | Jak rysujemy w aplikacji | Obrazów |
 |---|---|---|---|---:|
 | `ALFA` | prawdziwa przezroczystość, obiekt ~80–85% kadru, margines ≥ 6%, bez cienia, bez tekstu (chyba że wskazano), światło z lewej-góry | naprawa fałszywej szachownicy / jednolitego tła (§ 5.3–5.4), usuwanie obwódek (§ 5.5), przycięcie do alfy (§ 5.6) | normalne mieszanie (`blend: "normal"`); w Pixi alfa jest premultiplikowana przy wgrywaniu tekstury | 61 |
-| `CZARNE` | jednolite tło `#000000`, poświata wygasa do czerni przed krawędzią | czerń **zostaje**; zerowanie poziomu czerni i winieta krawędzi (§ 5.11); bez kanału alfa | tryb mieszania `add` (`blend: "add"`): w Pixi `blendMode = 'add'`, w CSS `mix-blend-mode: plus-lighter` (zapas: `screen`), w canvas 2D `globalCompositeOperation = 'lighter'` | 6 |
-| `PELNE` | pełny obraz bez tekstu i UI (wyjątek: okładki z logo, makiety) | skalowanie do wariantów szerokości, lekki szum przeciw pasmom, dopasowanie do proporcji źródła wokół punktu `focus`, LQIP (§ 5.17); kadr pod proporcje ekranu robi front (`object-fit: cover` + `focus`) | tło sceny Pixi, `<img>`/`<picture>` albo `background-image` w HTML | 26 |
+| `CZARNE` | obraz **nieprzezroczysty** (OPAQUE, bez kanału alfa albo z alfą w całości kryjącą), jednolite tło `#000000`, poświata wygasa do czerni przed krawędzią | czerń **zostaje**; zerowanie poziomu czerni i winieta krawędzi (§ 5.11); bez kanału alfa | tryb mieszania `add` (`blend: "add"`): w Pixi `blendMode = 'add'`, w CSS `mix-blend-mode: plus-lighter` (zapas: `screen`), w canvas 2D `globalCompositeOperation = 'lighter'` | 6 |
+| `PELNE` | pełny, **nieprzezroczysty** obraz (OPAQUE) bez tekstu i UI (wyjątek: okładki z logo, makiety) | skalowanie do wariantów szerokości, lekki szum przeciw pasmom, dopasowanie do proporcji źródła wokół punktu `focus`, LQIP (§ 5.17); kadr pod proporcje ekranu robi front (`object-fit: cover` + `focus`) | tło sceny Pixi, `<img>`/`<picture>` albo `background-image` w HTML | 26 |
 
 **Dlaczego efekty świetlne nie mają alfy:** w trybie `add` czarny piksel nic nie dodaje do obrazu, więc znika, a miękka
 poświata zachowuje pełne przejście tonalne. Wycinanie poświaty do przezroczystości daje brudne, szare krawędzie.
@@ -195,13 +195,14 @@ są kwadratowe):
 
 | Ramka | Siatka | Docelowa proporcja okna (szer. : wys.) | Okno w źródle (prompt z [03](03-prompty-chatgpt.md)) | Okno @1x (px) | Tolerancja bez rozciągania |
 |---|---|---|---|---|---|
-| `s1_ramka` (1:1) | 3×3 | 1,000 (kwadrat) | ok. 640×640 px (~62% szerokości kadru 1024) | 768×768 (3 × 256) | ±3% |
-| `s2_ramka` (3:2) | 5×3 | 1,667 (5:3) | ok. 1075×645 px (~70% szerokości kadru 1536) | 960×576 (5 × 192 na 3 × 192) | ±3% |
-| `s3_ramka` (1:1) | 6×5 | 1,200 (6:5) | ok. 717×598 px (~70% szerokości kadru 1024) | 864×720 (6 × 144 na 5 × 144) | ±3% |
+| `s1_ramka` (1:1) | 3×3 | 1,000 (kwadrat) | kwadratowe, ok. 640×640 px (~62% × 62% kadru 1024×1024) | 768×768 (3 × 256) | ±3% |
+| `s2_ramka` (3:2) | 5×3 | 1,667 (5:3) | ok. 1075×645 px (~70% × 63% kadru 1536×1024) | 960×576 (5 × 192 na 3 × 192) | ±3% |
+| `s3_ramka` (1:1) | 6×5 | 1,200 (6:5) | ok. 717×598 px (~70% × 58% kadru 1024×1024) | 864×720 (6 × 144 na 5 × 144) | ±3% |
 
 Okno zajmuje ok. 70% szerokości kadru (S1: ~62%), a nie ~80% jak w pierwszej wersji 01 § 10.8 / § 11.8: okno 80%
 plus boki ramy ~10% dawałyby 100% szerokości i łamały wymóg briefu „margines ≥ 6%, nic nie przycięte”. Cała ramka
-mieści się więc w marginesie 6% (ok. 88% kadru), a proporcje okien (1:1, 5:3, 6:5) zostają dokładne.
+mieści się więc w 88% kadru, czyli w marginesie 6% z każdej strony, a proporcje okien (1:1, 5:3, 6:5) zostają
+dokładne. Liczby są zgodne z [01](01-kierunek-artystyczny.md) (§ 10.8, § 11.8) i promptami w 03.
 
 Odchyłka proporcji 3–15% → pipeline zgłasza ostrzeżenie Q15, a front dopasowuje ramkę rozciągnięciem pasów 9-slice
 (`NineSliceSprite` z marginesami z `frames.<ID>.nineSlice`); > 15% → błąd Q15, obraz do ponownego wygenerowania
@@ -211,7 +212,7 @@ Skala ramki `s` wynika z okna (okno @1x : okno w źródle): S1 ≈ 768/640 = 1,2
 S3 ≈ 864/717 = 1,20 — wszystkie w limicie powiększenia ×1,25 dla @1x. Pipeline 1.0.0 robi @2x tylko wtedy, gdy
 wymaga ono powiększenia źródła najwyżej ×1,25 (`2·s ≤ 1,25`, § 2.6), więc **wszystkie trzy ramki mają tylko @1x**
 (S2: @2x wymagałoby ×1,79). Obniżone @2x (≤ ×1,25 względem źródła) ma sens tylko dla S2 — ok. 1690 px szerokości
-zamiast ≈ 1200 px @1x — i jest **[plan]**; dla S1 i S3 dałoby najwyżej ~4% więcej pikseli niż @1x, więc nie powstanie.
+zamiast ≈ 1200 px @1x — i jest **[plan]**; dla S1 i S3 byłoby najwyżej ~4% większe od @1x (poniżej progu 1,15× z § 2.6), więc nie powstanie.
 Jeśli generator narysuje okno innej wielkości, zmieni się tylko `s` (i ewentualnie dostępność @2x), nie wynik w grze.
 
 ### 2.6. Rozdzielczości @1x i @2x
@@ -232,7 +233,7 @@ Jeśli generator narysuje okno innej wielkości, zmieni się tylko `s` (i ewentu
   więc @2x potrzebowałoby napisu szerokiego na ≥ 1536 px, a w kadrze 1536 px z marginesem 6% napis ma ok. 1350 px).
   Na granicy są `g_logo` (@2x 1440 px wymaga logo ≥ 1152 px w źródle) i `g_maskotka_powitanie` (≥ 768 px wysokości).
 * **Obniżone @2x (`@2x↓`) dla sprite'ów — [plan]:** zamiast pomijać @2x, zrobić je w największym rozmiarze ≤ ×1,25
-  źródła, jeśli ma ≥ 1,15× pikseli @1x (ramki S2/S3, napisy wygranych ≈ 1600 px szerokości).
+  źródła, jeśli ma ≥ 1,15× pikseli @1x (ramka S2 ≈ 1690 px, napisy wygranych ≈ 1600 px szerokości).
 * **Tła i plakaty** mają limit **×1,67** (są ciemne, częściowo rozmyte i przykryte bębnami —
   [01 § 6.4](01-kierunek-artystyczny.md#64-kadrowanie-na-różnych-ekranach)); wariant szerokości wymagający więcej jest
   pomijany (Q20). Ich @2x jest zawsze „obniżone” w tym sensie, że ma mniej niż 2× pikseli @1x (2560 zamiast 3840 px).
@@ -422,7 +423,7 @@ specjalny `wild`.
 | `s1_sym_wild` | `s1/s1_sym_wild.png` | 1024×1024 | ALFA | P0 | bęben S1 (WILD): lądowanie E33, „prawie bonus” przy 2 WILD na linii E27, neonowy mnożnik ×2 E50, NEON JACKPOT E51; tabela wypłat | 256 / 512 + warianty S1 | `ALFA DEFR TRIM NORM(specjalne S1) RUCH GLOW CIEN SYL MINI ATLAS:s1-symbole` |
 | `s1_tlo_desktop` | `s1/s1_tlo_desktop.png` | 1536×1024 | PELNE | P0 | tło sceny S1 przy oknie poziomym: intro E21, bezczynność E22; podkład bębna i neonowe migotanie rysuje kod ([01 § 6.6](01-kierunek-artystyczny.md#66-tła-gier-i-podkład-bębna)) | 1920 (@1x) / 2560 (@2x↓) + `w1280` + `rozmyte` 640 + LQIP | `TLO` |
 | `s1_tlo_mobile` | `s1/s1_tlo_mobile.png` | 1024×1536 | PELNE | P0 | tło sceny S1 przy oknie pionowym (telefon) | 1080 (@1x) / 1280 (@2x↓) + `w720` + `rozmyte` 480 + LQIP | `TLO` |
-| `s1_ramka` | `s1/s1_ramka.png` | 1024×1024 | ALFA | P0 | ramka automatu nad bębnami 3×3 (`NineSliceSprite`, okno = siatka + 2% luzu); świecenie ramy przy antycypacji E27 i E51 robi kod | okno 768×768 → ramka ≈ 1230 (jedna — okno w źródle ma ~640 px, więc @1x to już ×1,2) | `ALFA DEFR TRIM OKNO` |
+| `s1_ramka` | `s1/s1_ramka.png` | 1024×1024 | ALFA | P0 | ramka automatu nad bębnami 3×3 (`NineSliceSprite`, okno = siatka + 2% luzu); świecenie ramy przy antycypacji E27 i E51 robi kod | okno 768×768 → ramka ≈ 1080 (jedna — okno w źródle ma ~640 px, więc @1x to już ×1,2; ramka zajmuje ~88% kadru) | `ALFA DEFR TRIM OKNO` |
 | `s1_logo` | `s1/s1_logo.png` | 1536×1024 | ALFA | P0 | logo nad ramką (pas górny tła): wejście E21, neonowe migotanie E22 (`glow` z tintem magenta / cyjan), ekran ładowania S1 E20 | 640 / 1280 szer. + `glow` | `ALFA DEFR TRIM GLOW` |
 | `s1_okladka` | `s1/s1_okladka.png` | 1024×1536 | PELNE | P0 | kafel gry w lobby: przechył 3D i poświata E03, plakat przed startem wideo kafla, wersja przy `prefers-reduced-motion` / słabym łączu | 400 (@1x) / 800 (@2x) + `w600` + LQIP | `SRCSET AVIF` |
 | `s1_baner` | `s1/s1_baner.png` | 1536×1024 | PELNE | P0 | karuzela / sekcja powitalna lobby (tytuł i przycisk HTML w lewych ~40%), plakat wideo 16:9, tło ekranu ładowania S1 E20 (`rozmyte`) | 960 (@1x) / 1536 (@2x, natywny); `k169` 960×540 / 1536×864; `rozmyte` 480 + LQIP | `PLAKAT AVIF` |
@@ -451,7 +452,7 @@ Warianty symboli S2: jak w S1 (`ruch1`, `ruch2`, `syl`, `glow`, `cien`, `mini`).
 | `s2_tlo_mobile` | `s2/s2_tlo_mobile.png` | 1024×1536 | PELNE | P1 | tło skarbca przy oknie pionowym | 1080 (@1x) / 1280 (@2x↓) + `w720` + `rozmyte` 480 + LQIP | `TLO` |
 | `s2_tlo_fs_desktop` | `s2/s2_tlo_fs_desktop.png` | 1536×1024 | PELNE | P1 | tło darmowych spinów (noc nad piramidami): przenikanie 600–900 ms z błyskiem przy E35, w trakcie E36, powrót po E37; doładowywane w tle po E21 | 1920 (@1x) / 2560 (@2x↓) + `w1280` + `rozmyte` 640 + LQIP | `TLO` |
 | `s2_tlo_fs_mobile` | `s2/s2_tlo_fs_mobile.png` | 1024×1536 | PELNE | P1 | jak wyżej, okno pionowe | 1080 (@1x) / 1280 (@2x↓) + `w720` + `rozmyte` 480 + LQIP | `TLO` |
-| `s2_ramka` | `s2/s2_ramka.png` | 1536×1024 | ALFA | P1 | ramka 5×3 (`NineSliceSprite`); rozbłyski przy E35 i E60 robi kod | okno 960×576 → ramka ≈ 1200 szer. (jedna — @2x wymagałoby powiększenia ×1,56; obniżone ≈ 1920 — [plan]) | `ALFA DEFR TRIM OKNO` |
+| `s2_ramka` | `s2/s2_ramka.png` | 1536×1024 | ALFA | P1 | ramka 5×3 (`NineSliceSprite`); rozbłyski przy E35 i E60 robi kod | okno 960×576 (w źródle ~1075×645, skala ≈ 0,89) → ramka ≈ 1200 szer. (jedna — @2x wymagałoby powiększenia ×1,79; obniżone ≈ 1690 — [plan]) | `ALFA DEFR TRIM OKNO` |
 | `s2_logo` | `s2/s2_logo.png` | 1536×1024 | ALFA | P1 | logo nad ramką: wejście E21, ekran ładowania S2 E20; złota poświata pulsuje w darmowych spinach | 640 / 1280 szer. + `glow` | `ALFA DEFR TRIM GLOW` |
 | `s2_okladka` | `s2/s2_okladka.png` | 1024×1536 | PELNE | P1 | kafel gry w lobby (E03), plakat przed startem wideo kafla | 400 (@1x) / 800 (@2x) + `w600` + LQIP | `SRCSET AVIF` |
 | `s2_baner` | `s2/s2_baner.png` | 1536×1024 | PELNE | P1 | karuzela / sekcja powitalna lobby, plakat wideo 16:9, tło ekranu ładowania S2 E20 (`rozmyte`) | 960 (@1x) / 1536 (@2x, natywny); `k169` 960×540 / 1536×864; `rozmyte` 480 + LQIP | `PLAKAT AVIF` |
@@ -463,7 +464,11 @@ Warianty symboli S3: `ruch1` (krótkie rozmycie do opadu), `syl`, `glow`, `cien`
 nie wiruje. Pipeline zapisuje w manifeście **kolor symbolu** (`tint`) z tabeli
 [01 § 11.4](01-kierunek-artystyczny.md#114-symbole-s3) (np. szafir `#2F6BFF`; w kodzie: `TINT_S3` w `tools/art/katalog.py`)
 — nim kod barwi neutralne odłamki przy pękaniu (E70, [01 § 5.7](01-kierunek-artystyczny.md#57-stany-symbolu-które-robi-kod)).
-Kontrola zmierzonego koloru dominującego (Q19) to [plan].
+Wartości z 01 § 11.4: szafir `#2F6BFF` (kropla), szmaragd `#19D17A` (pionowy ośmiokąt), **ametyst `#C77DFF`**
+(poziomy sześciokąt 1,25 : 1 — jaśniejszy od szafiru, żeby para była odróżnialna także w daltonizmie; `#A64DFF` zostaje
+tylko na obrzeża, kryształy w tle i UI), topaz `#FFB23D` (ukośne wrzeciono), rubin `#FF2D55`, diament `#E8FBFF`;
+dla cebuli, scattera i mnożnika 01 podaje opis słowny, a `TINT_S3` dobiera `#F5C542`, `#19F5D2` i `#E8FBFF`. **Do poprawy w pipeline:** `TINT_S3` w `katalog.py` ma
+jeszcze dla ametystu stare `#A64DFF`. Kontrola zmierzonego koloru dominującego (Q19) to [plan].
 Hierarchia: niskie `szafir`, `szmaragd`, `ametyst`, `topaz`; wysokie `rubin`, `diament`, `cebula`; specjalne
 `scatter`, `mnoznik`.
 
@@ -482,7 +487,7 @@ Hierarchia: niskie `szafir`, `szmaragd`, `ametyst`, `topaz`; wysokie `rubin`, `d
 | `s3_tlo_mobile` | `s3/s3_tlo_mobile.png` | 1024×1536 | PELNE | P2 | tło jaskini przy oknie pionowym | 1080 (@1x) / 1280 (@2x↓) + `w720` + `rozmyte` 480 + LQIP | `TLO` |
 | `s3_tlo_fs_desktop` | `s3/s3_tlo_fs_desktop.png` | 1536×1024 | PELNE | P2 | tło darmowych spinów (komnata z zorzą): przenikanie z błyskiem przy E35, w trakcie E36, powrót po E37; doładowywane w tle po E21 | 1920 (@1x) / 2560 (@2x↓) + `w1280` + `rozmyte` 640 + LQIP | `TLO` |
 | `s3_tlo_fs_mobile` | `s3/s3_tlo_fs_mobile.png` | 1024×1536 | PELNE | P2 | jak wyżej, okno pionowe | 1080 (@1x) / 1280 (@2x↓) + `w720` + `rozmyte` 480 + LQIP | `TLO` |
-| `s3_ramka` | `s3/s3_ramka.png` | 1024×1024 | ALFA | P2 | ramka 6×5 (`NineSliceSprite`); migotanie kryształów przy E35 i E73 robi kod | okno 864×720 → ramka ≈ 1080 (jedna — skala ≈ 1,05; obniżone @2x ≈ 1280 — [plan]) | `ALFA DEFR TRIM OKNO` |
+| `s3_ramka` | `s3/s3_ramka.png` | 1024×1024 | ALFA | P2 | ramka 6×5 (`NineSliceSprite`); migotanie kryształów przy E35 i E73 robi kod | okno 864×720 (w źródle ~717×598, skala ≈ 1,20) → ramka ≈ 1080 (jedna — źródło za małe na @2x, § 2.5) | `ALFA DEFR TRIM OKNO` |
 | `s3_logo` | `s3/s3_logo.png` | 1536×1024 | ALFA | P2 | logo nad ramką: wejście E21, ekran ładowania S3 E20 | 640 / 1280 szer. + `glow` | `ALFA DEFR TRIM GLOW` |
 | `s3_okladka` | `s3/s3_okladka.png` | 1024×1536 | PELNE | P2 | kafel gry w lobby (E03), plakat przed startem wideo kafla | 400 (@1x) / 800 (@2x) + `w600` + LQIP | `SRCSET AVIF` |
 | `s3_baner` | `s3/s3_baner.png` | 1536×1024 | PELNE | P2 | karuzela / sekcja powitalna lobby, plakat wideo 16:9, tło ekranu ładowania S3 E20 (`rozmyte`) | 960 (@1x) / 1536 (@2x, natywny); `k169` 960×540 / 1536×864; `rozmyte` 480 + LQIP | `PLAKAT AVIF` |
@@ -672,7 +677,9 @@ ani źródła, ani grafiki zastępczej, pipeline zostawia w manifeście poprzedn
 * [ ] Nazwa = ID (albo plik w `nieposortowane/` z dopiskiem w wiadomości), właściwy folder (`g_*` → `global/` itd.).
 * [ ] PNG, wymiary zgodne z § 3.
 * [ ] `ALFA`: prawdziwa przezroczystość, nic nie przycięte krawędzią, bez cienia i podłogi pod obiektem.
-* [ ] `CZARNE`: czysto czarne tło, poświata nie dotyka krawędzi.
+* [ ] `CZARNE`: czysto czarne tło, poświata nie dotyka krawędzi, obraz **nieprzezroczysty** (OPAQUE: w podglądzie
+  z jasnym tłem albo szachownicą czerń jest czarna, nic nie prześwituje; pipeline sprawdza to i tak — Q11).
+* [ ] `PELNE`: obraz nieprzezroczysty na całej powierzchni, bez przezroczystych rogów czy pasów (pipeline to sprawdza — § 5.2).
 * [ ] Tekst na obrazie dokładnie jak w prompcie (`WILD`, `SCATTER`, `BAR`, logotypy) — litera po literze;
   w „ZŁOTY FARAON” i „KRYSZTAŁOWA KASKADA” litera Ł (L z kreską).
 * [ ] Arkusze: właściwa liczba elementów, każdy w całości w swojej komórce.
@@ -1001,38 +1008,51 @@ sąsiedztwo zdradzają różnice:
    pikseli z α = 0.
 2. **Wyostrzenie po zmniejszeniu** (tylko RGB, nie alfa): `UnsharpMask(radius=0.6, percent=40, threshold=2)`;
    dla wyników ≤ 128 px (ikony, `male`, `ikona`, `mini`): `radius=0.5, percent=70`.
-3. **Powiększanie** (maks. ×1,25; tła i plakaty ×1,67): Lanczos + `UnsharpMask(1.0, 35, 2)`; współczynnik trafia
-   do raportu (Q20).
-4. **Wymiary:** @1x zaokrąglone w górę do liczby parzystej, @2x = dokładnie 2 × @1x (ewentualne dopełnienie
-   przezroczystymi pikselami).
-5. **Decyzja o @2x:** jak w § 2.6 — obniżone do limitu powiększenia, pominięte, gdy daje < 1,15× pikseli @1x.
+3. **Powiększanie:** Lanczos + `UnsharpMask(radius=1.0, percent=35, threshold=2)`. Limity (§ 2.6): sprite'y ×1,25
+   dla @2x (@1x powstaje zawsze, przekroczenie → info Q20 ze współczynnikiem), tła i banery ×1,67 (wariant ponad
+   limit jest pomijany, Q20). Przy powiększaniu teł dochodzi szum przeciw pasmom (§ 5.17).
+4. **Wymiary:** @1x zaokrąglone w górę do liczby parzystej (symbole, monety, ikony: stałe płótno pola, np. 256×256),
+   @2x = dokładnie 2 × @1x — rozmiar @2x liczymy z @1x, a nie ze źródła, więc oba pliki mają ten sam rozmiar logiczny.
+5. **Decyzja o @2x:** jak w § 2.6 — @2x tylko, gdy `2·s ≤ 1,25`; inaczej brak `src2x` (obniżone @2x — [plan]).
+6. Poświaty, cienie, sylwetki i rozmycia liczymy z gotowego @1x (§ 5.15–5.16), a nie ze źródła — tańsze
+   i spójne z tym, co widać w grze.
 
 ### 5.8. Kodowanie: WebP, AVIF i inne
 
 | Klasa obrazów | Format | Parametry | Dlaczego |
 |---|---|---|---|
-| `ALFA`: symbole, napisy, maskotka, skrzynia, logotypy, monety | WebP stratny z bezstratną alfą | `quality=82, method=6, exact=False` | najlepsza jakość do wagi dla błyszczących renderów; `exact=False` pozwala koderowi pominąć niewidoczne RGB pod α = 0 |
-| UI 9-slice, ikony, cyfry | WebP: kodujemy stratnie (`quality=90`) i bezstratnie, zostaje mniejszy plik | `lossless=True, method=6` / `quality=90` | ostre krawędzie i gładkie gradienty; dla małych plików bezstratny bywa mniejszy |
-| `PELNE`: tła, okładki, banery | WebP bez alfy + AVIF dla HTML | WebP `quality=85` ([01 § 4.9](01-kierunek-artystyczny.md#49-krawędzie-alfa-i-jakość-pliku)); AVIF `quality≈60, speed=6` | AVIF jest zwykle o 20–35% mniejszy przy podobnej jakości; WebP jako zapas i dla Pixi |
-| `CZARNE`: efekty | WebP bez alfy | `quality=80, method=6` | miękkie gradienty dobrze się kompresują; brak alfy = mniejszy plik |
-| Warianty `glow`, `cien`, `syl`, `rozmyte` | WebP | `quality=70` | rozmyte / jednobarwne — artefakty niewidoczne |
-| Favicony, ikony aplikacji | ICO, PNG | `optimize=True` | wymagane formaty |
-| Obraz Open Graph | JPEG progresywny | `quality=85, progressive=True, optimize=True` | najszersza obsługa w serwisach i komunikatorach |
+| `ALFA`: symbole, napisy, maskotka, skrzynia, logotypy, monety, ramki, `mini`, `male`, konfetti, odłamki | WebP stratny kolor + bezstratna alfa (rodzaj `alfa`) | `quality=82, alpha_quality=100, method=4` (`--dokladnie`: `method=6`) | najlepsza jakość do wagi dla błyszczących renderów; alfa bez strat, więc krawędzie się nie „gryzą” |
+| UI: panel, przyciski, ikony `g_ui_ikony__*`, glify cyfr, strona BitmapFont, `ikona`, `naglowek` (rodzaj `ui`) | WebP: kodujemy bezstratnie i stratnie, zostaje mniejszy plik | `lossless=True, exact=False` albo `quality=90, alpha_quality=100` | ostre krawędzie i gładkie gradienty; dla małych plików bezstratny bywa mniejszy; `exact=False` pozwala koderowi pominąć niewidoczne RGB pod α = 0 |
+| `PELNE`: tła, okładki, banery, `k169` | WebP bez alfy | `quality=85` ([01 § 4.9](01-kierunek-artystyczny.md#49-krawędzie-alfa-i-jakość-pliku)) | brak alfy = mniejszy plik |
+| `CZARNE`: efekty i ich komórki | WebP bez alfy | `quality=80` | miękkie gradienty dobrze się kompresują |
+| Warianty `ruch1`, `ruch2`, `syl`, `glow`, `glowzl`, `cien`, `rozmyte` (rodzaj `miekkie`) | WebP | `quality=70` | rozmyte / jednobarwne — artefakty niewidoczne |
+| Favicony, ikony aplikacji | ICO (16/32/48), PNG | PNG `optimize=True` | wymagane formaty |
+| **[plan]** `PELNE` w HTML | dodatkowo AVIF | `quality≈60, speed=6` | AVIF jest zwykle o 20–35% mniejszy przy podobnej jakości; WebP jako zapas i dla Pixi |
+| **[plan]** obraz Open Graph | JPEG progresywny | `quality=85, progressive=True, optimize=True` | najszersza obsługa w serwisach i komunikatorach |
 
 * **Bez zapasowych PNG:** WebP obsługują wszystkie przeglądarki, na które celujemy (Chrome, Edge, Firefox,
   Safari 14+).
-* **AVIF tylko w HTML** (`<picture>` ze źródłem AVIF i WebP). Tekstury Pixi i atlasy zostają w WebP — dekodowanie
-  AVIF jest cięższe, a nie chcemy wydłużać ładowania gry. Plan B, gdyby Pillow nie miał AVIF: ffmpeg
-  (`-c:v libaom-av1 -still-picture 1`) albo pominięcie AVIF (WebP wystarcza).
-* **Kodowanie do rozmiaru:** dla obrazów na ścieżce LCP lobby (`g_tlo_lobby_mobile.w720` i `.w1080` w AVIF) pipeline
-  szuka bisekcją jakości z przedziału 40–75 tak, by plik miał ≤ 120 KB (§ 7.3).
-* **Metadane** (EXIF, XMP, ICC) nie są kopiowane — oszczędność 2–20 KB na plik.
-* **Kontrola jakości** (Q21): PSNR obrazu po zdekodowaniu względem obrazu przed kodowaniem, oba złożone na
+* **[plan] AVIF tylko w HTML** (`<picture>` ze źródłem AVIF i WebP). Tekstury Pixi zostają w WebP — dekodowanie
+  AVIF jest cięższe, a nie chcemy wydłużać ładowania gry. Wykonalność sprawdzona: w naszym środowisku Pillow 12.3
+  ma wbudowany AVIF (`PIL.features.check("avif")` zwraca `True`). Plan B: ffmpeg (`-c:v libaom-av1 -still-picture 1`)
+  albo pominięcie AVIF (WebP wystarcza).
+* **[plan] Kodowanie do rozmiaru:** dla obrazu LCP lobby (`g_tlo_lobby_mobile` w wariantach 720 i 1080 px, AVIF)
+  bisekcja jakości z przedziału 40–75 tak, by plik miał ≤ 120 KB (§ 7.3).
+* **Metadane** (EXIF, XMP, ICC) nie są kopiowane — pliki powstają z tablic pikseli; oszczędność 2–20 KB na plik.
+* **Zapis „tylko gdy zmiana”:** plik jest nadpisywany wyłącznie wtedy, gdy jego bajty się różnią — git nie widzi
+  fałszywych zmian.
+* **[plan] Kontrola jakości** (Q21): PSNR obrazu po zdekodowaniu względem obrazu przed kodowaniem, oba złożone na
   `#07060F`: UI ≥ 38 dB, tła ≥ 36 dB, reszta ≥ 34 dB.
-* **Opcjonalnie** `cwebp -sharp_yuv`, jeśli używana wersja Pillow nie udostępnia tej opcji — poprawia krawędzie
-  nasyconych czerwieni i magenty (siódemka S1, muszka maskotki). To dodatek, nie wymóg.
+* **[plan] Opcjonalnie** `cwebp -sharp_yuv` — poprawia krawędzie nasyconych czerwieni i magenty (siódemka S1, muszka
+  maskotki). To dodatek, nie wymóg.
 
 ### 5.9. Atlasy tekstur dla Pixi
+
+> **Stan: [plan] — w wersji 1.0.0 atlasów nie ma.** Pipeline zapisuje wyłącznie pliki pojedyncze z kontraktu 09
+> (wraz z wariantami); scena Pixi ładuje je osobno przez `Assets.load`. Całą tę sekcję trzymamy jako projekt
+> następnego kroku: zysk (mniej żądań HTTP i wywołań rysowania) pojawi się dopiero przy S2 i pełnych efektach, a pliki
+> pojedyncze wystarczą do pierwszej grywalnej wersji z S1. Pola `atlas` i `atlases` w manifeście pojawią się razem
+> z tą funkcją.
 
 **Dlaczego atlasy:** sam S2 ma 13 symboli × 6 wariantów = 78 tekstur. Bez atlasu to 78 żądań HTTP, 78 wgrań na GPU
 i wiele wywołań rysowania (Pixi 8 łączy w jedną paczkę sprite'y korzystające łącznie z maks. kilkunastu tekstur —
@@ -1109,81 +1129,107 @@ są duże i pojedyncze, więc atlas nic by nie dał.
 
 ### 5.10. Cięcie arkuszy przez spójne składowe
 
-1. **Maska:** `ALFA` → α ≥ 24; `CZARNE` → max(R, G, B) ≥ 12 (po zerowaniu czerni z § 5.11).
-2. **Domknięcie morfologiczne** (dylatacja, potem erozja) dyskiem o promieniu 1,2% krótszego boku (≈ 12 px) —
-   łączy części jednego elementu (kropki wiązki iskier, ogonek przecinka, kawałki serpentyny).
-3. **Etykietowanie** 8-spójne (`scipy.ndimage.label`), odrzucenie składowych < 0,05% płótna.
-4. **Przypisanie do siatki:** komórka = (⌊y_środka / (H / wiersze)⌋, ⌊x_środka / (W / kolumny)⌋). Kilka składowych
-   w jednej komórce → łączymy (prostokąt = suma).
-5. **Kontrola:** liczba elementów = oczekiwana (8 / 12 / 13 / 3); w `g_font_cyfry` dwa ostatnie pola muszą być puste
-   (alfa < 0,1% komórki) — Q13, Q14.
-6. **Plan awaryjny:** (a) profile rzutów — suma maski po kolumnach i wierszach, cięcie w środkach przerw (serie zer
-   ≥ 1% szerokości); (b) równa siatka z 3% marginesu wewnętrznego. Każdy plan awaryjny = ostrzeżenie z podglądem
-   nałożonej siatki w raporcie.
-7. **Wycięcie** z oryginalnej (niedomkniętej) maski + margines: `ALFA` 4 px, `CZARNE` 8% rozmiaru elementu (ogony
-   poświaty), potem winieta krawędzi z § 5.11.
-8. **Nazwy** komórek z § 2.3; w manifeście `sheets.<ID>.cells` (kontrakt 09). Każdy element przechodzi dalej przez
-   § 5.6–5.9 jak zwykły obraz.
+1. **Maska:** `ALFA` → α ≥ 24/255 (po naprawie alfy z § 5.2–5.5, bez usuwania pyłków); `CZARNE` → max(R, G, B)
+   ≥ 12/255 (po spłaszczeniu alfy i zerowaniu czerni z § 5.11).
+2. **Domknięcie morfologiczne** (dylatacja, potem erozja) kwadratem o promieniu 1,2% krótszego boku (≈ 12 px,
+   min. 2 px) — łączy części jednego elementu (kropki wiązki iskier, ogonek przecinka, kawałki serpentyny).
+3. **Etykietowanie** 8-spójne (własna implementacja: przebiegi + union-find w `kroki/obraz.py`), odrzucenie składowych
+   < 0,05% płótna.
+4. **Wybór elementów:** jeśli plam jest więcej niż oczekiwanych, `n` największych to „ziarna”, a każdą mniejszą
+   dołączamy do najbliższego ziarna (rozbity element — info Q13). Prostokąt elementu = suma prostokątów jego plam.
+5. **Kolejność komórek:** środki elementów dzielimy na wiersze według **największych przerw w osi Y** (siatka może
+   być nierówna i przesunięta), w wierszu sortujemy od lewej. Wiersz krótszy niż liczba kolumn dopełniamy pustymi
+   polami na końcu — tak `g_font_cyfry` (5×3) dostaje 13 glifów i 2 puste pola.
+6. **Kontrola:** liczba elementów = oczekiwana (8 / 12 / 13 / 3), inaczej błąd Q13; w `g_font_cyfry` element
+   w którymś z dwóch ostatnich pól → ostrzeżenie Q14.
+7. **Plan awaryjny** (gdy liczba się nie zgadza): (a) profile rzutów — suma maski po kolumnach i wierszach, cięcie
+   w środkach przerw (serie zer ≥ 1% długości); (b) gdy profile nie dają właściwej liczby przerw — równa siatka.
+   Każdy plan awaryjny = ostrzeżenie Q13. Podgląd nałożonej siatki w raporcie — [plan].
+8. **Wycięcie:** `ALFA` — prostokąt + 4 px, przy czym zostają tylko piksele tej plamy (maska poszerzona o 3 px), więc
+   sąsiedzi nie przeciekają; potem obwódki (§ 5.5) i ciasne przycięcie. `CZARNE` — prostokąt + 8% rozmiaru elementu
+   (ogony poświaty), element skalowany do 92% komórki docelowej na czarnym płótnie, potem winieta krawędzi 8%
+   (§ 5.11).
+9. **Nazwy** komórek z § 2.3 (`KOMORKI` w `katalog.py`); pliki `<ID>__<komórka>.webp`, w manifeście osobne wpisy
+   `images.<ID>__<komórka>` i `sheets.<ID>.cells` (kontrakt 09). Rozmiary: § 5.6 (koło 0,96 komórki dla ikon
+   i awatarów, dłuższy bok dla konfetti i odłamków), `CZARNE` — stała komórka (iskry 128×128, błyskawice 384×768,
+   hieroglify 128×128 + @2x).
+
+Test `test_arkusz_nierowna_siatka` (§ 5.23): 12 plam w siatce 4×3 przesuniętych do ±70 px, jedna rozbita na dwie
+części → 12 elementów w poprawnej kolejności.
 
 ### 5.11. Efekty z czarnym tłem (FX)
 
-Czerń **zostaje** — obraz nie dostaje kanału alfy. Kroki:
+Czerń **zostaje** — obraz nie dostaje kanału alfy. Kroki w kolejności z `kroki/fx.py`:
 
-1. **Zerowanie czerni:** `b` = 2. percentyl jasności pasa brzegowego (zwykle 0–6/255), potem dla każdego kanału
-   `v' = clamp((v − b) · 255 / (255 − b))`. **Dlaczego:** w trybie `add` nawet 4/255 na dużym sprite'cie daje widoczny,
-   jaśniejszy prostokąt na tle `#07060F`, szczególnie na ekranach OLED.
-2. **Winieta krawędzi:** mnożnik `smoothstep(0, 6% krótszego boku, odległość od krawędzi)` — na samej krawędzi
+1. **Nieprzezroczystość (OPAQUE):** obraz `CZARNE` ma być nieprzezroczysty (zasada z 03). Jeśli ma przezroczyste
+   piksele (> 0,1% z α < 0,98), pipeline spłaszcza go na czerń (kolor × α — w trybie `add` daje to ten sam wygląd)
+   i zgłasza ostrzeżenie Q11 „efekt miał kanał alfa”.
+2. **Zerowanie czerni:** `b` = 2. percentyl jasności pasa brzegowego (3% krótszego boku; zwykle 0–6/255), potem dla
+   każdego kanału `v' = clamp((v − b) · 255 / (255 − b))`. **Dlaczego:** w trybie `add` nawet 4/255 na dużym sprite'cie
+   daje widoczny, jaśniejszy prostokąt na tle `#07060F`, szczególnie na ekranach OLED. Mediana pasa > 40/255 → błąd
+   Q11 (tło nie jest czarne).
+3. **Środek promieni i flary** (`cel.srodek` w katalogu): kod obraca `g_fx_promienie` (4–8°/s) i skaluje `g_fx_flara`
+   wokół środka, więc środek ciężkości jasności musi leżeć w środku obrazu. Przesunięcie > 2% → automatyczne
+   przesunięcie obrazu (dopełnienie czernią) i info Q11 w raporcie.
+4. **Limit jasności dymu** (`g_fx_dym`): 99. percentyl jasności sprowadzany do 70% (czysta biel w `add` prześwietla ekran).
+5. **Winieta krawędzi:** mnożnik `smoothstep(0, 6% krótszego boku, odległość od krawędzi)` — na samej krawędzi
    zawsze 0, więc żaden efekt nie ma twardego brzegu. Raport podaje, ile energii (suma jasności) zabrała winieta;
-   > 3% → „poświata dotyka krawędzi” (Q11).
-3. **Środek promieni i flary:** kod obraca `g_fx_promienie` (4–8°/s) i skaluje `g_fx_flara` wokół środka, więc
-   środek ciężkości jasności musi leżeć w środku obrazu. Przesunięcie > 2% → automatyczne przesunięcie obrazu
-   (dopełnienie czernią) i informacja w raporcie.
-4. **Neutralność barwy:** efekty mają być prawie białe, bo kolor nadaje `tint`
-   ([01 § 4.8](01-kierunek-artystyczny.md#48-obrazy-efektów-tło-czarne-i-konfetti)). Średnie nasycenie jasnych pikseli
-   > 0,25 → ostrzeżenie; opcja `neutralizuj = true` zamienia obraz na luminancję z lekko ciepłym odcieniem `#FFF3D1`.
-5. **Limit jasności dymu:** `g_fx_dym` — 99. percentyl jasności sprowadzany do ~70% (czysta biel w `add`
-   prześwietla ekran).
-6. **Zapis:** WebP bez alfy w atlasie `wspolne-fx` / `s2-fx`; w manifeście `blend: "add"`.
-7. **Użycie:** Pixi — `blendMode = 'add'` + `tint`; CSS (lobby) — `mix-blend-mode: plus-lighter` (dokładne
+   > 3% → ostrzeżenie Q11 „poświata dotyka krawędzi”. Komórki arkuszy `CZARNE` dostają winietę 8% na płótnie komórki
+   (§ 5.10).
+6. **Neutralność barwy:** efekty mają być prawie białe, bo kolor nadaje `tint`
+   ([01 § 4.8](01-kierunek-artystyczny.md#48-obrazy-efektów-tło-czarne-i-konfetti)). Średnie nasycenie pikseli
+   o jasności > 0,5 większe niż 0,25 → ostrzeżenie Q11. [plan]: opcja `neutralizuj = true` zamieniająca obraz na
+   luminancję z lekko ciepłym odcieniem `#FFF3D1`.
+7. **Skala i zapis:** dłuższy bok do rozmiaru z katalogu (`g_fx_promienie` 1024, `g_fx_flara` i `g_fx_dym` 512), jedna
+   rozdzielczość, WebP bez alfy `quality=80`; w manifeście `blend: "add"`. Atlasy `wspolne-fx` / `s2-fx` — [plan].
+8. **Użycie:** Pixi — `blendMode = 'add'` + `tint`; CSS (lobby) — `mix-blend-mode: plus-lighter` (dokładne
    dodawanie; zapas `screen`); canvas 2D — `globalCompositeOperation = 'lighter'`.
 
 ### 5.12. Okno w ramkach bębnów
 
-1. **Maska przezroczystości** `α ≤ 16` → spójne składowe; odrzucamy składowe dotykające brzegu obrazu (to tło wokół
-   ramki). Największa pozostała = okno; musi zajmować ≥ 25% prostokąta ramki.
-2. **Prostokątność** = pole składowej / pole jej prostokąta: ≥ 0,97 OK; 0,95–0,97 ostrzeżenie (np. zaokrąglone
+1. **Maska przezroczystości** `α ≤ 16/255` (po naprawie alfy i ciasnym przycięciu ramki) → spójne składowe; odrzucamy
+   składowe dotykające brzegu obrazu (to tło wokół ramki). Największa pozostała = okno; musi zajmować ≥ 25% prostokąta
+   ramki (prostokąt pikseli z α > 0,5).
+2. **Prostokątność** = pole składowej / pole jej prostokąta: ≥ 0,97 OK; 0,95–0,97 ostrzeżenie Q15 (np. zaokrąglone
    rogi okna); < 0,95 błąd Q15.
 3. **Dokładne krawędzie:** dla każdego boku, na liniach skanowania w środkowych 60% tego boku, szukamy od środka
-   okna pierwszego piksela z α ≥ 128; mediana = krawędź. Mediana ignoruje ornamenty wchodzące w okno.
-4. **Okno zamalowane** (generator narysował ciemne szkło zamiast przezroczystości): brak wewnętrznej przezroczystej
-   składowej → wypełnianie od środka z tolerancją ΔE < 10; jeśli wynik jest prostokątny (≥ 0,95) i zajmuje ≥ 25%
-   ramki → ustawiamy tam α = 0 (z 1 px wygładzenia) i zgłaszamy ostrzeżenie „okno było zamalowane — wycięte
-   automatycznie”.
-5. **Proporcja** względem siatki (§ 2.5): odchyłka ≤ 3% → skalowanie równomierne; 3–15% → rozciąganie pasów
-   9-slice; > 15% → błąd (do ponownego wygenerowania).
-6. **Marginesy 9-slice ramki** = odległości okna od krawędzi obrazu (`left = x0`, `top = y0`, `right = W − x1`,
-   `bottom = H − y1`). Sprawdzamy, czy rozciągane pasy (środkowe odcinki listew) są jednolite wzdłuż kierunku
-   rozciągania (odchylenie profilu ≤ 6/255). Ornament w pasie (np. herb na środku górnej listwy) → ostrzeżenie
-   i zalecenie skalowania równomiernego z minimalnym marginesem (lukę wypełnia podkład bębna z 01 § 6.6).
-7. **Zapis:** `frames.<ID>.window` jako ułamki (kontrakt 09) + rozszerzenie `frames.<ID>.nineSlice` w px @1x.
-8. **W Pixi:** `new NineSliceSprite({ texture, leftWidth, topHeight, rightWidth, bottomHeight })`; szerokość
+   okna pierwszego piksela z α ≥ 0,5; mediana = krawędź. Mediana ignoruje ornamenty wchodzące w okno.
+4. **Okno zamalowane** (generator narysował ciemne szkło zamiast przezroczystości): brak dużej wewnętrznej
+   przezroczystej składowej → wypełnianie od środka **ramki** z tolerancją ΔE < 10; jeśli wynik nie dotyka brzegu,
+   jest prostokątny (≥ 0,95) i zajmuje ≥ 25% ramki → ustawiamy tam α = 0 i zgłaszamy ostrzeżenie Q15 „okno było
+   zamalowane — wycięte automatycznie”. Inaczej błąd Q15 „nie znaleziono przezroczystego okna ramki”.
+5. **Proporcja** względem siatki (§ 2.5): odchyłka ≤ 3% OK; 3–15% ostrzeżenie Q15 (front dopasuje rozciągnięciem
+   pasów 9-slice); > 15% błąd Q15 (do ponownego wygenerowania).
+6. **Skala:** `s = √((okno_docelowe_szer / okno_szer) · (okno_docelowe_wys / okno_wys))` — średnia geometryczna,
+   więc przy lekko złej proporcji pole okna @1x i tak odpowiada siatce. @2x według § 2.6 (w praktyce brak, § 2.5).
+7. **Marginesy 9-slice ramki** = odległości okna od krawędzi obrazu po przeskalowaniu (`left = x0`, `top = y0`,
+   `right = W − x1`, `bottom = H − y1`, w px @1x). [plan]: kontrola, czy rozciągane pasy (środkowe odcinki listew) są
+   jednolite wzdłuż kierunku rozciągania (odchylenie profilu ≤ 6/255); ornament w pasie (np. herb na środku górnej
+   listwy) → ostrzeżenie i zalecenie skalowania równomiernego (lukę wypełnia podkład bębna z 01 § 6.6).
+8. **Zapis:** `frames.<ID>.window` jako ułamki wymiarów obrazu (kontrakt 09) + rozszerzenie `frames.<ID>.nineSlice`
+   w px @1x.
+9. **W Pixi:** `new NineSliceSprite({ texture, leftWidth, topHeight, rightWidth, bottomHeight })`; szerokość
    i wysokość dobrane tak, by okno = siatka bębnów + 2% luzu. Bębny leżą pod ramką i są przycinane prostokątem okna
    (prostokątna maska wyrównana do osi jest tania — może być realizowana nożycami GPU).
 
+Testy `test_okno_ramki` i `test_okno_zamalowane` (§ 5.23): okno 300×200 w (100, 120) wykryte z dokładnością ±1 px
+(także po naprawie szachownicy) i ±2 px, gdy okno było zamalowane.
+
 ### 5.13. Marginesy 9-slice (panel, przyciski)
 
-1. Po przycięciu liczymy **sygnatury kolumn** (średni kolor RGBA kolumny w paśmie 35–65% wysokości) i **sygnatury
-   wierszy** (w paśmie 35–65% szerokości).
-2. `d(x)` = maks. różnica kanałów między sąsiednimi kolumnami. Szukamy najdłuższego ciągłego odcinka wokół środka,
-   gdzie `d(x) ≤ 1,5/255` i odchylenie od kolumny środkowej ≤ 4/255 → `[xL, xR]`. Analogicznie wiersze → `[yT, yB]`.
-3. **Wycinki:** `left = xL + 2`, `right = W − xR + 2`, `top = yT + 2`, `bottom = H − yB + 2` (2 px zapasu w głąb
-   jednolitej strefy).
+1. Obraz jest przycięty **ciasno** (krawędź obrazu = krawędź ramy). Liczymy sygnatury **całych** kolumn i wierszy
+   (kolor z alfą premultiplikowaną, lekko wygładzony rozmyciem σ = 1 px — tłumi szum generatora). Całe, a nie tylko
+   pasmo środkowe, bo ozdobny róg sięgający w głąb krawędzi też musi trafić do wycinka narożnika.
+2. Szukamy najdłuższego ciągłego odcinka wokół środka, gdzie sąsiednie kolumny różnią się średnio o ≤ 1,5/255,
+   a od kolumny środkowej o ≤ 3/255 → `[xL, xR]`. Analogicznie wiersze → `[yT, yB]`.
+3. **Wycinki:** `left = xL + 2`, `right = W − xR + 2`, `top = yT + 2`, `bottom = H − yB + 2` (2 px zapasu).
 4. **Przyciski-pigułki:** w pionie nie ma jednolitych wierszy (gradient fazy), więc tryb „pigułka”:
    `top = bottom = ⌊H/2⌋ − 1` (rozciąga się tylko pasek 2 px, gdy przycisk jest wyższy niż projekt), `left/right`
-   = wykryty koniec zaokrąglenia (≈ H/2). Przyciski mają stałe wysokości w CSS, więc w praktyce nie rozciągają się
-   w pionie.
-5. **Kontrola** (Q16): jednolity środek ≥ 20% każdego wymiaru.
-6. **Zapis:** `nineSlice.<ID>` jako ułamki (kontrakt 09) + wygenerowany `global/ui-9slice.css`:
+   = max(wykryty odcinek, 0,5 H) — nie mniej niż zaokrąglenie. Przyciski mają stałe wysokości w CSS, więc w praktyce
+   nie rozciągają się w pionie.
+5. **Kontrola** (Q16, błąd): jednolity środek < 20% szerokości (panel: także wysokości).
+6. **Zapis:** `nineSlice.<ID>` jako ułamki (kontrakt 09). Regułę CSS pisze front na podstawie manifestu; generowany
+   plik `global/ui-9slice.css` (przykład niżej) — [plan]:
 
 ```css
 /* wygenerowane przez tools/art/przetworz.py — nie edytować ręcznie */
@@ -1204,35 +1250,50 @@ Zapas dla starszych Safari: `-webkit-image-set`.
 ### 5.14. Cyfry → BitmapFont
 
 1. **Cięcie** 15 komórek (§ 5.10) → 13 glifów; 2 ostatnie pola puste (Q14).
-2. **Linia bazowa:** dla cyfr 0–9 dół prostokąta w komórce → mediana = linia bazowa; wysokość cyfr `H` = mediana
-   wysokości. Wiersz 3 (`,` `+` `×`) dostaje tę samą linię bazową względem komórki (komórki mają równą wysokość),
-   więc przecinek schodzi pod linię, a `+` i `×` zostają tam, gdzie narysował je generator.
-3. **Skala:** `H` = 96 px @1x, 192 px @2x.
+2. **Linia bazowa:** dla wiersza 1 (cyfry 0–4) i wiersza 2 (5–9) linia bazowa = mediana dołów prostokątów cyfr;
+   wysokość cyfr `H` = mediana wysokości cyfr. Wiersz 3 (`,` `+` `×`) dostaje linię bazową przesuniętą o ten sam
+   odstęp co między wierszami 1 i 2 (siatka ma równe wiersze), więc przecinek schodzi pod linię, a `+` i `×` zostają
+   tam, gdzie narysował je generator. Q26: brak którejś cyfry → błąd; cyfra odbiega od linii bazowej o > 2 px @1x →
+   ostrzeżenie (poza 3, 5, 9, które w kroju nautycznym mogą schodzić pod linię).
+3. **Skala:** `H` = 96 px @1x, 192 px @2x (@2x według § 2.6 — przy cyfrach wysokich na ~250 px w źródle zawsze jest).
+   Wysokość linii `lineHeight` = 1,25 × 96 = 120 px, `base` = 96 + 0,4 × 24 ≈ 106 px (40% zapasu linii nad cyframi).
 4. **Cyfry tabularne:** `xadvance` cyfr = najszersza cyfra + 4% `H`, glif wyśrodkowany (`xoffset = (adv − w) / 2`).
    Wszystkie cyfry mają tę samą szerokość, więc licznik wygranej nie „pływa” w trakcie liczenia. `,` → szerokość
    + 4% `H`; `+`, `×` → szerokość + 8% `H`. **Spacja U+0020 i spacja niełamliwa U+00A0** (separator tysięcy „10 000”,
    [01 § 2.1](01-kierunek-artystyczny.md#21-nazwa-i-zapis)): bez glifu, `xadvance` = 0,25 szerokości cyfry
    ([01 § 7.9](01-kierunek-artystyczny.md#79-złote-cyfry-g_font_cyfry-sheet-53)).
-5. **Strona** glifów pakowana MaxRects (4 px odstępu), WebP (mniejszy z bezstratnego i `quality=90`).
-6. **Plik `.fnt`** (format BMFont tekstowy, czytany przez loader `BitmapFont` w Pixi 8):
+5. **Strona** glifów: 13 glifów w jednym rzędzie (proste pakowanie półkowe — przy 13 znakach MaxRects byłby
+   przesadą), 4 px odstępu (@2x: 8 px), wymiary strony = potęgi dwójki; WebP (mniejszy z bezstratnego i `quality=90`).
+   Pliki: `global/fonty/cebulion-cyfry@1x.webp` i `@2x.webp`.
+6. **Plik `.fnt`** (format BMFont tekstowy, czytany przez loader `BitmapFont` w Pixi 8), osobno `@1x` i `@2x`;
+   przykład @1x (liczby przykładowe — zależą od obrazu):
 
 ```text
 info face="CebulionCyfry" size=96 bold=0 italic=0 charset="" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=4,4
-common lineHeight=120 base=96 scaleW=512 scaleH=256 pages=1 packed=0
+common lineHeight=120 base=106 scaleW=1024 scaleH=128 pages=1 packed=0
 page id=0 file="cebulion-cyfry@1x.webp"
 chars count=15
-char id=48 x=2 y=2 width=70 height=98 xoffset=3 yoffset=0 xadvance=76 page=0 chnl=15
-char id=215 x=226 y=104 width=58 height=58 xoffset=0 yoffset=24 xadvance=66 page=0 chnl=15
-char id=160 x=0 y=0 width=0 height=0 xoffset=0 yoffset=0 xadvance=25 page=0 chnl=15
+char id=48 x=4 y=4 width=70 height=96 xoffset=3 yoffset=10 xadvance=76 page=0 chnl=15
+char id=215 x=880 y=4 width=58 height=58 xoffset=4 yoffset=34 xadvance=66 page=0 chnl=15
+char id=32 x=0 y=0 width=0 height=0 xoffset=0 yoffset=0 xadvance=18 page=0 chnl=15
+char id=160 x=0 y=0 width=0 height=0 xoffset=0 yoffset=0 xadvance=18 page=0 chnl=15
 ```
 
    15 znaków = 13 glifów + spacja + spacja niełamliwa. W Pixi: `Assets.load('…/cebulion-cyfry@1x.fnt')`, potem
    `new BitmapText({ text: '10 000', style: { fontFamily: 'CebulionCyfry', fontSize: 96 } })`. Czy loader odczyta
    skalę z `@2x` w nazwie — sprawdzimy na wendorowanej wersji; plan B: ładujemy plik @2x i ustawiamy `fontSize`.
-7. **HTML:** wygenerowany `global/fonty/cebulion-cyfry.css` z klasami `.cy-0` … `.cy-9`, `.cy-przecinek`, `.cy-plus`,
-   `.cy-razy`, `.cy-spacja` (wymiary i `background-position` na tej samej stronie glifów, `image-set` dla @1x/@2x).
-   Kontener ma `aria-label` z pełną kwotą, pojedyncze glify `aria-hidden="true"`.
-8. **Raport:** próbki „+10 000”, „1 250 000”, „×100”, „×2” wyrenderowane gotowym fontem.
+7. **Manifest:** `fonts.CebulionCyfry` = `size`, `lineHeight`, `base`, `space`, `tabular: true`, `fnt` (ścieżki
+   `.fnt` dla skali 1 i 2) oraz `chars` — dla każdego znaku komórka, ID pliku glifu i metryki (`w`, `h`, `xoffset`,
+   `yoffset`, `xadvance`) w px @1x.
+8. **HTML:** każdy glif jest też osobnym plikiem `g_font_cyfry__<komórka>.webp` (+ `@2x`) na płótnie o wysokości
+   linii (120 px @1x) i szerokości `xadvance` — w HTML wystarczy postawić obrazki obok siebie (`<img>` albo
+   `background-image`) w kolejności znaków; metryki są w `fonts.CebulionCyfry.chars`. Kontener ma `aria-label`
+   z pełną kwotą, pojedyncze glify `aria-hidden="true"`.
+9. **[plan]** Wygenerowany `global/fonty/cebulion-cyfry.css` z klasami `.cy-0` … `.cy-9`, `.cy-przecinek`, `.cy-plus`,
+   `.cy-razy`, `.cy-spacja` (sprite na stronie glifów, `image-set` dla @1x/@2x) oraz próbki „+10 000”, „1 250 000”,
+   „×100”, „×2” w raporcie.
+
+Test `test_arkusz_cyfr_puste_pola` (§ 5.23): 13 glifów + 2 puste pola, wysokość cyfr wyznaczona z dokładnością ±2 px.
 
 ### 5.15. Rozmycie ruchu (pre-baked)
 
@@ -1242,9 +1303,10 @@ char id=160 x=0 y=0 width=0 height=0 xoffset=0 yoffset=0 xadvance=25 page=0 chnl
 | `ruch2` | 20 px @1x (≈ 40 px przy @2x) + rozciągnięcie w pionie ×1,04 i jasność ×0,95 | S1, S2: pełna prędkość |
 
 Wartości odpowiadają [01 § 5.7](01-kierunek-artystyczny.md#57-stany-symbolu-które-robi-kod) (24–40 px przy @2x).
-Algorytm: obraz @1x w świetle liniowym z alfą premultiplikowaną, dopełnienie w pionie o `L`, dwukrotne rozmycie
-pudełkowe o długości `L/2` (≈ jądro trójkątne, liczone sumami skumulowanymi w czasie liniowym), powrót do alfy
-prostej i sRGB. Zapisujemy tylko @1x — rozmyty obraz nie zyskuje na @2x.
+Algorytm (`kroki/warianty.py`): obraz @1x w świetle liniowym z alfą premultiplikowaną, dopełnienie w pionie o `L/2`
+u góry i u dołu (smuga się nie ucina — dlatego plik `ruch1` S1 ma 256×268, a `ruch2` 256×288), dwukrotne rozmycie
+pudełkowe o długości ≈ `L/2` (≈ jądro trójkątne, liczone sumami skumulowanymi w czasie liniowym), powrót do alfy
+prostej i sRGB. Zapisujemy tylko @1x (WebP `quality=70`) — rozmyty obraz nie zyskuje na @2x.
 
 Kod przełącza tekstury według prędkości bębna (progi w [04](04-efekty-wizualne.md)), np. > 60% prędkości → `ruch2`,
 20–60% → `ruch1`, mniej → ostry symbol.
@@ -1255,49 +1317,63 @@ przebiegi renderowania w każdej klatce; podmiana tekstury kosztuje zero.
 
 | Wariant | Algorytm | Rozdzielczość i użycie |
 |---|---|---|
-| `glow` | sylwetka z alfy → dylatacja 2% S → rozmycie Gaussa σ = 5% S → normalizacja do 1 → gamma 0,8 (dłuższy ogon) → RGB białe, alfa = wynik; płótno powiększone o 15% S z każdej strony | @0,5x; w kodzie `tint` (kolor gry / poziomu wygranej) + `blendMode = 'add'` + puls alfy. Zastępuje filtr glow na poziomie Medium (brief § 5) |
+| `glow` | sylwetka z alfy (α > 0,5) → dylatacja 2% S → rozmycie Gaussa σ = 5% S → normalizacja do 1 → gamma 0,8 (dłuższy ogon) → RGB białe, alfa = wynik; płótno powiększone o 15% S z każdej strony | @0,5x (plik ma połowę pikseli, manifest podaje rozmiar logiczny @1x i `scale: 0.5`); w kodzie `tint` (kolor gry / poziomu wygranej) + `blendMode = 'add'` + puls alfy. Zastępuje filtr glow na poziomie Medium (brief § 5) |
 | `glowzl` | jak `glow`, ale RGB = `#F5C542` (`--gold-2`) | @1x; w HTML jako pseudo-element animowany przez `opacity`. **Dlaczego:** animacja `opacity` jest komponowana przez GPU, a animowanie `filter: drop-shadow` przerysowuje element w każdej klatce |
-| `cien` | sylwetka → rozmycie Gaussa σ = 4% S (banery: 3%) → RGB czarne | @0,5x; przesunięcie (x +3% S, y +5% S; banery y +4%) i krycie (0,45; banery 0,6) ustawia kod ([01 § 4.7](01-kierunek-artystyczny.md#47-cienie--dodaje-kod-nie-obraz)) |
+| `cien` | alfa → rozmycie Gaussa σ = 4% S (napisy `g_win_*`: 3% S) → RGB czarne; płótno powiększone o 3σ | @0,5x (jak `glow`); przesunięcie (x +3% S, y +5% S; banery y +4%) i krycie (0,45; banery 0,6) ustawia kod ([01 § 4.7](01-kierunek-artystyczny.md#47-cienie--dodaje-kod-nie-obraz)) |
 | `syl` | RGB białe, α = α symbolu | @1x; błysk lądowania (alfa 0 → 0,8 → 0 w ~120 ms) i stany na poziomie Low (bez filtrów) |
 | `mini` | symbol zmniejszony do 96 px (@2x: 192) z wyostrzeniem małych rozmiarów | tabela wypłat w HTML |
 
-`S` = rozmiar pola symbolu (albo szerokość napisu). Dodatkowo dla S3:
+`S` = rozmiar pola symbolu (256 / 192 / 144 px; także `g_ui_spin`: 144) albo **połowa** dłuższego boku obiektu @1x
+(napisy `g_win_*`, logotypy, `s2_wild_rozszerzony`, `g_logo`, `g_skrzynia`). Wszystkie warianty liczymy z gotowego
+pliku @1x. `male` (64 / 128), `ikona` (28 / 56) i `naglowek` (40 / 80) to pomniejszenia z wyostrzeniem małych
+rozmiarów (§ 5.7). Dodatkowo dla S3:
 
 * **`tint`** (do barwienia odłamków E70): wartość z tabeli kolorów [01 § 11.4](01-kierunek-artystyczny.md#114-symbole-s3),
-  wpisana w `manifest.toml`. Kontrolnie liczymy kolor dominujący — k-średnie (k = 3) na pikselach z α = 255
-  i nasyceniem > 0,25, skupienie o największym iloczynie liczności i nasycenia — i przy różnicy ΔE > 20 od tabeli
-  zgłaszamy ostrzeżenie Q19 (pomyłka nazwy albo dryf koloru).
-* **`pole`** kuli `s3_sym_mnoznik`: jasny, mało nasycony obszar w środkowych 60% (jasność > 0,75, nasycenie < 0,2)
-  → największa składowa → środek ciężkości i promień równoważny `√(pole/π)`; zapis jako ułamki `{x, y, r}`.
-  Kod skaluje liczbę „×5” do wysokości ≈ 1,2 r.
+  wpisana w `TINT_S3` w `tools/art/katalog.py`, trafia do manifestu bez zmian. **[plan]** Kontrolnie liczyć kolor
+  dominujący — k-średnie (k = 3) na pikselach z α = 255 i nasyceniem > 0,25, skupienie o największym iloczynie
+  liczności i nasycenia — i przy różnicy ΔE > 20 od tabeli zgłaszać ostrzeżenie Q19 (pomyłka nazwy albo dryf koloru).
+* **`pole`** kuli `s3_sym_mnoznik`: jasny, mało nasycony, kryjący obszar w środkowych 60% (jasność > 0,75, nasycenie
+  < 0,2, α > 0,9) → największa składowa → środek ciężkości i promień równoważny `√(pole/π)`; zapis jako ułamki
+  szerokości `{x, y, r}` (gdy nic nie znaleziono: `{0,5; 0,5; 0,25}`). Kod skaluje liczbę „×5” do wysokości ≈ 1,2 r.
 
 ### 5.17. Tła
 
-1. **Warianty szerokości:** desktop 3:2 → `w1280` (×0,83), `w1920` (×1,25), `w2560` (×1,67); mobile 2:3 → `w720`,
-   `w1080` (×1,05), `w1280` (×1,25). W manifeście `src` = `w1920` / `w1080`, `src2x` = `w2560` / `w1280`, a `widths`
-   i `avif` wymieniają wszystkie warianty.
-2. **Dithering przeciw pasmom** (01 § 4.9): po próbnym kodowaniu porównujemy gładkie ciemne obszary (L\* < 25,
-   lokalne odchylenie < 1/255). Jeśli powstały schodki > 2 poziomów co ≥ 8 px, dodajemy w tych obszarach szum
-   trójkątny ±1,5/255 (≈ 1%) z ziarnem zależnym od ID i kodujemy ponownie.
-3. **Pomiary jasności** ([01 § 6.1](01-kierunek-artystyczny.md#61-zasady-ogólne)): średnie L\* całego tła 12–22,
+1. **Warianty szerokości** (`cel.szerokosci` w katalogu): desktop 3:2 → 1280 (×0,83), **1920** (×1,25), **2560**
+   (×1,67); mobile 2:3 → 720 (×0,70), **1080** (×1,05), **1280** (×1,25). Pliki: wariant @1x (1920 / 1080) =
+   `<ID>.webp`, wariant @2x (2560 / 1280) = `<ID>@2x.webp`, najmniejszy = `<ID>.w1280.webp` / `<ID>.w720.webp`
+   — dzięki temu `src` / `src2x` mają dokładnie nazwy z kontraktu 09. W manifeście `widths` mapuje szerokość na
+   ścieżkę dla wszystkich trzech (`{"1280": "global/g_tlo_lobby_desktop.w1280.webp", "1920": "…/g_tlo_lobby_desktop.webp",
+   "2560": "…/g_tlo_lobby_desktop@2x.webp"}`). Wariant wymagający powiększenia > ×1,67 jest pomijany (Q20; brak @1x
+   → błąd Q20). Pole `avif` — [plan].
+2. **Szum przeciw pasmom** (01 § 4.9): każdy wariant dostaje szum trójkątny ±1/255, a przy powiększaniu mocniejszy
+   (dodatkowo 2,5/255 na każde 1,0 powiększenia ponad ×1, czyli ok. ±2,7/255 przy ×1,67), silniejszy w ciemnych
+   partiach (tam pasma są najbardziej widoczne). Ziarno losowania = skrót `ID:szerokość`, więc wynik jest powtarzalny.
+   [plan]: dithering adaptacyjny — tylko tam, gdzie próbne kodowanie dało schodki > 2 poziomów co ≥ 8 px w gładkich
+   ciemnych obszarach (L\* < 25).
+3. **[plan] Pomiary jasności** ([01 § 6.1](01-kierunek-artystyczny.md#61-zasady-ogólne)): średnie L\* całego tła 12–22,
    strefy bębnów 6–14 (desktop x 18–82%, y 12–80%; mobile x 4–96%, y 20–66%) — Q12.
-4. **Kadrowanie pod proporcje ekranu:** tło działa jak `object-fit: cover` z punktem ogniskowym `focus` z manifestu
-   (domyślnie desktop `[0.5, 0.45]` — punkt zbiegu na ~45% wysokości, mobile `[0.5, 0.5]`). Raport pokazuje kadry
-   dla proporcji desktop 16:10, 16:9, 4:3, 21:9 (z ograniczeniem przycięcia pionowego do 12%) i mobile 9:19,5, 9:16,
-   3:4, z nałożonymi strefami bezpiecznymi (desktop x 6–94%, y 9–91%; mobile x 16–84%, y 6–94%) i strefą bębnów —
+4. **Kadrowanie:** pipeline przycina tylko źródło o innej proporcji niż format z katalogu (np. ChatGPT oddał 1536×1000)
+   — największy prostokąt właściwej proporcji wokół punktu `focus`. Kadr pod proporcje **ekranu** robi front:
+   tło działa jak `object-fit: cover` z punktem ogniskowym `focus` z manifestu (desktop `[0.5, 0.45]` — punkt zbiegu
+   na ~45% wysokości; mobile i banery `[0.5, 0.5]`; pole `focus` mają tła i banery). [plan]: raport z kadrami dla
+   proporcji desktop 16:10, 16:9, 4:3, 21:9 (z ograniczeniem przycięcia pionowego do 12%) i mobile 9:19,5, 9:16, 3:4,
+   z nałożonymi strefami bezpiecznymi (desktop x 6–94%, y 9–91%; mobile x 16–84%, y 6–94%) i strefą bębnów —
    wartości z [01 § 6.4](01-kierunek-artystyczny.md#64-kadrowanie-na-różnych-ekranach).
-5. **LQIP:** miniatura 24×16 (mobile 16×24) WebP `quality=30` jako data URI (~250–400 B) w `manifest.json → lqip`;
-   front pokazuje ją rozmytą natychmiast, zanim przyjdzie właściwy plik.
-6. **`rozmyte`:** rozmycie Gaussa σ = 3% szerokości, przyciemnienie ×0,75, zapis 640 px (desktop) / 480 px (mobile).
-   Tło pod modalami (E04, E07, E09) zamiast `backdrop-filter: blur()`, które na telefonach rozmywa cały ekran
-   w każdej klatce animacji. Banery dostają `rozmyte` 480 px na ekran ładowania gry (E20).
-7. **Okładki** `s*_okladka`: `w400`, `w600`, `w800` (WebP + AVIF) i LQIP; `srcset` z deskryptorami `w`
-   i `sizes` wg szerokości kafla (06).
+5. **LQIP:** miniatura 24×16 (mobile i okładki 16×24) WebP `quality=30` jako data URI (~250–400 B) w `manifest.json →
+   images.<ID>.lqip`, dla wszystkich obrazów `PELNE` (tła, okładki, banery); front pokazuje ją rozmytą natychmiast,
+   zanim przyjdzie właściwy plik.
+6. **`rozmyte`** (`<ID>.rozmyte.webp`, `variants.rozmyte`): rozmycie Gaussa σ = 3% szerokości, przyciemnienie ×0,75,
+   zapis 640 px (tła desktop) / 480 px (tła mobile i banery). Powstaje dla **wszystkich** teł (`g_tlo_lobby_*`
+   i teł gier) oraz banerów. Tło pod modalami (E04, E07, E09) zamiast `backdrop-filter: blur()`, które na telefonach
+   rozmywa cały ekran w każdej klatce animacji. Banery dają `rozmyte` na ekran ładowania gry (E20).
+7. **Okładki** `s*_okladka`: 400 (`<ID>.webp`), 600 (`<ID>.w600.webp`), 800 (`<ID>@2x.webp`) i LQIP; bez `rozmyte`
+   i bez `focus`. `srcset` z deskryptorami `w` i `sizes` wg szerokości kafla (06). AVIF — [plan].
 
 **Wybór wariantu** (zalecenie; ostateczną logikę opisują 06 i 08). Zasada: najmniejszy wariant ≥ 0,9 × potrzebnych
 pikseli (wymiar pokrywający ekran × DPR). W HTML lobby: `<picture>` ze źródłem `media="(max-aspect-ratio: 1/1)"`
-dla wersji mobile, `type="image/avif"` przed WebP, `srcset` z deskryptorami `w`, `sizes="100vw"`, a obraz tła lobby
-z `fetchpriority="high"` (kandydat LCP).
+dla wersji mobile, `srcset` z deskryptorami `w` (ścieżki z `widths`), `sizes="100vw"`, a obraz tła lobby
+z `fetchpriority="high"` (kandydat LCP); po wdrożeniu AVIF ([plan]) — źródło `type="image/avif"` przed WebP.
+W tabeli niżej `w<N>` = wariant o szerokości N (plik z `widths`, np. `w1920` = `<ID>.webp`).
 
 | Poziom jakości | Okno poziome (tło 3:2) | Okno pionowe (tło 2:3) |
 |---|---|---|
@@ -1309,10 +1385,12 @@ z `fetchpriority="high"` (kandydat LCP).
 
 * **Z banerów** `s*_baner`: kadr 16:9 (`k169`) wycinany z 1536×1024 do 1536×864 (tylko w pionie, wg `focus`;
   motyw w prawych 60% kadru pozostaje nietknięty, [01 § 6.8](01-kierunek-artystyczny.md#68-okładki-i-banery--wspólne-zasady))
-  → 960×540 i 1536×864, WebP + AVIF. Użycie: `<video poster>` i warstwa `<img>` nad wideo, która znika
+  → 960×540 (`<ID>.k169.webp`) i 1536×864 (`<ID>.k169@2x.webp`), WebP (AVIF — [plan]); w manifeście
+  `variants.k169`. Banery dostają też `rozmyte` 480 px i LQIP (§ 5.17). Użycie: `<video poster>` i warstwa `<img>` nad wideo, która znika
   przenikaniem 300–400 ms po zdarzeniu `playing` (bez mignięcia czernią albo pierwszą klatką).
 * **Kafle gier:** plakatem wideo kafla jest okładka `s*_okladka` (wideo pojawia się na niej przy E03).
-* **Klatki z nagrań** (gdy w `art/wideo/` są nagrania rozgrywki z Playwrighta, plan § 9):
+* **[plan] Klatki z nagrań** (gdy w `art/wideo/` są nagrania rozgrywki z Playwrighta, plan § 9; tylko ten krok
+  potrzebuje ffmpeg):
   `ffmpeg -v error -ss 0 -i art/wideo/s1-podglad.mp4 -frames:v 1 -vf "scale=960:-2:flags=lanczos" klatka.png`
   → `s1_baner.klatka.webp`. Raport porównuje średnią jasność pierwszej klatki i plakatu; różnica > 15% → zalecamy
   dłuższe przenikanie (600 ms).
@@ -1326,17 +1404,23 @@ favicon to zmniejszony i wyostrzony emblemat, bez osobnego obrazu.
 
 | Plik | Rozmiar | Szczegóły |
 |---|---|---|
-| `favicon.ico` | 16, 32, 48 w jednym pliku | Pillow `save(..., sizes=[(16, 16), (32, 32), (48, 48)])`; każdy rozmiar zmniejszany osobno, wyostrzenie (`radius=0.5, percent=80`), kontrast +10%, tło przezroczyste |
+| `favicon.ico` | 16, 32, 48 w jednym pliku | Pillow `save(..., sizes=[(16, 16), (32, 32), (48, 48)])`; każdy rozmiar zmniejszany osobno, dla ≤ 48 px wyostrzenie (`radius=0.5, percent=80`) i kontrast +10%, tło przezroczyste |
+| `favicon-32.png` | 32 | ta sama ikona jako PNG (dla przeglądarek wolących PNG w `<link rel="icon">`) |
 | `icon-192.png`, `icon-512.png` | 192, 512 | tło przezroczyste, do `site.webmanifest` |
-| `icon-maskable-512.png` | 512 | pełne tło `#120B2A`, emblemat w kole bezpiecznym 80% (skala 0,62), bo system przycina ikonę do własnego kształtu |
+| `icon-maskable-512.png` | 512 | pełne tło — gradient radialny `#1E1442` → `#120B2A`, emblemat w kole bezpiecznym 80% (skala 0,62), bo system przycina ikonę do własnego kształtu |
 | `apple-touch-icon.png` | 180 | bez przezroczystości (iOS zamienia ją na czerń): emblemat 82% na gradiencie radialnym `#1E1442` → `#07060F` |
-| `site.webmanifest` | — | nazwa, ikony, `theme_color` i `background_color` = `#07060F` |
+| `site.webmanifest` | — | `name` „Cebulion Casino”, `short_name`, opis, trzy ikony PNG, `display: standalone`, `theme_color` i `background_color` = `#07060F` |
 
-Raport pokazuje 16 i 32 px w powiększeniu 400% na jasnym i ciemnym tle (karty przeglądarki bywają jasne i ciemne).
-Opcja `ikona_kadr = 0.8` (sama cebula z koroną, bez pierścienia) — tylko jeśli 16 px okaże się nieczytelne.
-Pliki trafiają do `assets/img/global/ikony/`; znaczniki `<link rel="icon">` dodaje front w `index.html`.
+Pliki trafiają **bezpośrednio** do `assets/img/global/` (np. `global/favicon.ico`), a ich ścieżki do sekcji `icons`
+w `manifest.json`; znaczniki `<link rel="icon">` i `<link rel="manifest">` dodaje front w `index.html`. Ikony
+powstają przy każdym przetworzeniu `g_emblemat` (także z grafiki zastępczej). [plan]: podgląd 16 i 32 px
+w powiększeniu 400% na jasnym i ciemnym tle w raporcie oraz opcja `ikona_kadr = 0.8` (sama cebula z koroną, bez
+pierścienia) — tylko jeśli 16 px okaże się nieczytelne.
 
 ### 5.20. Obraz Open Graph 1200×630
+
+> **Stan: [plan]** — w 1.0.0 obrazu OG nie ma. Wykonalność sprawdzona: Pillow w naszym środowisku ma FreeType
+> i czyta pliki WOFF2 z `static/fonts/`.
 
 Podgląd linku w komunikatorach i serwisach społecznościowych. Składamy go w Pillow:
 
@@ -1355,14 +1439,16 @@ Podgląd linku w komunikatorach i serwisach społecznościowych. Składamy go w 
 
 ### 5.21. Makiety
 
-Makiety nie trafiają do aplikacji. Pipeline tworzy tylko podglądy 768 px (WebP `quality=80`) w `art/raport/makiety/`
-— do raportu i porównania z gotowymi ekranami.
+Makiety nie trafiają do aplikacji (nie ma ich w `katalog.py`) i pipeline 1.0.0 w ogóle nie czyta folderu
+`art/zrodla/makiety/`. [plan]: podglądy 768 px (WebP `quality=80`) w `art/raport/makiety/` — do raportu i porównania
+z gotowymi ekranami.
 
 ### 5.22. `manifest.json` — wynik dla front-endu
 
 Plik `src/main/resources/static/assets/img/manifest.json` ma format z [09 § 3](09-kontrakt-api-i-assetow.md#3-assety-w-aplikacji)
 (`version`, `images`, `sheets`, `frames`, `nineSlice` — bez zmian) oraz **pola dodatkowe**, które klient znający
-tylko kontrakt 09 może pominąć (`src` / `src2x` zawsze wystarczą do narysowania obrazu):
+tylko kontrakt 09 może pominąć (`src` / `src2x` zawsze wystarczą do narysowania obrazu). Fragment tego, co zapisuje
+wersja 1.0.0 (wartości przykładowe; prawdziwy plik ma wcięcie 1 spacji i klucze w kolejności katalogu):
 
 ```json
 {
@@ -1370,42 +1456,73 @@ tylko kontrakt 09 może pominąć (`src` / `src2x` zawsze wystarczą do narysowa
   "pipeline": "1.0.0",
   "images": {
     "s1_sym_wild": {
-      "src": "s1/s1_sym_wild.webp", "src2x": "s1/s1_sym_wild@2x.webp",
-      "w": 256, "h": 256, "source": "chatgpt", "blend": "normal",
-      "atlas": "s1-symbole", "hash": "3fa2c1d9",
+      "source": "chatgpt", "blend": "normal",
+      "src": "s1/s1_sym_wild.webp", "w": 256, "h": 256, "hash": "3fa2c1d9",
+      "src2x": "s1/s1_sym_wild@2x.webp",
       "variants": {
-        "ruch2": { "src": "s1/s1_sym_wild.ruch2.webp", "w": 256, "h": 276, "atlas": "s1-ruch" },
-        "glow":  { "src": "s1/s1_sym_wild.glow.webp", "w": 334, "h": 334, "scale": 0.5, "atlas": "s1-miekkie" }
+        "ruch1": { "src": "s1/s1_sym_wild.ruch1.webp", "w": 256, "h": 268 },
+        "ruch2": { "src": "s1/s1_sym_wild.ruch2.webp", "w": 256, "h": 288 },
+        "syl":   { "src": "s1/s1_sym_wild.syl.webp",   "w": 256, "h": 256 },
+        "glow":  { "src": "s1/s1_sym_wild.glow.webp",  "w": 332, "h": 332, "scale": 0.5 },
+        "cien":  { "src": "s1/s1_sym_wild.cien.webp",  "w": 318, "h": 318, "scale": 0.5 },
+        "mini":  { "src": "s1/s1_sym_wild.mini.webp", "src2x": "s1/s1_sym_wild.mini@2x.webp", "w": 96, "h": 96 }
       }
     },
     "g_tlo_lobby_desktop": {
-      "src": "global/g_tlo_lobby_desktop.w1920.webp", "src2x": "global/g_tlo_lobby_desktop.w2560.webp",
-      "w": 1920, "h": 1280, "source": "chatgpt", "blend": "normal",
-      "widths": { "1280": "global/g_tlo_lobby_desktop.w1280.webp", "1920": "…", "2560": "…" },
-      "avif":   { "1280": "global/g_tlo_lobby_desktop.w1280.avif", "1920": "…", "2560": "…" },
+      "source": "zastepcze", "blend": "normal",
+      "src": "global/g_tlo_lobby_desktop.webp", "w": 1920, "h": 1280, "hash": "9c04e1aa",
+      "src2x": "global/g_tlo_lobby_desktop@2x.webp",
+      "widths": { "1280": "global/g_tlo_lobby_desktop.w1280.webp", "1920": "global/g_tlo_lobby_desktop.webp",
+                  "2560": "global/g_tlo_lobby_desktop@2x.webp" },
       "focus": [0.5, 0.45],
-      "lqip": "data:image/webp;base64,UklGR…"
+      "lqip": "data:image/webp;base64,UklGR…",
+      "variants": { "rozmyte": { "src": "global/g_tlo_lobby_desktop.rozmyte.webp", "w": 640, "h": 427 } }
     },
-    "s3_sym_szafir":  { "src": "s3/s3_sym_szafir.webp", "tint": "#2F6BFF" },
-    "s3_sym_mnoznik": { "src": "s3/s3_sym_mnoznik.webp", "pole": { "x": 0.5, "y": 0.47, "r": 0.24 } }
+    "g_fx_flara":        { "src": "global/g_fx_flara.webp", "w": 512, "h": 512, "source": "chatgpt", "blend": "add", "hash": "…" },
+    "g_ui_ikony__turbo": { "source": "chatgpt", "blend": "normal", "src": "global/g_ui_ikony__turbo.webp", "w": 56, "h": 56, "hash": "…", "src2x": "global/g_ui_ikony__turbo@2x.webp" },
+    "s3_sym_szafir":     { "src": "s3/s3_sym_szafir.webp", "…": "…", "tint": "#2F6BFF" },
+    "s3_sym_mnoznik":    { "src": "s3/s3_sym_mnoznik.webp", "…": "…", "pole": { "x": 0.5, "y": 0.47, "r": 0.24 } }
   },
   "sheets":    { "g_ui_ikony": { "cells": ["autoplay", "turbo", "minus", "plus", "dzwiek_wl", "dzwiek_wyl", "info", "menu", "lobby", "zamknij", "ustawienia", "historia"] } },
-  "frames":    { "s1_ramka": { "window": { "x": 0.12, "y": 0.13, "w": 0.76, "h": 0.76 }, "nineSlice": { "left": 122, "top": 130, "right": 122, "bottom": 112 } } },
+  "frames":    { "s1_ramka": { "window": { "x": 0.1457, "y": 0.1457, "w": 0.7086, "h": 0.7086 }, "nineSlice": { "left": 157, "top": 157, "right": 157, "bottom": 157 } } },
   "nineSlice": { "g_ui_panel": { "top": 0.174, "right": 0.174, "bottom": 0.174, "left": 0.174 } },
-  "atlases":   { "s1-symbole": { "scales": { "1": "s1/atlas/s1-symbole@1x.json", "2": "s1/atlas/s1-symbole@2x.json" }, "mipmap": false } },
-  "fonts":     { "CebulionCyfry": { "1": "global/fonty/cebulion-cyfry@1x.fnt", "2": "global/fonty/cebulion-cyfry@2x.fnt", "css": "global/fonty/cebulion-cyfry.css" } },
-  "bundles":   { "lobby": ["g_tlo_lobby_desktop", "g_tlo_lobby_mobile", "g_logo", "…"], "s1": ["s1-symbole", "s1-ruch", "…"] }
+  "fonts":     { "CebulionCyfry": { "size": 96, "lineHeight": 120, "base": 106, "space": 18, "tabular": true,
+                                    "chars": { "0": { "cell": "0", "image": "g_font_cyfry__0", "w": 70, "h": 96, "xoffset": 3, "yoffset": 10, "xadvance": 76 }, "…": {} },
+                                    "fnt": { "1": "global/fonty/cebulion-cyfry@1x.fnt", "2": "global/fonty/cebulion-cyfry@2x.fnt" } } },
+  "icons":     { "favicon.ico": "global/favicon.ico", "favicon-32.png": "global/favicon-32.png", "icon-192.png": "global/icon-192.png",
+                 "icon-512.png": "global/icon-512.png", "icon-maskable-512.png": "global/icon-maskable-512.png",
+                 "apple-touch-icon.png": "global/apple-touch-icon.png", "site.webmanifest": "global/site.webmanifest" }
 }
 ```
 
-**Paczki ładowania** (`bundles`) — co pobiera przeglądarka i kiedy:
+| Pole dodatkowe (poza kontraktem 09) | Gdzie | Znaczenie |
+|---|---|---|
+| `pipeline` | korzeń | wersja skryptu, który zapisał manifest |
+| `hash` | obraz | 8 znaków SHA-256 pliku @1x (unieważnianie pamięci podręcznej) |
+| `variants.<nazwa>` | obraz | warianty z § 2.7: `src`, opcjonalnie `src2x`, rozmiar **logiczny** `w`/`h` (rysujemy w nim), `scale` = skala pikseli pliku (0,5 dla `glow`/`cien`) |
+| `widths`, `focus`, `lqip` | `PELNE` | szerokość → ścieżka; punkt ogniskowy kadru (tła, banery); miniatura data URI |
+| `tint`, `pole` | symbole S3 | kolor do barwienia odłamków; środek i promień pustego wnętrza kuli mnożnika |
+| `frames.<ID>.nineSlice` | ramki | marginesy 9-slice ramki w px @1x (okno → krawędź obrazu) |
+| `fonts.CebulionCyfry` | korzeń | metryki BitmapFont i ścieżki `.fnt` (§ 5.14) |
+| `icons` | korzeń | favicony, ikony aplikacji i `site.webmanifest` (§ 5.19) |
+
+`version` zmienia się **tylko**, gdy zmieniła się treść manifestu (inaczej zostaje poprzednia data) — powtórne
+uruchomienie bez zmian nie tworzy fałszywej zmiany w git. Assety bez źródła zachowują poprzedni wpis.
+
+**[plan] — pola, które pojawią się z kolejnymi funkcjami:** `atlas` w obrazie i wariancie oraz sekcja `atlases`
+(`{ "s1-symbole": { "scales": { "1": "s1/atlas/s1-symbole@1x.json", "2": "…@2x.json" }, "mipmap": false } }`, § 5.9),
+`avif` w obrazach `PELNE` (§ 5.8), `fonts.CebulionCyfry.css` (§ 5.14) i `bundles` (paczki ładowania, niżej).
+
+**[plan] Paczki ładowania** (`bundles`) — co pobiera przeglądarka i kiedy. Do czasu, aż pipeline je zapisze, tę samą
+listę trzyma front (06, 08); pipeline 1.0.0 używa przypisania assetów do paczek (`paczki` w `katalog.py`: `lobby`,
+`wspolne`, `s1`, `s2`, `s3`) tylko do liczenia budżetów wagi (§ 7):
 
 | Paczka | Kiedy | Zawartość |
 |---|---|---|
 | `lobby` | start strony | tło lobby (jeden wariant), `g_logo`, `g_emblemat.naglowek`, `g_moneta_przod.ikona`, 3 okładki, pierwszy baner, `g_maskotka_powitanie`, UI kit HTML |
-| `lobby-bonus` | otwarcie modala logowania E04 (zanim padnie E07) | `g_skrzynia`, monety, `wspolne-czastki`, `wspolne-fx`, cyfry |
-| `wspolne` | ekran ładowania gry E20 | `wspolne-wygrane`, `wspolne-miekkie`, `wspolne-czastki`, `wspolne-fx`, cyfry, UI panelu gry, `g_emblemat` (loader) |
-| `s1` / `s2` / `s3` | E20 | atlasy symboli (@1x albo @2x), `-ruch`, `-miekkie`, tło gry, ramka, logo (S2: + `s2-fx`) |
+| `lobby-bonus` | otwarcie modala logowania E04 (zanim padnie E07) | `g_skrzynia`, monety, cząsteczki i efekty (`g_fx_*`, `g_fx_konfetti__*`), cyfry |
+| `wspolne` | ekran ładowania gry E20 | napisy `g_win_*` z poświatami i cieniami, efekty, monety, konfetti, cyfry, UI panelu gry, `g_emblemat` (loader) |
+| `s1` / `s2` / `s3` | E20 | symbole (@1x albo @2x) z wariantami `ruch*`, `syl`, `glow`, `cien`, tło gry, ramka, logo (S2: + `s2_fx_hieroglify__*`); po wdrożeniu atlasów — atlasy `-symbole`, `-ruch`, `-miekkie` |
 | `s2-fs` / `s3-fs` | w tle po E21, gdy przeglądarka jest bezczynna | tła darmowych spinów |
 | na żądanie | przy zdarzeniu | `g_maskotka_bankrut` (E09), `g_maskotka_wygrana` (E37), `mini` (tabela wypłat), awatary w rankingu, kolejne banery karuzeli |
 
@@ -1414,23 +1531,36 @@ może wysyłać `/assets/**` z długim czasem ważności (konfiguracja w [08](08
 
 ### 5.23. Czas działania, powtarzalność i testy pipeline'u
 
-* **Czas (szacunek):** pełne przetworzenie 93 obrazów na laptopie 2–4 min (najwolniejszy jest AVIF: 1–3 s na duży
-  obraz); przyrostowo — sekundy. `--bez-avif` skraca pełny przebieg mniej więcej o połowę.
-* **Powtarzalność:** stałe ziarna losowania (szum ditheringu = skrót ID, monety w OG = stała), sortowana kolejność
-  przetwarzania, brak znaczników czasu w plikach poza `manifest.version`. Te same wejścia dają te same bajty, więc
-  diff w git pokazuje tylko to, co naprawdę się zmieniło (`--sprawdz-determinizm`).
-* **Testy** (`pytest`, `tools/art/testy/`) na obrazach syntetycznych, o znanym wyniku:
+* **Czas (szacunek, do zmierzenia przy pierwszej pełnej dostawie):** pełne przetworzenie 85 assetów 1–3 min przy
+  4 procesach (`--watki`), z `--dokladnie` (WebP `method=6`) kilka razy dłużej. Cache nie ma, więc każde uruchomienie
+  liczy wybrane assety od nowa — przy iteracjach nad jednym obrazem używamy `--tylko <ID>` (sekundy). Dla porównania:
+  test całościowy na 2 assetach (symbol na szachownicy + ramka na zieleni) trwa ok. 4 s w jednym procesie.
+* **Powtarzalność:** stałe ziarna losowania (szum przeciw pasmom = skrót `ID:szerokość`), stała kolejność kluczy
+  w manifeście (kolejność katalogu), brak znaczników czasu w plikach poza `manifest.version`. Te same wejścia dają
+  te same bajty, a plik jest nadpisywany tylko przy zmianie bajtów — diff w git pokazuje tylko to, co naprawdę się
+  zmieniło. Automatyczne sprawdzenie (`--sprawdz-determinizm`, dwa przebiegi + porównanie SHA-256) — [plan].
+* **Testy:** `python3 tools/art/testy/test_przetworz.py [katalog_na_obrazy]` (działają też pod `pytest`); obrazy
+  wejściowe i wyniki zostają w podanym katalogu (domyślnie katalog tymczasowy), żeby można je obejrzeć. 13 testów
+  na obrazach syntetycznych o znanym wyniku — wszystkie przechodzą w wersji 1.0.0:
 
 | Test | Wejście | Oczekiwany wynik |
 |---|---|---|
-| szachownica | koło na narysowanej szachownicy 24 px | błąd alfy na krawędzi < 2/255, brak resztek wzoru |
-| jednolite tło | złoty kształt z białym odblaskiem na białym tle | odblask nietknięty (spójność z brzegiem) |
-| okno ramki | ramka z oknem 300×200 w (100, 120) | wykryte okno ±1 px |
-| 9-slice | panel z ornamentem 80 px i jednolitym środkiem | wycinki 82 ± 2 px |
-| arkusz | 12 plam w siatce 4×3, jedna rozbita na 2 części | 12 elementów, poprawna kolejność |
-| atlas | 200 losowych prostokątów | brak nakładania, wszystko na stronach, wypełnienie ≥ 70% |
-| BitmapFont | 13 syntetycznych glifów | 15 znaków w `.fnt`, równe `xadvance` cyfr |
-| skalowanie | biała linia 1 px na czerni, zmniejszenie ×0,5 | jasność linii ≥ 70% (w gamma byłoby ok. 50%) |
+| `test_szachownica_calkowita` | złote koło z odblaskiem i dziurą w uchwycie na narysowanej szachownicy 24 px | metoda „szachownica”, średni błąd alfy na krawędzi < 8/255, resztki wzoru w tle < 0,03, dziura usunięta |
+| `test_szachownica_ulamkowa_i_rozmyta` | wzór przeskalowany do pola 23,6 px, rozmyty, z szumem | metoda „szachownica”, błąd krawędzi < 14/255, tło < 0,08 |
+| `test_zielone_tlo_z_dziura` | ten sam obiekt na `#00FF00` (kolor klucza) | metoda „jednolite”, dziura w uchwycie usunięta, zieleń na krawędzi < 0,08 |
+| `test_biale_tlo_odblask_nietkniety` | złoty kształt z białym odblaskiem na białym tle | odblask nietknięty (α > 0,97) — spójność z brzegiem |
+| `test_arkusz_nierowna_siatka` | 12 plam w siatce 4×3, przesunięcia do ±70 px, jedna rozbita na 2 części | 12 elementów w poprawnej kolejności |
+| `test_arkusz_cyfr_puste_pola` | 13 glifów w siatce 5×3 | 2 ostatnie pola puste, wysokość cyfr ±2 px |
+| `test_okno_ramki` | ramka z oknem 300×200 w (100, 120), z ornamentem wchodzącym w okno; wersja z alfą i na szachownicy | okno wykryte ±1 px |
+| `test_okno_zamalowane` | ta sama ramka z oknem zamalowanym ciemnym „szkłem” | okno wycięte i wykryte ±2 px |
+| `test_9slice` | panel 600×400 z ornamentem 80 px w rogach | wycinki 82 ± 2 px |
+| `test_9slice_pigulka` | przycisk-pigułka 1300×340 z gradientem | tryb pigułki, wycinki ≥ zaokrąglenia, bez błędów |
+| `test_skalowanie_liniowe` | biała linia 1 px na czerni, zmniejszenie ×0,5 | jasność linii ≥ 0,68 i wyraźnie wyższa niż przy skalowaniu w gamma (≈ 0,45) |
+| `test_skladowe` | maska z plamami stykającymi się po skosie | 8-spójność, poprawne pola i flaga „dotyka brzegu” |
+| `test_calosc_pipeline` | pełne `przetworz.main(...)` na symbolu z szachownicą i ramce na zieleni | `manifest.json` z `w = 256`, `source: "chatgpt"`, przezroczystym tłem symbolu i oknem ramki ±1% |
+
+**[plan]** testy atlasu (200 losowych prostokątów: brak nakładania, wypełnienie ≥ 70%) i BitmapFont (15 znaków w `.fnt`,
+równe `xadvance` cyfr) — razem z tymi funkcjami.
 
 Testy są też argumentem na obronie: „skąd wiecie, że wykrywanie okna działa?” → pokazujemy test i jego wynik.
 
@@ -1439,12 +1569,12 @@ Testy są też argumentem na obronie: „skąd wiecie, że wykrywanie okna dzia�
 ## 6. Docelowa struktura plików w aplikacji
 
 Katalog `src/main/resources/static/assets/img/` należy **wyłącznie do pipeline'u** ([09 § 4](09-kontrakt-api-i-assetow.md#4-podział-katalogów-kto-co-zmienia)):
-nikt nie edytuje tam plików ręcznie — każda zmiana to nowe źródło albo parametr w `manifest.toml` i ponowne
-uruchomienie skryptu. Podkatalogi = pakiety `global`, `s1`, `s2`, `s3` (prefiks ID).
+nikt nie edytuje tam plików ręcznie — każda zmiana to nowe źródło albo parametr w `tools/art/katalog.py` i ponowne
+uruchomienie skryptu. Podkatalogi = pakiety `global`, `s1`, `s2`, `s3` (prefiks ID). Stan wersji 1.0.0:
 
 ```text
 src/main/resources/static/
-├── index.html                           front: <link rel="icon" …>, <meta property="og:image" …>
+├── index.html                           front: <link rel="icon" …>, <link rel="manifest" …>
 ├── fonts/                               woff2 z @fontsource (już w repozytorium)
 └── assets/
     ├── img/                             ← WYŁĄCZNIE wynik tools/art/przetworz.py
@@ -1452,54 +1582,54 @@ src/main/resources/static/
     │   ├── global/
     │   │   ├── g_logo.webp  g_logo@2x.webp  g_logo.glowzl.webp
     │   │   ├── g_emblemat.webp  g_emblemat@2x.webp  g_emblemat.naglowek.webp  g_emblemat.naglowek@2x.webp
-    │   │   ├── g_moneta_przod.webp  g_moneta_przod@2x.webp  g_moneta_przod.male.webp  g_moneta_przod.ikona@2x.webp …
-    │   │   ├── g_tlo_lobby_desktop.w1280.avif  g_tlo_lobby_desktop.w1920.webp  g_tlo_lobby_desktop.w2560.avif …
-    │   │   ├── g_tlo_lobby_desktop.rozmyte.webp  g_tlo_lobby_mobile.w720.avif  g_tlo_lobby_mobile.w1080.webp …
-    │   │   ├── g_maskotka_powitanie.webp  g_maskotka_powitanie@2x.webp  g_skrzynia.glowzl.webp …
+    │   │   ├── g_moneta_przod.webp  g_moneta_przod@2x.webp  g_moneta_przod.male.webp  g_moneta_przod.male@2x.webp
+    │   │   │   g_moneta_przod.ikona.webp  g_moneta_przod.ikona@2x.webp  (skos, bok: bez „ikona”)
+    │   │   ├── g_tlo_lobby_desktop.webp (1920)  g_tlo_lobby_desktop@2x.webp (2560)  g_tlo_lobby_desktop.w1280.webp
+    │   │   │   g_tlo_lobby_desktop.rozmyte.webp
+    │   │   ├── g_tlo_lobby_mobile.webp (1080)  g_tlo_lobby_mobile@2x.webp (1280)  g_tlo_lobby_mobile.w720.webp  …rozmyte.webp
+    │   │   ├── g_maskotka_powitanie.webp  g_maskotka_powitanie@2x.webp  g_skrzynia.webp  g_skrzynia.glowzl.webp …
     │   │   ├── g_awatary__0.webp … g_awatary__7@2x.webp
+    │   │   ├── g_font_cyfry__0.webp … g_font_cyfry__razy@2x.webp       (glify dla HTML)
     │   │   ├── g_ui_spin.webp  g_ui_spin@2x.webp  g_ui_spin.glowzl.webp  g_ui_ikony__turbo@2x.webp …
-    │   │   ├── g_ui_panel.webp  g_ui_panel@2x.webp  ui-9slice.css
-    │   │   ├── g_win_mega.webp  g_win_mega@2x.webp  g_win_mega.glow.webp  g_win_mega.cien.webp …
-    │   │   ├── g_fx_flara.webp  g_fx_iskry__0.webp … g_fx_iskry__7.webp …     (pojedyncze — lobby i podglądy)
-    │   │   ├── atlas/
-    │   │   │   ├── wspolne-wygrane@1x.webp  wspolne-wygrane@1x.json
-    │   │   │   ├── wspolne-wygrane@2x.webp  wspolne-wygrane@2x.json  (+ strony wspolne-wygrane@2x-1, -2 w profilu m)
-    │   │   │   ├── wspolne-miekkie@0.5x.webp/.json  wspolne-czastki@1x.webp/.json  wspolne-czastki@2x.webp/.json
-    │   │   │   └── wspolne-fx@1x.webp  wspolne-fx@1x.json
-    │   │   ├── fonty/
-    │   │   │   ├── cebulion-cyfry@1x.fnt  cebulion-cyfry@1x.webp
-    │   │   │   ├── cebulion-cyfry@2x.fnt  cebulion-cyfry@2x.webp
-    │   │   │   └── cebulion-cyfry.css
-    │   │   ├── ikony/
-    │   │   │   └── favicon.ico  icon-192.png  icon-512.png  icon-maskable-512.png  apple-touch-icon.png  site.webmanifest
-    │   │   └── og-image.jpg
+    │   │   ├── g_ui_panel.webp  g_ui_panel@2x.webp  g_ui_przycisk_glowny.webp …
+    │   │   ├── g_win_mega.webp  g_win_mega.glow.webp  g_win_mega.cien.webp …   (napisy: zwykle bez @2x, § 2.6)
+    │   │   ├── g_fx_flara.webp  g_fx_promienie.webp  g_fx_dym.webp  g_fx_iskry__0.webp … g_fx_iskry__7.webp …
+    │   │   ├── g_fx_konfetti__0.webp … g_fx_konfetti__11@2x.webp
+    │   │   ├── favicon.ico  favicon-32.png  icon-192.png  icon-512.png  icon-maskable-512.png
+    │   │   │   apple-touch-icon.png  site.webmanifest
+    │   │   └── fonty/
+    │   │       ├── cebulion-cyfry@1x.fnt  cebulion-cyfry@1x.webp
+    │   │       └── cebulion-cyfry@2x.fnt  cebulion-cyfry@2x.webp
     │   ├── s1/
     │   │   ├── s1_sym_wild.webp  s1_sym_wild@2x.webp
     │   │   ├── s1_sym_wild.ruch1.webp  s1_sym_wild.ruch2.webp  s1_sym_wild.syl.webp
     │   │   ├── s1_sym_wild.glow.webp  s1_sym_wild.cien.webp  s1_sym_wild.mini.webp  s1_sym_wild.mini@2x.webp
     │   │   ├── … (7 pozostałych symboli tak samo)
-    │   │   ├── s1_tlo_desktop.w1280.webp  s1_tlo_desktop.w1920.webp  s1_tlo_desktop.w2560.webp
-    │   │   ├── s1_tlo_mobile.w720.webp  s1_tlo_mobile.w1080.webp  s1_tlo_mobile.w1280.webp
+    │   │   ├── s1_tlo_desktop.webp  s1_tlo_desktop@2x.webp  s1_tlo_desktop.w1280.webp  s1_tlo_desktop.rozmyte.webp
+    │   │   ├── s1_tlo_mobile.webp  s1_tlo_mobile@2x.webp  s1_tlo_mobile.w720.webp  s1_tlo_mobile.rozmyte.webp
     │   │   ├── s1_ramka.webp                (bez @2x — źródło za małe, § 2.5)
     │   │   ├── s1_logo.webp  s1_logo@2x.webp  s1_logo.glow.webp
-    │   │   ├── s1_okladka.w400.avif  s1_okladka.w400.webp  … w600 … w800
-    │   │   ├── s1_baner.w960.avif  s1_baner.w1536.webp  s1_baner.k169.w960.webp  s1_baner.k169.w1536.avif  s1_baner.rozmyte.webp …
-    │   │   └── atlas/
-    │   │       ├── s1-symbole@1x.webp  s1-symbole@1x.json  s1-symbole@2x.webp  s1-symbole@2x.json
-    │   │       ├── s1-ruch@1x.webp  s1-ruch@1x.json
-    │   │       └── s1-miekkie@0.5x.webp  s1-miekkie@0.5x.json
-    │   ├── s2/                          jak s1 + s2_wild_rozszerzony*, s2_tlo_fs_*, s2_fx_hieroglify__0…7,
-    │   │                                atlas/s2-fx@1x, atlas/s2-fx@2x
-    │   └── s3/                          jak s1 (bez ruch2) + s3_tlo_fs_*, s3_fx_odlamki__0…11; s3_ramka@2x jest
+    │   │   ├── s1_okladka.webp (400)  s1_okladka.w600.webp  s1_okladka@2x.webp (800)
+    │   │   └── s1_baner.webp (960)  s1_baner@2x.webp (1536)  s1_baner.k169.webp  s1_baner.k169@2x.webp
+    │   │       s1_baner.rozmyte.webp
+    │   ├── s2/                          jak s1 + s2_wild_rozszerzony (+ @2x, .glow), s2_tlo_fs_*, s2_fx_hieroglify__0…7
+    │   │                                (+ @2x); s2_ramka bez @2x
+    │   └── s3/                          jak s1 (bez ruch2) + s3_tlo_fs_*, s3_fx_odlamki__0…11 (+ @2x); s3_ramka bez @2x
     ├── audio/                           pipeline dźwięku (05, kontrakt 09)
     └── wideo/                           propozycja: pętle wideo do lobby (poza pipeline'em obrazów)
 ```
 
+**[plan]** — pojawią się z kolejnymi funkcjami: `global/atlas/` i `s*/atlas/` (atlasy `*.webp` + `*.json`, § 5.9),
+pliki `*.avif` obok WebP dla obrazów `PELNE` (§ 5.8), `global/ui-9slice.css` (§ 5.13),
+`global/fonty/cebulion-cyfry.css` (§ 5.14), `global/og-image.jpg` (§ 5.20).
+
 Zasady:
 
 * Ścieżki w `manifest.json` są **względne wobec `assets/img/`** (jak w przykładzie z 09).
-* Plik pojedynczy istnieje dla każdego obrazu i komórki arkusza (kontrakt 09); atlas jest dodatkową drogą dla Pixi.
-  Dzięki temu HTML (lobby, panel, modale) korzysta z plików, a scena gry z atlasów — bez duplikowania logiki.
+* Plik pojedynczy istnieje dla każdego obrazu i komórki arkusza (kontrakt 09). Po wdrożeniu atlasów ([plan]) będą one
+  dodatkową drogą dla sceny Pixi; HTML (lobby, panel, modale) zawsze korzysta z plików pojedynczych.
+* Pipeline przed zapisem usuwa poprzednie wyniki danego ID (np. @2x, którego już nie da się zrobić), a pliki,
+  do których nie prowadzi żaden wpis manifestu, zgłasza jako sieroty (Q30) i usuwa opcją `--sprzataj`.
 * Wszystko poza `assets/img/` (HTML, CSS, JS, `fonts/`) należy do front-endu; pipeline tam nie pisze.
 * `art/` i `tools/art/` nie trafiają do pliku JAR (są poza `src/main/resources`).
 
@@ -1511,8 +1641,8 @@ Zasady:
 
 | Budżet | Wartość | Co z tego wynika dla obrazów |
 |---|---|---|
-| Waga assetów jednej gry | **≤ 6 MB (WebP)** | atlasy, warianty miękkie w @0,5x, rozmycia tylko @1x, AVIF niepotrzebny w Pixi |
-| Lobby bez wideo | **≤ 3 MB** | pliki pojedyncze, AVIF w `<picture>`, ładowanie na żądanie (`bundles`) |
+| Waga assetów jednej gry | **≤ 6 MB (WebP)** | warianty miękkie w @0,5x, rozmycia tylko @1x, efekty w jednej rozdzielczości; atlasy ([plan]) zmniejszają liczbę żądań, a nie wagę; AVIF niepotrzebny w Pixi |
+| Lobby bez wideo | **≤ 3 MB** | pliki pojedyncze, ładowanie na żądanie (`bundles` — [plan], dziś lista po stronie frontu), AVIF w `<picture>` ([plan]) |
 | LCP lobby (mobile 4G) | **< 2,5 s** | mały obraz LCP (≤ 120 KB), LQIP, `fetchpriority="high"` |
 | Long tasks w trakcie spinu | **brak > 50 ms** | dekodowanie i wgrywanie tekstur na GPU tylko na ekranie ładowania (E20) i w bezczynności — nigdy w trakcie spinu; strony atlasów na telefonach ≤ 2048 px, więc pojedyncze wgranie jest krótkie |
 | Czas klatki | **p95 ≤ 16,7 ms** (desktop) | pre-baked rozmycia, poświaty i cienie zamiast filtrów; jeden atlas = jedno wywołanie rysowania |
@@ -1522,21 +1652,46 @@ Zasady:
 (pierwsza wizyta). Waga lobby = obrazy lobby łącznie z doładowywanymi na żądanie. Dźwięk, fonty, JS i CSS mają osobne
 budżety w [05](05-dzwiek-i-muzyka.md) i [08](08-wydajnosc-i-jakosc.md).
 
+**Jak liczy raport 1.0.0** (`raport.budzety`, kontrola Q23): każdy asset ma w `katalog.py` listę `paczki`
+(`lobby`, `wspolne`, `s1`, `s2`, `s3`). Gra = assety z paczką gry **plus** wszystkie z paczką `wspolne`; lobby = assety
+z paczką `lobby` (w tym okładki i banery). Dla każdego pliku wynikowego pipeline księguje, czy pobiera go desktop,
+telefon, czy oba:
+
+| Plik | Desktop | Telefon |
+|---|:---:|:---:|
+| @1x sprite'a, gdy istnieje @2x | — | ✓ |
+| @1x sprite'a bez @2x (ramki, napisy) | ✓ | ✓ |
+| @2x sprite'a, `mini@2x`, `male@2x`, `ikona@2x`, `naglowek@2x` | ✓ | — |
+| warianty `ruch*`, `syl`, `glow`, `glowzl`, `cien`, `rozmyte`; efekty w jednej rozdzielczości | ✓ | ✓ |
+| tło / okładka / baner: wariant @2x (`<ID>@2x.webp`), `k169@2x` | ✓ | — |
+| tło / okładka / baner: wariant @1x (`<ID>.webp`), `k169` | — | ✓ |
+| trzecia szerokość (`.w1280`, `.w720`, `.w600`) | — | — |
+| favicony, strona BitmapFont (`fonty/*.webp`) | — | — |
+
+Q23: desktop > 100% budżetu → błąd, ≥ 85% → ostrzeżenie (oba liczą się do kodu wyjścia). **Uwaga — to liczenie jest
+pesymistyczne względem definicji wyżej:** sumuje tła **obu** orientacji (desktop pobrałby tylko tło 3:2), plakaty
+`k169` (potrzebne dopiero z wideo) i wszystkie trzy banery. Dla gier zapas jest duży (§ 7.3), ale dla lobby może to dać
+fałszywy alarm Q23 (§ 7.4). Liczenie zgodne z definicją (jedna orientacja tła, plakaty osobno) — [plan].
+
 ### 7.2. Budżety pochodne (pilnuje ich raport, § 8)
 
 | Budżet | Wartość | Kontrola |
 |---|---|---|
-| Pojedynczy plik | ≤ 450 KB (tła `w2560`), pozostałe ≤ 300 KB | Q25 |
-| Obraz LCP lobby (AVIF `w720` / `w1080`) | ≤ 120 KB | Q24 |
-| Strona atlasu | ≤ 2048×2048 (profil `m`), ≤ 4096×4096 (profil `d`) | Q22 |
+| Pojedynczy plik | ≤ 450 KB (tła 2560 px), pozostałe ≤ 300 KB | Q25 — [plan] |
+| Obraz LCP lobby (`g_tlo_lobby_mobile` 720 / 1080 px, docelowo AVIF) | ≤ 120 KB | Q24 — [plan] |
+| Strona atlasu | ≤ 2048×2048 (profil `m`), ≤ 4096×4096 (profil `d`) | Q22 — [plan] razem z atlasami |
 | Pamięć tekstur GPU jednej gry (orientacyjnie) | ≤ 192 MiB desktop, ≤ 96 MiB telefon | § 7.5, weryfikacja w 08 |
-| Próg ostrzeżenia | 85% każdego budżetu | Q23 |
+| Próg ostrzeżenia | 85% budżetu gry i lobby (wartość desktop) | Q23 — zrobione |
 
 ### 7.3. Szacunek wagi gier
 
 Szacunek ±30% na podstawie typowej kompresji WebP błyszczących renderów (ok. 1,5–2 bity na piksel obiektu, tła
 ok. 0,9–1,1 bita na piksel przy `quality=85`). Prawdziwe liczby poda raport po pierwszej dostawie (Q23).
-Kolumna „telefon” = @1x, tło mobile `w1280`; „desktop” = @2x, tło `w2560`. Wartości w KB.
+Kolumna „telefon” = @1x, tło mobile 1280 px; „desktop” = @2x, tło 2560 px. Wartości w KB. Tabele opisują wersję
+docelową (pozycje nazwane jak atlasy z § 5.9); w 1.0.0 te same tekstury są plikami pojedynczymi o podobnej łącznej
+wadze, a napisy `g_win_*` i ramki S2/S3 nie mają @2x — więc desktop wyjdzie raczej **lżej** (ok. −0,7 MB na napisach),
+za to raport 1.0.0 doliczy tła drugiej orientacji i warianty `rozmyte` teł gier (ok. +0,3 MB w S1, +0,6 MB w S2
+i S3, które mają też tła darmowych spinów; § 7.1). Wszystkie trzy gry zostają wyraźnie poniżej 6 MB.
 
 **Część wspólna gier** (paczka `wspolne`, pobierana raz):
 
@@ -1590,10 +1745,19 @@ generatora albo podniesienie jakości kodowania.
 | **Razem na żądanie** | | **504** | **1 162** |
 | **Łącznie** | | **≈ 1,1 MB** | **≈ 2,4 MB** |
 
-Desktop w najgorszym przypadku wykorzystuje ok. 81% budżetu 3 MB — tuż pod progiem ostrzeżenia. Gotowe środki
-zaradcze, gdyby po prawdziwej dostawie wyszło więcej: (1) AVIF również dla obrazów z alfą w HTML (maskotka, skrzynia,
-logo; zwykle −20–30%), (2) niższa jakość `w2560` (tło jest i tak częściowo zasłonięte), (3) `g_maskotka_wygrana`
-tylko w grze (E37), a nie w lobby.
+Desktop w najgorszym przypadku wykorzystuje ok. 81% budżetu 3 MB — tuż pod progiem ostrzeżenia. Tabela zakłada
+AVIF dla tła, okładek i banerów ([plan]); z samym WebP (wersja 1.0.0) te pozycje są o ok. 25–35% cięższe, czyli
+łącznie ok. **2,7–2,8 MB (≈ 92%)** — powyżej progu ostrzeżenia 85%.
+
+**Co pokaże raport 1.0.0 dla lobby (szacunek):** do powyższych ok. 2,75 MB doliczy jeszcze tło mobile @2x z `rozmyte`
+(ok. +0,3 MB) i trzy plakaty `k169@2x` (ok. +0,5 MB), bo liczy pesymistycznie (§ 7.1) — razem ok. **3,5 MB, czyli
+błąd Q23 i kod wyjścia 2**, mimo że przeglądarka desktopowa pobierze mniej niż 3 MB. Dopóki liczenie nie zostanie
+poprawione ([plan]: jedna orientacja tła, `k169` poza budżetem lobby do czasu wideo), wynik Q23 dla lobby czytamy
+ręcznie z tabeli `pliki` w `raport.json`, a nie z samego kodu wyjścia.
+
+Gotowe środki zaradcze, gdyby po prawdziwej dostawie wyszło więcej: (1) AVIF dla tła, okładek i banerów, a także dla
+obrazów z alfą w HTML (maskotka, skrzynia, logo; zwykle −20–30%), (2) niższa jakość wariantu 2560 px (tło jest i tak
+częściowo zasłonięte), (3) `g_maskotka_wygrana` tylko w grze (E37), a nie w lobby.
 
 **Ścieżka krytyczna LCP (telefon):** HTML + CSS + JS lobby + fonty nagłówków (szacunek ok. 150 KB, 08) + obraz LCP
 ≤ 120 KB. Przy profilu „Slow 4G” z Lighthouse (1,6 Mb/s, RTT 150 ms) to ok. 1,4 s samego transferu — mieści się
@@ -1601,12 +1765,14 @@ w 2,5 s z zapasem na renderowanie.
 
 ### 7.5. Pliki na dysku i pamięć GPU
 
-* **Na dysku** (wszystkie warianty, WebP + AVIF, pliki pojedyncze + atlasy): ≈ 25 MB (szacunek 20–28 MB). Największe
-  pozycje: tła (ok. 10 MB, bo każde ma 3 szerokości), atlasy (ok. 3,5 MB), banery z plakatami (ok. 3 MB).
-  Tyle urośnie plik JAR aplikacji.
+* **Na dysku**, wersja docelowa (wszystkie warianty, WebP + AVIF, pliki pojedyncze + atlasy): ≈ 25 MB (szacunek
+  20–28 MB). Największe pozycje: tła (ok. 10 MB, bo każde ma 3 szerokości), atlasy (ok. 3,5 MB), banery z plakatami
+  (ok. 3 MB). Wersja 1.0.0 (sam WebP, bez atlasów): ≈ 15–20 MB. Tyle urośnie plik JAR aplikacji.
 * **Źródła PNG** na gałęzi `grafika-zrodla`: ok. 180–260 MB.
-* **Pamięć tekstur GPU** (najcięższa gra S2): desktop @2x ≈ 155 MiB (m.in. 3 strony `wspolne-wygrane` po 16 MiB,
-  dwa tła 2560×1707 po ok. 17 MiB, `wspolne-fx` z mipmapami ok. 21 MiB); telefon @1x ≈ 85 MiB. Jeśli okaże się to za
+* **Pamięć tekstur GPU** (najcięższa gra S2, wersja docelowa z atlasami): desktop @2x ≈ 155 MiB (m.in. 3 strony
+  `wspolne-wygrane` po 16 MiB, dwa tła 2560×1707 po ok. 17 MiB, `wspolne-fx` z mipmapami ok. 21 MiB); telefon @1x
+  ≈ 85 MiB. W 1.0.0 (pliki pojedyncze, napisy bez @2x) pamięć jest podobna albo mniejsza — każdy plik to osobna
+  tekstura, ale bez pustych miejsc stron atlasu. Jeśli okaże się to za
   dużo na słabszych telefonach: zwalniamy tło darmowych spinów po E37, a w ostateczności rozważymy skompresowane
   tekstury GPU (KTX2/Basis) — dziś ich nie planujemy, bo komplikują pipeline.
 

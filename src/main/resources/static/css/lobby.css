@@ -118,8 +118,18 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
 @media (min-width: 641px) {
   .user-menu__nick { display: block; }
 }
+/* Po zalogowaniu w pasku stoją jeszcze saldo i menu gracza — do 739 px logo zostaje w wersji dwuwierszowej
+   (węższej), żeby duże saldo i długa nazwa gracza nie wypychały paska poza ekran. */
+@media (min-width: 481px) and (max-width: 739px) {
+  .topbar.is-logged-in .brand__word { flex-direction: column; align-items: center; gap: 0; }
+  .topbar.is-logged-in .brand__name { font-size: 1.05rem; }
+  .topbar.is-logged-in .brand__casino { margin-top: 3px; font-size: 0.56rem; letter-spacing: 0.5em; padding-left: 0.5em; }
+}
+/* Nawigacja po sekcjach: od 1100 px dla gościa; po zalogowaniu pasek mieści jeszcze saldo i menu gracza,
+   więc nawigacja pojawia się dopiero od 1320 px (inaczej logo nachodziło na „Automaty”). */
 @media (min-width: 1100px) {
   .topnav { display: flex; gap: 4px; margin-right: 8px; }
+  .topbar.is-logged-in .topnav { display: none; }
   .topnav a {
     position: relative;
     display: inline-flex;
@@ -130,6 +140,7 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
+    white-space: nowrap;
     color: var(--text-2);
     text-decoration: none;
     transition: color var(--dur-2);
@@ -149,6 +160,11 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
   .topnav a:hover { color: var(--gold-1); }
   .topnav a:hover::after { transform: scaleX(1); }
 }
+@media (min-width: 1320px) {
+  .topbar.is-logged-in .topnav { display: flex; }
+}
+.brand { flex: none; }
+@media (max-width: 400px) { .brand { flex: 0 1 auto; } }
 @media (min-width: 901px) {
   .brand__emblem { width: 46px; height: 46px; }
   .brand__name,
@@ -186,20 +202,42 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
   line-height: 0.92;
 }
 .hero__title-logo { width: min(100%, 560px); height: auto; margin-inline: auto; }
-.hero__title.has-logo .hero__brand,
+.hero__title.has-logo .hero__brand-wrap,
 .hero__title.has-logo .hero__casino { display: none; }
 @media (min-width: 901px) { .hero__title-logo { margin-inline: 0; } }
-.hero__brand {
+/* Wrapper trzyma krój i rozmiar — napis i jego połysk dziedziczą je, więc nakładają się co do piksela. */
+.hero__brand-wrap {
+  position: relative;
   display: block;
   font-size: clamp(2.7rem, 1.1rem + 7.6vw, 6.6rem);
   letter-spacing: 0.035em;
-  background:
-    linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.95) 50%, transparent 62%) -160% 0 / 55% 100% no-repeat,
-    var(--gold-grad-text);
+}
+.hero__brand {
+  display: block;
+  background: var(--gold-grad-text);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   filter: drop-shadow(0 2px 0 #5C3A00) drop-shadow(0 10px 30px rgba(245, 197, 66, 0.3));
+}
+/*
+ * Połysk napisu (E01) bez przemalowywania tekstu: „okienko” (.hero__shine, maska z jasnym ukośnym pasem)
+ * jedzie w prawo, a biała kopia napisu w środku jedzie o tyle samo w lewo — stoi więc w miejscu, a widać ją
+ * tylko tam, gdzie akurat jest pas. Obie animacje to transform → liczy je kompozytor (GPU), nie główny wątek.
+ */
+.hero__shine {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translateX(-100%);
+  -webkit-mask-image: linear-gradient(105deg, transparent 32%, #000 50%, transparent 68%);
+  mask-image: linear-gradient(105deg, transparent 32%, #000 50%, transparent 68%);
+}
+.hero__shine > span {
+  display: block;
+  color: rgba(255, 252, 235, 0.92);
+  transform: translateX(100%);
 }
 .hero__casino {
   display: flex;
@@ -228,6 +266,7 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
   font-size: var(--fs-xl);
   letter-spacing: 0.08em;
   color: var(--text-2);
+  text-wrap: balance;               /* „Graj bez ryzyka. / Wygrywaj z klasą.” zamiast osieroconego „z klasą.” */
 }
 .hero__lead {
   max-width: 52ch;
@@ -367,12 +406,12 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
 /* --- panel bankructwa (E09) i bonusu ratunkowego (E10) --- */
 .rescue {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 14px 18px;
+  gap: 14px 16px;
   width: min(100%, 560px);
-  margin-top: 26px;
-  padding: 18px;
+  margin-top: 22px;
+  padding: 16px;
   border-radius: var(--r-lg);
   border: 1px solid transparent;
   background:
@@ -382,21 +421,37 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
   text-align: left;
   animation: rise 520ms var(--ease-spring) both;
 }
-.rescue__art { width: 64px; height: 64px; object-fit: contain; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5)); }
-.rescue__title { font-family: var(--font-display); font-weight: 900; font-size: var(--fs-xl); }
-.rescue__text { margin-top: 2px; font-size: var(--fs-sm); color: var(--text-2); }
-.rescue__btn { grid-column: 1 / -1; }
-.rescue__btn.is-ready::before { animation: none; }
-.rescue__btn.is-ready { animation: ready-glow 1.8s ease-in-out infinite; }
-@keyframes ready-glow {
-  0%, 100% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -2px 0 rgba(92, 58, 0, 0.45), 0 0 0 1px rgba(92, 58, 0, 0.6), 0 6px 18px rgba(245, 197, 66, 0.3); }
-  50% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -2px 0 rgba(92, 58, 0, 0.45), 0 0 0 1px rgba(92, 58, 0, 0.6), 0 0 0 6px rgba(245, 197, 66, 0.18), 0 10px 36px rgba(245, 197, 66, 0.6); }
+.rescue__art { width: 56px; height: 56px; object-fit: contain; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5)); }
+.rescue__title { font-family: var(--font-display); font-weight: 900; font-size: var(--fs-xl); line-height: 1.15; }
+.rescue__text { margin-top: 4px; font-size: var(--fs-sm); line-height: 1.45; color: var(--text-2); }
+.rescue__cta { position: relative; grid-column: 1 / -1; display: grid; isolation: isolate; }
+.rescue__btn { width: 100%; }
+/* Pulsująca poświata „bonus gotowy” — osobna warstwa, animujemy tylko jej opacity (box-shadow liczyłby się co klatkę). */
+.rescue__cta::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  z-index: -1;
+  border-radius: var(--r-pill);
+  box-shadow: 0 0 0 4px rgba(245, 197, 66, 0.2), 0 10px 36px rgba(245, 197, 66, 0.6);
+  opacity: 0;
+  pointer-events: none;
 }
+.rescue.is-ready .rescue__cta::before { animation: ready-glow 1.8s ease-in-out infinite; }
+@keyframes ready-glow { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
 @keyframes rise { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
 
+/* Bankrut: panel ratunku zastępuje przyciski „Graj teraz / Historia gry” (grać i tak się nie da),
+   a na telefonie chowamy też akapit reklamowy — przycisk bonusu ma być widoczny bez przewijania. */
+.hero.is-bankrupt .hero__cta { display: none; }
+@media (max-width: 480px) {
+  .hero.is-bankrupt .hero__lead { display: none; }
+}
 @media (min-width: 481px) {
-  .rescue { grid-template-columns: auto 1fr auto; }
-  .rescue__btn { grid-column: auto; }
+  .rescue { grid-template-columns: auto minmax(0, 1fr); padding: 18px 20px; gap: 14px 18px; }
+  .rescue__art { width: 72px; height: 72px; grid-row: span 2; align-self: start; }
+  .rescue__cta { grid-column: 2; justify-self: start; }
+  .rescue__btn { width: auto; }
 }
 @media (min-width: 901px) {
   .hero__grid { grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr); min-height: clamp(460px, calc(78dvh - var(--topbar-h)), 760px); gap: 32px; }
@@ -458,11 +513,11 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
 /* Intro strony (E01): elementy wjeżdżają kaskadowo po załadowaniu (body.is-ready). */
 .js .intro { opacity: 0; transform: translateY(16px); }
 .js body.is-ready .intro { opacity: 1; transform: none; transition: opacity 800ms var(--ease-out), transform 800ms var(--ease-out); transition-delay: calc(var(--i, 0) * 90ms); }
-.js body.is-ready .hero__brand { animation: brand-shine 2600ms var(--ease-in-out) 500ms 1 both; }
-@keyframes brand-shine {
-  from { background-position: -160% 0, 0 0; }
-  to { background-position: 260% 0, 0 0; }
-}
+.js body.is-ready .hero__shine { animation: shine-window 2600ms var(--ease-in-out) 500ms 1 both; }
+.js body.is-ready .hero__shine > span { animation: shine-text 2600ms var(--ease-in-out) 500ms 1 both; }
+@keyframes shine-window { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@keyframes shine-text { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
+@media (prefers-reduced-motion: reduce) { .hero__shine { display: none; } }
 
 /* ============================================================================ KAFLE GIER */
 .tiles {
@@ -480,32 +535,49 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
 }
 .tiles::-webkit-scrollbar { display: none; }
 .tiles > .tile { scroll-snap-align: center; aspect-ratio: 2 / 3; }
-.tiles__dots { display: flex; justify-content: center; gap: 8px; margin-top: 4px; }
+/* Kropki karuzeli: wskaźnik + skrót dla myszy (klik przewija do kafla). Dla klawiatury i czytnika ekranu
+   wystarczą same kafle (Tab przewija do nich automatycznie), więc kropki są aria-hidden. */
+.tiles__dots { display: flex; justify-content: center; gap: 2px; margin-top: 2px; }
 .tiles__dots i {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+.tiles__dots i::before {
+  content: "";
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.2);
   transition: transform var(--dur-3) var(--ease-out), background-color var(--dur-3);
 }
-.tiles__dots i.is-active { background: var(--gold-2); transform: scale(1.35); box-shadow: 0 0 8px rgba(245, 197, 66, 0.7); }
+.tiles__dots i.is-active::before { background: var(--gold-2); transform: scale(1.35); box-shadow: 0 0 8px rgba(245, 197, 66, 0.7); }
 
+/* Tablet (641–900): nadal karuzela, ale z większymi kaflami 3:4 (~2,3 kafla na ekranie). Trzy kolumny po
+   ~245 px były za ciasne — tytuł i opis nachodziły na grafikę okładki. */
 @media (min-width: 641px) {
+  .tiles { grid-auto-columns: min(42%, 340px); gap: 18px; }
+  .tiles > .tile { aspect-ratio: 3 / 4; }
+}
+/* Mysz na wąskim oknie: cienki złoty pasek przewijania zamiast ukrytego (bez niego karuzela byłaby „ślepa”). */
+@media (hover: hover) and (pointer: fine) {
+  .tiles { scrollbar-width: thin; scrollbar-color: rgba(245, 197, 66, 0.45) transparent; }
+  .tiles::-webkit-scrollbar { display: block; height: 6px; }
+  .tiles::-webkit-scrollbar-thumb { border: 0; border-radius: 6px; background: rgba(245, 197, 66, 0.45); }
+}
+@media (min-width: 901px) {
   .tiles {
     grid-auto-flow: row;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-auto-columns: auto;
-    gap: clamp(14px, 2vw, 28px);
+    gap: clamp(16px, 2vw, 28px);
     margin-inline: 0;
     padding: 6px 0 12px;
     overflow: visible;
   }
-  .tiles > .tile { aspect-ratio: 3 / 4; }
   .tiles__dots { display: none; }
-}
-@media (min-width: 641px) and (max-width: 900px) {
-  .tile__vol-label { display: none; }
-  .tile__top .chip:last-child { display: none; }
 }
 
 .tile { container-type: inline-size; }
@@ -649,15 +721,20 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
     radial-gradient(circle at 12.6% 33.7%, rgba(255,255,255,0.55) 0 1.2px, transparent 2.0px),
     radial-gradient(circle at 60.7% 5.9%, rgba(255,224,138,1) 0 0.8px, transparent 1.6px);
 }
+/* Wiązka światła z wierzchołka piramidy: wąska u dołu, rozszerza się ku górze i gaśnie (trapez + rozmycie). */
 .art--s2 .art__beam {
   left: 50%;
   top: 0;
-  width: 30cqw;
-  height: calc(82% - 48cqw);
+  width: 56cqw;
+  height: calc(82% - 48cqw + 2cqw);
   transform: translateX(-50%);
-  background: linear-gradient(0deg, rgba(255, 246, 214, 0.9), rgba(255, 224, 138, 0.3) 40%, transparent 85%);
-  -webkit-mask-image: radial-gradient(50% 100% at 50% 100%, #000 18%, rgba(0, 0, 0, 0.45) 45%, transparent 75%);
-  mask-image: radial-gradient(50% 100% at 50% 100%, #000 18%, rgba(0, 0, 0, 0.45) 45%, transparent 75%);
+  clip-path: polygon(46% 100%, 54% 100%, 100% 0, 0 0);
+  background:
+    linear-gradient(90deg, transparent 20%, rgba(255, 246, 214, 0.55) 50%, transparent 80%),
+    linear-gradient(0deg, rgba(255, 246, 214, 0.85), rgba(255, 224, 138, 0.28) 45%, transparent 92%);
+  -webkit-mask-image: linear-gradient(0deg, #000 30%, transparent 100%);
+  mask-image: linear-gradient(0deg, #000 30%, transparent 100%);
+  filter: blur(3px);
 }
 .art--s2 .art__pyramid {
   left: 50%;
@@ -887,7 +964,7 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
 .about-grid + .about-grid { margin-top: clamp(16px, 2vw, 24px); }
 @media (min-width: 901px) {
   .about-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .about-grid--2 { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .about-grid--2 { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: start; }
 }
 .about-card h3 {
   display: flex;
@@ -915,27 +992,47 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
 .team span.idx { display: block; font-size: var(--fs-sm); color: var(--text-2); }
 .team .avatar { --size: 44px; }
 
+/* Cytat persony: krój UI (Cinzel ma same wersaliki — 4 wiersze nim były trudne do czytania), ozdobny cudzysłów
+   w Cinzel jako akcent marki. */
 .persona__quote {
   position: relative;
   margin: 0;
-  padding-left: 18px;
-  font-family: var(--font-display);
-  font-size: var(--fs-lg);
-  line-height: 1.45;
+  padding: 2px 0 0 34px;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1.55;
   color: var(--text-1);
 }
 .persona__quote::before {
+  content: "„";
+  position: absolute;
+  left: -2px;
+  top: -26px;
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 900;
+  font-size: 3.4rem;
+  line-height: 1;
+  background: var(--gold-grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.persona__who { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-soft); font-size: var(--fs-sm); color: var(--text-2); }
+.persona__who b { color: var(--gold-1); }
+.persona__needs { list-style: none; display: grid; gap: 6px; margin-top: 8px; font-size: var(--fs-sm); color: var(--text-2); }
+.persona__needs li { position: relative; padding-left: 18px; }
+.persona__needs li::before {          /* złoty romb zamiast kropki */
   content: "";
   position: absolute;
-  left: 0;
-  top: 4px;
-  bottom: 4px;
-  width: 3px;
-  border-radius: 3px;
-  background: var(--gold-grad);
+  left: 2px;
+  top: 0.62em;
+  width: 6px;
+  height: 6px;
+  transform: rotate(45deg);
+  background: var(--gold-2);
 }
-.persona__who { margin-top: 12px; font-size: var(--fs-sm); color: var(--text-2); }
-.persona__who b { color: var(--gold-1); }
 
 .features { list-style: none; counter-reset: f; display: grid; gap: 12px; }
 .features li { counter-increment: f; display: grid; grid-template-columns: 32px 1fr; gap: 12px; align-items: start; }
@@ -972,6 +1069,7 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
   color: var(--ink-on-gold);
   background: var(--gold-grad);
 }
+.timeline__tag--next { color: var(--gold-1); background: rgba(245, 197, 66, 0.1); box-shadow: inset 0 0 0 1px var(--line-gold-ui); }
 .muted { color: var(--text-2); font-size: var(--fs-sm); }
 .about-changes .muted { margin-top: 14px; }
 
@@ -993,6 +1091,8 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.about-tech pre code { padding: 0; border: 0; background: none; font-size: inherit; } /* bez „ramki” łamanej na każdym wierszu */
+.kv-scroll { overflow-x: auto; }
 .about-tech .btn { margin-top: 14px; }
 
 .about-foot {

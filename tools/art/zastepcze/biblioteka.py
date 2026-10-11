@@ -508,3 +508,104 @@ def blysk(rgba: np.ndarray, x: float, y: float, r: float, sila: float = 1.0) -> 
     out[..., :3] = 1 - (1 - out[..., :3]) * (1 - g[..., None] * np.array([1.0, 0.97, 0.88]))
     out[..., 3] = np.maximum(out[..., 3], g)
     return out
+
+
+# ================================================================================================
+# Napisy 3D (złote litery: banery wygranych, logotypy, cyfry)
+# ================================================================================================
+def gradient_lica(maska: np.ndarray, gora=(1.12, 1.06, 0.92), dol=(0.86, 0.74, 0.55)) -> np.ndarray:
+    """Pionowy gradient lica liter (01 § 2.3: --gold-1 u góry → --gold-3 u dołu), mnożony przez matcap."""
+    ys = np.nonzero(maska.max(1) > 0.05)[0]
+    h = maska.shape[0]
+    y0, y1 = (ys.min(), ys.max()) if len(ys) else (0, h - 1)
+    t = np.clip((np.arange(h) - y0) / max(1, y1 - y0), 0, 1)[:, None, None]
+    return (np.array(gora) * (1 - t) + np.array(dol) * t).astype(np.float32)
+
+
+def zloty_napis(maska: np.ndarray, faza: float = 12, glebokosc: int = 18, kontur: float = 8,
+                rodzaj: str = "zloto", gra: str = "global", kolor=None, poswiata_r: float = 0,
+                poswiata_kolor="gold2", wypuklosc: float = 0.35, gradient: bool = True,
+                wkladki: list | None = None, kontur_kolor="kontur", sila: float = 1.3,
+                profil: str = "okragly", zwroc_lico: bool = False) -> np.ndarray:
+    """Maska napisu → litery z fazą, lekko wypukłym licem, ekstruzją w dół, ciemnym konturem i poświatą.
+
+    ``wkladki`` = lista (maska, rodzaj, kolor, profil) — inkrustacje na licu: lapis w literach S2, fioletowy
+    metal w EPIC WIN, klejnoty w MEGA WIN, kryształ w ULTRA WIN. ``kolor`` może być tablicą (H, W, 3) —
+    np. tęczowy gradient kryształu."""
+    pad = int(faza + 4)
+    m = np.pad(maska, pad)
+    h = wysokosc(m, faza, profil)
+    if wypuklosc:
+        ys = np.nonzero(m.max(1) > 0.05)[0]
+        yc, hh = (ys.min() + ys.max()) / 2, max(1, (ys.max() - ys.min()) / 2)
+        yy = np.arange(m.shape[0], dtype=np.float32)[:, None]
+        h = h + wypuklosc * faza * 3 * np.clip(1 - ((yy - yc) / hh) ** 2, 0, 1) * (m > 0.01)
+    n = normalne(h, sila)
+    rgb = material(n, rodzaj, gra, kolor)
+    if gradient and rodzaj.startswith("zloto"):
+        rgb = rgb * gradient_lica(m)
+    for (wm, w_rodzaj, w_kolor, w_profil) in (wkladki or []):
+        w = np.pad(wm, pad)
+        if isinstance(w_kolor, np.ndarray) and w_kolor.ndim == 3:
+            w_kolor = np.pad(w_kolor, ((pad, pad), (pad, pad), (0, 0)), mode="edge")
+        if w_profil == "kopula":
+            hw = kopula(w, faza * 0.8, max(3.0, faza * 0.7))
+        elif w_profil == "skos":
+            hw = wysokosc(w, max(3.0, faza * 0.9), "skos") * 1.4
+        else:
+            hw = wysokosc(w, max(2.0, faza * 0.4), "okragly") * 0.6
+        nw = normalne(h * 0.25 + hw, sila * (1.6 if w_profil == "skos" else 1.0))
+        if isinstance(w_kolor, np.ndarray) and w_kolor.ndim == 3:
+            dif = probkuj_matcap(nw, matcap(f"emalia_dif_{gra}"))
+            spek = probkuj_matcap(nw, matcap(f"emalia_spek_{gra}"))
+            kol_w = np.clip(w_kolor * (0.35 + 0.8 * dif) + spek * 1.4, 0, 1)
+        elif w_rodzaj == "swiecace":
+            kol_w = np.broadcast_to(kol(w_kolor), rgb.shape) * (0.85 + 0.3 * np.clip(hw / max(hw.max(), 1e-6), 0, 1))[..., None]
+        else:
+            kol_w = material(nw, w_rodzaj, gra, w_kolor)
+        rgb = rgb * (1 - w[..., None]) + kol_w * w[..., None]
+    rgb = rgb * ao(h, faza * 1.2, 0.5)
+    gora = np.concatenate([np.clip(rgb, 0, 1), m[..., None]], -1).astype(np.float32)
+    if zwroc_lico:
+        return gora
+    out = ekstruzja(gora, glebokosc, rodzaj, gra, kolor) if glebokosc else przytnij_alfa(gora)
+    if kontur:
+        out = obrys(np.pad(out, ((int(kontur * 2),) * 2, (int(kontur * 2),) * 2, (0, 0))), kontur, kontur_kolor)
+    if poswiata_r:
+        out = poswiata(out, poswiata_r, poswiata_kolor, 0.45)
+    return przytnij_alfa(out)
+
+
+def tecza(h: int, w: int, kolory=("#21E6FF", "#8F3DFF", "#FF2E88", "#FFE08A"), kat: float = 0.35) -> np.ndarray:
+    """Tęczowy gradient po skosie (kryształ ULTRA WIN, logo S3)."""
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    t = (xx / max(1, w) * math.cos(kat) + yy / max(1, h) * math.sin(kat))
+    t = (t - t.min()) / max(1e-6, t.max() - t.min())
+    poz = np.linspace(0, 1, len(kolory))
+    k = np.array([kol(c) for c in kolory])
+    return np.stack([np.interp(t, poz, k[:, i]) for i in range(3)], -1).astype(np.float32)
+
+
+def wiersze_napisu(wiersze: list[str], font: str, wys_litery: int, odstep_liter=0.02, odstep_wierszy=0.18,
+                   luk_proc: float = 0.0) -> np.ndarray:
+    """Kilka wierszy napisu wyśrodkowanych jeden pod drugim, litery wszystkich wierszy tej samej wysokości."""
+    maski = []
+    for w in wiersze:
+        m = maska_tekstu(w, font, int(wys_litery * 1.4), odstep_liter)
+        k = wys_litery / max(1, m.shape[0])
+        im = Image.fromarray((m * 255).astype(np.uint8)).resize((max(1, int(m.shape[1] * k)), wys_litery),
+                                                                Image.Resampling.LANCZOS)
+        m = np.asarray(im, dtype=np.float32) / 255
+        if luk_proc:
+            m = luk(np.pad(m, ((int(wys_litery * luk_proc) + 2,) * 2, (0, 0))), luk_proc)
+        maski.append(m)
+    W = max(m.shape[1] for m in maski)
+    odst = int(wys_litery * odstep_wierszy)
+    H = sum(m.shape[0] for m in maski) + odst * (len(maski) - 1)
+    out = np.zeros((H, W), np.float32)
+    y = 0
+    for m in maski:
+        x = (W - m.shape[1]) // 2
+        out[y:y + m.shape[0], x:x + m.shape[1]] = np.maximum(out[y:y + m.shape[0], x:x + m.shape[1]], m)
+        y += m.shape[0] + odst
+    return out
