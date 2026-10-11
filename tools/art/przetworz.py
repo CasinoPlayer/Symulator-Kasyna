@@ -799,8 +799,9 @@ def posortuj(manifest: dict) -> dict:
     kolej = {a.id: i for i, a in enumerate(katalog.ASSETY)}
 
     def klucz(k):
-        baza = k.split("__")[0]
-        return (kolej.get(baza, 999), k)
+        baza, _, komorka = k.partition("__")
+        komorki = katalog.KOMORKI.get(baza, [])
+        return (kolej.get(baza, 999), komorki.index(komorka) if komorka in komorki else -1, k)
     out = {"version": manifest.get("version"), "pipeline": WERSJA_PIPELINE}
     for sekcja in ("images", "sheets", "frames", "nineSlice", "fonts", "icons"):
         dane = manifest.get(sekcja) or {}

@@ -349,15 +349,6 @@
    "hash": "3871c034",
    "src2x": "global/g_font_cyfry__9@2x.webp"
   },
-  "g_font_cyfry__plus": {
-   "source": "zastepcze",
-   "blend": "normal",
-   "src": "global/g_font_cyfry__plus.webp",
-   "w": 62,
-   "h": 120,
-   "hash": "9d0bd609",
-   "src2x": "global/g_font_cyfry__plus@2x.webp"
-  },
   "g_font_cyfry__przecinek": {
    "source": "zastepcze",
    "blend": "normal",
@@ -366,6 +357,15 @@
    "h": 120,
    "hash": "9ecff517",
    "src2x": "global/g_font_cyfry__przecinek@2x.webp"
+  },
+  "g_font_cyfry__plus": {
+   "source": "zastepcze",
+   "blend": "normal",
+   "src": "global/g_font_cyfry__plus.webp",
+   "w": 62,
+   "h": 120,
+   "hash": "9d0bd609",
+   "src2x": "global/g_font_cyfry__plus@2x.webp"
   },
   "g_font_cyfry__razy": {
    "source": "zastepcze",
@@ -410,59 +410,14 @@
    "hash": "3aa5e0fd",
    "src2x": "global/g_ui_ikony__autoplay@2x.webp"
   },
-  "g_ui_ikony__dzwiek_wl": {
+  "g_ui_ikony__turbo": {
    "source": "zastepcze",
    "blend": "normal",
-   "src": "global/g_ui_ikony__dzwiek_wl.webp",
+   "src": "global/g_ui_ikony__turbo.webp",
    "w": 56,
    "h": 56,
-   "hash": "9ccee216",
-   "src2x": "global/g_ui_ikony__dzwiek_wl@2x.webp"
-  },
-  "g_ui_ikony__dzwiek_wyl": {
-   "source": "zastepcze",
-   "blend": "normal",
-   "src": "global/g_ui_ikony__dzwiek_wyl.webp",
-   "w": 56,
-   "h": 56,
-   "hash": "b8770744",
-   "src2x": "global/g_ui_ikony__dzwiek_wyl@2x.webp"
-  },
-  "g_ui_ikony__historia": {
-   "source": "zastepcze",
-   "blend": "normal",
-   "src": "global/g_ui_ikony__historia.webp",
-   "w": 56,
-   "h": 56,
-   "hash": "7345588c",
-   "src2x": "global/g_ui_ikony__historia@2x.webp"
-  },
-  "g_ui_ikony__info": {
-   "source": "zastepcze",
-   "blend": "normal",
-   "src": "global/g_ui_ikony__info.webp",
-   "w": 56,
-   "h": 56,
-   "hash": "aea15472",
-   "src2x": "global/g_ui_ikony__info@2x.webp"
-  },
-  "g_ui_ikony__lobby": {
-   "source": "zastepcze",
-   "blend": "normal",
-   "src": "global/g_ui_ikony__lobby.webp",
-   "w": 56,
-   "h": 56,
-   "hash": "2a9ac371",
-   "src2x": "global/g_ui_ikony__lobby@2x.webp"
-  },
-  "g_ui_ikony__menu": {
-   "source": "zastepcze",
-   "blend": "normal",
-   "src": "global/g_ui_ikony__menu.webp",
-   "w": 56,
-   "h": 56,
-   "hash": "e66bb428",
-   "src2x": "global/g_ui_ikony__menu@2x.webp"
+   "hash": "02a522e0",
+   "src2x": "global/g_ui_ikony__turbo@2x.webp"
   },
   "g_ui_ikony__minus": {
    "source": "zastepcze",
@@ -482,14 +437,59 @@
    "hash": "28a9a390",
    "src2x": "global/g_ui_ikony__plus@2x.webp"
   },
-  "g_ui_ikony__turbo": {
+  "g_ui_ikony__dzwiek_wl": {
    "source": "zastepcze",
    "blend": "normal",
-   "src": "global/g_ui_ikony__turbo.webp",
+   "src": "global/g_ui_ikony__dzwiek_wl.webp",
    "w": 56,
    "h": 56,
-   "hash": "02a522e0",
-   "src2x": "global/g_ui_ikony__turbo@2x.webp"
+   "hash": "9ccee216",
+   "src2x": "global/g_ui_ikony__dzwiek_wl@2x.webp"
+  },
+  "g_ui_ikony__dzwiek_wyl": {
+   "source": "zastepcze",
+   "blend": "normal",
+   "src": "global/g_ui_ikony__dzwiek_wyl.webp",
+   "w": 56,
+   "h": 56,
+   "hash": "b8770744",
+   "src2x": "global/g_ui_ikony__dzwiek_wyl@2x.webp"
+  },
+  "g_ui_ikony__info": {
+   "source": "zastepcze",
+   "blend": "normal",
+   "src": "global/g_ui_ikony__info.webp",
+   "w": 56,
+   "h": 56,
+   "hash": "aea15472",
+   "src2x": "global/g_ui_ikony__info@2x.webp"
+  },
+  "g_ui_ikony__menu": {
+   "source": "zastepcze",
+   "blend": "normal",
+   "src": "global/g_ui_ikony__menu.webp",
+   "w": 56,
+   "h": 56,
+   "hash": "e66bb428",
+   "src2x": "global/g_ui_ikony__menu@2x.webp"
+  },
+  "g_ui_ikony__lobby": {
+   "source": "zastepcze",
+   "blend": "normal",
+   "src": "global/g_ui_ikony__lobby.webp",
+   "w": 56,
+   "h": 56,
+   "hash": "2a9ac371",
+   "src2x": "global/g_ui_ikony__lobby@2x.webp"
+  },
+  "g_ui_ikony__zamknij": {
+   "source": "zastepcze",
+   "blend": "normal",
+   "src": "global/g_ui_ikony__zamknij.webp",
+   "w": 56,
+   "h": 56,
+   "hash": "d9b5ed27",
+   "src2x": "global/g_ui_ikony__zamknij@2x.webp"
   },
   "g_ui_ikony__ustawienia": {
    "source": "zastepcze",
@@ -500,14 +500,14 @@
    "hash": "83cbe814",
    "src2x": "global/g_ui_ikony__ustawienia@2x.webp"
   },
-  "g_ui_ikony__zamknij": {
+  "g_ui_ikony__historia": {
    "source": "zastepcze",
    "blend": "normal",
-   "src": "global/g_ui_ikony__zamknij.webp",
+   "src": "global/g_ui_ikony__historia.webp",
    "w": 56,
    "h": 56,
-   "hash": "d9b5ed27",
-   "src2x": "global/g_ui_ikony__zamknij@2x.webp"
+   "hash": "7345588c",
+   "src2x": "global/g_ui_ikony__historia@2x.webp"
   },
   "g_ui_panel": {
    "source": "zastepcze",
@@ -785,24 +785,6 @@
    "hash": "c124e495",
    "src2x": "global/g_fx_konfetti__1@2x.webp"
   },
-  "g_fx_konfetti__10": {
-   "source": "zastepcze",
-   "blend": "normal",
-   "src": "global/g_fx_konfetti__10.webp",
-   "w": 48,
-   "h": 34,
-   "hash": "bb92f26e",
-   "src2x": "global/g_fx_konfetti__10@2x.webp"
-  },
-  "g_fx_konfetti__11": {
-   "source": "zastepcze",
-   "blend": "normal",
-   "src": "global/g_fx_konfetti__11.webp",
-   "w": 26,
-   "h": 48,
-   "hash": "a0005f27",
-   "src2x": "global/g_fx_konfetti__11@2x.webp"
-  },
   "g_fx_konfetti__2": {
    "source": "zastepcze",
    "blend": "normal",
@@ -874,6 +856,24 @@
    "h": 36,
    "hash": "670936e8",
    "src2x": "global/g_fx_konfetti__9@2x.webp"
+  },
+  "g_fx_konfetti__10": {
+   "source": "zastepcze",
+   "blend": "normal",
+   "src": "global/g_fx_konfetti__10.webp",
+   "w": 48,
+   "h": 34,
+   "hash": "bb92f26e",
+   "src2x": "global/g_fx_konfetti__10@2x.webp"
+  },
+  "g_fx_konfetti__11": {
+   "source": "zastepcze",
+   "blend": "normal",
+   "src": "global/g_fx_konfetti__11.webp",
+   "w": 26,
+   "h": 48,
+   "hash": "a0005f27",
+   "src2x": "global/g_fx_konfetti__11@2x.webp"
   },
   "s1_sym_wisnie": {
    "source": "zastepcze",
@@ -2700,24 +2700,6 @@
    "hash": "60d59e16",
    "src2x": "s3/s3_fx_odlamki__1@2x.webp"
   },
-  "s3_fx_odlamki__10": {
-   "source": "zastepcze",
-   "blend": "normal",
-   "src": "s3/s3_fx_odlamki__10.webp",
-   "w": 46,
-   "h": 64,
-   "hash": "05e06f7c",
-   "src2x": "s3/s3_fx_odlamki__10@2x.webp"
-  },
-  "s3_fx_odlamki__11": {
-   "source": "zastepcze",
-   "blend": "normal",
-   "src": "s3/s3_fx_odlamki__11.webp",
-   "w": 64,
-   "h": 56,
-   "hash": "c069e003",
-   "src2x": "s3/s3_fx_odlamki__11@2x.webp"
-  },
   "s3_fx_odlamki__2": {
    "source": "zastepcze",
    "blend": "normal",
@@ -2789,6 +2771,24 @@
    "h": 64,
    "hash": "c7586428",
    "src2x": "s3/s3_fx_odlamki__9@2x.webp"
+  },
+  "s3_fx_odlamki__10": {
+   "source": "zastepcze",
+   "blend": "normal",
+   "src": "s3/s3_fx_odlamki__10.webp",
+   "w": 46,
+   "h": 64,
+   "hash": "05e06f7c",
+   "src2x": "s3/s3_fx_odlamki__10@2x.webp"
+  },
+  "s3_fx_odlamki__11": {
+   "source": "zastepcze",
+   "blend": "normal",
+   "src": "s3/s3_fx_odlamki__11.webp",
+   "w": 64,
+   "h": 56,
+   "hash": "c069e003",
+   "src2x": "s3/s3_fx_odlamki__11@2x.webp"
   }
  },
  "sheets": {
