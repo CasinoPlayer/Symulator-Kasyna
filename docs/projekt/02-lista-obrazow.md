@@ -188,25 +188,31 @@ marginesy wyznacza **okno** ramki (§ 2.5, § 5.12), a nie analiza jednolitego �
 
 ### 2.5. Okna ramek bębnów
 
-Każda ramka ma w środku **w pełni przezroczyste, prostokątne okno**. Pipeline wykrywa jego granice (§ 5.12)
-i zapisuje je w `manifest.json` → `frames.<ID>.window` (ułamki: `x`, `y`, `w`, `h`). Okno musi pasować do siatki
-bębnów (pola symboli są kwadratowe):
+Każda ramka ma w środku **w pełni przezroczyste, prostokątne okno**. Pipeline **sam wykrywa** jego granice (§ 5.12)
+i zapisuje je w `manifest.json` → `frames.<ID>.window` (ułamki: `x`, `y`, `w`, `h`), więc bezwzględny rozmiar okna
+w źródle nie musi być co do piksela — liczy się **proporcja** okna, bo musi pasować do siatki bębnów (pola symboli
+są kwadratowe):
 
-| Ramka | Siatka | Docelowa proporcja okna (szer. : wys.) | Okno @1x (px) | Tolerancja bez rozciągania |
-|---|---|---|---|---|
-| `s1_ramka` (1:1) | 3×3 | 1,000 | 768×768 (3 × 256) | ±3% |
-| `s2_ramka` (3:2) | 5×3 | 1,667 | 960×576 (5 × 192 na 3 × 192) | ±3% |
-| `s3_ramka` (1:1) | 6×5 | 1,200 | 864×720 (6 × 144 na 5 × 144) | ±3% |
+| Ramka | Siatka | Docelowa proporcja okna (szer. : wys.) | Okno w źródle (prompt z [03](03-prompty-chatgpt.md)) | Okno @1x (px) | Tolerancja bez rozciągania |
+|---|---|---|---|---|---|
+| `s1_ramka` (1:1) | 3×3 | 1,000 (kwadrat) | ok. 640×640 px (~62% szerokości kadru 1024) | 768×768 (3 × 256) | ±3% |
+| `s2_ramka` (3:2) | 5×3 | 1,667 (5:3) | ok. 1075×645 px (~70% szerokości kadru 1536) | 960×576 (5 × 192 na 3 × 192) | ±3% |
+| `s3_ramka` (1:1) | 6×5 | 1,200 (6:5) | ok. 717×598 px (~70% szerokości kadru 1024) | 864×720 (6 × 144 na 5 × 144) | ±3% |
 
-Odchyłka 3–15% → pipeline zgłasza ostrzeżenie Q15, a front dopasowuje ramkę rozciągnięciem pasów 9-slice
+Okno zajmuje ok. 70% szerokości kadru (S1: ~62%), a nie ~80% jak w pierwszej wersji 01 § 10.8 / § 11.8: okno 80%
+plus boki ramy ~10% dawałyby 100% szerokości i łamały wymóg briefu „margines ≥ 6%, nic nie przycięte”. Cała ramka
+mieści się więc w marginesie 6% (ok. 88% kadru), a proporcje okien (1:1, 5:3, 6:5) zostają dokładne.
+
+Odchyłka proporcji 3–15% → pipeline zgłasza ostrzeżenie Q15, a front dopasowuje ramkę rozciągnięciem pasów 9-slice
 (`NineSliceSprite` z marginesami z `frames.<ID>.nineSlice`); > 15% → błąd Q15, obraz do ponownego wygenerowania
 (szczegóły w § 5.12). Sam pipeline ramki nie rozciąga — tylko ją mierzy, skaluje i opisuje w manifeście.
 
-Okna w źródłach mają według [01](01-kierunek-artystyczny.md) ok. 640×640 px (S1, 62% kadru), 1229×737 px (S2)
-i 819×686 px (S3). Skala ramki `s` wynika z okna (okno @1x : okno w źródle): S1 ≈ 1,20, S2 ≈ 0,78, S3 ≈ 1,05.
-Pipeline 1.0.0 robi @2x tylko wtedy, gdy wymaga ono powiększenia źródła najwyżej ×1,25 (`2·s ≤ 1,25`, § 2.6), więc
-**wszystkie trzy ramki mają tylko @1x** (S2: @2x wymagałoby ×1,56). Obniżone @2x dla S2 i S3 (≈ 1920 / 1280 px
-szerokości, zawsze ≤ ×1,25 względem źródła) to **[plan]**.
+Skala ramki `s` wynika z okna (okno @1x : okno w źródle): S1 ≈ 768/640 = 1,20, S2 ≈ 960/1075 = 0,89,
+S3 ≈ 864/717 = 1,20 — wszystkie w limicie powiększenia ×1,25 dla @1x. Pipeline 1.0.0 robi @2x tylko wtedy, gdy
+wymaga ono powiększenia źródła najwyżej ×1,25 (`2·s ≤ 1,25`, § 2.6), więc **wszystkie trzy ramki mają tylko @1x**
+(S2: @2x wymagałoby ×1,79). Obniżone @2x (≤ ×1,25 względem źródła) ma sens tylko dla S2 — ok. 1690 px szerokości
+zamiast ≈ 1200 px @1x — i jest **[plan]**; dla S1 i S3 dałoby najwyżej ~4% więcej pikseli niż @1x, więc nie powstanie.
+Jeśli generator narysuje okno innej wielkości, zmieni się tylko `s` (i ewentualnie dostępność @2x), nie wynik w grze.
 
 ### 2.6. Rozdzielczości @1x i @2x
 

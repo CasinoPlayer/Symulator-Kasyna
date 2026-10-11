@@ -21,7 +21,7 @@
   **−6 dB** w sekwencji big win.
 * Limit **24 głosów** jednocześnie (16 na poziomie jakości Low), kradzież głosów według 5 priorytetów.
 * Wszystkie tonalne efekty skomponowane w **pentatonice C** i transponowane do tonacji gry: S1 0, S2 +200, S3 +400 centów
-  (w S2 nuty D i A przesuwamy o +100 c, bo D-dur-owe E i H nie należą do skali hidżaz — § 1.2).
+  (w S2 nuty D i A przesuwamy tylko o +100 c — na E♭ i B♭ — bo E i B nie należą do skali hidżaz, § 1.2).
 * Muzyka: 8 pętli o długości będącej całkowitą liczbą taktów (15–40 s), przejścia kwantyzowane do miary lub taktu.
 * Pliki: WAV 48 kHz → **Opus w WebM** (64 kb/s mono, 96 kb/s stereo) + **AAC w M4A** (96/128 kb/s) dla Safari.
 * Budżet sieci: lobby ≤ 0,8 MB, jedna gra ≤ 1,8 MB (Opus); pamięć po dekodowaniu ≤ 24 MB w lobby i ≤ 56 MB na stronie gry.
