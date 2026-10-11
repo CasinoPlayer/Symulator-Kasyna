@@ -41,10 +41,18 @@ class WynikAlfy:
 # 1. Klasyfikacja
 # ------------------------------------------------------------------------------------------------
 def ma_prawdziwa_alfe(rgba: np.ndarray) -> bool:
-    """Prawdziwa alfa = brzeg obrazu jest w większości przezroczysty (obiekt stoi na niczym)."""
+    """Prawdziwa alfa = brzeg obrazu jest w większości przezroczysty (obiekt stoi na niczym) ALBO obraz ma
+    wyraźny obszar całkiem przezroczysty (≥ 3% pikseli z α < 0,02).
+
+    Drugi warunek jest potrzebny dla obrazów, w których obiekt sięga krawędzi płótna — typowo ramka bębnów
+    narysowana „od brzegu do brzegu” z przezroczystym oknem. Bez niego pas brzegowy jest kryjący, pipeline
+    uznałby złotą ramę za „jednolite tło” i wyciął ją w całości. Narysowanej szachownicy ani jednolitego tła
+    nie da się pomylić z takim obrazem: one nie mają ani jednego piksela przezroczystego.
+    """
     H, W = rgba.shape[:2]
     pas = pas_brzegowy(H, W, max(4, int(0.03 * min(H, W))))
-    return float((rgba[..., 3][pas] < 0.05).mean()) >= 0.6
+    a = rgba[..., 3]
+    return float((a[pas] < 0.05).mean()) >= 0.6 or float((a < 0.02).mean()) >= 0.03
 
 
 # ------------------------------------------------------------------------------------------------
@@ -242,18 +250,38 @@ def usun_jednolite_tlo(rgba: np.ndarray, rola: str) -> tuple[np.ndarray, list]:
     sk = Skladowe(dE < 6)
     wybor = sk.brzeg.copy()
     skala = (H * W) / (1024 * 1024)
+    jasne_tlo = float(rgb_do_lab(np.asarray(kolor_tla, np.float32)[None, None, :])[0, 0, 0]) > 50
+    wyciete, watpliwe = [], []
     for k in np.flatnonzero(~sk.brzeg):
         if k == 0:
             continue
-        m = sk.etykiety[sk.y0[k]:sk.y1[k], sk.x0[k]:sk.x1[k]] == k
-        sredni = float(dE[sk.y0[k]:sk.y1[k], sk.x0[k]:sk.x1[k]][m].mean())
+        ys, xs = slice(sk.y0[k], sk.y1[k]), slice(sk.x0[k], sk.x1[k])
+        m = sk.etykiety[ys, xs] == k
+        sredni = float(dE[ys, xs][m].mean())
+        udzial = sk.pole[k] / (H * W)
         if chroma and sk.pole[k] >= 100 * skala and sredni < 4:
             wybor[k] = True                                   # dziura w obiekcie na zielonym tle
-        elif rola == "ramka" and sk.pole[k] >= 0.04 * H * W and sredni < 4:
+        elif rola == "ramka" and udzial >= 0.04 and sredni < 4:
             wybor[k] = True                                   # okno ramki na białym/czarnym tle
-        elif sk.pole[k] >= 0.01 * H * W and sredni < 2:
+        elif udzial >= 0.01 and sredni < 2:
             wybor[k] = True                                   # duża, idealnie zgodna z tłem dziura
+        elif udzial >= (0.003 if jasne_tlo else 0.006) and sredni < 1.5 and _ostra_krawedz(dE, sk, k):
+            # Średnia dziura (pętla anchu, przestrzeń między ogonkami wiśni, ucho dzwonka): wnętrze idealnie
+            # w kolorze tła i OSTRE przejście do innego koloru tuż za brzegiem. Odblask na złocie przy białym
+            # tle zwykle tak nie wygląda — wokół niego jasność opada łagodnie. Na ciemnym tle próg pola jest
+            # wyższy, bo czarne źrenice i szczeliny łatwiej pomylić z tłem.
+            wybor[k] = True
+            wyciete.append(udzial)
+        elif udzial >= 0.001 and sredni < 3:
+            watpliwe.append(udzial)
     tlo = sk.maska(wybor)
+    if wyciete:
+        uwagi.append(("info", "Q06", "wycięto dziury w kolorze tła wewnątrz obiektu: "
+                                     + ", ".join(f"{u:.1%}" for u in wyciete) + " kadru — sprawdź w raporcie"))
+    if watpliwe:
+        uwagi.append(("ostrzezenie", "Q06", f"{len(watpliwe)} obszar(y) w kolorze tła wewnątrz obiektu zostały "
+                                            "kryjące (dziura czy odblask?) — najlepiej wygenerować obraz "
+                                            "z prawdziwą przezroczystością"))
     wynik = _alfa_z_tla(rgba, tlo, B, dE, prog_tla=6.0, prog_strefy=30.0)
     if chroma:
         wynik = _usun_przebarwienie(wynik, kolor_tla)
@@ -262,6 +290,22 @@ def usun_jednolite_tlo(rgba: np.ndarray, rola: str) -> tuple[np.ndarray, list]:
     if obrys.any() and float((dE[obrys] < 10).mean()) > 0.3:
         uwagi.append(("ostrzezenie", "Q06", "niski kontrast obiektu z tłem — sprawdź krawędzie, rozważ ponowne wygenerowanie"))
     return wynik, uwagi
+
+
+def _ostra_krawedz(dE: np.ndarray, sk: Skladowe, k: int, mediana_min: float = 25.0, p10_min: float = 12.0) -> bool:
+    """Czy składowa ``k`` (obszar w kolorze tła) ma ostry brzeg: w pierścieniu 3–5 px za jej krawędzią kolor
+    wyraźnie różni się od tła (mediana ΔE ≥ 25 i prawie cały obwód ≥ 12). Tak wygląda dziura w obiekcie
+    (antyaliasing ma 1–2 px), a nie miękko wygasający odblask."""
+    H, W = dE.shape
+    p = 6
+    y0, y1 = max(0, sk.y0[k] - p), min(H, sk.y1[k] + p)
+    x0, x1 = max(0, sk.x0[k] - p), min(W, sk.x1[k] + p)
+    m = sk.etykiety[y0:y1, x0:x1] == k
+    pierscien = dylatacja(m, 5) & ~dylatacja(m, 2)
+    if pierscien.sum() < 8:
+        return False
+    v = dE[y0:y1, x0:x1][pierscien]
+    return float(np.median(v)) >= mediana_min and float(np.percentile(v, 10)) >= p10_min
 
 
 def _usun_przebarwienie(rgba: np.ndarray, kolor_tla: np.ndarray) -> np.ndarray:
