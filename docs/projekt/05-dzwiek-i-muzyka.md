@@ -363,17 +363,21 @@ odrzuci `.webm` — przełącza się na `.m4a` do końca wizyty (§ 7.1). **Uwag
 plik do częstotliwości kontekstu (często 44,1 kHz zamiast naszych 48 kHz) — dlatego punkty pętli i `syncPoint`
 podajemy w sekundach, nie w próbkach.
 
-**Pakiety ładowania.** Każdy wpis manifestu ma pole `pack` (§ 7.5) — nazwę pakietu albo **listę** pakietów, bo
-część dźwięków gra na obu stronach (np. monety, licznik, `sfx_przejscie_whoosh`). Dźwięki jednej gry mają dodatkowo
-pole `gra` (`s1` / `s2` / `s3`): strona gry ładuje z pakietu tylko wpisy bez pola `gra` albo z `gra` równym
-bieżącej grze. Strona prosi tylko o swoje pakiety:
+**Pakiety ładowania.** Każdy wpis manifestu ma pole `pack` (§ 7.5) — **listę** pakietów (w przepisach: argument
+`packs` dekoratora `@dzwiek`), bo część dźwięków gra na obu stronach (np. monety, licznik, `sfx_przejscie_whoosh`
+mają `["lobby", "gry-krytyczne"]` albo `["lobby", "gry-dalsze"]`). Reguły dla strony gry N:
+
+1. ładujemy wpisy, których lista zawiera `ui`, `gry-krytyczne`, `gry-dalsze` albo `sN` — i **nie** zawiera
+   pakietu innej gry (`s1` / `s2` / `s3` ≠ N);
+2. wpis z `gry-dalsze` na liście ładuje się w drugiej fazie (po intro), pozostałe — w pierwszej (ekran ładowania).
 
 | Pakiet | Strona | Zawartość | Kiedy ładujemy |
 |---|---|---|---|
 | `ui` | lobby i gra | 8 dźwięków `ui_*` | od razu po odblokowaniu (łącznie ~10 KB) |
 | `lobby` | lobby | `sfx_logowanie`, `sfx_skrzynia_otwarcie`, `sfx_monety_fontanna`, monety, licznik (`sfx_licznik_tik`, `sfx_licznik_koniec`), `sfx_saldo_puls`, `sfx_bankrut`, `sfx_przejscie_whoosh`, `sfx_blysk`, `sfx_uderzenie_basu`, `mus_lobby` | po odblokowaniu; `sfx_logowanie` i bonus — **w trakcie** żądania logowania (zdążą, zanim przyjdzie odpowiedź) |
-| `gry-krytyczne` | gra | `sfx_spin_start`, pętla bębnów danej gry, `sfx_beben_stop_1` … `_6`, wygrane small/medium, `sfx_linia`, licznik, `sfx_saldo_puls`, `sfx_wild`, `sfx_scatter_1` … `_3`, monety, muzyka bazowa gry (`gra`), krótkie efekty gry: `sfx_s1_neon_bzyk`, `sfx_s2_gong`, `sfx_s3_opad`, `sfx_s3_pekniecie_*` | na ekranie ładowania (E20) — wliczone do paska postępu |
-| `gry-dalsze` | gra | big win (`sfx_bigwin_*`, `sfx_poziom_w_gore`, `mus_bigwin`, fontanna), antycypacja (`sfx_antycypacja_narastanie`, `sfx_bicie_serca`, `mus_napiecie`), free spins (`sfx_free_spins_*`, `mus_s2_fs` / `mus_s3_fs`), `sfx_blysk`, `sfx_uderzenie_basu`, `sfx_przejscie_whoosh`, `sfx_bankrut`, skrzynia, efekty funkcji gry: `sfx_s1_jackpot`, `sfx_s2_wild_rozszerzenie`, `sfx_s3_mnoznik`, `sfx_s3_mnoznik_zbior` | po intro, w tle, kolejno po jednym pliku, **nigdy w trakcie spinu** |
+| `gry-krytyczne` | gra | `sfx_spin_start`, `sfx_beben_stop_1` … `_6`, wygrane small/medium, `sfx_linia`, licznik, `sfx_saldo_puls`, `sfx_wild`, `sfx_scatter_1` … `_3`, monety | na ekranie ładowania (E20) — wliczone do paska postępu |
+| `s1` / `s2` / `s3` | strona danej gry | pętla bębnów gry, efekty gry (`sfx_s1_*`, `sfx_s2_*`, `sfx_s3_*`), muzyka bazowa gry; muzyka FS z listą `["s2", "gry-dalsze"]` / `["s3", "gry-dalsze"]` | w pierwszej fazie razem z `gry-krytyczne`; wpisy z `gry-dalsze` — w drugiej |
+| `gry-dalsze` | gra | big win (`sfx_bigwin_*`, `sfx_poziom_w_gore`, `mus_bigwin`, fontanna), antycypacja (`sfx_antycypacja_narastanie`, `sfx_bicie_serca`, `mus_napiecie`), free spins (`sfx_free_spins_*`), `sfx_blysk`, `sfx_uderzenie_basu`, `sfx_przejscie_whoosh`, `sfx_bankrut`, skrzynia | po intro, w tle, kolejno po jednym pliku, **nigdy w trakcie spinu** |
 
 Wpis bez pola `pack` trafia do `gry-dalsze` (wartość domyślna z § 7.5).
 
@@ -712,7 +716,7 @@ wychodzi **melodyjny deszcz**, który nigdy nie fałszuje, a z muzyką lobby (a-
 | `sfx_bigwin_wejscie` | wejście BIG WIN: zasysające narastanie, potężne uderzenie, akord „dętych” i motyw Cebuliona jako fanfara | 2 400 ms | nie | sfx | −3 | 5 | 1 plik, stereo; `syncPoint` 300 ms | 0–300 ms: odwrócony talerz (szum HP 3 kHz, obwiednia rosnąca wykładniczo); 300 ms: uderzenie — sinus 55 → 30 Hz (600 ms) + trzask + akord C3–G3–C4–E4–G4–C5 („dęte”: piła + kwadrat oktawę wyżej, LP 400 → 8 000 Hz w 80 ms); 500–1 300 ms: motyw G4–C5–E5–G5 po 120 ms (ostatnia nuta trzymana); do 2 400 ms: trzymany akord, migotanie (iskry 5–9 kHz), pogłos sali 2,5 s |
 | `sfx_poziom_w_gore` | eskalacja poziomu: świst w górę i uderzenie z akordem kwintowym, za każdym razem o ton wyżej | 1 400 ms | nie | sfx | −4 | 5 | 1 plik; MEGA 0 c, EPIC +200 c, ULTRA +400 c; `syncPoint` 250 ms | 0–250 ms: świst w górę (szum BP 500 → 6 000 Hz + sinus 200 → 1 600 Hz); 250 ms: uderzenie (sub 60 → 32 Hz, trzask 4 ms) + akord kwintowy F (F2–C3–F3–C4: piły z nasyceniem tanh ×4 + „dęte” oktawę wyżej), LP 600 → 7 000 Hz w 60 ms, trzymany 600 ms z zanikiem; iskry; pogłos 2 s |
 | `sfx_bigwin_koniec` | domknięcie sekwencji: kadencja G → C, kaskada monet, długi błyszczący ogon | 2 200 ms | nie | sfx | −4 | 5 | 1 plik, stereo | 0 ms: akord G-dur („dęte”, 150 ms) → 180 ms: Cadd9 („dęte” + dzwony FM + sub 55 Hz) trzymany 800 ms; 200–1 200 ms: kaskada 20 monet (panorama ±0,8); ogon: pogłos 2,5 s + migotanie |
-| `sfx_blysk` | jasne, krótkie „szyng” błysku światła | 420 ms | nie | sfx | −12 | 3 | 1 plik; ±100 c | 30 ms odwróconego narastania; szum HP 5 kHz, atak 2 ms, τ 120 ms; sinusy 6,0 / 8,2 / 11,0 kHz, τ 200 ms, −10 dB; pogłos 1 s, mix 30% |
+| `sfx_blysk` | jasne, krótkie „szyng” błysku światła | 420 ms | nie | sfx | −12 | 3 | 1 plik; ±100 c, ±1,5 dB; `syncPoint` 30 ms (transjent po 30 ms narastania — trafia w szczyt błysku ekranu) | 30 ms odwróconego narastania; szum HP 5 kHz, atak 2 ms, τ 120 ms; sinusy 6,0 / 8,2 / 11,0 kHz, τ 200 ms, −10 dB; pogłos 1 s, mix 30% |
 | `sfx_uderzenie_basu` | głębokie, kinowe uderzenie basu z „mięsem” słyszalnym na telefonie | 1 000 ms | nie | sfx | −5 | 4 | 1 plik; ±30 c | sinus 60 → 32 Hz (wykładniczo, 250 ms), τ 400 ms; nasycenie asym. ×3 (harmoniczne 2.–8.: 120–480 Hz na starcie, potem niżej razem z glissandem — to je słychać na telefonie, § 1.4); klik 2 ms (szum LP 2 kHz) na początku; LP 4 kHz |
 | `sfx_free_spins_start` | wielkie przejście do darmowych spinów: narastanie 1 s, uderzenie, epicki akord z chórem | 3 200 ms | nie | sfx | −3 | 5 | 1 plik, stereo; T; `syncPoint` 1 000 ms | 0–1 000 ms: narastanie (szum BP 300 → 8 000 Hz, ton Sheparda w górę, werbel szesnastkami z crescendo od −30 dB); 1 000 ms: uderzenie (sub 50 → 28 Hz, 800 ms, trzask, talerz: szum HP 4 kHz, τ 900 ms) + akord C-dur („dęte” + chór „a” + dzwony C6–E6–G6) narastający 600 ms; do 3 200 ms: wybrzmienie, pogłos 3 s |
 | `sfx_free_spins_koniec` | zamknięcie bonusu: opadające rozwiązanie, „zamykający się portal” | 2 400 ms | nie | sfx | −5 | 5 | 1 plik, stereo; T | szum BP 6 000 → 400 Hz (whoosh w dół, 600 ms); dzwony opadają po dźwiękach C-dur G6–E6–C6–G5 (co 120 ms) i lądują na trzymanym akordzie C-dur (pad + dzwony, 900 ms); sub 55 Hz; pogłos 2 s. **Bez kadencji F → C:** po T akord F staje się G-dur w S2 (B nie należy do hidżazu) i A-dur w S3 (A nie należy do E lidyjskiej) — „rozwiązanie” daje ruch w dół na jednym akordzie |
@@ -1659,7 +1663,7 @@ dokumentu — silnik v1 je ignoruje, wersja docelowa używa ich z wartościami d
       "webm": "mus_s2.webm", "m4a": "mus_s2.m4a",
       "loop": true, "duration": 38.9, "bus": "music", "channels": 2,
       "loopStart": 0.25, "loopEnd": 38.65, "bpm": 100, "beatsPerBar": 4,
-      "gainDb": 0, "pack": "gry-krytyczne", "gra": "s2"
+      "gainDb": 0, "pack": ["s2"]
     }
   }
 }
@@ -1681,8 +1685,7 @@ dokumentu — silnik v1 je ignoruje, wersja docelowa używa ich z wartościami d
 | `syncPoint` | s | 0 | punkt synchronizacji w pliku (§ 2.6, § 2.7) |
 | `loopStart`, `loopEnd` | s | 0, `duration` | punkty pętli (§ 7.3) |
 | `bpm`, `beatsPerBar` | liczba | — | tylko muzyka, do kwantyzacji (§ 4.6) |
-| `pack` | tekst albo lista tekstów | `gry-dalsze` | pakiet(y) ładowania (§ 2.4); dźwięk z obu stron ma dwa, np. `["lobby", "gry-krytyczne"]` |
-| `gra` | `s1` / `s2` / `s3` | brak (wspólny) | dźwięk tylko jednej gry — inne strony gier go nie ładują (§ 2.4) |
+| `pack` | lista tekstów (pojedynczy tekst = lista jednoelementowa) | `["gry-dalsze"]` | pakiety ładowania (§ 2.4): `ui`, `lobby`, `gry-krytyczne`, `gry-dalsze`, `s1`, `s2`, `s3`; dźwięk z obu stron ma dwa, np. `["lobby", "gry-krytyczne"]` |
 | `source` | `synteza` / `zrodla` | `synteza` | skąd plik (jak w manifeście obrazów) |
 
 ### 7.6. Budżet wagi

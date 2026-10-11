@@ -56,18 +56,32 @@ export async function createScene(container, slot, onProgress) {
   let lastH = 0;
   let cellSize = 0;
 
-  /** Przelicza układ: siatka mieści się w ~88% szerokości i ~82% wysokości sceny, komórki są kwadratowe. */
+  /**
+   * Przelicza układ. Komórki są kwadratowe, a CAŁA plansza — z ramką (pad), złotym obrysem (6 px) i poświatą
+   * (2 × pad) — mieści się w 94% szerokości i 92% wysokości sceny. Wcześniej liczyliśmy tylko same komórki,
+   * więc na tablecie pionowo ramka i poświata wychodziły poza płótno.
+   * U góry zostawiamy pas na napis „Podgląd układu bębnów” (gdy jest widoczny), żeby nie nachodził na ramkę.
+   */
   function layout() {
     const w = app.screen.width;
     const h = app.screen.height;
     lastW = w;
     lastH = h;
+    const note = container.querySelector('.stage__note:not([hidden])');
+    const top = note ? note.offsetTop + note.offsetHeight + 6 : 0;
+    const availW = w * 0.94;
+    const availH = (h - top) * 0.92;
     const gap = Math.max(4, Math.min(w, h) * 0.012);
-    cellSize = Math.floor(Math.min((w * 0.88 - gap * (reels - 1)) / reels, (h * 0.8 - gap * (rows - 1)) / rows));
+    // pad = 0,12 × komórka (min. 10 px); poświata = 2 × pad z każdej strony → razem 4 × pad + 12 px obrysu
+    const fit = (avail, count) => {
+      const byRatio = (avail - gap * (count - 1) - 12) / (count + 0.48);
+      return byRatio * 0.12 >= 10 ? byRatio : (avail - gap * (count - 1) - 12 - 40) / count;
+    };
+    cellSize = Math.max(8, Math.floor(Math.min(fit(availW, reels), fit(availH, rows))));
     const gridW = reels * cellSize + (reels - 1) * gap;
     const gridH = rows * cellSize + (rows - 1) * gap;
     const x0 = (w - gridW) / 2;
-    const y0 = (h - gridH) / 2;
+    const y0 = top + (h - top - gridH) / 2;
     const pad = Math.max(10, cellSize * 0.12);
 
     glow.clear()
@@ -92,6 +106,9 @@ export async function createScene(container, slot, onProgress) {
   }
 
   layout();
+  // napis nad planszą pokazuje się po zniknięciu ekranu ładowania → przeliczamy układ, gdy zmieni się `hidden`
+  const noteWatcher = new MutationObserver(layout);
+  noteWatcher.observe(container, { attributes: true, subtree: true, attributeFilter: ['hidden'] });
   let t = 0;
   // Lekka „fala” jasności po komórkach — żeby było widać, że scena żyje i renderuje się płynnie.
   app.ticker.add((ticker) => {
@@ -107,6 +124,7 @@ export async function createScene(container, slot, onProgress) {
   return {
     app,
     destroy() {
+      noteWatcher.disconnect();
       app.destroy(true, { children: true });
     },
   };

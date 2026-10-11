@@ -334,7 +334,8 @@ async function handleApi(req, res, url) {
 
 /** Przykładowa historia rund (tylko przez /api/dev/gracz) — do oglądania wyglądu okna „Historia gry”. */
 function demoHistory(n) {
-  const tiers = [[0, null], [0.4, 'small'], [2, 'small'], [6, 'medium'], [0, null], [18, 'big'], [1.2, 'small'], [0, null]];
+  // tier jak w kontrakcie 09 § 2.4 i w backendzie: 'none' (a nie null) dla rundy bez wygranej
+  const tiers = [[0, 'none'], [0.4, 'small'], [2, 'small'], [6, 'medium'], [0, 'none'], [18, 'big'], [1.2, 'small'], [0, 'none']];
   return Array.from({ length: n }, (_, i) => {
     const slot = SLOTS[i % SLOTS.length];
     const bet = slot.betLevels[(i * 3) % 4];

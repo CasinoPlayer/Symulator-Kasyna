@@ -51,19 +51,19 @@ def _kola(shape, punkty, r):
 
 
 def _plomienie(w: int, h: int, seed: int = 7) -> np.ndarray:
-    """Fioletowe płomienie (EPIC WIN): szum rozciągnięty w pionie, wygaszany ku górze; rdzeń magenta."""
-    n = B.szum(h, w, 60, 4, seed)
-    n2 = B.szum(h, w, 18, 3, seed + 1)
-    yy = np.linspace(0, 1, h, dtype=np.float32)[:, None]
-    jezyki = 0.5 + 0.5 * np.sin(np.linspace(0, 1, w, dtype=np.float32)[None, :] * 2 * math.pi * 9 + n * 4)
-    gest = np.clip((yy * 1.25 - 0.25) + (n - 0.5) * 0.7 + (jezyki - 0.5) * 0.35 + (n2 - 0.5) * 0.25, 0, 1)
-    gest = B.smoothstep(gest, 0.25, 0.85)
-    rdzen = B.smoothstep(gest, 0.7, 1.0)
-    rgb = B.kol("violet_epic") * gest[..., None] + (B.kol("magenta") - B.kol("violet_epic")) * rdzen[..., None]
-    rgb = rgb + np.array([1, 0.8, 1.0]) * (B.smoothstep(gest, 0.92, 1.0)[..., None] * 0.5)
-    a = np.clip(gest * 1.2, 0, 1)
-    brzeg = B.smoothstep(np.minimum(np.linspace(0, 1, w)[None, :], np.linspace(1, 0, w)[None, :]), 0, 0.12)
-    a = a * brzeg
+    """Fioletowe płomienie (EPIC WIN): języki = sinusoida zaburzona szumem, wygaszane ku górze; rdzeń magenta."""
+    n = B.szum(h, w, 40, 4, seed)
+    yy = np.linspace(1, 0, h, dtype=np.float32)[:, None]          # 1 = dół
+    xx = np.linspace(0, 1, w, dtype=np.float32)[None, :]
+    jezyki = 0.5 + 0.5 * np.sin(xx * 2 * math.pi * 11 + n * 5.0)
+    wys_jezyka = 0.45 + 0.55 * jezyki * (0.6 + 0.4 * B.szum(1, w, 30, 2, seed + 3))
+    gest = np.clip((yy - (1 - wys_jezyka)) / np.maximum(wys_jezyka, 1e-3), 0, 1)
+    gest = B.smoothstep(gest, 0.0, 0.7) * (0.75 + 0.25 * n)
+    rdzen = B.smoothstep(gest, 0.55, 1.0)
+    rgb = B.kol("violet_epic") * (0.6 + 0.4 * gest[..., None]) + (B.kol("magenta") - B.kol("violet_epic")) * rdzen[..., None]
+    rgb = rgb + np.array([1.0, 0.85, 1.0]) * B.smoothstep(gest, 0.85, 1.0)[..., None] * 0.45
+    brzeg = B.smoothstep(np.minimum(xx, 1 - xx), 0, 0.1)
+    a = np.clip(gest * 1.15, 0, 1) * brzeg
     return np.concatenate([np.clip(rgb, 0, 1), a[..., None]], -1).astype(np.float32)
 
 
@@ -118,9 +118,9 @@ def g_win_big():
 
 def g_win_mega():
     m = _maska_banera(["MEGA", "WIN"])
-    pts = _punkty_na_literach(m, 44, 16)
-    mag = _kola(m.shape, pts[0::2], 10)
-    cyj = _kola(m.shape, pts[1::2], 10)
+    pts = _punkty_na_literach(m, 64, 20)
+    mag = _kola(m.shape, pts[0::2], 15)
+    cyj = _kola(m.shape, pts[1::2], 15)
     out = B.zloty_napis(m, faza=14, glebokosc=26, kontur=11, poswiata_r=18, poswiata_kolor="magenta",
                         wkladki=[(mag, "emalia", "#FF2E88", "kopula"), (cyj, "emalia", "#21E6FF", "kopula")])
     # złota laurowa wstęga pod napisem
@@ -153,13 +153,15 @@ def g_win_epic():
     rdzen = B.rozmyj(rdzen, 1.2)
     out = B.zloty_napis(m, faza=14, glebokosc=26, kontur=11, poswiata_r=20, poswiata_kolor="violet_epic",
                         wkladki=[(rdzen, "emalia", "#3A0E6E", "plaski")])
-    pl = _plomienie(int(out.shape[1] * 1.0), int(out.shape[0] * 0.75))
-    calosc = B.plotno(out.shape[1], int(out.shape[0] * 1.12))
-    B.nakladaj(calosc, pl, 0, calosc.shape[0] - pl.shape[0])
+    # płomienie liżą litery od dołu i mieszczą się w marginesie (01 § 7.8)
+    pl = _plomienie(int(out.shape[1] * 0.96), int(out.shape[0] * 0.42))
+    pl[..., 3] *= 0.9
+    calosc = B.plotno(out.shape[1], int(out.shape[0] * 1.1))
+    B.nakladaj(calosc, pl, int(out.shape[1] * 0.02), calosc.shape[0] - pl.shape[0])
     B.nakladaj(calosc, out, 0, 0)
-    pl2 = _plomienie(int(out.shape[1] * 0.95), int(out.shape[0] * 0.35), 11)
-    pl2[..., 3] *= 0.75
-    B.nakladaj(calosc, pl2, int(out.shape[1] * 0.025), calosc.shape[0] - pl2.shape[0])
+    pl2 = _plomienie(int(out.shape[1] * 0.9), int(out.shape[0] * 0.2), 11)
+    pl2[..., 3] *= 0.55
+    B.nakladaj(calosc, pl2, int(out.shape[1] * 0.05), calosc.shape[0] - pl2.shape[0], tryb="screen")
     return B.wpasuj(calosc, W32, H32, 0.84)
 
 
@@ -185,9 +187,9 @@ def g_win_ultra():
 
 def g_win_free_spins():
     m = _maska_banera(["FREE", "SPINS"])
-    rdzen = B.rozmyj(B.erozja(m > 0.5, 18).astype(np.float32), 3.0) * 0.85
+    rdzen = B.rozmyj(B.erozja(m > 0.5, 20).astype(np.float32), 6.0) * 0.6
     out = B.zloty_napis(m, faza=14, glebokosc=24, kontur=11, poswiata_r=20, poswiata_kolor="#2EC4B6",
-                        wkladki=[(rdzen, "swiecace", "#8FF7FF", "plaski")])
+                        wkladki=[(rdzen, "swiecace", "#7FF2F0", "plaski")])
     for (fx, fy, r) in ((0.08, 0.2, 34), (0.93, 0.15, 30), (0.5, 0.5, 26), (0.85, 0.88, 36), (0.12, 0.85, 28)):
         out = B.blysk(out, out.shape[1] * fx, out.shape[0] * fy, r, 1.0)
     return B.wpasuj(out, W32, H32, 0.84)
@@ -248,7 +250,7 @@ def g_logo():
     lm = B.maska_rysunku(lin_w, lh, linia)
     lewa = B.zloty_napis(lm, faza=3, glebokosc=3, kontur=3, wypuklosc=0)
     prawa = lewa[:, ::-1].copy()
-    k = 0.4 * (napis.shape[0] + casino.shape[0]) / 0.6 / emb.shape[0]
+    k = 1.25 * napis.shape[0] / emb.shape[0]          # emblemat ≈ 40% wysokości całego logotypu
     emb = B.skaluj(emb, int(emb.shape[1] * k))
     H = emb.shape[0] + napis.shape[0] + casino.shape[0] + 40
     W = max(szer, emb.shape[1]) + 20
@@ -374,12 +376,15 @@ def s2_logo():
 
 
 def s3_logo():
-    m1 = B.wiersze_napisu(["KRYSZTAŁOWA"], "marcellus", 140, 0.06, 0)
-    m2 = B.wiersze_napisu(["KASKADA"], "marcellus", 240, 0.05, 0)
+    m1 = B.wiersze_napisu(["KRYSZTAŁOWA"], "marcellus", 140, 0.07, 0)
+    m2 = B.wiersze_napisu(["KASKADA"], "marcellus", 240, 0.06, 0)
+    # Marcellus ma cienkie kreski — pogrubiamy maskę, żeby kryształ miał „ciało”
+    m1 = B.rozmyj(B.dylatacja(np.pad(m1, 8) > 0.5, 3).astype(np.float32), 1.0)
+    m2 = B.rozmyj(B.dylatacja(np.pad(m2, 10) > 0.5, 5).astype(np.float32), 1.2)
 
     def krysztal(m, faza):
         rdzen = B.rozmyj(B.erozja(m > 0.5, max(2, int(faza * 0.5))).astype(np.float32), 0.8)
-        tecz = B.tecza(m.shape[0], m.shape[1], ("#9C6BFF", "#21E6FF", "#B66BFF", "#5CFFB0"), 0.6)
+        tecz = B.tecza(m.shape[0], m.shape[1], ("#8A4DFF", "#21E6FF", "#B04DFF", "#2EE6B0"), 0.6)
         return B.zloty_napis(m, faza=faza, glebokosc=int(faza * 1.2), kontur=faza * 0.6, gra="s3",
                              poswiata_r=faza * 1.4, poswiata_kolor="#A64DFF", kontur_kolor="#120B2A",
                              wkladki=[(rdzen, "emalia", tecz, "skos")])

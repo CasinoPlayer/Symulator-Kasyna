@@ -291,7 +291,13 @@ function openInfo() {
   }
 
   if (Array.isArray(slot.symbols) && slot.symbols.length) {
-    el.infoBody.append(Object.assign(document.createElement('h3'), { className: 'info-section-title', textContent: 'Tabela wypłat (mnożnik zakładu)' }));
+    // Kontrakt 09 § 2.4: w grach liniowych mnożnik dotyczy stawki NA LINIĘ (zakład / liczba linii),
+    // a scatter i klastry — całego zakładu. Nagłówek mówi to wprost, żeby tabela nie wprowadzała w błąd.
+    const unit = slot.engineType === 'LINES'
+      ? `mnożnik stawki na linię (zakład ÷ ${slot.lines}); scatter — mnożnik całego zakładu`
+      : 'mnożnik całego zakładu';
+    el.infoBody.append(Object.assign(document.createElement('h3'), { className: 'info-section-title', textContent: 'Tabela wypłat' }));
+    el.infoBody.append(Object.assign(document.createElement('p'), { className: 'info-section-note', textContent: `Wartości: ${unit}.` }));
     const table = document.createElement('div');
     table.className = 'paytable';
     for (const s of [...slot.symbols].reverse()) {

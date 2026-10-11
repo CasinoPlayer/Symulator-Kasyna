@@ -359,16 +359,17 @@ def linia_mono(nuty, dlugosc, oscylator="pila", glide=0.04, vibrato=(5.5, 12.0, 
     return x * env, fz, env
 
 
-def deta_nuta(f, dlugosc, gate=None, f_od=800.0, f_do=5000.0, tau_filtra=0.15, atak=0.02, sila=1.0, rng=None):
+def deta_nuta(f, dlugosc, gate=None, f_od=800.0, f_do=5000.0, tau_filtra=0.15, atak=0.02, sila=1.0, rng=None,
+              t_otwarcia=0.02):
     """„Dęte” syntezatorowe: 3 piły ±8 c + kwadrat oktawę wyżej przez LP otwierany od f_od do f_do
-    i zamykany z czasem (obwiednia filtra). Nasycenie dla „brudu” blachy."""
+    i zamykany z czasem (obwiednia filtra). Nasycenie dla „brudu” blachy. t_otwarcia > 1 s → narastanie (swell)."""
     rng = _rng(rng, 31)
     n = n_probek(dlugosc)
     t = np.arange(n) / SR
     gate = dlugosc - 0.15 if gate is None else gate
     x = sum(dsp.pila(dsp.centy(f, c), n, rng.random()) for c in (-8, 0, 8)) / 3
     x += 0.35 * dsp.kwadrat(2 * f, n, 0.5, rng.random())
-    otw = 1 - np.exp(-t / 0.02)
+    otw = 1 - np.exp(-t / t_otwarcia)
     fc = f_od + (f_do - f_od) * sila * otw * (0.45 + 0.55 * np.exp(-t / tau_filtra))
     x = dsp.svf(x, fc, 0.9, "lp")
     x = dsp.nasycenie(x * 1.2, 1.5)

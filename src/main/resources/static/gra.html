@@ -25,9 +25,9 @@
 
 <div id="app" class="game">
   <header class="game-bar">
-    <a class="btn-icon game-bar__back" href="./" id="btn-lobby">
-      <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#wstecz"/></svg><span>Lobby</span>
-      <span class="sr-only">Wróć do lobby</span>
+    <!-- aria-label: jedna nazwa dla czytnika ekranu (napis „Lobby” znika na telefonie, zostaje sama strzałka) -->
+    <a class="btn-icon game-bar__back" href="./" id="btn-lobby" aria-label="Wróć do lobby">
+      <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#wstecz"/></svg><span aria-hidden="true">Lobby</span>
     </a>
     <div class="game-bar__title">
       <img src="icons/emblemat.svg" data-asset="g_emblemat" alt="" width="30" height="30">
