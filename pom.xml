@@ -11,12 +11,12 @@
     </parent>
 
     <groupId>pl.wsb</groupId>
-    <!-- LAB 01: dopisz nazwę projektu (taką samą jak pakiet pl.wsb.<nazwaprojektu>), np. wdtb-2026-backend-kawiarnia -->
-    <artifactId>wdtb-2026-backend</artifactId>
-    <!-- LAB 01: wpisz numery indeksów osób z zespołu, np. 1.0.0-123456-123457-123458 (reguła R1.05) -->
-    <version>1.0.0-NRINDEKSU1-NRINDEKSU2-NRINDEKSU3</version>
-    <name>WdTB-2026-Backend</name>
-    <description>Projekt zespołowy z przedmiotu Wprowadzenie do technologii backendowych (WdTB)</description>
+    <!-- LAB 01 (R1.01): nazwa projektu taka sama jak pakiet pl.wsb.kasyno -->
+    <artifactId>wdtb-2026-backend-kasyno</artifactId>
+    <!-- LAB 01 (R1.05): numery indeksów zespołu: Konrad Paulus, Dominik Pacanowski, Dawid Majewski -->
+    <version>1.0.0-112960-112961-113154</version>
+    <name>Cebulion Casino</name>
+    <description>Cebulion Casino: symulator kasyna z wirtualną walutą (cebulion). Projekt zespołowy z przedmiotu Wprowadzenie do technologii backendowych (WdTB)</description>
 
     <properties>
         <java.version>21</java.version>
