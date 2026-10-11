@@ -97,21 +97,30 @@ python3 tools/art/przetworz.py --zrodla ../kasyno-grafika/art/zrodla   # źród�
 | `--strict` | kod wyjścia 2 także przy ostrzeżeniach |
 | `--sprzataj` | usuwa z `assets/img` pliki, do których nie prowadzi manifest |
 
-Kody wyjścia: `0` — w porządku, `1` — ostrzeżenia, `2` — błędy. **Brak źródła** dla ID (ani w `zrodla`, ani
-w `zastepcze`) nie psuje aplikacji: poprzedni wynik i wpis w manifeście zostają, raport ostrzega (Q01).
+Kody wyjścia: `0` — w porządku, `1` — ostrzeżenia, `2` — błędy (także plik z manifestu, którego nie ma na dysku,
+Q30). **Brak źródła** dla ID (ani w `zrodla`, ani w `zastepcze`) nie psuje aplikacji: poprzedni wynik i wpis
+w manifeście zostają, raport ostrzega (Q01). Pliki w `art/zrodla`, których pipeline nie użyje (literówka w nazwie,
+zły folder, dopisek „ (1)” przy pobieraniu), są zgłaszane z podpowiedzią poprawnej nazwy (Q02); foldery `makiety/`,
+`nieposortowane/` i zaczynające się od `_` (np. `_do-poprawy/`) są pomijane. JPEG jako obraz `ALFA` → ostrzeżenie
+Q04 (brak przezroczystości, artefakty krawędzi).
+
+**Budżety wagi** (Q23) liczą to, co pobiera przeglądarka w najcięższej konfiguracji (02 § 7.1): desktop — @2x
+i tła `*_desktop` w 2560 px, telefon — @1x i tła `*_mobile`; tło jednej orientacji nie jest doliczane drugiej
+(front wybiera je po proporcji okna). Banery nie wchodzą do budżetu lobby — plakatem filmiku w kaflu jest
+okładka (`js/lobby.js`). Kodowanie: tła q80, okładki i banery q78, sprite'y q82 + bezstratna alfa.
 
 **Kroki** (moduły w [`kroki/`](kroki), opis i uzasadnienia w [02 § 5](../../docs/projekt/02-lista-obrazow.md)):
 
 | Typ / rola | Co się dzieje |
 |---|---|
-| `ALFA` | prawdziwa alfa → usuwanie obwódek; **narysowana szachownica** → wykrycie okresu i fazy (statystyka kołowa, działa też dla ułamkowego okresu) i dokładna alfa z rzutu na kierunek tło→obiekt; **jednolite tło** (biel, czerń, `#00FF00`…) → model tła, ΔE w CIELAB, strefa przejścia, odkażenie koloru krawędzi, despill; usuwanie „pyłków”; przycięcie do alfy |
+| `ALFA` | prawdziwa alfa (przezroczysty brzeg albo ≥ 3% pikseli całkiem przezroczystych — np. ramka „od brzegu do brzegu”) → usuwanie obwódek; **narysowana szachownica** → wykrycie okresu i fazy (statystyka kołowa, działa też dla ułamkowego okresu) i dokładna alfa z rzutu na kierunek tło→obiekt; **jednolite tło** (biel, czerń, `#00FF00`…) → model tła, ΔE w CIELAB, strefa przejścia, odkażenie koloru krawędzi, despill, **dziury w kolorze tła** wewnątrz obiektu (pętla anchu, przestrzeń między ogonkami wiśni) wycinane, gdy mają ostry brzeg (ostrzeżenie do sprawdzenia w raporcie); usuwanie „pyłków”; przycięcie do alfy; Q07 stopniowane: czubek na krawędzi ≤ 1,5% boku = ostrzeżenie, ucięty obiekt = błąd |
 | symbole | wspólna normalizacja w grupie (gra + poziom: dłuższy bok 0,86 / 0,89 / 0,92 pola, wyrównanie pokrycia ±12%, środek optyczny) → pole 256/192/144 px @1x + `ruch1`, `ruch2`, `syl`, `glow`, `cien`, `mini`; S3: `tint`, kula mnożnika: `pole` |
-| `CZARNE` | czerń zostaje (bez alfy), zerowanie poziomu czerni, winieta krawędzi, wyśrodkowanie promieni/flary, limit jasności dymu, `blend: "add"` |
+| `CZARNE` | czerń zostaje (bez alfy), zerowanie poziomu czerni, winieta krawędzi, wyśrodkowanie promieni/flary, limit jasności dymu, **kolorowy efekt → ciepła biel** z zachowaniem jasności (kod barwi efekty tintem, 04 § 2.3), `blend: "add"` |
 | `PELNE` | kadr pod proporcję z punktem ogniskowym, warianty szerokości (tła 1280/1920/2560, mobile 720/1080/1280, okładki 400/600/800, banery 960/1536 + kadr 16:9), ziarno przy powiększaniu, LQIP, wersja `rozmyte` |
-| arkusze | cięcie przez spójne składowe (alfa albo jasność na czerni), sklejanie rozbitych elementów, przypisanie do komórek wierszami (odporne na nierówną siatkę), plany awaryjne; pliki `<ID>__<komórka>.webp` |
+| arkusze | cięcie przez spójne składowe (alfa albo jasność na czerni), sklejanie rozbitych elementów (z mniejszym promieniem, gdy elementy prawie się stykają), pomijanie podpisów dopisanych przez ChatGPT pod ikonami, przypisanie do komórek wierszami (odporne na nierówną siatkę), plany awaryjne; pliki `<ID>__<komórka>.webp` |
 | cyfry | 13 glifów na wspólnej linii bazowej, cyfry tabelaryczne → pliki glifów + BitmapFont `global/fonty/cebulion-cyfry@{1,2}x.fnt` + metryki w `manifest.fonts` |
-| ramki | wykrycie przezroczystego okna (także „zamalowanego”), kontrola proporcji siatki → `frames.<ID>.window` (ułamki) + `frames.<ID>.nineSlice` (px @1x) |
-| panel, przyciski | marginesy 9-slice z porównania całych kolumn/wierszy → `nineSlice` (ułamki) |
+| ramki | wykrycie przezroczystego okna (także zamalowanego kolorem albo szachownicą); okno o innej proporcji niż siatka bębnów → **rozciągnięcie najbardziej jednolitego pasa boków ramki** (z ominięciem ornamentów, np. wajchy S1), żeby okno miało dokładnie proporcję siatki → `frames.<ID>.window` (ułamki) + `frames.<ID>.nineSlice` (px @1x) |
+| panel, przyciski | marginesy 9-slice z porównania całych kolumn/wierszy z tolerancją adaptacyjną (faktura szkła, winieta i odblaski na listwach nie blokują wykrycia, ornament w rogu tak) → `nineSlice` (ułamki) |
 | emblemat | dodatkowo `favicon.ico` (16/32/48), `favicon-32.png`, `icon-192/512.png`, `icon-maskable-512.png`, `apple-touch-icon.png`, `site.webmanifest` → `global/`, opis w `manifest.icons` |
 
 Skalowanie odbywa się w świetle liniowym z alfą premultiplikowaną (jasne odblaski złota nie ciemnieją, brak
@@ -166,12 +175,16 @@ Komórki arkuszy (kolejność wierszami, numeracja od 0 jak `avatarIndex` z API)
 python3 tools/art/testy/test_przetworz.py /tmp/test-art       # obrazy wejściowe i wyniki zostają w katalogu
 ```
 
-15 testów na syntetycznych obrazach o znanym wyniku: obiekt na narysowanej szachownicy (całkowitej oraz
+27 testów na syntetycznych obrazach o znanym wyniku: obiekt na narysowanej szachownicy (całkowitej oraz
 przeskalowanej do pola 23,6 px, rozmytej, z szumem), na `#00FF00` z dziurą w obiekcie, na bieli z białym
-odblaskiem, arkusz z nierówną siatką i rozbitym elementem, puste pola arkusza cyfr, okno ramki (na alfie i na
-szachownicy), okno zamalowane, panel 9-slice z ornamentem w rogach, pigułka, skalowanie w świetle liniowym,
-etykietowanie składowych, pełne uruchomienie pipeline'u, zachowanie wyniku przy braku źródła, determinizm.
-Działają bez pytesta (i z nim).
+odblaskiem, dziura w obiekcie na bieli i na zaszumionej czerni, arkusz z nierówną siatką i rozbitym elementem,
+arkusz z podpisami pod ikonami, arkusz z prawie stykającymi się elementami, puste pola arkusza cyfr, okno ramki
+(na alfie, na szachownicy, zamalowane, z szachownicą w samym oknie), ramka z prawdziwą alfą od brzegu do brzegu,
+korekta proporcji okna z ominięciem „wajchy”, panel 9-slice z ornamentem w rogach (także z fakturą, winietą
+i odblaskami), pigułka, nieznane nazwy plików (Q02), JPEG i tryby P / LA / 16-bit, efekt na zaszumionej czerni
+i z kanałem alfa, neutralizacja koloru efektów, stopniowanie Q07, skalowanie w świetle liniowym, etykietowanie
+składowych, pełne uruchomienie pipeline'u, zachowanie wyniku przy braku źródła, determinizm. Działają bez
+pytesta (i z nim). Pipeline był też sprawdzony na komplecie 92 prawdziwych obrazów z ChatGPT (0 błędów).
 
 ## 6. Czego jeszcze nie ma (plan)
 

@@ -89,12 +89,25 @@ def ogranicz_dym(rgba: np.ndarray) -> np.ndarray:
     return out
 
 
-def kontrola_barwy(rgba: np.ndarray, uwagi: list) -> None:
-    """Efekty powinny być prawie białe (kolor nadaje kod przez tint)."""
-    L = jasnosc(rgba[..., :3])
-    jasne = L > 0.5
-    if jasne.sum() > 100 and float(nasycenie(rgba[..., :3])[jasne].mean()) > 0.25:
-        uwagi.append(("ostrzezenie", "Q11", "efekt jest mocno kolorowy — kod barwi efekty przez tint, lepiej biały"))
+CIEPLA_BIEL = np.array([1.0, 0.965, 0.88], dtype=np.float32)   # między #FFFFFF a #FFF3D1 z promptów (03)
+
+
+def neutralizuj_barwe(rgba: np.ndarray, uwagi: list) -> np.ndarray:
+    """Efekty mają być prawie białe — kolor nadaje kod przez ``tint`` (04 § 2.3: jeden arkusz iskier służy jako
+    złote iskry BIG WIN, cyjanowe w S1 i turkusowe w S2). ChatGPT mimo promptu „warm white” potrafi oddać złote
+    albo niebieskie efekty; złota tekstura zabarwiona na cyjan daje błotnistą zieleń. Dlatego kolorowy efekt
+    sprowadzamy do ciepłej bieli z zachowaniem jasności: v = ½ · (luma + max(R, G, B)) — sama luma za bardzo
+    przyciemniłaby nasycone poświaty (pomarańcz ma niską lumę, a na ekranie świeci mocno)."""
+    rgb = rgba[..., :3]
+    L = jasnosc(rgb)
+    jasne = L > 0.25
+    if jasne.sum() <= 100 or float(nasycenie(rgb)[jasne].mean()) <= 0.25:
+        return rgba
+    v = 0.5 * (L + rgb.max(-1))
+    out = rgba.copy()
+    out[..., :3] = np.clip(v[..., None] * CIEPLA_BIEL, 0, 1)
+    uwagi.append(("info", "Q11", "efekt był kolorowy — sprowadzony do ciepłej bieli (kolor nadaje kod tintem, 04 § 2.3)"))
+    return out
 
 
 def przygotuj_fx(rgba: np.ndarray, uwagi: list, srodek: bool = False, dym: bool = False) -> np.ndarray:
@@ -105,5 +118,4 @@ def przygotuj_fx(rgba: np.ndarray, uwagi: list, srodek: bool = False, dym: bool 
     if dym:
         out = ogranicz_dym(out)
     out = winieta_krawedzi(out, uwagi)
-    kontrola_barwy(out, uwagi)
-    return out
+    return neutralizuj_barwe(out, uwagi)

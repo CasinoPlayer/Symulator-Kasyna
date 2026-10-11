@@ -22,3 +22,9 @@
 - Opus constrained VBR, AAC koder fast
 - muzyka −14 LUFS (szyna 0,45 → ~−22 LUFS w sesji)
 - front: audio-engine.js musi używać loopStart/loopEnd z manifestu (przekazane agentowi S1)
+
+## Z recenzji pipeline'u grafiki (po przetworzeniu obrazów z ChatGPT)
+- docs/projekt/02: zaktualizować § 7.1 (budżety wg orientacji, banery poza lobby, jakość q80/q78), Q02/Q04/Q07/Q11/Q15/Q16/Q30 (zaimplementowane/zmienione), wycinanie dziur § 5.4, Q09
+- front: okna ramek mają proporcję siatki (s1_ramka 1210×1318 @1x) — wszystko z manifestu; g_logo bez src2x; efekty ciepłobiałe → kolor przez tint w kodzie (04 § 2.3)
+- budżet lobby 86% (próg ostrzeżenia 85%) — ewentualnie AVIF w <picture>
+- g_win_epic: po poprawce → art/zrodla/global/g_win_epic.png, potem `python3 tools/art/przetworz.py --tylko g_win_epic`

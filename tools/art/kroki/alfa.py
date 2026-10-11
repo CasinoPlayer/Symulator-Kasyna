@@ -490,6 +490,15 @@ def napraw_alfe(rgba: np.ndarray, rola: str = "obiekt", pylki: bool = True) -> W
     return wynik
 
 
+def styk_z_krawedzia(rgba: np.ndarray, prog: float = 32 / 255) -> float:
+    """Q07: jaka część najdłuższego boku płótna styka się z obiektem (α > 32/255 w pasie 2 px przy krawędzi).
+    Czubek iskry albo listka to ułamek procenta; obiekt ucięty krawędzią — kilka–kilkadziesiąt procent."""
+    a = rgba[..., 3]
+    styk = max(int((a[:2, :] > prog).any(0).sum()), int((a[-2:, :] > prog).any(0).sum()),
+               int((a[:, :2] > prog).any(1).sum()), int((a[:, -2:] > prog).any(1).sum()))
+    return styk / max(a.shape)
+
+
 def przytnij(rgba: np.ndarray, margines_proc: float = 0.02, min_px: int = 4, prog: float = 8 / 255):
     """Przycięcie do prostokąta pikseli z α ≥ 8/255 + margines (02 § 5.6). Zwraca (obraz, prostokąt, dotyka)."""
     a = rgba[..., 3]

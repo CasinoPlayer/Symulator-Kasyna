@@ -131,6 +131,62 @@ def _okno_w_szachownicy(rgba: np.ndarray, cx: int, cy: int, xs: np.ndarray, ys: 
     return (D <= 14 / 255) & (rgba[..., 3] > 0.5)
 
 
+def dopasuj_proporcje_okna(img: np.ndarray, okno, siatka, uwagi: list, tolerancja: float = 0.03):
+    """Ramka z oknem o złej proporcji (np. ChatGPT narysował okno 1,24 : 1 dla siatki 3×3): rozciągamy
+    NAJBARDZIEJ JEDNOLITY pas boków ramki tak, żeby okno miało dokładnie proporcję siatki bębnów.
+
+    To ten sam zabieg co rozciąganie środkowego pasa 9-slice, ale z pasem wybranym automatycznie: szukamy
+    wierszy (albo kolumn), w których boki ramki prawie się nie zmieniają — gładka rura neonu, gładki kamień —
+    i omijamy ornamenty, wajchę automatu czy kapitele kolumn. Front dostaje okno, w które siatka wchodzi bez
+    zniekształceń. Zwraca (obraz, okno)."""
+    x0, y0, x1, y1 = okno
+    H, W = img.shape[:2]
+    cel = siatka[0] / siatka[1]
+    jest = (x1 - x0) / max(1, y1 - y0)
+    if abs(jest / cel - 1) <= tolerancja:
+        return img, okno
+    pionowo = jest > cel                          # okno za szerokie → dokładamy wiersze (ramka wyższa)
+    p = img.copy()
+    p[..., :3] *= p[..., 3:4]
+    if pionowo:
+        delta = int(round((x1 - x0) / cel - (y1 - y0)))
+        a0, a1 = y0, y1
+        boki = np.concatenate([p[:, :x0], p[:, x1:]], axis=1)            # wiersze boków ramki
+        zmiennosc = np.abs(np.diff(boki, axis=0)).max(-1).mean(1)        # różnica wiersz → następny wiersz
+    else:
+        delta = int(round((y1 - y0) * cel - (x1 - x0)))
+        a0, a1 = x0, x1
+        boki = np.concatenate([p[:y0], p[y1:]], axis=0).transpose(1, 0, 2)
+        zmiennosc = np.abs(np.diff(boki, axis=0)).max(-1).mean(1)
+    dl = a1 - a0
+    pas = int(min(max(delta, round(0.18 * dl)), 0.6 * dl))
+    lo, hi = a0 + int(0.08 * dl), a1 - int(0.08 * dl) - pas
+    if hi <= lo:
+        uwagi.append(("blad", "Q15", f"proporcja okna {jest:.3f} zamiast {cel:.3f} — za mało miejsca na korektę"))
+        return img, okno
+    suma = np.concatenate([[0.0], np.cumsum(zmiennosc)])
+    starty = np.arange(lo, hi + 1)
+    koszt = (suma[starty + pas] - suma[starty]) / pas
+    s0 = int(starty[np.argmin(koszt)])
+    sredni = float(koszt.min()) * 255
+    from .skala import skaluj                      # import lokalny: skala nie zależy od geometrii
+    if pionowo:
+        pasek = skaluj(img[s0:s0 + pas], W, pas + delta, wyostrz=False)
+        out = np.concatenate([img[:s0], pasek, img[s0 + pas:]], axis=0)
+        nowe = (x0, y0, x1, y1 + delta)
+        opis = f"wiersze {s0}–{s0 + pas}"
+    else:
+        pasek = skaluj(img[:, s0:s0 + pas], pas + delta, H, wyostrz=False)
+        out = np.concatenate([img[:, :s0], pasek, img[:, s0 + pas:]], axis=1)
+        nowe = (x0, y0, x1 + delta, y1)
+        opis = f"kolumny {s0}–{s0 + pas}"
+    uwagi.append(("ostrzezenie", "Q15", f"proporcja okna {jest:.3f} zamiast {cel:.3f} — rozciągnięto jednolity pas ramki "
+                                        f"({opis} źródła, +{delta} px, zmienność {sredni:.1f}/255); sprawdź ramkę w raporcie"))
+    if sredni > 4:
+        uwagi.append(("ostrzezenie", "Q15", "rozciągnięty pas ramki nie jest jednolity — możliwe zniekształcenie ornamentu"))
+    return out.astype(np.float32), nowe
+
+
 def sprawdz_proporcje_okna(okno, siatka, uwagi):
     """Okno musi pasować do siatki bębnów (pola kwadratowe): ±3% OK, 3–15% ostrzeżenie, > 15% błąd."""
     x0, y0, x1, y1 = okno
@@ -151,17 +207,29 @@ def sprawdz_proporcje_okna(okno, siatka, uwagi):
 def _jednolity_odcinek(p: np.ndarray, os: int, tol_sasiad=1.5 / 255, tol_srodek=3 / 255):
     """Najdłuższy ciągły odcinek wokół środka, w którym CAŁE kolumny (os=1) albo wiersze (os=0) są prawie
     identyczne — tylko takie można rozciągać bez zniekształceń. Porównujemy pełne kolumny, a nie tylko pasmo
-    środkowe, bo ozdobny róg sięgający w głąb krawędzi też musi trafić do wycinka narożnika."""
+    środkowe, bo ozdobny róg sięgający w głąb krawędzi też musi trafić do wycinka narożnika.
+
+    Tolerancja jest ADAPTACYJNA: obraz z ChatGPT nigdy nie ma idealnie płaskiego środka (delikatna faktura
+    szkła, winieta, odblaski na listwach), więc próg to większa z wartości stałej i 2,5 × „naturalnej” zmienności
+    zmierzonej w środkowych 20% obrazu. Odniesieniem jest mediana kolumn środkowych, a nie jedna kolumna (ta mogła
+    trafić na odblask). Ornament w rogu i tak odstaje od tej zmienności wielokrotnie (ostre krawędzie)."""
     if os == 0:
         p = p.transpose(1, 0, 2)
     # lekkie wygładzenie wzdłuż kierunku rozciągania tłumi szum generatora (inaczej każda kolumna „różna”)
     p = rozmyj(p, 1.0) if min(p.shape[:2]) > 8 else p
     n = p.shape[1]
     c = n // 2
+    r = max(2, int(0.1 * n))
+    srodek = slice(max(1, c - r), min(n, c + r + 1))
     sasiad = np.zeros(n, dtype=np.float32)
     sasiad[1:] = np.abs(np.diff(p, axis=1)).max(-1).mean(0)
-    od_srodka = np.abs(p - p[:, c:c + 1]).max(-1).mean(0)
-    ok = (sasiad <= tol_sasiad) & (od_srodka <= tol_srodek)
+    wzor = np.median(p[:, srodek], axis=1, keepdims=True)
+    od_srodka = np.abs(p - wzor).max(-1).mean(0)
+    tol_s = max(tol_sasiad, 2.5 * float(np.median(sasiad[srodek])))
+    # Odległość od wzorca ma luźny próg: szeroki, miękki odblask na listwie zmienia średni kolor kolumny nawet
+    # o ~10/255, ale rozciągnięty wygląda dobrze. Ornament zatrzymuje wzrost dzięki ostrym krawędziom (sasiad).
+    tol_o = max(tol_srodek, 2.5 * float(np.median(od_srodka[srodek])) + 1 / 255, 24 / 255)
+    ok = (sasiad <= tol_s) & (od_srodka <= tol_o)
     lo = c
     while lo - 1 >= 0 and ok[lo - 1] and ok[lo]:
         lo -= 1

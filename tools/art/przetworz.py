@@ -79,7 +79,9 @@ def znajdz_zrodlo(a: katalog.Asset, ust: dict) -> tuple[Path | None, str, list]:
 
 
 ROZSZERZENIA = (".png", ".webp", ".jpg", ".jpeg")
-POMIJANE_FOLDERY = {"makiety", "nieposortowane"}       # makiety nie trafiają do aplikacji; nieposortowane — 02 § 4.6
+# makiety nie trafiają do aplikacji; nieposortowane — 02 § 4.6; foldery z „_” na początku (np. _do-poprawy) to
+# odłożone pliki robocze, których pipeline świadomie nie czyta
+POMIJANE_FOLDERY = {"makiety", "nieposortowane"}
 
 
 def _znormalizuj_nazwe(nazwa: str) -> str:
@@ -109,7 +111,7 @@ def nieznane_pliki(zrodla: Path) -> list[str]:
             continue
         rel = p.relative_to(zrodla)
         folder = rel.parts[0] if len(rel.parts) > 1 else ""
-        if folder in POMIJANE_FOLDERY:
+        if folder in POMIJANE_FOLDERY or folder.startswith("_"):
             continue
         m = re.fullmatch(r"(.+?)(?:\.v\d+)?\.(png|webp|jpe?g)", p.name, re.IGNORECASE)
         rdzen = m.group(1).lower() if m else ""
@@ -140,6 +142,19 @@ def sprawdz_typ_pliku(a: katalog.Asset, sciezka: Path, uwagi: list) -> None:
                                             "pobierz z ChatGPT oryginalny PNG"])
     elif fmt and fmt != "PNG" and sciezka.suffix.lower() == ".png":
         uwagi.append(["info", "Q04", f"plik .png jest naprawdę w formacie {fmt}"])
+
+
+def zglos_styk(rgba: np.ndarray, uwagi: list, ramka: bool = False) -> None:
+    """Q07 ze stopniowaniem: czubek (iskra, listek, promień wiązki) dotykający krawędzi na ≤ 1,5% boku to
+    ostrzeżenie — po przycięciu i tak wygląda dobrze; dłuższy styk = obiekt ucięty przez generator → błąd
+    (dla ramek zawsze ostrzeżenie, bo ramka może celowo sięgać brzegu)."""
+    styk = alfa.styk_z_krawedzia(rgba)
+    if styk <= 0:
+        return
+    if ramka or styk <= 0.015:
+        uwagi.append(["ostrzezenie", "Q07", f"obiekt dotyka krawędzi obrazu na {styk:.1%} boku (czubek) — sprawdź, czy nic nie ucięto"])
+    else:
+        uwagi.append(["blad", "Q07", f"obiekt przycięty krawędzią obrazu ({styk:.0%} boku) — wygeneruj z większym marginesem"])
 
 
 def sprawdz_wymiary(a: katalog.Asset, rgba: np.ndarray, uwagi: list) -> None:
@@ -284,9 +299,8 @@ def obsluz_symbole(przyg: list[Przygotowany], zapisz_ids: set, ust: dict, wynik:
     pole, poziom = a0.cel["pole"], a0.cel["poziom"]
     ciasne = {}
     for p in dostepne:
-        img, _, dotyka = alfa.przytnij(p.rgba, margines_proc=0, min_px=0)
-        if dotyka:
-            p.uwagi.append(["blad", "Q07", "obiekt przycięty krawędzią obrazu"])
+        img, _, _ = alfa.przytnij(p.rgba, margines_proc=0, min_px=0)
+        zglos_styk(p.rgba, p.uwagi)
         ciasne[p.a.id] = img
     skale = geometria.skale_symboli(ciasne, pole, poziom)
     for p in dostepne:
@@ -400,9 +414,8 @@ def obsluz_pole_grupowe(przyg: list[Przygotowany], zapisz_ids: set, ust: dict, w
 def obsluz_obiekt(p: Przygotowany, ust: dict, wynik: dict) -> None:
     """Pojedynczy obraz ALFA (logo, maskotka, skrzynia, ornament, napisy wygranych, rozszerzony WILD)."""
     a = p.a
-    img, _, dotyka = alfa.przytnij(p.rgba)
-    if dotyka:
-        p.uwagi.append(["blad", "Q07", "obiekt przycięty krawędzią obrazu"])
+    img, _, _ = alfa.przytnij(p.rgba)
+    zglos_styk(p.rgba, p.uwagi)
     h, w = img.shape[:2]
     cel = a.cel
     if "wys_dokladna" in cel:
@@ -473,13 +486,14 @@ def obsluz_emblemat(p: Przygotowany, ust: dict, wynik: dict) -> None:
 def obsluz_ramke(p: Przygotowany, ust: dict, wynik: dict) -> None:
     """Ramka bębnów: wykrycie okna → ``frames.<ID>.window`` (ułamki) + marginesy 9-slice ramki w px @1x."""
     a = p.a
-    img, _, dotyka = alfa.przytnij(p.rgba, margines_proc=0, min_px=2)
-    if dotyka:
-        p.uwagi.append(["ostrzezenie", "Q07", "ramka dotyka krawędzi obrazu"])
+    img, _, _ = alfa.przytnij(p.rgba, margines_proc=0, min_px=2)
+    zglos_styk(p.rgba, p.uwagi, ramka=True)
     okno = geometria.wykryj_okno(img, p.uwagi)
     wiersz = nowy_wiersz(p, wynik)
     if okno is None:
         return
+    # okno o innej proporcji niż siatka bębnów: rozciągamy jednolity pas boków ramki (bębny bez zniekształceń)
+    img, okno = geometria.dopasuj_proporcje_okna(img, okno, a.cel["siatka"], p.uwagi)
     geometria.sprawdz_proporcje_okna(okno, a.cel["siatka"], p.uwagi)
     h, w = img.shape[:2]
     x0, y0, x1o, y1o = okno
@@ -546,6 +560,7 @@ def obsluz_arkusz(p: Przygotowany, ust: dict, wynik: dict) -> None:
     rgba = p.rgba
     if czarne:
         rgba = fx.zeruj_czern(fx.splaszcz_na_czarne(rgba, p.uwagi), p.uwagi)
+        rgba = fx.neutralizuj_barwe(rgba, p.uwagi)
     nazwy = a.komorki
     elementy = arkusze.tnij(rgba, a.siatka, len(nazwy), czarne, p.uwagi)
     wiersz = nowy_wiersz(p, wynik)
@@ -727,6 +742,18 @@ def obsluz_pelne(p: Przygotowany, ust: dict, wynik: dict) -> None:
     limit = tla.LIMIT_POWIEKSZENIA_TLA
     szerokosci = {}
     wpis = {"source": p.zrodlo, "blend": "normal"}
+    # Tło pobiera tylko jedna orientacja: desktop bierze ``*_desktop``, telefon (pionowo) ``*_mobile`` — front
+    # wybiera wariant po proporcji okna (js/lobby.js). Budżet „co przeglądarka pobiera” (02 § 7.1) nie może więc
+    # doliczać desktopowi teł pionowych ani telefonowi poziomych.
+    dla_desktopu = not (a.rola == "tlo" and a.id.endswith("_mobile"))
+    dla_telefonu = not (a.rola == "tlo" and not a.id.endswith("_mobile"))
+    # Baner (kadr 3:2 i 16:9) nie jest pobierany przez stronę lobby: plakatem filmiku w kaflu jest okładka
+    # (02 § 5.18, js/lobby.js → video.poster = okładka), a banery to materiał na plakaty/galerię nagrań i ekran
+    # ładowania gry (mały wariant ``rozmyte``). Wcześniej oba kadry liczyły się do budżetu lobby (+1,5 MB).
+    if a.rola == "baner":
+        dla_desktopu = dla_telefonu = False
+    # key art (okładki, banery) oglądamy w kaflu i plakacie — q78 zamiast q80 tła gry (~10% mniej)
+    rodzaj_pelne = "pelne_kafel" if a.rola in ("okladka", "baner") else "pelne"
     for szer in cel["szerokosci"]:
         obraz = tla.wariant_szerokosci(rgb, szer, a.id, p.uwagi, limit)
         if obraz is None:
@@ -738,7 +765,8 @@ def obsluz_pelne(p: Przygotowany, ust: dict, wynik: dict) -> None:
         else:
             nazwa = f"{a.id}.w{szer}.webp"
         # desktop pobiera największy wariant, telefon — @1x (tło mobile) — tak liczymy budżet
-        rel, hs = wy.zapisz(nazwa, obraz, "pelne", desktop=(szer == x2w), telefon=(szer == x1w))
+        rel, hs = wy.zapisz(nazwa, obraz, rodzaj_pelne, desktop=(szer == x2w) and dla_desktopu,
+                            telefon=(szer == x1w) and dla_telefonu)
         szerokosci[str(szer)] = rel
         if szer == x1w:
             wpis.update({"src": rel, "w": int(obraz.shape[1]), "h": int(obraz.shape[0]), "hash": hs})
@@ -752,13 +780,14 @@ def obsluz_pelne(p: Przygotowany, ust: dict, wynik: dict) -> None:
     war = {}
     if "rozmyte" in cel:
         r = tla.rozmyte(rgb, cel["rozmyte"])
-        war["rozmyte"] = wpis_wariantu(wy, f"{a.id}.rozmyte.webp", r, "miekkie")
+        rel_r, _ = wy.zapisz(f"{a.id}.rozmyte.webp", r, "miekkie", desktop=dla_desktopu, telefon=dla_telefonu)
+        war["rozmyte"] = {"src": rel_r, "w": int(r.shape[1]), "h": int(r.shape[0])}
     if a.rola == "baner":
         k169 = tla.kadruj(rgb, 16 / 9, focus)
         o1 = tla.wariant_szerokosci(k169, 960, a.id + "k", None, limit)
         o2 = tla.wariant_szerokosci(k169, 1536, a.id + "k", None, limit)
-        r1, _ = wy.zapisz(f"{a.id}.k169.webp", o1, "pelne", desktop=False)
-        r2, _ = wy.zapisz(f"{a.id}.k169@2x.webp", o2, "pelne", telefon=False)
+        r1, _ = wy.zapisz(f"{a.id}.k169.webp", o1, rodzaj_pelne, desktop=False, telefon=False)
+        r2, _ = wy.zapisz(f"{a.id}.k169@2x.webp", o2, rodzaj_pelne, desktop=False, telefon=False)
         war["k169"] = {"src": r1, "src2x": r2, "w": 960, "h": 540}
     if war:
         wpis["variants"] = war

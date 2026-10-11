@@ -95,8 +95,8 @@ def parzyste(v: float) -> int:
 # ------------------------------------------------------------------------------------------------
 def zakoduj_webp(rgba: np.ndarray, rodzaj: str) -> bytes:
     """Koduje obraz do WebP. ``rodzaj``: 'alfa' (q82 + bezstratna alfa), 'ui' (mniejszy z bezstratnego i q90),
-    'pelne' (q85, bez alfy), 'czarne' (q80, bez alfy), 'miekkie' (q70 — poświaty, cienie, rozmycia)."""
-    if rodzaj in ("pelne", "czarne"):
+    'pelne' (q80, bez alfy), 'pelne_kafel' (q78 — okładki i banery), 'czarne' (q80, bez alfy), 'miekkie' (q70 — poświaty, cienie, rozmycia)."""
+    if rodzaj in ("pelne", "pelne_kafel", "czarne"):
         im = do_pil(rgba[..., :3])
     else:
         im = do_pil(rgba if rgba.shape[2] == 4 else np.concatenate([rgba, np.ones_like(rgba[..., :1])], -1))
@@ -108,7 +108,9 @@ def zakoduj_webp(rgba: np.ndarray, rodzaj: str) -> bytes:
         im.save(buf, "WEBP", quality=90, method=METODA_WEBP, alpha_quality=100)
         stratny = buf.getvalue()
         return bez if len(bez) <= len(stratny) else stratny
-    jakosc = {"alfa": 82, "pelne": 85, "czarne": 80, "miekkie": 70}[rodzaj]
+    # PELNE q80: grafika z ChatGPT jest bardzo szczegółowa (bogate tła, key art), a q85 → q80 oszczędza ~17% wagi
+    # przy różnicy < 1 dB PSNR — tło leży pod bębnami i UI, a budżety z briefu § 5 są twarde
+    jakosc = {"alfa": 82, "pelne": 80, "pelne_kafel": 78, "czarne": 80, "miekkie": 70}[rodzaj]
     opcje = dict(quality=jakosc, method=METODA_WEBP)
     if im.mode == "RGBA":
         opcje["alpha_quality"] = 100

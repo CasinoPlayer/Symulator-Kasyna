@@ -69,10 +69,15 @@ def tnij(rgba: np.ndarray, siatka: tuple[int, int], oczekiwane: int, czarne: boo
     H, W = rgba.shape[:2]
     kol, wie = siatka
     maska = maska_elementow(rgba, czarne)
-    r = max(2, int(0.012 * min(H, W)))
-    sklejona = domkniecie(maska, r)
-    sk = Skladowe(sklejona)
-    duze = [k for k in range(1, sk.n + 1) if sk.pole[k] >= 0.0005 * H * W]
+    # Domknięcie skleja kawałki jednego elementu (kropki wiązki iskier), ale gdy generator ustawił elementy
+    # bliżej niż ~2r, skleja też SĄSIADÓW (cały wiersz awatarów w jedną plamę). Wtedy próbujemy mniejszych
+    # promieni, aż plam będzie co najmniej tyle, ile komórek — dopiero potem plan awaryjny.
+    r0 = max(2, int(0.012 * min(H, W)))
+    for r in (r0, max(1, r0 // 3), 0):
+        sk = Skladowe(domkniecie(maska, r) if r else maska)
+        duze = [k for k in range(1, sk.n + 1) if sk.pole[k] >= 0.0005 * H * W]
+        if len(duze) >= oczekiwane:
+            break
 
     elementy = None
     if len(duze) >= oczekiwane:

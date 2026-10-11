@@ -411,6 +411,105 @@ def test_fx_szum_i_przezroczystosc():
     print(f"    krawędź efektu {brzeg * 255:.2f}/255; alfa → czerń z ostrzeżeniem Q11")
 
 
+def test_korekta_proporcji_okna():
+    """Okno 300×200 dla siatki 3×3: pipeline rozciąga NAJBARDZIEJ jednolity pas boków ramki, omijając „wajchę”
+    przy prawej krawędzi (S1 z ChatGPT ma wajchę automatu na boku) — ornament nie może się rozciągnąć."""
+    rgba = ramka_testowa()
+    im = Image.fromarray((rgba * 255).astype(np.uint8))
+    d = ImageDraw.Draw(im)
+    d.ellipse([468, 130, 498, 160], fill=(255, 220, 90, 255))          # gałka wajchy (koło 30 px) za prawym bokiem
+    d.rectangle([462, 140, 486, 230], fill=(220, 180, 60, 255))         # ramię wajchy (styka się z ramą)
+    rgba = np.asarray(im, dtype=np.float32) / 255
+    img, prost, _ = alfa.przytnij(rgba, margines_proc=0, min_px=2)
+    uw = []
+    okno = geometria.wykryj_okno(img, uw)
+    nowa, okno2 = geometria.dopasuj_proporcje_okna(img, okno, (3, 3), uw)
+    x0, y0, x1, y1 = okno2
+    gal = nowa[..., 3] > 0.5
+    kol = gal[:, 494 - (prost[0] - 2)]                                 # pionowa linia przez gałkę (obok ramienia)
+    ys = np.flatnonzero(kol)
+    print(f"    okno {okno} → {okno2}, ramka {img.shape[:2]} → {nowa.shape[:2]}; {[u[2][:60] for u in uw]}")
+    assert abs((x1 - x0) - (y1 - y0)) <= 1 and nowa.shape[0] - img.shape[0] == 100
+    assert any(u[1] == "Q15" for u in uw)
+    # gałka nierozciągnięta: cięciwa koła r = 15 px w odległości 11 px od środka ma 2·√(15² − 11²) ≈ 20 px
+    biegi = np.split(ys, np.flatnonzero(np.diff(ys) > 1) + 1)
+    assert len(biegi) == 1 and 18 <= len(biegi[0]) <= 24, [len(b) for b in biegi]
+
+
+def test_9slice_z_faktura_i_odblaskami():
+    """Panel jak z ChatGPT: środek z szumem i winietą, listwy z miękkimi odblaskami, ornamenty w rogach 200 px.
+    Wcześniej każdy taki panel kończył się błędem Q16 (wymóg identycznych kolumn)."""
+    n = 1000
+    im = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, n - 1, n - 1], fill=(245, 197, 66, 255))
+    d.rectangle([40, 40, n - 41, n - 41], fill=(30, 20, 66, 255))
+    for (x, y) in ((0, 0), (n - 200, 0), (0, n - 200), (n - 200, n - 200)):
+        d.ellipse([x + 10, y + 10, x + 190, y + 190], fill=(255, 224, 138, 255))
+        d.ellipse([x + 60, y + 60, x + 140, y + 140], fill=(184, 134, 11, 255))
+    p = np.asarray(im, dtype=np.float32) / 255
+    yy, xx = np.mgrid[0:n, 0:n] / n
+    p[..., :3] *= (1 - 0.08 * ((xx - .5) ** 2 + (yy - .5) ** 2) * 4)[..., None]          # winieta
+    p[..., :3] += np.random.default_rng(2).normal(0, 3 / 255, p[..., :3].shape)          # faktura
+    for cx in (330, 640):                                                                 # odblaski na listwach
+        g = np.exp(-((xx * n - cx) / 40) ** 2)
+        for y0 in (0, n - 40):
+            p[y0:y0 + 40, :, :3] += 0.4 * g[y0:y0 + 40, :, None]
+    p = np.clip(p, 0, 1).astype(np.float32)
+    uw = []
+    m = geometria.marginesy_9slice(p, False, uw)
+    px = {k: round(v * n) for k, v in m.items()}
+    print(f"    wycinki px: {px}, uwagi: {uw}")
+    assert not uw and all(190 <= v <= 240 for v in px.values())
+
+
+def test_arkusz_stykajace_sie_elementy():
+    """Elementy ustawione bliżej niż promień domknięcia (awatary ChatGPT w wierszu prawie się stykają):
+    pipeline zmniejsza promień zamiast sklejać cały wiersz w jedną plamę i iść w plan awaryjny."""
+    im = Image.new("RGBA", (1536, 1024), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    for r in range(2):
+        for c in range(4):
+            cx, cy = 192 + c * 384, 256 + r * 512
+            d.ellipse([cx - 186, cy - 186, cx + 186, cy + 186], fill=(120 + 15 * c, 80, 200 - 20 * r, 255))  # odstęp 12 px
+    uw = []
+    el = arkusze.tnij(np.asarray(im, np.float32) / 255, (4, 2), 8, False, uw)
+    print(f"    {sum(e is not None for e in el)} elementów, uwagi: {[u[2] for u in uw]}")
+    assert all(e is not None for e in el) and not [u for u in uw if "awaryjny" in u[2]]
+    assert all(abs((e.x1 - e.x0) - 373) <= 3 for e in el)
+
+
+def test_neutralizacja_koloru_efektow():
+    """Złota iskra (ChatGPT zamiast „warm white”) → ciepła biel z zachowaną jasnością; biała zostaje bez zmian."""
+    from kroki import fx
+    yy, xx = np.mgrid[0:256, 0:256] / 256
+    g = np.exp(-(((xx - .5) ** 2 + (yy - .5) ** 2) / 0.004))[..., None]
+    zlota = np.concatenate([g * np.array([1.0, 0.7, 0.2]), np.ones_like(g)], -1).astype(np.float32)
+    uw = []
+    out = fx.neutralizuj_barwe(zlota, uw)
+    rgb = out[128, 128, :3]
+    assert rgb.min() / rgb.max() > 0.85 and rgb.max() > 0.75 and any(u[1] == "Q11" for u in uw)
+    biala = np.concatenate([np.repeat(g, 3, -1), np.ones_like(g)], -1).astype(np.float32)
+    uw = []
+    assert np.array_equal(fx.neutralizuj_barwe(biala, uw), biala) and not uw
+    print(f"    złota iskra → {np.round(rgb, 2)}")
+
+
+def test_stopniowanie_q07():
+    """Czubek iskry na krawędzi = ostrzeżenie; obiekt ucięty krawędzią na 30% boku = błąd."""
+    import przetworz
+    a = np.zeros((1024, 1024, 4), np.float32)
+    a[0:3, 500:504, 3] = 1                                    # 4 px czubka
+    uw = []
+    przetworz.zglos_styk(a, uw)
+    assert uw and uw[0][0] == "ostrzezenie"
+    a[0:3, 300:620, 3] = 1                                    # 320 px = 31% boku
+    uw = []
+    przetworz.zglos_styk(a, uw)
+    assert uw and uw[0][0] == "blad"
+    print("    czubek → ostrzeżenie, ucięty obiekt → błąd")
+
+
 def test_calosc_pipeline():
     """Pełne uruchomienie przetworz.py na obrazach z wadami podłożonych jako „grafika z ChatGPT”."""
     import przetworz
@@ -435,9 +534,12 @@ def test_calosc_pipeline():
     d = m["images"]["s1_sym_dzwonek"]
     assert d["w"] == 256 and d["source"] == "chatgpt" and (wy / d["src"]).exists()
     okno = m["frames"]["s1_ramka"]["window"]
+    ramka = m["images"]["s1_ramka"]
     print(f"    kod wyjścia {kod}; okno ramki {okno}")
-    # okno 300×200 w ramce 420×330 (40..460, 50..380) po przycięciu
-    assert abs(okno["w"] - 300 / 422) < 0.01 and abs(okno["h"] - 200 / 332) < 0.01
+    # okno 300×200 w ramce ~422×332 po przycięciu; siatka S1 to 3×3, więc pipeline rozciąga jednolity pas boków
+    # ramki o +100 px: okno staje się kwadratowe (300×300), a ramka ma ~432 px wysokości
+    assert abs(okno["w"] - 300 / 422) < 0.01 and abs(okno["h"] - 300 / 432) < 0.01
+    assert abs(okno["w"] * ramka["w"] - okno["h"] * ramka["h"]) <= 2, "okno nie jest kwadratowe"
     wynik = wczytaj_rgba(wy / d["src"])
     assert wynik[..., 3][0, :].max() == 0, "tło symbolu nie jest przezroczyste"
 

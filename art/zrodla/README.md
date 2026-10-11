@@ -38,8 +38,16 @@ zastępczą: wrzucasz plik → uruchamiasz pipeline → aplikacja od razu pokazu
 * **jednolite tło** (białe, czarne, zielone `#00FF00`…) zamiast przezroczystości — także „dziury” w obiekcie
   i zamalowane okno ramki,
 * jasne obwódki (halo) na krawędziach, drobne „pyłki” w alfie,
-* nierówna siatka arkuszy (ikony, awatary, cyfry) — elementy są wyszukiwane automatycznie,
-* inny rozmiar niż 1024×1024 / 1536×1024 / 1024×1536 (ostrzeżenie, ale obraz jest przetwarzany).
+* nierówna siatka arkuszy (ikony, awatary, cyfry) — elementy są wyszukiwane automatycznie, także gdy prawie się
+  stykają; podpisy dopisane przez ChatGPT pod ikonami są pomijane (z ostrzeżeniem),
+* ramka bębnów z oknem o innej proporcji niż siatka (np. 1,24 : 1 zamiast 3×3) — pipeline rozciąga najbardziej
+  jednolity pas boków ramki, omijając ornamenty; okno zamalowane kolorem albo szachownicą jest wycinane,
+* panele i przyciski 9-slice z fakturą i odblaskami (marginesy wykrywane z tolerancją),
+* kolorowe efekty świetlne (złote zamiast „warm white”) — sprowadzane do ciepłej bieli, bo kolor nadaje kod,
+* inny rozmiar niż 1024×1024 / 1536×1024 / 1024×1536 (ostrzeżenie, ale obraz jest przetwarzany),
+* zła nazwa pliku (literówka, „ (1)”, zły folder) — pipeline nie użyje pliku, ale podpowie poprawną nazwę (Q02).
+
+Pliki odłożone do poprawy trzymaj w folderze zaczynającym się od `_` (np. `_do-poprawy/`) — pipeline go pomija.
 
 Zamieniona orientacja (np. 1024×1536 zamiast 1536×1024) albo tło, którego nie da się rozpoznać, to **błąd** —
 taki obraz trzeba wygenerować ponownie (raport podpowie, co poprawić).
