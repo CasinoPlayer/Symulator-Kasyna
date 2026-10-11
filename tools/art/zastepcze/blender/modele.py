@@ -18,7 +18,7 @@ import bmesh
 from mathutils import Vector
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from scena import (chrom, emalia, emisja, kadruj, kamera, klejnot, krzywa, kula, lin, matowy,  # noqa: E402
+from scena import (bryla_z_obrysu, chrom, emalia, emisja, kadruj, kamera, klejnot, krzywa, kula, lin, matowy,  # noqa: E402
                    nowa_scena, obrys_funkcji, obrys_okregu, profil_cebuli, przypisz, prostopadloscian, szklo,
                    tlo_dla_szkla, tokarka, torus, walec, wygladz, z_bmesh, zloto, zloto_satyna, _principled)
 
@@ -94,7 +94,7 @@ def m_s1_wisnie():
     krzywa("og1", [(-0.34, 0.05, -0.1), (-0.3, 0.05, 0.25), (-0.12, 0.0, 0.62), (0.08, 0.0, 0.78)], 0.028, mat=og)
     krzywa("og2", [(0.35, -0.08, -0.02), (0.32, -0.04, 0.3), (0.2, 0.0, 0.6), (0.08, 0.0, 0.78)], 0.028, mat=og)
     krzywa("og3", [(0.08, 0.0, 0.78), (0.05, 0.0, 0.86)], 0.03, mat=og)
-    _lisc("lisc", (0.32, 0.02, 0.86), (math.radians(10), math.radians(-20), math.radians(-60)), 0.42)
+    _lisc("lisc", (0.22, 0.0, 0.88), (math.radians(10), math.radians(-25), math.radians(-62)), 0.42)
     k = kamera()
     kadruj(k, 0.05)
     return k
@@ -109,7 +109,7 @@ def m_s1_cytryna():
     prof[0] = (0.0, -0.84)
     prof[-1] = (0.0, 0.84)
     c = tokarka("cytryna", prof, segmenty=96)
-    m = emalia("#FFD23F", 0.32, sss=0.15)
+    m = emalia("#FFCC1A", 0.32)
     nt = m.node_tree
     p = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
     sz = nt.nodes.new("ShaderNodeTexNoise")
@@ -232,9 +232,9 @@ def m_s1_dzwonek():
     kula("serce", 0.13, (0, 0, -0.13), mat=zloto(0.15))
     torus("uchwyt", 0.11, 0.035, (0, 0, 1.08), (math.pi / 2, 0, 0), mat=z)
     # czerwona satynowa kokarda na szczycie
-    k_m = emalia("#D01830", 0.35)
+    k_m = emalia("#C8102E", 0.3)
     p = next(n for n in k_m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
-    p.inputs["Sheen Weight"].default_value = 0.5
+    p.inputs["Sheen Weight"].default_value = 0.15
     for s in (-1, 1):
         ob = torus(f"petla{s}", 0.17, 0.05, (s * 0.2, -0.05, 1.12), (math.pi / 2, 0, s * math.radians(20)), mat=k_m)
         ob.scale = (1.0, 0.55, 1.0)
@@ -276,7 +276,7 @@ def m_s1_cebula():
     mix.inputs[6].default_value = lin("#FF2E88")
     mix.inputs[7].default_value = lin("#21E6FF")
     em = nt.nodes.new("ShaderNodeEmission")
-    em.inputs["Strength"].default_value = 7.0
+    em.inputs["Strength"].default_value = 2.6
     out = nt.nodes.new("ShaderNodeOutputMaterial")
     nt.links.new(tc.outputs["Object"], sep.inputs[0])
     nt.links.new(sep.outputs["X"], mr.inputs["Value"])
@@ -408,32 +408,28 @@ def m_moneta_bok():
     return k
 
 
-def _korona(z0=0.0, R=0.3, skala=1.0, gemy=True):
-    """Korona: obręcz + 5 zębów (naprzemiennie lilie i perły), kamienie na obręczy (01 § 2.4)."""
+def _korona(z0=0.0, R=0.3, skala=1.0, gemy=True, y=0.0):
+    """Korona en face: sylwetka (obręcz + 5 zębów) wyciągnięta w głąb z fazą, na czubkach naprzemiennie lilie
+    (złote kulki) i perły; kamienie na obręczy: magentowy rubin w środku, cyjanowe szafiry po bokach (01 § 2.4)."""
     zl = zloto(0.14)
-    obr = tokarka("obrecz", [(R * 0.98, z0), (R, z0 + 0.02 * skala), (R, z0 + 0.13 * skala), (R * 0.98, z0 + 0.15 * skala),
-                             (R * 0.9, z0 + 0.15 * skala), (R * 0.9, z0)], segmenty=96, zamknij=False)
-    przypisz(obr, zl)
+    w = R
+    hb = 0.16 * skala
+    zeby = [(-1.0, 0.36), (-0.5, 0.27), (0.0, 0.4), (0.5, 0.27), (1.0, 0.36)]
+    bw = 0.17 * w
+    pts = [(-w, z0), (w, z0)]
+    for dx, wys in reversed(zeby):                 # od prawej do lewej: podstawa → czubek → podstawa
+        x = dx * (w - bw)
+        pts += [(x + bw, z0 + hb), (x, z0 + hb + wys * skala), (x - bw, z0 + hb)]
+    bryla_z_obrysu("korona", pts, 0.08 * skala, 0.012 * skala, zl).location.y = y
     perla = emalia("#FFF4E6", 0.15)
-    for i, kat in enumerate((-64, -32, 0, 32, 64)):
-        a = math.radians(kat - 90)
-        x, y = R * math.cos(a), R * math.sin(a)
-        wys = (0.30 if i % 2 == 0 else 0.22) * skala
-        bpy.ops.mesh.primitive_cone_add(vertices=24, radius1=0.075 * skala, radius2=0.012 * skala, depth=wys,
-                                        location=(x, y, z0 + 0.13 * skala + wys / 2))
-        zab = bpy.context.object
-        bpy.ops.object.shade_smooth()
-        przypisz(zab, zl)
-        zab.rotation_euler = (0, 0, 0)
-        if i % 2 == 0:
-            kula(f"lilia{i}", 0.05 * skala, (x, y, z0 + 0.13 * skala + wys + 0.02 * skala), (1, 1, 1.4), mat=zl)
-        else:
-            kula(f"perla{i}", 0.055 * skala, (x, y, z0 + 0.13 * skala + wys + 0.03 * skala), mat=perla)
+    for i, (dx, wys) in enumerate(zeby):
+        x = dx * (w - bw)
+        kula(f"czubek{i}", 0.045 * skala, (x, y - 0.01, z0 + hb + wys * skala + 0.02 * skala),
+             mat=zl if i % 2 == 0 else perla)
     if gemy:
-        for kat, kol in ((0, "#FF2E88"), (-36, "#21E6FF"), (36, "#21E6FF")):
-            a = math.radians(kat - 90)
-            kula(f"gem{kat}", 0.045 * skala, (R * 1.01 * math.cos(a), R * 1.01 * math.sin(a), z0 + 0.075 * skala),
-                 (1, 0.6, 1), mat=szklo(kol, 1.6))
+        for dx, kol, r in ((0.0, "#FF2E88", 0.05), (-0.55, "#21E6FF", 0.04), (0.55, "#21E6FF", 0.04)):
+            kula(f"gem{dx}", r * skala, (dx * w, y - 0.05 * skala, z0 + hb * 0.5), (1, 0.7, 1),
+                 mat=szklo(kol, 1.6))
 
 
 def m_emblemat():
@@ -477,12 +473,9 @@ def m_emblemat():
         ob.parent = rodzic
     rodzic.rotation_euler = (math.pi / 2, 0, 0)
     # cebula w koronie przed polem
-    c = _cebula_zlota("cebula", R=0.36, H=0.9, zebra=5, czubek=False)
-    c.location = (0, -0.16, -0.52)
-    _korona(z0=0.3, R=0.2, skala=0.9)
-    for ob in list(bpy.context.scene.objects):
-        if ob.name.startswith(("obrecz", "Cone", "lilia", "perla", "gem")):
-            ob.location.y -= 0.16
+    c = _cebula_zlota("cebula", R=0.42, H=1.0, zebra=5, czubek=False)
+    c.location = (0, -0.16, -0.66)
+    _korona(z0=0.24, R=0.27, skala=1.25, y=-0.2)
     # gałązki laurowe łukiem pod cebulą
     lis = zloto(0.18)
     for s in (-1, 1):
@@ -575,7 +568,7 @@ def m_s2_relikwia():
 
 
 def m_s2_piramida():
-    nowa_scena((512, 512), 48, "s2_noc" if False else "s2")
+    nowa_scena((512, 512), 48, "s2_noc")
     bm = bmesh.new()
     s, h = 0.85, 0.95
     v = [bm.verts.new(p) for p in ((-s, -s, 0), (s, -s, 0), (s, s, 0), (-s, s, 0), (0, 0, h))]
@@ -592,10 +585,10 @@ def m_s2_piramida():
     fala = nt.nodes.new("ShaderNodeTexWave")
     fala.wave_type = "BANDS"
     fala.bands_direction = "Z"
-    fala.inputs["Scale"].default_value = 3.0
+    fala.inputs["Scale"].default_value = 5.0
     fala.inputs["Distortion"].default_value = 0.0
     b = nt.nodes.new("ShaderNodeBump")
-    b.inputs["Strength"].default_value = 0.35
+    b.inputs["Strength"].default_value = 0.6
     nt.links.new(tc.outputs["Object"], fala.inputs["Vector"])
     nt.links.new(fala.outputs["Fac"], b.inputs["Height"])
     nt.links.new(b.outputs["Normal"], p.inputs["Normal"])
@@ -608,9 +601,9 @@ def m_s2_piramida():
     szczyt = z_bmesh("piramidion", bm, gladko=False)
     przypisz(szczyt, zloto(0.12))
     szczyt.scale = (1.04, 1.04, 1.0)
-    pir.rotation_euler = (0, 0, math.radians(8))
-    szczyt.rotation_euler = (0, 0, math.radians(8))
-    k = kamera(wzniesienie_st=9)
+    pir.rotation_euler = (0, 0, math.radians(32))
+    szczyt.rotation_euler = (0, 0, math.radians(32))
+    k = kamera(wzniesienie_st=16)
     kadruj(k, 0.05)
     return k
 
@@ -665,15 +658,17 @@ def m_s3_ametyst():
 
 def m_s3_topaz():
     _gem_scena()
-
-    def markiza(u):
-        a = 2 * math.pi * u
-        return (0.32 * math.sin(a) * (abs(math.sin(a)) ** 0.0), 0.62 * math.cos(a) * (1 - 0.0))
-    obrys = obrys_funkcji(lambda u: (0.3 * math.sin(2 * math.pi * u) * abs(math.sin(2 * math.pi * u)) ** 0.15,
-                                     0.65 * math.cos(2 * math.pi * u)), 28)
-    g = klejnot("topaz", obrys, mat=szklo("#FFB23D", 1.62))
+    # markiza: dwa łuki okręgu spotykające się w ostrych szpicach
+    obrys = []
+    for i in range(10):
+        t = -1 + 2 * i / 10
+        obrys.append((0.3 * (1 - t * t) ** 0.75, 0.66 * t))
+    for i in range(10):
+        t = 1 - 2 * i / 10
+        obrys.append((-0.3 * (1 - t * t) ** 0.75, 0.66 * t))
+    g = klejnot("topaz", obrys[::1], h_korony=0.16, tafla=0.5, h_pawilonu=0.38, mat=szklo("#FFB23D", 1.55))
+    bpy.context.scene.cycles.samples = 160
     g.rotation_euler = (math.radians(78), math.radians(45), 0)
-    del markiza
     k = kamera()
     kadruj(k, 0.05)
     return k
@@ -752,22 +747,23 @@ def m_s3_cebula():
 
 def m_s3_pryzmat():
     _gem_scena()
-    bpy.ops.mesh.primitive_cylinder_add(vertices=3, radius=0.42, depth=1.1, location=(0, 0, 0.0))
+    bpy.ops.mesh.primitive_cylinder_add(vertices=3, radius=0.55, depth=0.5, location=(0, 0, 0.05))
     pr = bpy.context.object
     mod = pr.modifiers.new("faza", "BEVEL")
-    mod.width = 0.015
+    mod.width = 0.02
     mod.segments = 2
-    przypisz(pr, szklo("#FFFFFF", 1.6, cienka_warstwa=500))
-    pr.rotation_euler = (math.radians(10), math.radians(-12), math.radians(30))
+    przypisz(pr, szklo("#F6FBFF", 1.65, cienka_warstwa=520))
+    # trójkątna ściana zwrócona do kamery, lekko obrócona — widać grubość bryły
+    pr.rotation_euler = (math.radians(70), math.radians(16), 0)
     random.seed(4)
-    for i in range(14):
-        a = 2 * math.pi * i / 14
-        r = 0.78
-        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=0.05 + 0.03 * random.random(),
-                                              location=(r * math.cos(a), r * math.sin(a) * 0.35, r * math.sin(a) * 0.55))
+    for i in range(16):
+        a = 2 * math.pi * i / 16
+        r = 0.86
+        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=0.045 + 0.03 * random.random(),
+                                              location=(r * math.cos(a), 0.2 * math.sin(a), 0.05 + r * 0.62 * math.sin(a)))
         ob = bpy.context.object
         ob.rotation_euler = (random.random() * 3, random.random() * 3, random.random() * 3)
-        przypisz(ob, szklo(random.choice(["#8FDFFF", "#E2B6FF", "#FFFFFF", "#9CFFE0"]), 1.6))
+        przypisz(ob, szklo(random.choice(["#8FDFFF", "#E2B6FF", "#FFFFFF", "#9CFFE0", "#FFC2E6"]), 1.6))
     k = kamera()
     kadruj(k, 0.05)
     return k
@@ -776,10 +772,13 @@ def m_s3_pryzmat():
 def m_s3_kula():
     _gem_scena()
     kula("kula", 0.6, mat=szklo("#F2FAFF", 1.45, cienka_warstwa=250), seg=128)
-    kula("srodek", 0.36, mat=emisja("#F4F8FF", 1.6))
-    torus("klatka1", 0.64, 0.028, rot=(math.radians(90), math.radians(20), 0), mat=zloto(0.14))
-    torus("klatka2", 0.64, 0.028, rot=(math.radians(90), math.radians(-20), 0), mat=zloto(0.14))
-    torus("pas", 0.63, 0.022, rot=(math.radians(8), 0, 0), mat=zloto(0.14))
+    kula("srodek", 0.34, mat=emisja("#F4F8FF", 1.0))
+    zl = zloto(0.14)
+    torus("klatka1", 0.645, 0.026, rot=(math.radians(90), 0, math.radians(38)), mat=zl)
+    torus("klatka2", 0.645, 0.026, rot=(math.radians(90), 0, math.radians(-38)), mat=zl)
+    torus("pas", 0.64, 0.024, rot=(math.radians(12), 0, 0), mat=zl)
+    kula("szpic_g", 0.05, (0, 0, 0.66), mat=zl)
+    kula("szpic_d", 0.05, (0, 0, -0.66), mat=zl)
     k = kamera()
     kadruj(k, 0.05)
     return k
@@ -807,7 +806,7 @@ def m_s3_odlamki():
     random.Random(9).shuffle(typy)
     for i, t in enumerate(typy):
         r, c = divmod(i, 4)
-        ob = _odlamek(f"o{i}", 100 + i, t, 0.55 + 0.35 * ((i * 7) % 5) / 4)
+        ob = _odlamek(f"o{i}", 100 + i, t, 1.0 + 0.6 * ((i * 7) % 5) / 4)
         ob.location = (-2.25 + c * 1.5, 0, 1.0 - r * 1.0)
         przypisz(ob, mat)
     k = kamera(wzniesienie_st=0.0, skala=6.0)

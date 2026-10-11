@@ -11,6 +11,11 @@ formaty, typy tła i priorytety pochodzą z briefu i są **wiążące**. Prompty
 w [03-prompty-chatgpt.md](03-prompty-chatgpt.md), wymagania stylu w [01-kierunek-artystyczny.md](01-kierunek-artystyczny.md),
 a kontrakt plików wynikowych (`assets/img/...`, `manifest.json`) w [09-kontrakt-api-i-assetow.md](09-kontrakt-api-i-assetow.md).
 
+**Stan pipeline'u.** § 5–8 opisują to, co **naprawdę robi** `tools/art/przetworz.py` w wersji **1.0.0**
+(lista assetów i parametry: `tools/art/katalog.py`). Elementy zaprojektowane, ale jeszcze niezaimplementowane, mają
+znacznik **[plan]** — zostawiamy ich opis, bo mówi, dokąd zmierzamy i dlaczego, ale nie wolno na nich polegać
+(zestawienie: § 5.0, tabela „Co jest w wersji 1.0.0”).
+
 ## Spis treści
 
 1. [Podsumowanie liczbowe](#1-podsumowanie-liczbowe)
@@ -58,6 +63,10 @@ Kontrola: 34 + 33 + 18 = 85 assetów; 85 + 8 makiet = 93.
 **P1 spoza S2 (11 obrazów):** `g_maskotka_wygrana`, `g_maskotka_bankrut`, `g_awatary` (czat 1) ·
 `g_ui_ornament`, `g_win_mega`, `g_win_epic`, `g_win_ultra`, `g_win_free_spins`, `g_fx_blyskawice`, `g_fx_dym`,
 `g_fx_konfetti` (czat 2). Do czasu ich dostarczenia aplikacja używa grafiki zastępczej z `art/zastepcze/` (§ 5.1).
+
+Sumy kontrolne tych list sprawdza skrypt audytu dokumentu (każde z 93 ID dokładnie raz w § 3, format, tło i priorytet
+zgodne z briefem, sumy per czat i per priorytet); ten sam zestaw 85 assetów jest wpisany w `tools/art/katalog.py`,
+który pilnuje liczby asercją `len(ASSETY) == 85`.
 
 ### 1.2. Formaty i typy tła w czatach
 
@@ -114,10 +123,10 @@ z arkuszy = **153 obrazach bazowych** (zanim powstaną warianty @2x, rozmycia ru
 | Wielkość | Wartość |
 |---|---|
 | Surowe PNG z ChatGPT (93 pliki) | ≈ 180–260 MB (1–3,5 MB na plik) — dlatego trzymamy je poza gałęzią `main` (§ 4.4) |
-| Pliki wynikowe w `static/assets/img/` (wszystkie warianty, WebP + AVIF) | ≈ 20–28 MB |
-| Gra S1 / S2 / S3 — to, co pobiera przeglądarka (najgorszy przypadek: desktop, @2x) | ≈ 3,3 / 4,0 / 3,6 MB (budżet ≤ 6 MB) |
-| Lobby bez wideo (desktop, @2x, ze wszystkim doładowywanym na żądanie) | ≈ 2,4 MB (budżet ≤ 3 MB) |
-| Atlasy tekstur Pixi | 20 atlasów (każdy = WebP + JSON), strony ≤ 2048 px na telefonach, ≤ 4096 px na desktopie (§ 5.9) |
+| Pliki wynikowe w `static/assets/img/` | wersja 1.0.0 (tylko WebP, pliki pojedyncze): ≈ 15–20 MB; docelowo z AVIF i atlasami **[plan]**: ≈ 20–28 MB |
+| Gra S1 / S2 / S3 — to, co pobiera przeglądarka (najgorszy przypadek: desktop, @2x) | ≈ 3,3 / 4,0 / 3,6 MB (budżet ≤ 6 MB; szacunek § 7, prawdziwe liczby liczy raport — Q23) |
+| Lobby bez wideo (desktop, @2x, ze wszystkim doładowywanym na żądanie) | ≈ 2,4 MB z AVIF, ≈ 2,7 MB z samym WebP (wersja 1.0.0) — budżet ≤ 3 MB; uwaga: raport 1.0.0 liczy lobby pesymistycznie i może zgłosić Q23 (§ 7.4) |
+| Atlasy tekstur Pixi | **[plan]** 20 atlasów (każdy = WebP + JSON), strony ≤ 2048 px na telefonach, ≤ 4096 px na desktopie (§ 5.9); w 1.0.0 scena Pixi ładuje pliki pojedyncze |
 
 ---
 
@@ -141,7 +150,7 @@ przyjmie plik, ale raport oznaczy go ostrzeżeniem Q03 (§ 8). Zamieniona orient
 |---|---|---|---|---:|
 | `ALFA` | prawdziwa przezroczystość, obiekt ~80–85% kadru, margines ≥ 6%, bez cienia, bez tekstu (chyba że wskazano), światło z lewej-góry | naprawa fałszywej szachownicy / jednolitego tła (§ 5.3–5.4), usuwanie obwódek (§ 5.5), przycięcie do alfy (§ 5.6) | normalne mieszanie (`blend: "normal"`); w Pixi alfa jest premultiplikowana przy wgrywaniu tekstury | 61 |
 | `CZARNE` | jednolite tło `#000000`, poświata wygasa do czerni przed krawędzią | czerń **zostaje**; zerowanie poziomu czerni i winieta krawędzi (§ 5.11); bez kanału alfa | tryb mieszania `add` (`blend: "add"`): w Pixi `blendMode = 'add'`, w CSS `mix-blend-mode: plus-lighter` (zapas: `screen`), w canvas 2D `globalCompositeOperation = 'lighter'` | 6 |
-| `PELNE` | pełny obraz bez tekstu i UI (wyjątek: okładki z logo, makiety) | skalowanie do wariantów szerokości, dithering przeciw pasmom, kadrowanie pod proporcje ekranu, LQIP (§ 5.17) | tło sceny Pixi, `<img>`/`<picture>` albo `background-image` w HTML | 26 |
+| `PELNE` | pełny obraz bez tekstu i UI (wyjątek: okładki z logo, makiety) | skalowanie do wariantów szerokości, lekki szum przeciw pasmom, dopasowanie do proporcji źródła wokół punktu `focus`, LQIP (§ 5.17); kadr pod proporcje ekranu robi front (`object-fit: cover` + `focus`) | tło sceny Pixi, `<img>`/`<picture>` albo `background-image` w HTML | 26 |
 
 **Dlaczego efekty świetlne nie mają alfy:** w trybie `add` czarny piksel nic nie dodaje do obrazu, więc znika, a miękka
 poświata zachowuje pełne przejście tonalne. Wycinanie poświaty do przezroczystości daje brudne, szare krawędzie.
@@ -189,11 +198,15 @@ bębnów (pola symboli są kwadratowe):
 | `s2_ramka` (3:2) | 5×3 | 1,667 | 960×576 (5 × 192 na 3 × 192) | ±3% |
 | `s3_ramka` (1:1) | 6×5 | 1,200 | 864×720 (6 × 144 na 5 × 144) | ±3% |
 
-Odchyłka 3–15% → ramka jest dopasowywana przez rozciągnięcie pasów 9-slice; > 15% → obraz do ponownego
-wygenerowania (szczegóły w § 5.12).
+Odchyłka 3–15% → pipeline zgłasza ostrzeżenie Q15, a front dopasowuje ramkę rozciągnięciem pasów 9-slice
+(`NineSliceSprite` z marginesami z `frames.<ID>.nineSlice`); > 15% → błąd Q15, obraz do ponownego wygenerowania
+(szczegóły w § 5.12). Sam pipeline ramki nie rozciąga — tylko ją mierzy, skaluje i opisuje w manifeście.
 
 Okna w źródłach mają według [01](01-kierunek-artystyczny.md) ok. 640×640 px (S1, 62% kadru), 1229×737 px (S2)
-i 819×686 px (S3). Stąd rozdzielczości ramek: S1 tylko @1x (już ×1,2), S2 i S3 z obniżonym @2x (§ 2.6).
+i 819×686 px (S3). Skala ramki `s` wynika z okna (okno @1x : okno w źródle): S1 ≈ 1,20, S2 ≈ 0,78, S3 ≈ 1,05.
+Pipeline 1.0.0 robi @2x tylko wtedy, gdy wymaga ono powiększenia źródła najwyżej ×1,25 (`2·s ≤ 1,25`, § 2.6), więc
+**wszystkie trzy ramki mają tylko @1x** (S2: @2x wymagałoby ×1,56). Obniżone @2x dla S2 i S3 (≈ 1920 / 1280 px
+szerokości, zawsze ≤ ×1,25 względem źródła) to **[plan]**.
 
 ### 2.6. Rozdzielczości @1x i @2x
 
@@ -205,35 +218,47 @@ i 819×686 px (S3). Stąd rozdzielczości ramek: S1 tylko @1x (już ×1,2), S2 i
 * **Telefon zwykle ma dość @1x.** Pole S1 na telefonie ma 100–120 px CSS; przy DPR ograniczonym do 2 (poziom High)
   to 200–240 px fizycznych — mniej niż 256 px tekstury @1x. Dzięki temu atlasy na telefonach mieszczą się
   w limicie 2048 px.
-* **Limit powiększania:** nigdy nie powiększamy źródła bardziej niż **×1,25** (Lanczos + lekkie wyostrzenie);
-  wyjątek: tła i plakaty do **×1,67** (są ciemne, częściowo rozmyte i przykryte bębnami — [01 § 6.4](01-kierunek-artystyczny.md#64-kadrowanie-na-różnych-ekranach)).
-  Jeśli pełne @2x wymagałoby więcej, @2x jest **obniżone** do tego limitu (raport: `@2x↓`). Jeśli obniżone @2x
-  ma mniej niż 1,15× pikseli @1x, nie tworzymy go wcale (`src2x` nie występuje w manifeście — zgodnie z 09:
-  „@2x, gdy źródło na to pozwala”).
-* **Efekty miękkie** (promienie, flara, iskry, dym, błyskawice, poświaty, cienie) mają **jedną** rozdzielczość —
-  rozmyty gradient nie zyskuje na @2x, a oszczędzamy 75% pikseli.
-* Wymiary @2x są **dokładnie** 2× wymiary @1x (zaokrąglamy @1x do liczb parzystych), żeby sprite'y obu wersji
+* **Limit powiększania (sprite'y, wersja 1.0.0):** `s` = skala @1x względem źródła. Plik **@2x powstaje tylko,
+  gdy `2·s ≤ 1,25`**, czyli gdy wymaga powiększenia źródła najwyżej ×1,25 (Lanczos + lekkie wyostrzenie). W przeciwnym
+  razie @2x nie ma wcale, a `src2x` nie występuje w manifeście — zgodnie z 09: „@2x, gdy źródło na to pozwala”
+  (raport: info Q20 „bez @2x”). Plik @1x powstaje **zawsze**; jeśli sam wymaga powiększenia > ×1,25, raport daje
+  info Q20 z współczynnikiem. W praktyce bez @2x zostają ramki bębnów (§ 2.5) i napisy `g_win_*` (pole 960×640 @1x,
+  więc @2x potrzebowałoby napisu szerokiego na ≥ 1536 px, a w kadrze 1536 px z marginesem 6% napis ma ok. 1350 px).
+  Na granicy są `g_logo` (@2x 1440 px wymaga logo ≥ 1152 px w źródle) i `g_maskotka_powitanie` (≥ 768 px wysokości).
+* **Obniżone @2x (`@2x↓`) dla sprite'ów — [plan]:** zamiast pomijać @2x, zrobić je w największym rozmiarze ≤ ×1,25
+  źródła, jeśli ma ≥ 1,15× pikseli @1x (ramki S2/S3, napisy wygranych ≈ 1600 px szerokości).
+* **Tła i plakaty** mają limit **×1,67** (są ciemne, częściowo rozmyte i przykryte bębnami —
+  [01 § 6.4](01-kierunek-artystyczny.md#64-kadrowanie-na-różnych-ekranach)); wariant szerokości wymagający więcej jest
+  pomijany (Q20). Ich @2x jest zawsze „obniżone” w tym sensie, że ma mniej niż 2× pikseli @1x (2560 zamiast 3840 px).
+* **Efekty miękkie** (`g_fx_promienie`, `g_fx_flara`, `g_fx_dym`, komórki `g_fx_iskry` i `g_fx_blyskawice`) mają
+  **jedną** rozdzielczość; poświaty i cienie (`glow`, `cien`) są w skali @0,5x — rozmyty gradient nie zyskuje na @2x,
+  a oszczędzamy 75% pikseli. Wyjątek: `s2_fx_hieroglify` (wyraźne kształty) ma parę @1x/@2x.
+* Wymiary @2x są **dokładnie** 2× wymiary @1x (zaokrąglamy @1x w górę do liczb parzystych), żeby sprite'y obu wersji
   miały identyczny rozmiar logiczny w scenie.
-* **Tła, okładki, banery i plakaty** nie mają pary @1x/@2x w ścisłym sensie, tylko **warianty szerokości** (`w720` …
-  `w2560`) do `srcset` i wyboru według poziomu jakości (§ 5.17). W manifeście `src` / `src2x` wskazują dla nich
-  wariant średni i największy, żeby klient znający tylko kontrakt 09 też działał.
+* **Tła, okładki i banery** mają **warianty szerokości** do `srcset` i wyboru według poziomu jakości (§ 5.17).
+  Zgodnie z kontraktem 09 wariant „@1x” zapisujemy jako `<ID>.webp`, wariant „@2x” jako `<ID>@2x.webp`, a pozostałą
+  szerokość jako `<ID>.w<N>.webp`; pole `widths` w manifeście wymienia wszystkie trzy. Klient znający tylko kontrakt 09
+  używa `src` / `src2x` i też działa.
 
 ### 2.7. Nazwy plików
 
 | Co | Wzorzec | Przykład |
 |---|---|---|
-| Plik źródłowy od Was | `<ID>.png` | `s2_sym_anubis.png` |
-| Kolejna wersja tego samego ID | `<ID>.v2.png`, `<ID>.v3.png` | `s2_sym_anubis.v2.png` |
+| Plik źródłowy od Was | `art/zrodla/<pakiet>/<ID>.png` | `art/zrodla/s2/s2_sym_anubis.png` |
+| Kolejna wersja tego samego ID | `<ID>.v2.png`, `<ID>.v3.png` (wygrywa najwyższy numer) | `s2_sym_anubis.v2.png` |
 | Plik zastępczy (generowany) | `art/zastepcze/<pakiet>/<ID>.png` | `art/zastepcze/s2/s2_sym_anubis.png` |
 | Wynik @1x / @2x (kontrakt 09) | `<ID>.webp`, `<ID>@2x.webp` | `s2_sym_anubis@2x.webp` |
 | Komórka arkusza (kontrakt 09) | `<ID>__<komórka>.webp` (+ `@2x`) | `g_ui_ikony__turbo@2x.webp` |
-| Wariant pochodny (rozszerzenie) | `<ID>.<wariant>.webp` (+ `@2x`) | `s1_sym_wild.ruch2.webp`, `g_moneta_przod.male@2x.webp` |
-| Wariant szerokości (tła, okładki, banery) | `<ID>.w<szerokość>.<webp/avif>` | `g_tlo_lobby_desktop.w2560.avif` |
-| Wariant + szerokość | `<ID>.<wariant>.w<szerokość>.<webp/avif>` | `s1_baner.k169.w1536.avif` |
-| Atlas tekstur Pixi | `<pakiet>/atlas/<nazwa>@<skala>x.{webp,json}` | `s1/atlas/s1-symbole@2x.webp` |
+| Wariant pochodny (rozszerzenie) | `<ID>.<wariant>.webp` (+ `@2x`) | `s1_sym_wild.ruch2.webp`, `g_moneta_przod.male@2x.webp`, `s1_baner.k169@2x.webp` |
+| Trzecia szerokość tła / okładki (poza @1x i @2x) | `<ID>.w<szerokość>.webp` | `g_tlo_lobby_desktop.w1280.webp`, `s1_okladka.w600.webp` |
+| Favicony i ikony aplikacji (z `g_emblemat`) | stałe nazwy w `global/` | `global/favicon.ico`, `global/icon-512.png` |
+| BitmapFont cyfr (z `g_font_cyfry`) | `global/fonty/cebulion-cyfry@<k>x.{fnt,webp}` | `global/fonty/cebulion-cyfry@2x.fnt` |
+| AVIF — **[plan]** | `<ID>[.<wariant>][.w<N>].avif` | `g_tlo_lobby_desktop.avif` |
+| Atlas tekstur Pixi — **[plan]** | `<pakiet>/atlas/<nazwa>@<skala>x.{webp,json}` | `s1/atlas/s1-symbole@2x.webp` |
 
 Zasady: tylko małe litery ASCII, cyfry, `_` w ID; `__` oddziela komórkę arkusza, `.` oddziela wariant, `@` skalę.
-ID są bez polskich znaków (np. `s1_sym_wisnie`, nie `wiśnie`), bo trafiają do adresów URL i kodu.
+ID są bez polskich znaków (np. `s1_sym_wisnie`, nie `wiśnie`), bo trafiają do adresów URL i kodu. Pipeline szuka
+źródła po nazwie bez względu na wielkość liter (`S1_SYM_WILD.PNG` też zadziała), ale prosimy o małe litery.
 
 Lista wariantów pochodnych (opis w § 5):
 
@@ -248,9 +273,9 @@ Lista wariantów pochodnych (opis w § 5):
 | `male` | mała wersja do cząsteczek (lepsza ostrość niż silne zmniejszanie w locie) | 64 / 128 px | `g_moneta_przod`, `g_moneta_skos`, `g_moneta_bok` |
 | `ikona` | wyostrzona ikona waluty w HTML | 28 / 56 px | `g_moneta_przod` |
 | `naglowek` | emblemat do paska górnego (01 § 2.3: emblemat 40 px + napis HTML) | 40 / 80 px | `g_emblemat` |
-| `rozmyte` | mocno rozmyta, przyciemniona miniatura tła (zamiast kosztownego `backdrop-filter`) | 640 px szer. (tło desktop), 480 px (tło mobile, banery) | `g_tlo_lobby_*`, `s*_baner` |
-| `k169` | kadr 16:9 do plakatu wideo | 960×540 i 1536×864 | `s*_baner` |
-| `w<N>` | wariant szerokości do `srcset` / wyboru wg poziomu jakości | patrz § 5.17 | tła, okładki, banery |
+| `rozmyte` | mocno rozmyta, przyciemniona miniatura tła (zamiast kosztownego `backdrop-filter`) | 640 px szer. (tło desktop), 480 px (tło mobile, banery) | wszystkie tła `*_tlo_*` (lobby i gry) oraz `s*_baner` |
+| `k169` | kadr 16:9 do plakatu wideo | 960×540 (`.k169.webp`) i 1536×864 (`.k169@2x.webp`) | `s*_baner` |
+| `w<N>` | trzecia szerokość do `srcset` / wyboru wg poziomu jakości (obok `<ID>.webp` i `<ID>@2x.webp`) | patrz § 5.17 | tła (`w1280` desktop, `w720` mobile), okładki (`w600`) |
 
 ### 2.8. Foldery
 
@@ -262,13 +287,18 @@ art/                              ← poza src/, więc nie trafia do pliku JAR a
 │   ├── s1/        s1_sym_wisnie.png … s1_baner.png
 │   ├── s2/        s2_sym_10.png … s2_fx_hieroglify.png
 │   ├── s3/        s3_sym_szafir.png … s3_fx_odlamki.png
-│   └── nieposortowane/           ← pliki o nieznanych nazwach (§ 4.6)
-├── zastepcze/                    ← grafika zastępcza, generowana skryptem (kontrakt 09)
-├── robocze/                      ← wyniki pośrednie i cache (w .gitignore)
-└── raport/                       ← raport jakości HTML + JSON (w .gitignore)
+│   └── nieposortowane/           ← pliki o nieznanych nazwach (§ 4.6) — pipeline ich NIE czyta
+├── zastepcze/                    ← grafika zastępcza, generowana skryptem (kontrakt 09); te same podfoldery
+│   └── _render/                  ← pośrednie rendery Blendera dla generatorów (nie trafiają do aplikacji)
+├── raport/                       ← raport jakości raport.html + raport.json (domyślne --raport)
+└── robocze/                      ← [plan] podglądy pośrednie dla opcji --etap
 tools/art/                        ← pipeline (Python), § 5
 src/main/resources/static/assets/img/   ← wynik dla przeglądarki, § 6
 ```
+
+Pipeline szuka źródła **tylko** w folderze swojego pakietu (prefiks ID: `g_` → `global/`, `s1_` → `s1/` itd.).
+Plik w złym folderze albo pod nazwą, która nie jest ID, jest pomijany bez komunikatu — wtedy w raporcie to ID
+dalej ma źródło `zastepcze` (kontrola nazw Q02 to [plan], § 4.6). Folder `makiety/` pipeline 1.0.0 pomija w ogóle.
 
 ---
 
@@ -280,8 +310,10 @@ Każde ID z briefu występuje poniżej **dokładnie raz, w osobnym wierszu**. Ko
 * **Gdzie użyty** — ekran i zdarzenia z katalogu `E01`–`E73` (efekty: [04](04-efekty-wizualne.md), dźwięk:
   [05](05-dzwiek-i-muzyka.md), zachowanie UI: [06](06-interfejs-ux.md)).
 * **Rozmiar docelowy** — `@1x / @2x` w pikselach (definicja w § 2.6); „szer.”/„wys.” = wymiar, do którego dopasowujemy,
-  drugi wynika z proporcji po przycięciu. „(jedna)” = tylko jedna rozdzielczość.
-* **Obróbka** — znaczniki kroków pipeline'u z tabeli niżej.
+  drugi wynika z proporcji po przycięciu. „(jedna)” = tylko jedna rozdzielczość. Wartość @1x to parametr `cel`
+  z `tools/art/katalog.py`; @2x powstaje tylko, gdy źródło na to pozwala (`2·s ≤ 1,25`, § 2.6).
+* **Obróbka** — znaczniki kroków pipeline'u z tabeli niżej. Znaczniki oznaczone w tabeli jako **[plan]** (`ATLAS`,
+  `AVIF`, `OG`, `PODGLAD`) wersja 1.0.0 pomija — zostają w wierszach, żeby było widać docelowy zakres obróbki.
 
 ### 3.0. Znaczniki obróbki
 
@@ -293,24 +325,24 @@ Każdy asset przechodzi kroki wspólne: wejście i walidacja (§ 5.1), klasyfika
 | `ALFA` | kontrola przezroczystości: wykrycie i usunięcie fałszywej szachownicy albo jednolitego tła | 5.3–5.4 |
 | `DEFR` | usuwanie obwódek (halo), czyszczenie alfy i „pyłków” | 5.5 |
 | `TRIM` | przycięcie do alfy + margines | 5.6 |
-| `NORM(…)` | normalizacja skali i środka w zestawie (w nawiasie: według czego) | 5.6 |
+| `NORM(…)` | normalizacja skali i środka (w nawiasie: według czego; wspólna dla zestawu przy symbolach, monetach i SPIN/STOP) | 5.6 |
 | `CIECIE n` | cięcie arkusza na `n` elementów | 5.10 |
 | `FX` | obraz z czarnym tłem: zerowanie czerni, winieta krawędzi, `blend: "add"`, bez alfy | 5.11 |
-| `OKNO` | wykrycie przezroczystego okna ramki → `frames.window` + marginesy 9-slice ramki | 5.12 |
-| `9S` | wykrycie marginesów 9-slice → `nineSlice` + CSS `border-image` | 5.13 |
-| `BMF` | cyfry → BitmapFont (`.fnt`) dla Pixi + sprite CSS | 5.14 |
+| `OKNO` | wykrycie przezroczystego okna ramki → `frames.<ID>.window` + marginesy 9-slice ramki | 5.12 |
+| `9S` | wykrycie marginesów 9-slice → `nineSlice` (CSS `border-image` pisze front; gotowy plik CSS — [plan]) | 5.13 |
+| `BMF` | cyfry → BitmapFont (`.fnt` + strona glifów) dla Pixi i pliki glifów `g_font_cyfry__*` dla HTML | 5.14 |
 | `RUCH` | warianty z rozmyciem ruchu `ruch1`/`ruch2` | 5.15 |
 | `GLOW` / `GLOW(zl)` | poświata biała do `tint` / poświata zabarwiona na złoto dla HTML | 5.16 |
 | `CIEN` / `SYL` | sprite cienia / biała sylwetka | 5.16 |
 | `MINI` | miniatura do tabeli wypłat (96 / 192 px) | 5.16 |
-| `TLO` | tło: warianty szerokości, dithering, kadrowanie pod proporcje, LQIP, wersja rozmyta | 5.17 |
-| `SRCSET` | warianty szerokości `w400/w600/w800` dla `<img srcset>` | 5.17 |
-| `PLAKAT` | plakat wideo (kadr 16:9, wersja rozmyta) | 5.18 |
-| `IKONY` | favicon, ikony aplikacji | 5.19 |
-| `OG` | składnik obrazu Open Graph 1200×630 | 5.20 |
-| `AVIF` | dodatkowo AVIF (dla `<picture>` w HTML) | 5.8 |
-| `ATLAS:nazwa` | pakowanie do atlasu tekstur Pixi | 5.9 |
-| `PODGLAD` | tylko miniatura 768 px do raportu (makiety) | 5.21 |
+| `TLO` | tło: 3 szerokości, szum przeciw pasmom, LQIP, wersja `rozmyte`, punkt `focus` | 5.17 |
+| `SRCSET` | okładka w szerokościach 400 (`<ID>.webp`), 600 (`.w600`), 800 (`@2x`) + LQIP | 5.17 |
+| `PLAKAT` | baner 960 / 1536 + kadr 16:9 `k169` + `rozmyte` + LQIP (klatki z nagrań — [plan]) | 5.18 |
+| `IKONY` | favicon, ikony aplikacji, `site.webmanifest` | 5.19 |
+| `OG` — **[plan]** | składnik obrazu Open Graph 1200×630 | 5.20 |
+| `AVIF` — **[plan]** | dodatkowo AVIF (dla `<picture>` w HTML) | 5.8 |
+| `ATLAS:nazwa` — **[plan]** | pakowanie do atlasu tekstur Pixi | 5.9 |
+| `PODGLAD` — **[plan]** | tylko miniatura 768 px do raportu (makiety; w 1.0.0 makiety są pomijane) | 5.21 |
 
 ### 3.1. Czat 0 — Makiety (8 obrazów, nie trafiają do aplikacji)
 
@@ -331,17 +363,17 @@ Każdy asset przechodzi kroki wspólne: wejście i walidacja (§ 5.1), klasyfika
 |---|---|---|---|---|---|---|---|
 | `g_logo` | `global/g_logo.png` | 1536×1024 | ALFA | P0 | sekcja powitalna lobby (szer. 360–720 px CSS), odsłonięcie logo z błyskiem po literach E01, ekran ładowania gry E20, obraz OG; **nie** w pasku górnym ([01 § 2.3](01-kierunek-artystyczny.md#23-logotyp-g_logo)) | 720 / 1440 szer. (+ `glowzl` 720) | `ALFA DEFR TRIM GLOW(zl) OG` |
 | `g_emblemat` | `global/g_emblemat.png` | 1024×1024 | ALFA | P0 | pasek górny (40 px obok napisu HTML), loader E20 (obrót + puls), favicon i ikony aplikacji, znak wodny modala E04 | loader 192 / 384; `naglowek` 40 / 80; ikony 16–512 | `ALFA DEFR TRIM IKONY` |
-| `g_moneta_przod` | `global/g_moneta_przod.png` | 1024×1024 | ALFA | P0 | ikona waluty przed kwotą (HTML, 20–28 px) z pulsem E08; pierwsza klatka obrotu: scena bonusu E07/E10 (160–256 px), cząsteczki — fontanna E07, lot monet do salda, deszcz monet E29–E32 | 256 / 512; `male` 64 / 128; `ikona` 28 / 56 | `ALFA DEFR TRIM NORM(średnica) ATLAS:wspolne-czastki` |
-| `g_moneta_skos` | `global/g_moneta_skos.png` | 1024×1024 | ALFA | P0 | klatka obrotu: przód → skos → bok → skos odbity (`scale.x = -1`) → przód ([01 § 2.5](01-kierunek-artystyczny.md#25-moneta-cebulion-g_moneta_przod-g_moneta_skos-g_moneta_bok)); scena bonusu i cząsteczki jak wyżej | 256 / 512 wys.; `male` 64 / 128 | `ALFA DEFR TRIM NORM(wys. i środek jak przód) ATLAS:wspolne-czastki` |
-| `g_moneta_bok` | `global/g_moneta_bok.png` | 1024×1024 | ALFA | P0 | klatka obrotu „na krawędzi” (najwęższa faza), scena bonusu i cząsteczki jak wyżej | 256 / 512 wys.; `male` 64 / 128 | `ALFA DEFR TRIM NORM(wys. i środek jak przód) ATLAS:wspolne-czastki` |
-| `g_tlo_lobby_desktop` | `global/g_tlo_lobby_desktop.png` | 1536×1024 | PELNE | P0 | tło lobby, gdy okno jest poziome (wybór wersji: 06); powolny zoom 1,00 → 1,04 i warstwy cząsteczek E02; wersja rozmyta pod modalami E04, E07, E09 | `w1280`, `w1920` (= @1x), `w2560` (= @2x↓) + `rozmyte` 640 + LQIP 24×16 | `TLO AVIF` |
-| `g_tlo_lobby_mobile` | `global/g_tlo_lobby_mobile.png` | 1024×1536 | PELNE | P0 | tło lobby, gdy okno jest pionowe (telefon) | `w720`, `w1080` (= @1x), `w1280` (= @2x↓) + `rozmyte` 480 + LQIP 16×24 | `TLO AVIF` |
-| `g_maskotka_powitanie` | `global/g_maskotka_powitanie.png` | 1024×1024 | ALFA | P0 | lobby niezalogowane obok przycisku „Zaloguj” (wejście z odbiciem E01), modal logowania E04, scena bonusu E07; „oddech”, kołysanie i cień-elipsę robi kod ([01 § 2.7](01-kierunek-artystyczny.md#27-maskotka-pan-cebulion)) | 480 / 960 wys. | `ALFA DEFR TRIM NORM(wys., linia stóp)` |
-| `g_maskotka_wygrana` | `global/g_maskotka_wygrana.png` | 1024×1024 | ALFA | P1 | modal podsumowania darmowych spinów E37 (HTML nad grą); nagłówek sekcji „Ostatnie duże wygrane” w lobby | 420 / 840 wys. | `ALFA DEFR TRIM NORM(wys., linia stóp)` |
-| `g_maskotka_bankrut` | `global/g_maskotka_bankrut.png` | 1024×1024 | ALFA | P1 | modal bankructwa E09 i odbiór bonusu ratunkowego E10 (w lobby i w grze) | 420 / 840 wys. | `ALFA DEFR TRIM NORM(wys., linia stóp)` |
+| `g_moneta_przod` | `global/g_moneta_przod.png` | 1024×1024 | ALFA | P0 | ikona waluty przed kwotą (HTML, 20–28 px) z pulsem E08; pierwsza klatka obrotu: scena bonusu E07/E10 (160–256 px), cząsteczki — fontanna E07, lot monet do salda, deszcz monet E29–E32 | 256 / 512; `male` 64 / 128; `ikona` 28 / 56 | `ALFA DEFR TRIM NORM(skala z wys. przodu) ATLAS:wspolne-czastki` |
+| `g_moneta_skos` | `global/g_moneta_skos.png` | 1024×1024 | ALFA | P0 | klatka obrotu: przód → skos → bok → skos odbity (`scale.x = -1`) → przód ([01 § 2.5](01-kierunek-artystyczny.md#25-moneta-cebulion-g_moneta_przod-g_moneta_skos-g_moneta_bok)); scena bonusu i cząsteczki jak wyżej | 256 / 512 (płótno; skala jak przód); `male` 64 / 128 | `ALFA DEFR TRIM NORM(skala z wys. przodu) ATLAS:wspolne-czastki` |
+| `g_moneta_bok` | `global/g_moneta_bok.png` | 1024×1024 | ALFA | P0 | klatka obrotu „na krawędzi” (najwęższa faza), scena bonusu i cząsteczki jak wyżej | 256 / 512 (płótno; skala jak przód); `male` 64 / 128 | `ALFA DEFR TRIM NORM(skala z wys. przodu) ATLAS:wspolne-czastki` |
+| `g_tlo_lobby_desktop` | `global/g_tlo_lobby_desktop.png` | 1536×1024 | PELNE | P0 | tło lobby, gdy okno jest poziome (wybór wersji: 06); powolny zoom 1,00 → 1,04 i warstwy cząsteczek E02; wersja rozmyta pod modalami E04, E07, E09 | 1920 (@1x, `<ID>.webp`) / 2560 (@2x↓, `<ID>@2x.webp`) + `w1280` + `rozmyte` 640 + LQIP 24×16 | `TLO AVIF` |
+| `g_tlo_lobby_mobile` | `global/g_tlo_lobby_mobile.png` | 1024×1536 | PELNE | P0 | tło lobby, gdy okno jest pionowe (telefon) | 1080 (@1x) / 1280 (@2x↓) + `w720` + `rozmyte` 480 + LQIP 16×24 | `TLO AVIF` |
+| `g_maskotka_powitanie` | `global/g_maskotka_powitanie.png` | 1024×1024 | ALFA | P0 | lobby niezalogowane obok przycisku „Zaloguj” (wejście z odbiciem E01), modal logowania E04, scena bonusu E07; „oddech”, kołysanie i cień-elipsę robi kod ([01 § 2.7](01-kierunek-artystyczny.md#27-maskotka-pan-cebulion)) | 480 / 960 wys. | `ALFA DEFR TRIM NORM(wys.)` |
+| `g_maskotka_wygrana` | `global/g_maskotka_wygrana.png` | 1024×1024 | ALFA | P1 | modal podsumowania darmowych spinów E37 (HTML nad grą); nagłówek sekcji „Ostatnie duże wygrane” w lobby | 420 / 840 wys. | `ALFA DEFR TRIM NORM(wys.)` |
+| `g_maskotka_bankrut` | `global/g_maskotka_bankrut.png` | 1024×1024 | ALFA | P1 | modal bankructwa E09 i odbiór bonusu ratunkowego E10 (w lobby i w grze) | 420 / 840 wys. | `ALFA DEFR TRIM NORM(wys.)` |
 | `g_skrzynia` | `global/g_skrzynia.png` | 1024×1024 | ALFA | P0 | scena bonusu powitalnego E07 i ratunkowego E10: wejście skali 0 → 1,08 → 1, promienie za skrzynią, fontanna monet z wnętrza | 480 / 960 (+ `glowzl` 480) | `ALFA DEFR TRIM GLOW(zl)` |
-| `g_awatary` | `global/g_awatary.png` | 1536×1024 | ALFA SHEET 4×2 | P1 | awatar gracza w pasku górnym (`avatarIndex` 0–7 z API, [09 § 2.1](09-kontrakt-api-i-assetow.md#21-logowanie-i-gracz)), ranking, feed dużych wygranych (32–64 px) | każda komórka 64 / 128 | `ALFA CIECIE 8 DEFR TRIM NORM(średnica koła)` |
-| `g_font_cyfry` | `global/g_font_cyfry.png` | 1536×1024 | ALFA SHEET 5×3 | P0 | kwoty w scenie gry jako `BitmapText` (E28–E32, E36, E37), mnożniki „×2”, „×10”, „×5” (E50, E51, E72, E73), „+10” przy retriggerze E61; licznik „+10 000” w lobby E07 (sprite CSS z tej samej strony) | wys. cyfry 96 / 192 | `ALFA CIECIE 13 DEFR BMF` |
+| `g_awatary` | `global/g_awatary.png` | 1536×1024 | ALFA SHEET 4×2 | P1 | awatar gracza w pasku górnym (`avatarIndex` 0–7 z API, [09 § 2.1](09-kontrakt-api-i-assetow.md#21-logowanie-i-gracz)), ranking, feed dużych wygranych (32–64 px) | każda komórka 64 / 128 | `ALFA CIECIE 8 DEFR TRIM NORM(0,96 komórki)` |
+| `g_font_cyfry` | `global/g_font_cyfry.png` | 1536×1024 | ALFA SHEET | P0 | arkusz w siatce 5×3 (2 ostatnie pola puste); kwoty w scenie gry jako `BitmapText` (E28–E32, E36, E37), mnożniki „×2”, „×10”, „×5” (E50, E51, E72, E73), „+10” przy retriggerze E61; licznik „+10 000” w lobby E07 (pliki glifów `g_font_cyfry__*` w HTML) | wys. cyfry 96 / 192 | `ALFA CIECIE 13 DEFR BMF` |
 
 ### 3.3. Czat 2 — GLOBAL B: UI kit, banery wygranych, efekty (18 obrazów)
 
@@ -349,16 +381,16 @@ Każdy asset przechodzi kroki wspólne: wejście i walidacja (§ 5.1), klasyfika
 |---|---|---|---|---|---|---|---|
 | `g_ui_spin` | `global/g_ui_spin.png` | 1024×1024 | ALFA | P0 | przycisk SPIN w panelu gry (HTML nad kanwą, 120–140 px desktop, 88–104 px telefon): wciśnięcie `scale(0.94)` i przenikanie do STOP w 120 ms przy E24, pulsująca poświata co 2,4 s w bezczynności E22; przycisku **nie obracamy** ([01 § 7.3](01-kierunek-artystyczny.md#73-przycisk-spin-g_ui_spin-i-g_ui_spin_stop)); skrót Spacja | 144 / 288 (+ `glowzl` 188) | `ALFA DEFR TRIM NORM(wspólny z g_ui_spin_stop) GLOW(zl)` |
 | `g_ui_spin_stop` | `global/g_ui_spin_stop.png` | 1024×1024 | ALFA | P0 | ten sam przycisk w stanie STOP (przenikanie 120 ms ze SPIN): szybkie zatrzymanie bębnów, przerwanie autoplay E38 | 144 / 288 | `ALFA DEFR TRIM NORM(wspólny z g_ui_spin)` |
-| `g_ui_ikony` | `global/g_ui_ikony.png` | 1536×1024 | ALFA SHEET 4×3 | P0 | okrągłe przyciski-ikony panelu gry i lobby (40–52 px): autoplay E38, turbo E39, minus/plus zakładu E23, dźwięk wł./wył., info (tabela wypłat), menu, lobby E12, zamknij, ustawienia, historia | każda ikona 56 / 112 | `ALFA CIECIE 12 DEFR TRIM NORM(średnica dysku)` |
+| `g_ui_ikony` | `global/g_ui_ikony.png` | 1536×1024 | ALFA SHEET 4×3 | P0 | okrągłe przyciski-ikony panelu gry i lobby (40–52 px): autoplay E38, turbo E39, minus/plus zakładu E23, dźwięk wł./wył., info (tabela wypłat), menu, lobby E12, zamknij, ustawienia, historia | każda ikona 56 / 112 | `ALFA CIECIE 12 DEFR TRIM NORM(0,96 komórki)` |
 | `g_ui_panel` | `global/g_ui_panel.png` | 1024×1024 | ALFA | P0 | modale HTML: logowanie E04, bankructwo E09, ustawienia, tabela wypłat, historia, podsumowanie FS E37, błąd sieci E40 | ≈ 460 / ≈ 920 (po przycięciu) + `nineSlice` | `ALFA DEFR TRIM 9S` |
 | `g_ui_przycisk_glowny` | `global/g_ui_przycisk_glowny.png` | 1536×1024 | ALFA | P0 | przyciski główne (HTML): „Zaloguj”, „Wejdź do kasyna”, „Odbierz 10 000”, „Graj” | wys. 80 / 160 | `ALFA DEFR TRIM 9S` |
 | `g_ui_przycisk_drugi` | `global/g_ui_przycisk_drugi.png` | 1536×1024 | ALFA | P0 | przyciski drugorzędne (HTML): „Anuluj”, „Tabela wypłat”, „Wróć do lobby”, przyciski ustawień | wys. 80 / 160 | `ALFA DEFR TRIM 9S` |
 | `g_ui_ornament` | `global/g_ui_ornament.png` | 1536×1024 | ALFA | P1 | ozdobnik nagłówków modali i sekcji lobby, separator w tabeli wypłat | 480 / 960 szer. | `ALFA DEFR TRIM` |
-| `g_win_big` | `global/g_win_big.png` | 1536×1024 | ALFA | P0 | pełnoekranowa sekwencja wygranej (scena Pixi): wejście E30, początek eskalacji E31, zakończenie / przewinięcie E32 | w polu 960×640 / ≈ 1600 szer. (@2x↓) + `glow`, `cien` | `ALFA DEFR TRIM NORM(szer.) GLOW CIEN ATLAS:wspolne-wygrane` |
-| `g_win_mega` | `global/g_win_mega.png` | 1536×1024 | ALFA | P1 | eskalacja BIG → MEGA (E31), zakończenie E32 | w polu 960×640 / ≈ 1600 szer. (@2x↓) + `glow`, `cien` | `ALFA DEFR TRIM NORM(szer.) GLOW CIEN ATLAS:wspolne-wygrane` |
-| `g_win_epic` | `global/g_win_epic.png` | 1536×1024 | ALFA | P1 | eskalacja MEGA → EPIC (E31), zakończenie E32 | w polu 960×640 / ≈ 1600 szer. (@2x↓) + `glow`, `cien` | `ALFA DEFR TRIM NORM(szer.) GLOW CIEN ATLAS:wspolne-wygrane` |
-| `g_win_ultra` | `global/g_win_ultra.png` | 1536×1024 | ALFA | P1 | eskalacja EPIC → ULTRA (E31) — najmocniejszy poziom; zakończenie E32 | w polu 960×640 / ≈ 1600 szer. (@2x↓) + `glow`, `cien` | `ALFA DEFR TRIM NORM(szer.) GLOW CIEN ATLAS:wspolne-wygrane` |
-| `g_win_free_spins` | `global/g_win_free_spins.png` | 1536×1024 | ALFA | P1 | aktywacja darmowych spinów E35 (S2, S3), retrigger E61 (z „+10” z `g_font_cyfry`), nagłówek podsumowania E37 | w polu 960×640 / ≈ 1600 szer. (@2x↓) + `glow`, `cien` | `ALFA DEFR TRIM NORM(szer.) GLOW CIEN ATLAS:wspolne-wygrane` |
+| `g_win_big` | `global/g_win_big.png` | 1536×1024 | ALFA | P0 | pełnoekranowa sekwencja wygranej (scena Pixi): wejście E30, początek eskalacji E31, zakończenie / przewinięcie E32 | w polu 960×640 (@1x); @2x zwykle brak (§ 2.6), obniżone ≈ 1600 szer. — [plan]; + `glow`, `cien` | `ALFA DEFR TRIM NORM(pole 960×640) GLOW CIEN ATLAS:wspolne-wygrane` |
+| `g_win_mega` | `global/g_win_mega.png` | 1536×1024 | ALFA | P1 | eskalacja BIG → MEGA (E31), zakończenie E32 | w polu 960×640 (@1x); @2x zwykle brak (§ 2.6), obniżone ≈ 1600 szer. — [plan]; + `glow`, `cien` | `ALFA DEFR TRIM NORM(pole 960×640) GLOW CIEN ATLAS:wspolne-wygrane` |
+| `g_win_epic` | `global/g_win_epic.png` | 1536×1024 | ALFA | P1 | eskalacja MEGA → EPIC (E31), zakończenie E32 | w polu 960×640 (@1x); @2x zwykle brak (§ 2.6), obniżone ≈ 1600 szer. — [plan]; + `glow`, `cien` | `ALFA DEFR TRIM NORM(pole 960×640) GLOW CIEN ATLAS:wspolne-wygrane` |
+| `g_win_ultra` | `global/g_win_ultra.png` | 1536×1024 | ALFA | P1 | eskalacja EPIC → ULTRA (E31) — najmocniejszy poziom; zakończenie E32 | w polu 960×640 (@1x); @2x zwykle brak (§ 2.6), obniżone ≈ 1600 szer. — [plan]; + `glow`, `cien` | `ALFA DEFR TRIM NORM(pole 960×640) GLOW CIEN ATLAS:wspolne-wygrane` |
+| `g_win_free_spins` | `global/g_win_free_spins.png` | 1536×1024 | ALFA | P1 | aktywacja darmowych spinów E35 (S2, S3), retrigger E61 (z „+10” z `g_font_cyfry`), nagłówek podsumowania E37 | w polu 960×640 (@1x); @2x zwykle brak (§ 2.6), obniżone ≈ 1600 szer. — [plan]; + `glow`, `cien` | `ALFA DEFR TRIM NORM(pole 960×640) GLOW CIEN ATLAS:wspolne-wygrane` |
 | `g_fx_promienie` | `global/g_fx_promienie.png` | 1024×1024 | CZARNE | P0 | obracające się snopy (4–8°/s) za napisami wygranych E30–E32, za skrzynią E07/E10, aktywacja FS E35, NEON JACKPOT E51, intro gry E21 | 1024 (jedna) | `FX ATLAS:wspolne-fx` |
 | `g_fx_flara` | `global/g_fx_flara.png` | 1024×1024 | CZARNE | P0 | błysk przy lądowaniu WILD / scattera E33/E34, stop bębna z wygraną E26, uderzenie przy eskalacji E31, przejścia E12 | 512 (jedna) | `FX ATLAS:wspolne-fx` |
 | `g_fx_iskry` | `global/g_fx_iskry.png` | 1536×1024 | CZARNE SHEET 4×2 | P0 | tekstury cząsteczek: wygrana medium E29, eskalacja E31, WILD / scatter E33/E34, bonus E07, neonowy mnożnik E50, pęknięcie S3 E70 | każda 128 (jedna) | `CIECIE 8 FX ATLAS:wspolne-fx` |
@@ -382,12 +414,12 @@ specjalny `wild`.
 | `s1_sym_bar` | `s1/s1_sym_bar.png` | 1024×1024 | ALFA | P0 | bęben S1 (wysoki): E25, E26, E28/E29, E51; tabela wypłat | 256 / 512 + warianty S1 | `ALFA DEFR TRIM NORM(wysokie S1) RUCH GLOW CIEN SYL MINI ATLAS:s1-symbole` |
 | `s1_sym_siodemka` | `s1/s1_sym_siodemka.png` | 1024×1024 | ALFA | P0 | bęben S1 (najwyższy): E25, E26, E28/E29, E51; tabela wypłat | 256 / 512 + warianty S1 | `ALFA DEFR TRIM NORM(wysokie S1) RUCH GLOW CIEN SYL MINI ATLAS:s1-symbole` |
 | `s1_sym_wild` | `s1/s1_sym_wild.png` | 1024×1024 | ALFA | P0 | bęben S1 (WILD): lądowanie E33, „prawie bonus” przy 2 WILD na linii E27, neonowy mnożnik ×2 E50, NEON JACKPOT E51; tabela wypłat | 256 / 512 + warianty S1 | `ALFA DEFR TRIM NORM(specjalne S1) RUCH GLOW CIEN SYL MINI ATLAS:s1-symbole` |
-| `s1_tlo_desktop` | `s1/s1_tlo_desktop.png` | 1536×1024 | PELNE | P0 | tło sceny S1 przy oknie poziomym: intro E21, bezczynność E22; podkład bębna i neonowe migotanie rysuje kod ([01 § 6.6](01-kierunek-artystyczny.md#66-tła-gier-i-podkład-bębna)) | `w1280`, `w1920` (= @1x), `w2560` (= @2x↓) | `TLO` |
-| `s1_tlo_mobile` | `s1/s1_tlo_mobile.png` | 1024×1536 | PELNE | P0 | tło sceny S1 przy oknie pionowym (telefon) | `w720`, `w1080` (= @1x), `w1280` (= @2x↓) | `TLO` |
+| `s1_tlo_desktop` | `s1/s1_tlo_desktop.png` | 1536×1024 | PELNE | P0 | tło sceny S1 przy oknie poziomym: intro E21, bezczynność E22; podkład bębna i neonowe migotanie rysuje kod ([01 § 6.6](01-kierunek-artystyczny.md#66-tła-gier-i-podkład-bębna)) | 1920 (@1x) / 2560 (@2x↓) + `w1280` + `rozmyte` 640 + LQIP | `TLO` |
+| `s1_tlo_mobile` | `s1/s1_tlo_mobile.png` | 1024×1536 | PELNE | P0 | tło sceny S1 przy oknie pionowym (telefon) | 1080 (@1x) / 1280 (@2x↓) + `w720` + `rozmyte` 480 + LQIP | `TLO` |
 | `s1_ramka` | `s1/s1_ramka.png` | 1024×1024 | ALFA | P0 | ramka automatu nad bębnami 3×3 (`NineSliceSprite`, okno = siatka + 2% luzu); świecenie ramy przy antycypacji E27 i E51 robi kod | okno 768×768 → ramka ≈ 1230 (jedna — okno w źródle ma ~640 px, więc @1x to już ×1,2) | `ALFA DEFR TRIM OKNO` |
 | `s1_logo` | `s1/s1_logo.png` | 1536×1024 | ALFA | P0 | logo nad ramką (pas górny tła): wejście E21, neonowe migotanie E22 (`glow` z tintem magenta / cyjan), ekran ładowania S1 E20 | 640 / 1280 szer. + `glow` | `ALFA DEFR TRIM GLOW` |
-| `s1_okladka` | `s1/s1_okladka.png` | 1024×1536 | PELNE | P0 | kafel gry w lobby: przechył 3D i poświata E03, plakat przed startem wideo kafla, wersja przy `prefers-reduced-motion` / słabym łączu | `w400` (= @1x), `w600`, `w800` (= @2x) + LQIP | `SRCSET AVIF` |
-| `s1_baner` | `s1/s1_baner.png` | 1536×1024 | PELNE | P0 | karuzela / sekcja powitalna lobby (tytuł i przycisk HTML w lewych ~40%), plakat wideo 16:9, tło ekranu ładowania S1 E20 (`rozmyte`) | `w960`, `w1536` (natywny); `k169` 960×540 / 1536×864; `rozmyte` 480 | `PLAKAT AVIF` |
+| `s1_okladka` | `s1/s1_okladka.png` | 1024×1536 | PELNE | P0 | kafel gry w lobby: przechył 3D i poświata E03, plakat przed startem wideo kafla, wersja przy `prefers-reduced-motion` / słabym łączu | 400 (@1x) / 800 (@2x) + `w600` + LQIP | `SRCSET AVIF` |
+| `s1_baner` | `s1/s1_baner.png` | 1536×1024 | PELNE | P0 | karuzela / sekcja powitalna lobby (tytuł i przycisk HTML w lewych ~40%), plakat wideo 16:9, tło ekranu ładowania S1 E20 (`rozmyte`) | 960 (@1x) / 1536 (@2x, natywny); `k169` 960×540 / 1536×864; `rozmyte` 480 + LQIP | `PLAKAT AVIF` |
 
 ### 3.5. Czat 4 — S2 „Złoty Faraon” (22 obrazy, P1)
 
@@ -408,24 +440,24 @@ Warianty symboli S2: jak w S1 (`ruch1`, `ruch2`, `syl`, `glow`, `cien`, `mini`).
 | `s2_sym_faraon` | `s2/s2_sym_faraon.png` | 1024×1024 | ALFA | P1 | bęben S2 (najwyższy): E25, E26, E28/E29; tabela wypłat | 192 / 384 + warianty S2 | `ALFA DEFR TRIM NORM(wysokie S2) RUCH GLOW CIEN SYL MINI ATLAS:s2-symbole` |
 | `s2_sym_wild` | `s2/s2_sym_wild.png` | 1024×1024 | ALFA | P1 | bęben S2 (WILD): lądowanie E33; w darmowych spinach punkt startowy rozszerzenia E60; tabela wypłat | 192 / 384 + warianty S2 | `ALFA DEFR TRIM NORM(specjalne S2) RUCH GLOW CIEN SYL MINI ATLAS:s2-symbole` |
 | `s2_sym_scatter` | `s2/s2_sym_scatter.png` | 1024×1024 | ALFA | P1 | bęben S2 (SCATTER): lądowanie E34 (1., 2., 3.+), antycypacja E27 (drżenie + poświata), aktywacja FS E35, retrigger E61; tabela wypłat | 192 / 384 + warianty S2 | `ALFA DEFR TRIM NORM(specjalne S2) RUCH GLOW CIEN SYL MINI ATLAS:s2-symbole` |
-| `s2_wild_rozszerzony` | `s2/s2_wild_rozszerzony.png` | 1024×1536 | ALFA | P1 | rozszerzenie WILD na cały bęben w darmowych spinach E60 (słup światła); dopasowany do wysokości 3 pól, szerokość może wychodzić do 15% na sąsiednie bębny | 192×576 / 384×1152 (wys. 3 pól) + `glow` | `ALFA DEFR TRIM NORM(wys. 3 pól) GLOW ATLAS:s2-symbole` |
-| `s2_tlo_desktop` | `s2/s2_tlo_desktop.png` | 1536×1024 | PELNE | P1 | tło skarbca przy oknie poziomym: intro E21, bezczynność E22 (migotanie pochodni robi kod) | `w1280`, `w1920` (= @1x), `w2560` (= @2x↓) | `TLO` |
-| `s2_tlo_mobile` | `s2/s2_tlo_mobile.png` | 1024×1536 | PELNE | P1 | tło skarbca przy oknie pionowym | `w720`, `w1080` (= @1x), `w1280` (= @2x↓) | `TLO` |
-| `s2_tlo_fs_desktop` | `s2/s2_tlo_fs_desktop.png` | 1536×1024 | PELNE | P1 | tło darmowych spinów (noc nad piramidami): przenikanie 600–900 ms z błyskiem przy E35, w trakcie E36, powrót po E37; doładowywane w tle po E21 | `w1280`, `w1920` (= @1x), `w2560` (= @2x↓) | `TLO` |
-| `s2_tlo_fs_mobile` | `s2/s2_tlo_fs_mobile.png` | 1024×1536 | PELNE | P1 | jak wyżej, okno pionowe | `w720`, `w1080` (= @1x), `w1280` (= @2x↓) | `TLO` |
-| `s2_ramka` | `s2/s2_ramka.png` | 1536×1024 | ALFA | P1 | ramka 5×3 (`NineSliceSprite`); rozbłyski przy E35 i E60 robi kod | okno 960×576 → ramka ≈ 1200 / ≈ 1920 szer. (@2x↓) | `ALFA DEFR TRIM OKNO` |
+| `s2_wild_rozszerzony` | `s2/s2_wild_rozszerzony.png` | 1024×1536 | ALFA | P1 | rozszerzenie WILD na cały bęben w darmowych spinach E60 (słup światła); dopasowany do wysokości 3 pól, szerokość może wychodzić do 15% na sąsiednie bębny | wys. 576 / 1152 (= 3 pola × 192), szer. z proporcji (przycięcie ciasne) + `glow` | `ALFA DEFR TRIM NORM(wys. 3 pól) GLOW ATLAS:s2-symbole` |
+| `s2_tlo_desktop` | `s2/s2_tlo_desktop.png` | 1536×1024 | PELNE | P1 | tło skarbca przy oknie poziomym: intro E21, bezczynność E22 (migotanie pochodni robi kod) | 1920 (@1x) / 2560 (@2x↓) + `w1280` + `rozmyte` 640 + LQIP | `TLO` |
+| `s2_tlo_mobile` | `s2/s2_tlo_mobile.png` | 1024×1536 | PELNE | P1 | tło skarbca przy oknie pionowym | 1080 (@1x) / 1280 (@2x↓) + `w720` + `rozmyte` 480 + LQIP | `TLO` |
+| `s2_tlo_fs_desktop` | `s2/s2_tlo_fs_desktop.png` | 1536×1024 | PELNE | P1 | tło darmowych spinów (noc nad piramidami): przenikanie 600–900 ms z błyskiem przy E35, w trakcie E36, powrót po E37; doładowywane w tle po E21 | 1920 (@1x) / 2560 (@2x↓) + `w1280` + `rozmyte` 640 + LQIP | `TLO` |
+| `s2_tlo_fs_mobile` | `s2/s2_tlo_fs_mobile.png` | 1024×1536 | PELNE | P1 | jak wyżej, okno pionowe | 1080 (@1x) / 1280 (@2x↓) + `w720` + `rozmyte` 480 + LQIP | `TLO` |
+| `s2_ramka` | `s2/s2_ramka.png` | 1536×1024 | ALFA | P1 | ramka 5×3 (`NineSliceSprite`); rozbłyski przy E35 i E60 robi kod | okno 960×576 → ramka ≈ 1200 szer. (jedna — @2x wymagałoby powiększenia ×1,56; obniżone ≈ 1920 — [plan]) | `ALFA DEFR TRIM OKNO` |
 | `s2_logo` | `s2/s2_logo.png` | 1536×1024 | ALFA | P1 | logo nad ramką: wejście E21, ekran ładowania S2 E20; złota poświata pulsuje w darmowych spinach | 640 / 1280 szer. + `glow` | `ALFA DEFR TRIM GLOW` |
-| `s2_okladka` | `s2/s2_okladka.png` | 1024×1536 | PELNE | P1 | kafel gry w lobby (E03), plakat przed startem wideo kafla | `w400` (= @1x), `w600`, `w800` (= @2x) + LQIP | `SRCSET AVIF` |
-| `s2_baner` | `s2/s2_baner.png` | 1536×1024 | PELNE | P1 | karuzela / sekcja powitalna lobby, plakat wideo 16:9, tło ekranu ładowania S2 E20 (`rozmyte`) | `w960`, `w1536` (natywny); `k169` 960×540 / 1536×864; `rozmyte` 480 | `PLAKAT AVIF` |
+| `s2_okladka` | `s2/s2_okladka.png` | 1024×1536 | PELNE | P1 | kafel gry w lobby (E03), plakat przed startem wideo kafla | 400 (@1x) / 800 (@2x) + `w600` + LQIP | `SRCSET AVIF` |
+| `s2_baner` | `s2/s2_baner.png` | 1536×1024 | PELNE | P1 | karuzela / sekcja powitalna lobby, plakat wideo 16:9, tło ekranu ładowania S2 E20 (`rozmyte`) | 960 (@1x) / 1536 (@2x, natywny); `k169` 960×540 / 1536×864; `rozmyte` 480 + LQIP | `PLAKAT AVIF` |
 | `s2_fx_hieroglify` | `s2/s2_fx_hieroglify.png` | 1536×1024 | CZARNE SHEET 4×2 | P1 | świecące hieroglify unoszące się wzdłuż bębna przy rozszerzaniu WILD E60, wir przy aktywacji FS E35, retrigger E61, lądowanie scattera E34 | każdy 128 / 256 | `CIECIE 8 FX ATLAS:s2-fx` |
 
 ### 3.6. Czat 5 — S3 „Kryształowa Kaskada” (18 obrazów, P2)
 
 Warianty symboli S3: `ruch1` (krótkie rozmycie do opadu), `syl`, `glow`, `cien`, `mini`; bez `ruch2`, bo plansza
 nie wiruje. Pipeline zapisuje w manifeście **kolor symbolu** (`tint`) z tabeli
-[01 § 11.4](01-kierunek-artystyczny.md#114-symbole-s3) (np. szafir `#2F6BFF`) — nim kod barwi neutralne odłamki
-przy pękaniu (E70, [01 § 5.7](01-kierunek-artystyczny.md#57-stany-symbolu-które-robi-kod)); zmierzony kolor
-dominujący służy tylko do kontroli (Q19).
+[01 § 11.4](01-kierunek-artystyczny.md#114-symbole-s3) (np. szafir `#2F6BFF`; w kodzie: `TINT_S3` w `tools/art/katalog.py`)
+— nim kod barwi neutralne odłamki przy pękaniu (E70, [01 § 5.7](01-kierunek-artystyczny.md#57-stany-symbolu-które-robi-kod)).
+Kontrola zmierzonego koloru dominującego (Q19) to [plan].
 Hierarchia: niskie `szafir`, `szmaragd`, `ametyst`, `topaz`; wysokie `rubin`, `diament`, `cebula`; specjalne
 `scatter`, `mnoznik`.
 
@@ -440,15 +472,15 @@ Hierarchia: niskie `szafir`, `szmaragd`, `ametyst`, `topaz`; wysokie `rubin`, `d
 | `s3_sym_cebula` | `s3/s3_sym_cebula.png` | 1024×1024 | ALFA | P2 | plansza S3 (najwyższy): E25, E28/E29, E70, E71; tabela wypłat | 144 / 288 + warianty S3 | `ALFA DEFR TRIM NORM(wysokie S3) RUCH GLOW CIEN SYL MINI ATLAS:s3-symbole` |
 | `s3_sym_scatter` | `s3/s3_sym_scatter.png` | 1024×1024 | ALFA | P2 | plansza S3 (SCATTER): lądowanie E34, antycypacja przy 3 scatterach E27, aktywacja FS przy 4+ E35; tabela wypłat | 144 / 288 + warianty S3 | `ALFA DEFR TRIM NORM(specjalne S3) RUCH GLOW CIEN SYL MINI ATLAS:s3-symbole` |
 | `s3_sym_mnoznik` | `s3/s3_sym_mnoznik.png` | 1024×1024 | ALFA | P2 | kula mnożnika w darmowych spinach: lądowanie E72 (liczba „×2…×100” jako `BitmapText` z `g_font_cyfry` na jasnym środku), lot do licznika E73; pipeline zapisuje w manifeście środek i promień pustego wnętrza (`pole`) | 144 / 288 + warianty S3 | `ALFA DEFR TRIM NORM(specjalne S3) RUCH GLOW CIEN SYL MINI ATLAS:s3-symbole` |
-| `s3_tlo_desktop` | `s3/s3_tlo_desktop.png` | 1536×1024 | PELNE | P2 | tło jaskini przy oknie poziomym: intro E21, bezczynność E22 (kaustyki i pył robi kod) | `w1280`, `w1920` (= @1x), `w2560` (= @2x↓) | `TLO` |
-| `s3_tlo_mobile` | `s3/s3_tlo_mobile.png` | 1024×1536 | PELNE | P2 | tło jaskini przy oknie pionowym | `w720`, `w1080` (= @1x), `w1280` (= @2x↓) | `TLO` |
-| `s3_tlo_fs_desktop` | `s3/s3_tlo_fs_desktop.png` | 1536×1024 | PELNE | P2 | tło darmowych spinów (komnata z zorzą): przenikanie z błyskiem przy E35, w trakcie E36, powrót po E37; doładowywane w tle po E21 | `w1280`, `w1920` (= @1x), `w2560` (= @2x↓) | `TLO` |
-| `s3_tlo_fs_mobile` | `s3/s3_tlo_fs_mobile.png` | 1024×1536 | PELNE | P2 | jak wyżej, okno pionowe | `w720`, `w1080` (= @1x), `w1280` (= @2x↓) | `TLO` |
-| `s3_ramka` | `s3/s3_ramka.png` | 1024×1024 | ALFA | P2 | ramka 6×5 (`NineSliceSprite`); migotanie kryształów przy E35 i E73 robi kod | okno 864×720 → ramka ≈ 1080 / ≈ 1280 (@2x↓) | `ALFA DEFR TRIM OKNO` |
+| `s3_tlo_desktop` | `s3/s3_tlo_desktop.png` | 1536×1024 | PELNE | P2 | tło jaskini przy oknie poziomym: intro E21, bezczynność E22 (kaustyki i pył robi kod) | 1920 (@1x) / 2560 (@2x↓) + `w1280` + `rozmyte` 640 + LQIP | `TLO` |
+| `s3_tlo_mobile` | `s3/s3_tlo_mobile.png` | 1024×1536 | PELNE | P2 | tło jaskini przy oknie pionowym | 1080 (@1x) / 1280 (@2x↓) + `w720` + `rozmyte` 480 + LQIP | `TLO` |
+| `s3_tlo_fs_desktop` | `s3/s3_tlo_fs_desktop.png` | 1536×1024 | PELNE | P2 | tło darmowych spinów (komnata z zorzą): przenikanie z błyskiem przy E35, w trakcie E36, powrót po E37; doładowywane w tle po E21 | 1920 (@1x) / 2560 (@2x↓) + `w1280` + `rozmyte` 640 + LQIP | `TLO` |
+| `s3_tlo_fs_mobile` | `s3/s3_tlo_fs_mobile.png` | 1024×1536 | PELNE | P2 | jak wyżej, okno pionowe | 1080 (@1x) / 1280 (@2x↓) + `w720` + `rozmyte` 480 + LQIP | `TLO` |
+| `s3_ramka` | `s3/s3_ramka.png` | 1024×1024 | ALFA | P2 | ramka 6×5 (`NineSliceSprite`); migotanie kryształów przy E35 i E73 robi kod | okno 864×720 → ramka ≈ 1080 (jedna — skala ≈ 1,05; obniżone @2x ≈ 1280 — [plan]) | `ALFA DEFR TRIM OKNO` |
 | `s3_logo` | `s3/s3_logo.png` | 1536×1024 | ALFA | P2 | logo nad ramką: wejście E21, ekran ładowania S3 E20 | 640 / 1280 szer. + `glow` | `ALFA DEFR TRIM GLOW` |
-| `s3_okladka` | `s3/s3_okladka.png` | 1024×1536 | PELNE | P2 | kafel gry w lobby (E03), plakat przed startem wideo kafla | `w400` (= @1x), `w600`, `w800` (= @2x) + LQIP | `SRCSET AVIF` |
-| `s3_baner` | `s3/s3_baner.png` | 1536×1024 | PELNE | P2 | karuzela / sekcja powitalna lobby, plakat wideo 16:9, tło ekranu ładowania S3 E20 (`rozmyte`) | `w960`, `w1536` (natywny); `k169` 960×540 / 1536×864; `rozmyte` 480 | `PLAKAT AVIF` |
-| `s3_fx_odlamki` | `s3/s3_fx_odlamki.png` | 1536×1024 | ALFA SHEET 4×3 | P2 | odłamki przy pękaniu wygrywających symboli E70 (fizykę liczy kod, `tint` = kolor dominujący pękającego symbolu) | każdy 64 / 128 (dłuższy bok) | `ALFA CIECIE 12 DEFR TRIM ATLAS:s3-symbole` |
+| `s3_okladka` | `s3/s3_okladka.png` | 1024×1536 | PELNE | P2 | kafel gry w lobby (E03), plakat przed startem wideo kafla | 400 (@1x) / 800 (@2x) + `w600` + LQIP | `SRCSET AVIF` |
+| `s3_baner` | `s3/s3_baner.png` | 1536×1024 | PELNE | P2 | karuzela / sekcja powitalna lobby, plakat wideo 16:9, tło ekranu ładowania S3 E20 (`rozmyte`) | 960 (@1x) / 1536 (@2x, natywny); `k169` 960×540 / 1536×864; `rozmyte` 480 + LQIP | `PLAKAT AVIF` |
+| `s3_fx_odlamki` | `s3/s3_fx_odlamki.png` | 1536×1024 | ALFA SHEET 4×3 | P2 | odłamki przy pękaniu wygrywających symboli E70 (fizykę liczy kod, `tint` = pole `tint` pękającego symbolu z manifestu) | każdy 64 / 128 (dłuższy bok) | `ALFA CIECIE 12 DEFR TRIM ATLAS:s3-symbole` |
 
 ---
 
@@ -456,9 +488,11 @@ Hierarchia: niskie `szafir`, `szmaragd`, `ametyst`, `topaz`; wysokie `rubin`, `d
 
 ### 4.1. W skrócie
 
-1. W ChatGPT **pobierz oryginalny PNG** przyciskiem pobierania (nie zrzut ekranu, nie „kopiuj obraz”).
+1. W ChatGPT **pobierz oryginalny PNG** przyciskiem pobierania, w przeglądarce na komputerze (nie zrzut ekranu,
+   nie „kopiuj obraz”, nie zapis z aplikacji na telefonie — § 4.3).
 2. Nazwij plik **dokładnie** `<ID>.png` (np. `s2_sym_anubis.png`). Brak czasu na nazwy? Patrz § 4.6.
-3. Włóż go do właściwego folderu `art/zrodla/{makiety,global,s1,s2,s3}/`.
+3. Włóż go do właściwego folderu `art/zrodla/{makiety,global,s1,s2,s3}/` — folder wynika z prefiksu ID: `m01`–`m08`
+   → `makiety/`, `g_*` → `global/`, `s1_*` → `s1/`, `s2_*` → `s2/`, `s3_*` → `s3/`. Plik w złym folderze pipeline pominie.
 4. Wyślij: **commit do repozytorium** (dowolna gałąź, najlepiej `grafika-zrodla`) albo **ZIP jako załącznik w czacie**.
 5. Napisz, które ID są w paczce. My uruchamiamy pipeline i odsyłamy raport z listą ewentualnych poprawek.
 
@@ -475,13 +509,19 @@ Hierarchia: niskie `szafir`, `szmaragd`, `ametyst`, `topaz`; wysokie `rubin`, `d
 | **Razem** | | **93** |
 
 Nazwa pliku = ID z § 3 + `.png`, małymi literami, bez spacji i polskich znaków. Druga wersja tego samego obrazu:
-`<ID>.v2.png` (pipeline bierze najnowszą wersję, chyba że w `tools/art/manifest.toml` wskażemy inną — § 5.0).
-Nie wysyłaj więcej niż 2–3 wersji jednego ID: każda zostaje w historii repozytorium na zawsze.
+`<ID>.v2.png`, trzecia `<ID>.v3.png`. Pipeline bierze **wersję o najwyższym numerze** (`<ID>.png` liczy się jak wersja 0);
+żeby wrócić do starszej, usuwamy (albo przenosimy poza folder) nowszy plik — wskazywanie wersji w konfiguracji
+(`wybor` w `manifest.toml`) to [plan], § 5.0. Pliki `.webp` / `.jpg` / `.jpeg` o nazwie ID pipeline też przyjmie,
+ale z ostrzeżeniem Q04 (przy tym samym numerze wersji wygrywa PNG). Nie wysyłaj więcej niż 2–3 wersji jednego ID:
+każda zostaje w historii repozytorium na zawsze.
 
 ### 4.3. Jak pobrać oryginał z ChatGPT
 
 * **W przeglądarce na komputerze:** kliknij obraz, w podglądzie użyj ikony pobierania (strzałka w dół). Plik ma
-  nazwę w rodzaju `ChatGPT Image …png` — zmień ją na ID.
+  nazwę w rodzaju `ChatGPT Image …png` — zmień ją na ID. Interfejs ChatGPT się zmienia; jeśli ikona jest gdzie
+  indziej, szukaj polecenia „Pobierz” przy obrazie, a nie „Kopiuj” i nie „Zapisz obraz jako” z menu miniatury
+  (miniatura bywa pomniejszona). Gdyby pobrany plik miał rozszerzenie `.webp` albo `.jpg`, **nie zmieniaj go** —
+  nazwij `<ID>.webp` i wyślij; pipeline przyjmie go z ostrzeżeniem Q04, a my ocenimy, czy wystarczy.
 * **W aplikacji na telefonie** obraz trafia zwykle do galerii, a galeria przy udostępnianiu potrafi zamienić PNG
   na JPEG/HEIC bez przezroczystości. Dlatego obrazy `ALFA` pobieraj na komputerze. Jeśli musisz z telefonu —
   wysyłaj je jako plik (ZIP), nie jako zdjęcie.
@@ -503,7 +543,7 @@ Nie wysyłaj więcej niż 2–3 wersji jednego ID: każda zostaje w historii rep
 | wysyłka przez Messengera / WhatsAppa / Discorda jako zdjęcie | komunikatory kompresują do JPEG i usuwają przezroczystość |
 | otwieranie i zapisywanie w Paint / Zdjęciach / edytorach online | ponowny zapis potrafi spłaszczyć alfę albo zmienić profil kolorów |
 | konwersja do JPG / WebP, „optymalizatory” typu TinyPNG | stratna kwantyzacja palety niszczy gradienty złota; kompresją zajmuje się pipeline |
-| zmiana samego rozszerzenia (`.webp` → `.png`) | plik dalej jest WebP; pipeline i tak to wykryje (Q04) |
+| zmiana samego rozszerzenia (`.webp` → `.png`) | plik dalej jest (często stratnym) WebP; pipeline go odczyta (Pillow rozpoznaje format po zawartości), ale wersja 1.0.0 sprawdza tylko rozszerzenie, więc **nie ostrzeże** — kontrola sygnatury pliku to [plan] (Q04) |
 
 ### 4.4. Sposób A: commit do repozytorium (zalecany)
 
@@ -521,31 +561,44 @@ kontach i w forkach to osobna komplikacja.
    nie przechowuje pustych folderów).
 3. Wejdź do folderu `art/zrodla/` → *Add file → Upload files* → przeciągnij z dysku **folder czatu** (np. `s1`
    z 14 plikami). Przy przeciąganiu folderu GitHub zachowuje jego nazwę, więc pliki trafią do `art/zrodla/s1/`.
-4. Opis zmiany, np. „Grafika: czat 3 (S1), 14 obrazów” → *Commit directly to the grafika-zrodla branch*.
+   Wariant z [03 § 11.3](03-prompty-chatgpt.md#113-jak-wysłać): jeśli na dysku masz już całą strukturę
+   `art/zrodla/<folder>/…`, możesz w katalogu **głównym** repozytorium przeciągnąć folder `art` — efekt jest ten sam.
+   Nie przeciągaj samych plików do katalogu głównego ani do `art/zrodla/` (bez podfolderu) — pipeline ich nie znajdzie.
+4. Sprawdź listę plików na dole strony (ścieżki muszą zaczynać się od `art/zrodla/<folder>/`). Opis zmiany, np.
+   „Grafika: czat 3 (S1), 14 obrazów” → *Commit directly to the grafika-zrodla branch*.
 5. Limity przesyłania przez przeglądarkę: do **100 plików** naraz i do **25 MB** na plik — paczka jednego czatu
-   (maks. 22 pliki) mieści się bez problemu.
+   (maks. 22 pliki) mieści się bez problemu. Przeciąganie całych folderów sprawdzaj w Chrome albo Edge (w innych
+   przeglądarkach nie mamy pewności); gdyby lista z kroku 4 pokazała pliki bez folderu, anuluj, wejdź najpierw do
+   `art/zrodla/s1/` i przeciągnij same pliki.
 
 **Przez git (dla zespołu):**
 
 ```bash
-git switch -c grafika-zrodla          # pierwszy raz; potem: git switch grafika-zrodla
+git fetch origin
+git switch grafika-zrodla             # gałąź już jest na GitHubie (krok 2 wyżej); git utworzy lokalną kopię
 mkdir -p art/zrodla/s1
 cp ~/Pobrane/s1_*.png art/zrodla/s1/
-git add -f art/zrodla/s1             # -f, bo .gitignore z main ignoruje art/zrodla/ (patrz niżej)
+git add -f art/zrodla/s1             # -f: na wypadek, gdy .gitignore ignoruje art/zrodla/ (patrz niżej)
 git commit -m "Grafika: czat 3 (S1), 14 obrazów"
-git push -u origin grafika-zrodla
+git push origin grafika-zrodla
+git switch main                       # wróć do pracy nad aplikacją
 ```
 
 **Jak pipeline sięga po źródła z innej gałęzi** (bez przełączania się z `main`):
 
 ```bash
 git fetch origin grafika-zrodla
-git worktree add ../kasyno-grafika grafika-zrodla        # druga kopia robocza obok projektu
-python tools/art/przetworz.py --zrodla ../kasyno-grafika/art/zrodla
+git worktree add ../kasyno-grafika grafika-zrodla        # pierwszy raz: druga kopia robocza obok projektu
+git -C ../kasyno-grafika pull                            # przy kolejnych paczkach: pobierz nowe pliki
+python3 tools/art/przetworz.py --zrodla ../kasyno-grafika/art/zrodla
 ```
 
-Na `main` dopisujemy do `.gitignore` wpisy `art/zrodla/`, `art/robocze/` i `art/raport/` (razem z pierwszą wersją
-pipeline'u), żeby nikt przypadkiem nie dodał 200 MB do głównej gałęzi lokalnym `git add .`. `.gitignore` nie blokuje
+`git worktree add` sam tworzy lokalną gałąź śledzącą `origin/grafika-zrodla`, jeśli lokalnej jeszcze nie ma. Ta sama
+gałąź nie może być jednocześnie wybrana w dwóch kopiach roboczych — w głównej kopii pracuj na `main`.
+
+Na `main` w `.gitignore` muszą być wpisy `art/zrodla/` i `art/raport/`, żeby nikt przypadkiem nie dodał 200 MB do
+głównej gałęzi lokalnym `git add .`. **Stan na dziś: tych wpisów jeszcze nie ma** — dopisujemy je przed pierwszą
+dostawą (wtedy w gałęzi `grafika-zrodla` potrzebne jest `git add -f`, jak w przykładzie). `.gitignore` nie blokuje
 przesyłania przez stronę GitHub, dlatego przy sposobie przez przeglądarkę trzeba wybrać gałąź `grafika-zrodla`.
 
 ### 4.5. Sposób B: załącznik w czacie
@@ -560,31 +613,37 @@ przesyłania przez stronę GitHub, dlatego przy sposobie przez przeglądarkę tr
 
 ### 4.6. Co gdy nazwy się pomieszają
 
-To normalne przy 93 plikach. Nie musisz niczego poprawiać ręcznie — **rozpoznamy obrazy wizualnie**,
-a pipeline nam w tym pomaga:
+To normalne przy 93 plikach. Nie musisz niczego poprawiać ręcznie — **rozpoznamy obrazy wizualnie**.
 
-1. Pliki o nieznanych nazwach wrzuć do `art/zrodla/nieposortowane/` (albo gdziekolwiek — pipeline zgłosi każdą
-   nazwę, która nie jest ID, kontrola Q02).
-2. Uruchamiamy `python tools/art/przetworz.py --dopasuj`. Powstaje strona `art/raport/dopasowanie.html`: obok
-   każdego nieznanego pliku miniatura i **3 najbardziej prawdopodobne ID**, wyliczone z:
-   * formatu (1:1 / 3:2 / 2:3) i typu tła (alfa / czerń / pełny obraz),
-   * liczby elementów (arkusz 4×2, 4×3, 5×3, 3×1 albo pojedynczy obiekt),
-   * palety (S1: gorący róż + elektryczny błękit; S2: złoto + lapis + piaskowiec; S3: cyjan + ametyst; global:
-     złoto + granat),
-   * przezroczystego okna (ramki) i proporcji obiektu (np. pionowa kolumna = `s2_wild_rozszerzony`),
-   * daty w nazwie `ChatGPT Image …` — kolejność generowania odpowiada kolejności promptów w czacie (03),
-   * listy ID, których jeszcze brakuje (dopasowanie zawęża się do brakujących).
-3. Decyzję podejmuje człowiek. Zamiast zmieniać nazwy plików, wpisujemy przypisanie do `tools/art/mapowanie.toml`:
+**Jak to działa dziś (pipeline 1.0.0).** Pipeline czyta wyłącznie pliki `<ID>[.vN].png` w folderze swojego pakietu;
+każdy inny plik po cichu pomija. Dlatego nazwy porządkujemy my, **przed** uruchomieniem pipeline'u:
+
+1. Pliki o nieznanych nazwach wrzuć do `art/zrodla/nieposortowane/` (albo przyślij w ZIP-ie bez sortowania).
+2. Otwieramy folder w widoku dużych miniatur i przypisujemy ID, korzystając z: formatu (1:1 / 3:2 / 2:3), typu tła
+   (alfa / czerń / pełny obraz), liczby elementów (arkusz 4×2, 4×3, 5×3, 3×1 albo pojedynczy obiekt), palety gry,
+   przezroczystego okna (ramki), proporcji (pionowa kolumna = `s2_wild_rozszerzony`) i **kolejności generowania** —
+   godzina w nazwie `ChatGPT Image …` odpowiada kolejności pozycji w bloku promptów czatu (03).
+3. Zmieniamy nazwy na `<ID>.png`, przenosimy do właściwych folderów i commitujemy na `grafika-zrodla`.
+4. Uruchamiamy pipeline; w raporcie sprawdzamy licznik źródeł (`chatgpt` / `zastepcze`) — jeśli dla ID, które
+   przyszło w paczce, nadal widać `zastepcze`, plik ma złą nazwę albo leży w złym folderze.
+
+**Pomylone ID** (np. w `s1_sym_cytryna.png` jest śliwka) wychwytujemy w `art/raport/raport.html`, gdzie każde ID ma
+kartę z miniaturami wyników — przeglądamy karty jednej gry jedna pod drugą.
+
+**[plan] — automatyczne dopasowanie.** Opcja `--dopasuj` miałaby tworzyć stronę `art/raport/dopasowanie.html`: obok
+każdego nieznanego pliku miniatura i **3 najbardziej prawdopodobne ID**, wyliczone z tych samych cech co w kroku 2
+(plus lista ID, których jeszcze brakuje — dopasowanie zawęża się do brakujących). Decyzję zapisywalibyśmy w
+`tools/art/mapowanie.toml` zamiast zmieniać nazwy plików:
 
 ```toml
-# nazwa pliku od właściciela = ID z manifestu
+# nazwa pliku od właściciela = ID z manifestu   ([plan] — pipeline 1.0.0 tego pliku nie czyta)
 "ChatGPT Image 12 paź 2026, 14_03_22.png" = "s2_sym_anubis"
 "ChatGPT Image 12 paź 2026, 14_05_10.png" = "s2_sym_faraon"
 ```
 
-**Pomylone ID** (np. w `s1_sym_cytryna.png` jest śliwka) wychwytujemy na stykówce zestawu (wszystkie symbole
-gry obok siebie na tle gry, § 8.3) i kontrolą koloru dominującego Q19 (cytryna powinna być żółta, szafir
-niebieski itd.). **Duplikaty** (ten sam obraz pod dwiema nazwami) wykrywa odcisk percepcyjny dHash (Q05).
+W tym samym planie: kontrola nazw Q02 (raport wymienia każdy plik, który nie jest ID), stykówka zestawu (wszystkie
+symbole gry obok siebie na tle gry, § 8.3), kontrola koloru dominującego Q19 (cytryna żółta, szafir niebieski)
+i wykrywanie **duplikatów** (ten sam obraz pod dwiema nazwami) odciskiem percepcyjnym dHash (Q05).
 
 ### 4.7. Kolejność dostaw
 
@@ -599,11 +658,12 @@ niebieski itd.). **Duplikaty** (ten sam obraz pod dwiema nazwami) wykrywa odcisk
 
 Po każdej paczce uruchamiamy pipeline i odsyłamy raport: lista obrazów do poprawy z numerem kontroli
 (np. „Q07 — obiekt dotyka krawędzi”) i gotową poprawką promptu z 03. Do czasu dostarczenia danego ID aplikacja
-używa grafiki zastępczej (`source: "zastepcze"` w manifeście), więc nic nie czeka na komplet.
+używa grafiki zastępczej (`source: "zastepcze"` w manifeście), więc nic nie czeka na komplet. Jeśli dla ID nie ma
+ani źródła, ani grafiki zastępczej, pipeline zostawia w manifeście poprzedni wynik i zgłasza Q01 (dla P0 — błąd).
 
 ### 4.8. Lista kontrolna przed wysłaniem
 
-* [ ] Nazwa = ID (albo wpis w `mapowanie.toml`), właściwy folder.
+* [ ] Nazwa = ID (albo plik w `nieposortowane/` z dopiskiem w wiadomości), właściwy folder (`g_*` → `global/` itd.).
 * [ ] PNG, wymiary zgodne z § 3.
 * [ ] `ALFA`: prawdziwa przezroczystość, nic nie przycięte krawędzią, bez cienia i podłogi pod obiektem.
 * [ ] `CZARNE`: czysto czarne tło, poświata nie dotyka krawędzi.
@@ -631,163 +691,181 @@ dłuższy. Przedmiot ocenia backend w Javie; skrypty pomocnicze mogą być w czy
 
 | Zależność | Wersja | Do czego |
 |---|---|---|
-| Python | ≥ 3.11 | `tomllib` (odczyt `manifest.toml`) jest w bibliotece standardowej od 3.11 |
-| Pillow | ≥ 11.2 | wczytywanie PNG, skalowanie Lanczos, zapis WebP, **AVIF** (wbudowany od 11.2; w naszym środowisku Pillow 12.3 — `features.check("avif")` zwraca `True`), ICO, JPEG, rysowanie tekstu (FreeType czyta pliki WOFF2 z `static/fonts/` — sprawdzone) |
-| NumPy | ≥ 2.0 | operacje na pikselach: alfa, odległości kolorów, rozmycia kierunkowe, statystyki |
-| SciPy | ≥ 1.13 | `scipy.ndimage`: etykietowanie spójnych składowych, morfologia, transformata odległości, rozmycie Gaussa |
-| ffmpeg | ≥ 6 | klatki z nagrań gry na plakaty (§ 5.18), zapasowe kodowanie AVIF (`libaom-av1` / `libsvtav1`) |
-| opcjonalnie `cwebp` | libwebp | opcja `-sharp_yuv` (ostrzejsze krawędzie nasyconych czerwieni i magenty) |
+| Python | ≥ 3.9 (sprawdzone na 3.13) | sam skrypt; `Path.is_relative_to` wymaga 3.9 |
+| Pillow | ≥ 9.1 (sprawdzone na 12.3) | wczytywanie PNG/JPEG/WebP, skalowanie Lanczos w trybie `F`, zapis WebP, ICO i PNG ikon; `Image.Resampling` jest od 9.1 |
+| NumPy | sprawdzone na 2.5 | wszystkie operacje na pikselach: alfa, odległości kolorów ΔE, rozmycia, morfologia, etykietowanie spójnych składowych |
+| ffmpeg, `cwebp`, SciPy | — | **niepotrzebne** w 1.0.0. ffmpeg będzie potrzebny dopiero do klatek z nagrań (§ 5.18, [plan]) |
 
-SciPy wykracza poza zestaw „Pillow + NumPy + ffmpeg”, ale oszczędza ok. 300 linii własnego kodu (etykietowanie,
-morfologia). Plan B bez SciPy: własne etykietowanie metodą union-find na masce zmniejszonej 4× — wolniejsze, ale
-wystarczające. Instalacja: `python -m venv .venv && .venv/bin/pip install -r tools/art/requirements.txt`.
+Pipeline celowo działa na „gołym” Pillow + NumPy: klasyczne algorytmy (rozmycie Gaussa przybliżone trzema rozmyciami
+pudełkowymi, dylatacja/erozja, etykietowanie spójnych składowych metodą przebiegów + union-find, „rozlewanie” koloru
+zamiast transformaty odległości, konwersja sRGB → CIELAB) są napisane w `kroki/obraz.py`, krótko i z komentarzem —
+łatwiej je obronić niż wywołanie czarnej skrzynki, a instalacja to jedna linia. Instalacja (pliku `requirements.txt`
+jeszcze nie ma): `python3 -m venv .venv && .venv/bin/pip install pillow numpy`.
 
-**Moduły** (każdy 100–250 linii z polskimi komentarzami, żeby dało się go omówić na obronie):
+**Moduły** (polskie komentarze i docstringi „Po co to jest”, żeby dało się je omówić na obronie):
 
 ```text
 tools/art/
-├── przetworz.py        CLI, kolejność kroków, cache, kody wyjścia
-├── manifest.toml       93 pozycje: format, tło, priorytet, rola, parametry (+ ręczne korekty)
-├── mapowanie.toml      nazwy plików od właściciela → ID (§ 4.6)
-├── requirements.txt    Pillow, numpy, scipy
+├── przetworz.py        CLI, wybór źródła, obsługa ról, zapis plików, scalanie manifest.json, kody wyjścia
+├── katalog.py          lista 85 assetów: format, tło, rola, priorytet, rozmiar docelowy (cel), siatka arkusza,
+│                       paczki do budżetów; nazwy komórek arkuszy; kolory TINT_S3; budżety wagi
 ├── kroki/
-│   ├── wejscie.py      5.1–5.2  wybór źródła, walidacja, sRGB, klasyfikacja tła
-│   ├── alfa.py         5.3–5.5  szachownica, jednolite tło, obwódki
-│   ├── geometria.py    5.6, 5.12, 5.13  przycięcie, normalizacja, okno ramki, 9-slice
-│   ├── skala.py        5.7      skalowanie w świetle liniowym, wyostrzanie
-│   ├── koduj.py        5.8      WebP, AVIF, PNG, ICO, JPEG, kontrola PSNR
-│   ├── atlas.py        5.9      MaxRects, JSON dla Pixi
-│   ├── arkusze.py      5.10     cięcie arkuszy
-│   ├── fx.py           5.11, 5.16  czarne tło, poświaty, cienie, sylwetki
-│   ├── bmfont.py       5.14     BitmapFont + sprite CSS
-│   ├── ruch.py         5.15     rozmycie ruchu
-│   ├── tla.py          5.17–5.18  tła, LQIP, plakaty
-│   ├── ikony.py        5.19–5.20  favicony, obraz OG
-│   └── raport.py       § 8      raport HTML + JSON
-└── testy/              testy pytest na obrazach syntetycznych (§ 5.23)
+│   ├── obraz.py        operacje bazowe: sRGB ↔ liniowe, CIELAB, rozmycie, morfologia, spójne składowe, Otsu
+│   ├── alfa.py         5.2–5.6  klasyfikacja tła, szachownica, jednolite tło, obwódki, pyłki, przycięcie
+│   ├── geometria.py    5.6, 5.12, 5.13  normalizacja symboli, okno ramki, 9-slice
+│   ├── skala.py        5.7–5.8  skalowanie w świetle liniowym, wyostrzanie, kodowanie WebP, zapis „tylko gdy zmiana”
+│   ├── arkusze.py      5.10, 5.14  cięcie arkuszy, metryki cyfr, plik .fnt
+│   ├── fx.py           5.11     czarne tło: spłaszczenie, zerowanie czerni, środek, dym, winieta, barwa
+│   ├── warianty.py     5.15–5.16  ruch1/ruch2, syl, glow/glowzl, cien, pomniejszenia
+│   ├── tla.py          5.17–5.18  tła, okładki, banery: szerokości, szum, LQIP, rozmyte, kadr 16:9
+│   ├── ikony.py        5.19     favicony, ikony aplikacji, site.webmanifest
+│   └── raport.py       § 8      konsola, raport.json, raport.html, budżety wagi
+├── testy/
+│   └── test_przetworz.py   13 testów na obrazach syntetycznych (§ 5.23)
+└── zastepcze/          generatory grafiki zastępczej (Pillow + opcjonalnie Blender) → art/zastepcze/
 ```
 
-**Przepływ:**
+**[plan]** — pliki opisane w tym dokumencie, których w 1.0.0 jeszcze nie ma: `manifest.toml` (ręczne korekty
+`skala`, `przesuniecie`, `wybor`, `akceptuj`), `mapowanie.toml` (§ 4.6), `requirements.txt`, `kroki/atlas.py`
+(MaxRects, § 5.9), kodowanie AVIF i obraz OG (§ 5.8, § 5.20).
+
+**Przepływ** (linie przerywane = [plan]):
 
 ```mermaid
 flowchart TD
-  Z["art/zrodla — PNG z ChatGPT"] --> W["5.1 Wejście i walidacja"]
+  Z["art/zrodla — PNG z ChatGPT"] --> W["5.1 Wybór źródła i walidacja"]
   ZZ["art/zastepcze — grafika zastępcza"] --> W
-  W --> K["5.2 Klasyfikacja tła"]
-  K -->|ALFA| A["5.3–5.5 Szachownica, jednolite tło, obwódki"]
+  W --> K{"Typ tła z katalogu"}
+  K -->|ALFA| A["5.2–5.5 Klasyfikacja, szachownica, jednolite tło, obwódki, pyłki"]
   K -->|CZARNE| F["5.11 FX: czerń zostaje"]
-  K -->|PELNE| T["5.17–5.18 Tła, okładki, plakaty"]
-  A --> C["5.6 Przycięcie i normalizacja"]
-  C --> AR{"Arkusz?"}
-  F --> AR
-  AR -->|tak| CI["5.10 Cięcie na elementy"]
-  AR -->|nie| R{"Rola"}
-  CI --> R
+  K -->|PELNE| T["5.17–5.18 Tła, okładki, banery"]
+  A --> R{"Rola"}
+  F --> R
+  R -->|symbol| S["5.6 Normalizacja grupy + 5.15–5.16 warianty"]
+  R -->|moneta, SPIN/STOP| G["5.6 Wspólna skala zestawu"]
+  R -->|arkusz| CI["5.10 Cięcie na elementy"]
+  R -->|cyfry| B["5.10 + 5.14 BitmapFont"]
   R -->|ramka| O["5.12 Okno ramki"]
   R -->|panel, przycisk| N["5.13 Marginesy 9-slice"]
-  R -->|cyfry| B["5.14 BitmapFont"]
-  R -->|symbol| S["5.15–5.16 Ruch, poświata, cień, sylwetka"]
-  R -->|emblemat, logo| I["5.19–5.20 Ikony, obraz OG"]
-  R -->|inne| SK
-  O & N & B & S & I & T --> SK["5.7 Skalowanie @1x / @2x"]
-  SK --> KO["5.8 WebP / AVIF"]
-  KO --> AT["5.9 Atlasy Pixi"]
-  AT --> M["5.22 manifest.json"]
+  R -->|emblemat| I["5.19 Favicony i ikony"]
+  R -->|logo, maskotka, napis, inne| OB["5.6 Przycięcie i dopasowanie"]
+  R -->|fx| FX1["5.11 Skala do boku, jedna rozdzielczość"]
+  S & G & CI & B & O & N & I & OB & FX1 & T --> SK["5.7 Skalowanie @1x / @2x"]
+  SK --> KO["5.8 WebP"]
+  KO --> M["5.22 manifest.json"]
   M --> RP["§ 8 Raport jakości"]
+  KO -.-> AT["5.9 Atlasy Pixi, AVIF"]
+  AT -.-> M
 ```
 
 **Uruchamianie:**
 
 ```bash
-python tools/art/przetworz.py                         # wszystko, co się zmieniło (przyrostowo)
-python tools/art/przetworz.py --gra s1                # tylko pakiet s1 (global | s1 | s2 | s3)
-python tools/art/przetworz.py --id s1_sym_wild,s1_ramka --etap alfa   # zatrzymaj po kroku, podgląd w art/robocze/
-python tools/art/przetworz.py --zrodla ../kasyno-grafika/art/zrodla   # źródła z worktree gałęzi grafika-zrodla
-python tools/art/przetworz.py --dopasuj               # rozpoznawanie nieznanych plików (§ 4.6)
-python tools/art/przetworz.py --od-nowa --strict      # bez cache; ostrzeżenia = błędy (przed commitem)
+python3 tools/art/przetworz.py                                  # wszystkie 85 assetów
+python3 tools/art/przetworz.py --tylko s1                       # tylko pakiet s1 (global | s1 | s2 | s3)
+python3 tools/art/przetworz.py --tylko s1_sym_wild,g_ui_ikony   # wybrane ID (można mieszać z pakietami)
+python3 tools/art/przetworz.py --zrodla ../kasyno-grafika/art/zrodla   # źródła z worktree gałęzi grafika-zrodla
+python3 tools/art/przetworz.py --dokladnie --strict --sprzataj  # przed commitem: najmniejsze pliki, ostrzeżenia = błędy, bez sierot
 ```
 
-| Opcja | Działanie |
-|---|---|
-| `--gra`, `--id` | ogranicza przetwarzanie do pakietu albo listy ID |
-| `--etap <krok>` | zatrzymuje się po kroku (`wejscie`, `alfa`, `geometria`, `skala`, `koduj`, `atlas`) i zapisuje podgląd pośredni |
-| `--od-nowa` | ignoruje cache |
-| `--bez-avif` | pomija AVIF (najwolniejszy krok) — do szybkich iteracji |
-| `--raport` | tylko odświeża raport jakości (§ 8) |
-| `--strict` | ostrzeżenia traktuje jak błędy (kod wyjścia 2) |
-| `--sprawdz-determinizm` | przetwarza dwukrotnie i porównuje skróty SHA-256 wyników |
+| Opcja | Domyślnie | Działanie |
+|---|---|---|
+| `--tylko <lista>` | wszystkie | ID albo pakiety rozdzielone przecinkami; nieznana nazwa kończy program. Dla symbolu, monety i SPIN/STOP i tak liczona jest cała grupa (wspólna normalizacja), ale zapisywane są tylko wskazane ID |
+| `--zrodla <katalog>` | `art/zrodla` | skąd brać grafikę z ChatGPT |
+| `--zastepcze <katalog>` | `art/zastepcze` | skąd brać grafikę zastępczą |
+| `--wyjscie <katalog>` | `src/main/resources/static/assets/img` | dokąd zapisać wyniki i `manifest.json` |
+| `--raport <katalog>` | `art/raport` | dokąd zapisać `raport.json` i `raport.html` |
+| `--watki <n>` | min(4, liczba rdzeni) | liczba procesów (grupy assetów idą równolegle) |
+| `--dokladnie` | wyłączone | WebP `method=6` zamiast `4`: mniejsze pliki, wielokrotnie wolniej |
+| `--strict` | wyłączone | ostrzeżenia traktuje jak błędy (kod wyjścia 2) |
+| `--sprzataj` | wyłączone | usuwa z `assets/img` pliki-sieroty, do których nie prowadzi żaden wpis manifestu (Q30) |
 
 Kody wyjścia: `0` — wszystko w porządku, `1` — są ostrzeżenia, `2` — są błędy (albo ostrzeżenia z `--strict`).
 
-**Konfiguracja `tools/art/manifest.toml`.** Wartości domyślne zależą od roli (symbol, tło, ramka, fx, ui9, …);
-przy ID wpisujemy tylko to, co odbiega od domyślnych, albo ręczne korekty po obejrzeniu raportu:
+**[plan] — opcje opisane wcześniej, których 1.0.0 nie ma:** `--etap <krok>` (podgląd pośredni w `art/robocze/`),
+`--od-nowa` (ignoruj cache), `--bez-avif`, `--dopasuj` (§ 4.6), samo odświeżenie raportu, `--sprawdz-determinizm`
+(dwa przebiegi i porównanie SHA-256).
 
-```toml
-[domyslne.symbol]
-warianty = ["ruch1", "ruch2", "syl", "glow", "cien", "mini"]
-webp_q   = 82
+**Konfiguracja: `tools/art/katalog.py`.** Jedna lista 85 assetów, z której korzystają pipeline i generatory grafiki
+zastępczej. Każdy wpis to `Asset(id, format, tlo, rola, prio, opis, cel={…}, siatka=…, paczki=…)`:
 
-[s1_sym_wild]
-plik    = "s1/s1_sym_wild.png"
-format  = "1:1"
-tlo     = "ALFA"
-prio    = "P0"
-rola    = "symbol"
-poziom  = "specjalne"      # niskie | wysokie | specjalne — do normalizacji (5.6)
-pole_1x = 256              # rozmiar pola symbolu @1x
-atlas   = "s1-symbole"
-
-[s2_sym_anubis]
-plik         = "s2/s2_sym_anubis.png"
-format       = "1:1"
-tlo          = "ALFA"
-prio         = "P1"
-rola         = "symbol"
-poziom       = "wysokie"
-pole_1x      = 192
-atlas        = "s2-symbole"
-wybor        = "v2"         # użyj s2_sym_anubis.v2.png zamiast najnowszej wersji
-skala        = 0.97         # ręczna korekta po normalizacji
-przesuniecie = [0, -3]      # px @1x — korekta optyczna
+```python
+_sym("s1_sym_wild", "specjalne", 256, "Złota Cebula WILD", "P0", "s1"),     # symbol: poziom, pole @1x, paczka
+Asset("s2_ramka", "3:2", "ALFA", "ramka", "P1", "złoto-kamienna ramka 5×3",
+      cel={"okno": (960, 576), "siatka": (5, 3)}, paczki=("s2",)),
+Asset("g_logo", "3:2", "ALFA", "obiekt", "P0", "logotyp CEBULION CASINO z emblematem",
+      cel={"szer": 720, "warianty": ["glowzl"]}, paczki=("lobby",)),
 ```
 
-**Cache.** Klucz = SHA-256 pliku źródłowego + SHA-256 sekcji z `manifest.toml` + wersja pipeline'u.
-Niezmienione obrazy są pomijane, więc druga i kolejne iteracje trwają sekundy (§ 5.23).
+Role: `symbol`, `moneta`, `obiekt`, `napis`, `emblemat`, `ramka`, `panel9`, `przycisk9`, `fx`, `arkusz`, `cyfry`,
+`tlo`, `okladka`, `baner`. Klucze `cel`: `pole` (symbol, moneta, SPIN), `szer` / `wys` / `bok` / `pudelko`
+(obiekty), `wys_dokladna` (rozszerzony WILD), `okno` + `siatka` (ramki), `komorka` / `komorka_wh` (arkusze),
+`jedna` (arkusz bez @2x), `dopasuj: "kolo"` (ikony, awatary), `wys_cyfry`, `szerokosci` + `x1` + `x2` (`PELNE`),
+`focus`, `rozmyte`, `warianty`, `grupa`, `srodek` / `dym` (fx). Zmiana rozmiaru docelowego = zmiana `cel`
+w `katalog.py` i ponowne uruchomienie. Ręczne korekty pojedynczego obrazu (`skala`, `przesuniecie`), wybór
+starszej wersji (`wybor`) i akceptacja ostrzeżeń (`akceptuj`) w osobnym pliku `manifest.toml` to [plan].
+
+**Przyrostowość i cache.** 1.0.0 **nie ma cache**: każde uruchomienie przetwarza wszystkie wybrane assety (równolegle,
+`--watki`). Żeby `git diff` pokazywał tylko prawdziwe zmiany, plik wynikowy jest zapisywany **tylko wtedy, gdy jego
+bajty się zmieniły**, a `manifest.version` zmienia się tylko wtedy, gdy zmieniła się treść manifestu. Assety bez
+źródła zachowują w manifeście poprzedni wynik. Cache po SHA-256 źródła i parametrów (druga iteracja w sekundy) to [plan].
+
+**Co jest w wersji 1.0.0** (szczegóły w podrozdziałach):
+
+| § | Krok | Stan w 1.0.0 |
+|---|---|---|
+| 5.1 | wybór źródła, walidacja wymiarów | zrobione; typ pliku tylko po rozszerzeniu, profil ICC pomijany bez konwersji |
+| 5.2–5.5 | klasyfikacja tła, szachownica, jednolite tło (też kolor klucza z planu B w 03), obwódki, pyłki | zrobione (bez zaciśnięcia `defringe = "mocny"` i bez miary obwódki Q09) |
+| 5.6 | przycięcie i normalizacja | zrobione dla symboli, monet, SPIN/STOP, ikon, awatarów, napisów; maskotka — tylko dopasowanie wysokości; ręczne korekty — [plan] |
+| 5.7 | skalowanie @1x / @2x | zrobione; obniżone @2x sprite'ów — [plan] |
+| 5.8 | kodowanie | tylko WebP; AVIF, JPEG OG, kontrola PSNR (Q21), kodowanie do rozmiaru — [plan] |
+| 5.9 | atlasy Pixi | [plan] |
+| 5.10 | cięcie arkuszy | zrobione |
+| 5.11 | efekty FX | zrobione (bez opcji `neutralizuj`) |
+| 5.12–5.13 | okno ramki, 9-slice | zrobione; generowany plik CSS 9-slice — [plan] |
+| 5.14 | BitmapFont | zrobione (`.fnt` + strona glifów + pliki glifów); plik CSS z klasami `.cy-*` i próbki w raporcie — [plan] |
+| 5.15–5.16 | ruch, poświaty, cienie, sylwetki, miniatury, `tint`, `pole` | zrobione; kontrola koloru Q19 — [plan] |
+| 5.17–5.18 | tła, okładki, banery, kadr 16:9 | zrobione; pomiary jasności Q12, podglądy kadrów, klatki z nagrań — [plan] |
+| 5.19 | favicony i ikony | zrobione |
+| 5.20–5.21 | obraz OG, podglądy makiet | [plan] |
+| 5.22 | `manifest.json` | zrobione (bez `atlases`, `bundles`, `avif`) |
+| 5.23 | powtarzalność, testy | zrobione (13 testów); `--sprawdz-determinizm` — [plan] |
+| § 8 | raport | konsola + JSON + HTML z miniaturami; część kontroli Q — [plan] (tabela w § 8.2) |
 
 ### 5.1. Wejście i walidacja
 
-1. **Wybór źródła:** `art/zrodla/<pakiet>/<ID>.png` → najnowsze `<ID>.vN.png` (albo wskazane `wybor`) →
-   `art/zastepcze/<pakiet>/<ID>.png`. Do manifestu trafia `source: "chatgpt"` albo `"zastepcze"` (kontrakt 09).
-   Raport pokazuje, ile ID wciąż korzysta z grafiki zastępczej.
-2. **Typ pliku po zawartości**, nie po rozszerzeniu (sygnatura PNG `89 50 4E 47`). JPEG/WebP jest przyjmowany
-   z ostrzeżeniem Q04; JPEG dla obrazu `ALFA` → automatycznie ścieżka „jednolite tło” (§ 5.4).
-3. **Normalizacja trybu:** `P`, `L`, `LA`, `RGB` → `RGBA`, 8 bitów na kanał.
-4. **Kolory:** jeśli PNG ma osadzony profil ICC inny niż sRGB, konwersja do sRGB (`PIL.ImageCms`), potem profil
-   usuwamy. Przeglądarki traktują obrazy bez profilu jako sRGB, więc zachowujemy wygląd i oszczędzamy bajty.
-5. **Wymiary:** zgodność z formatem z manifestu (Q03).
-6. **Skrót SHA-256** → cache i wykrywanie duplikatów (razem z dHash, Q05).
+1. **Wybór źródła:** w `art/zrodla/<pakiet>/` pliki o nazwie `<ID>.png` albo `<ID>.vN.png` (wielkość liter bez
+   znaczenia) → wygrywa najwyższy numer wersji (`<ID>.png` = wersja 0) → gdy brak, `art/zastepcze/<pakiet>/<ID>.png`
+   → gdy i tego brak: Q01 (P0 — błąd, P1/P2 — ostrzeżenie) i poprzedni wynik zostaje w manifeście. Do manifestu trafia
+   `source: "chatgpt"` albo `"zastepcze"` (kontrakt 09); konsola i raport pokazują, ile ID ma które źródło.
+2. **Typ pliku:** przyjmowane są też `<ID>.webp`, `<ID>.jpg`, `<ID>.jpeg` (ostrzeżenie Q04; przy tym samym numerze
+   wersji wygrywa PNG). Wersja 1.0.0 ocenia typ **po rozszerzeniu**; Pillow i tak dekoduje plik według zawartości,
+   więc WebP przemianowany na `.png` zostanie poprawnie odczytany, tylko bez ostrzeżenia. Kontrola sygnatury
+   (`89 50 4E 47`) — [plan]. JPEG dla obrazu `ALFA` nie ma alfy, więc trafia na ścieżkę „jednolite tło” (§ 5.4).
+3. **Normalizacja trybu:** każdy tryb Pillow (`P`, `L`, `LA`, `RGB`, 16-bitowe `I;16`) → `RGBA`, 8 bitów na kanał,
+   dalej `float32` 0–1.
+4. **Kolory:** osadzony profil ICC jest **pomijany** (bez konwersji); wyniki nie mają profilu, więc przeglądarka
+   traktuje je jako sRGB. ChatGPT zapisuje PNG w sRGB, więc w praktyce to bez znaczenia. Konwersja profilu innego niż
+   sRGB przez `PIL.ImageCms` — [plan], gdyby trafił się taki plik (np. po edycji w programie graficznym).
+5. **Wymiary** (Q03): inne niż format z katalogu → ostrzeżenie (inny rozmiar albo proporcja odbiegająca o > 0,02);
+   zamieniona orientacja (np. 1024×1536 zamiast 1536×1024) → błąd.
+6. **Skrót** `hash` w manifeście = 8 znaków SHA-256 pliku wynikowego @1x (unieważnianie pamięci podręcznej, § 5.22).
+   SHA-256 źródła do cache i dHash do wykrywania duplikatów (Q05) — [plan].
 
 ### 5.2. Klasyfikacja tła
 
-Pipeline nie ufa deklaracji — mierzy obraz i porównuje z typem z manifestu:
+Pipeline nie ufa deklaracji — mierzy obraz i porównuje z typem z katalogu. Pas brzegowy = zewnętrzne 3% krótszego
+boku (min. 4 px) ze wszystkich stron.
 
-| Pomiar | Definicja |
-|---|---|
-| `alfa_zero` | odsetek pikseli z α = 0 |
-| pas brzegowy | zewnętrzne 3% szerokości obrazu ze wszystkich stron |
-| `czarne` | brak alfy, średnia jasność pasa ≤ 6/255, 99. percentyl ≤ 20/255 |
-| `jednolite` | brak alfy, odchylenie standardowe pasa ≤ 8/255, nie czarne |
-| `szachownica` | wynik testu z § 5.3 (pewność 0–1) |
-| `alfa_prawdziwa` | `alfa_zero` ≥ 15% |
-
-| Deklaracja | Wykryto | Działanie |
+| Deklaracja | Pomiar | Działanie |
 |---|---|---|
-| `ALFA` | prawdziwa alfa | dalej do § 5.5 |
-| `ALFA` | szachownica | § 5.3 (ostrzeżenie Q06) |
-| `ALFA` | jednolite tło (białe, szare, czarne, kolorowe) | § 5.4 (ostrzeżenie Q06) |
-| `CZARNE` | ma kanał alfa | spłaszczenie na czerń (kolor × α), ostrzeżenie |
-| `CZARNE` | tło nie jest czarne | zerowanie czerni (§ 5.11) nie wystarczy → błąd Q11, do ponownego wygenerowania |
-| `PELNE` | ma przezroczyste obszary | spłaszczenie na `--bg-0` `#07060F`, ostrzeżenie |
+| `ALFA` | ≥ 60% pikseli pasa brzegowego ma α < 0,05 (prawdziwa alfa) | dalej do § 5.5 (obwódki) |
+| `ALFA` | brak przezroczystego brzegu, test szachownicy (§ 5.3) z pewnością ≥ 0,80 | § 5.3; Q06: info przy pewności ≥ 0,90, ostrzeżenie przy 0,80–0,90 |
+| `ALFA` | brak przezroczystego brzegu, to nie szachownica | § 5.4 (jednolite tło, info Q06); jeśli tła nie da się opisać ani stałym kolorem, ani łagodnym gradientem → błąd Q06, obraz do ponownego wygenerowania |
+| `ALFA` | częściowa przezroczystość bez przezroczystego brzegu (< 97% pikseli kryjących) | dodatkowo ostrzeżenie Q06 „sprawdź obraz” |
+| `CZARNE` | ma kanał alfa (> 0,1% pikseli z α < 0,98) | spłaszczenie na czerń (kolor × α), ostrzeżenie Q11 |
+| `CZARNE` | mediana jasności pasa > 40/255 | błąd Q11 „tło efektu nie jest czarne”, do ponownego wygenerowania (zerowanie czerni z § 5.11 tego nie naprawi) |
+| `PELNE` | ma przezroczyste obszary (> 0,1% pikseli z α < 0,98) | spłaszczenie na `--bg-0` `#07060F`, ostrzeżenie (w 1.0.0 z kodem Q03) |
 
 ### 5.3. Wykrycie i usunięcie fałszywej szachownicy
 
@@ -795,42 +873,61 @@ Generatory czasem **rysują** wzór „przezroczystości” (szaro-białą szach
 Ponieważ wzór jest okresowy, znamy kolor tła w każdym pikselu — także pod krawędzią obiektu — więc możemy policzyć
 alfę dokładnie, a nie zgadywać.
 
-**Wykrycie** (tylko gdy `alfa_zero` < 1%):
+**Wykrycie** (tylko gdy obraz nie ma prawdziwej alfy, § 5.2):
 
-1. W pasie brzegowym (4% szerokości) dzielimy piksele na dwie grupy progiem Otsu jasności. Warunki: obie grupy
-   prawie bez nasycenia (max(R,G,B) − min(R,G,B) ≤ 18), różnica jasności 6–90 poziomów (typowe pary:
-   `#FFFFFF`/`#E6E6E6`, `#FFFFFF`/`#CCCCCC`, `#CCCCCC`/`#999999`), razem ≥ 85% pikseli pasa.
-2. **Okres** `p`: długości serii jednego koloru wzdłuż wierszy górnego pasa i kolumn lewego pasa; dominanta
-   z przedziału 6–64 px, ≥ 70% serii w zakresie `p ± 2`. Faza `(x0, y0)` = położenie pierwszej zmiany koloru.
-3. **Weryfikacja:** syntetyzujemy wzór `P(x, y) = c1`, gdy `(⌊(x−x0)/p⌋ + ⌊(y−y0)/p⌋) mod 2 = 0`, inaczej `c2`.
-   **Pewność** = odsetek pikseli pasa, które różnią się od wzoru o ≤ 6 poziomów w każdym kanale.
+1. W pasie brzegowym (4% krótszego boku, min. 8 px): najwyżej 15% pikseli może mieć nasycenie
+   (max(R,G,B) − min(R,G,B)) > 18/255 — szachownica jest szara. Dzielimy piksele pasa na dwie grupy progiem Otsu
+   jasności; każda grupa ≥ 20% pasa, różnica jasności median 6–90/255 (typowe pary: `#FFFFFF`/`#E6E6E6`,
+   `#FFFFFF`/`#CCCCCC`, `#CCCCCC`/`#999999`), ≥ 75% pikseli pasa w odległości ≤ 14/255 od jednego z dwóch kolorów.
+2. **Okres** `p`: długości serii jednego koloru w wierszach górnego pasa i kolumnach lewego pasa (serie 4–160 px),
+   wstępnie mediana; ≥ 60% serii w zakresie `p ± max(2 px, 12%)`. Potem **statystyka kołowa**: każdą granicę pól `x`
+   zamieniamy na kąt 2π·x/p i szukamy `p` (krok 0,02 px wokół mediany), dla którego średni wektor jednostkowy jest
+   najdłuższy — działa też okres ułamkowy (np. 23,6 px, gdy generator przeskalował wzór). Długość wektora ≥ 0,6
+   w obu osiach; jego kąt daje fazę `(x0, y0)`.
+3. **Weryfikacja:** syntetyzujemy wzór `P(x, y) = c1`, gdy `(⌊(x−x0)/p⌋ + ⌊(y−y0)/p⌋ + parzystość) mod 2 = 0`,
+   inaczej `c2` (parzystość wybieramy lepiej pasującą). Na granicach pól (do 1,6 px) dopuszczamy dowolną mieszankę
+   `c1`/`c2` (antyaliasing generatora) — liczymy odległość od odcinka `[c2, c1]` w RGB. **Pewność** = odsetek pikseli
+   pasa różniących się od wzoru o ≤ 12/255. Pewność < 0,80 → to nie jest szachownica, obraz idzie do § 5.4.
 
 **Usunięcie:**
 
-4. `B` = wzór na całym obrazie; `D` = maksymalna różnica kanałów `|I − B|`.
-5. **Pewne tło:** spójne składowe maski `D ≤ 8` dotykające brzegu. Dodatkowo „dziury” wewnątrz obiektu (np. między
-   ogonkami wiśni, w uchwycie dzwonka): składowe nie dotykające brzegu o powierzchni ≥ 400 px (dla 1024²), które
-   w ≥ 95% pasują do wzoru.
-6. **Pas krawędzi** (do 4 px od tła, `8 < D < 60`): kolor obiektu `F` = kolor najbliższego pewnego piksela obiektu
-   (`D ≥ 60`, indeksy z transformaty odległości), alfa z rzutu:
-   `α = clamp( ((I − B) · (F − B)) / |F − B|², 0, 1 )`, a kolor odkażony: `F' = (I − (1 − α) · B) / α` dla α ≥ 0,05.
-7. Wynik → § 5.5. Raport: „naprawiono szachownicę (komórka 24 px, pewność 0,96)”. Pewność 0,80–0,90 →
-   ostrzeżenie do ręcznej kontroli; < 0,80 → bez zmian i błąd Q06 (obraz do ponownego wygenerowania).
+4. `B` = wzór na całym obrazie (kolor tła w każdym pikselu); `D` = maksymalna różnica kanałów `|I − B|`.
+5. **Pewne tło:** spójne składowe maski `D ≤ 10/255` dotykające brzegu. Dodatkowo „dziury” wewnątrz obiektu
+   (np. między ogonkami wiśni, w uchwycie dzwonka, okno ramki): składowe niedotykające brzegu o powierzchni
+   ≥ max(400 px przy 1024², 2 pola szachownicy), które zawierają pola **obu** kolorów (20–80% jasnych) — sam biały
+   odblask na obiekcie pasowałby tylko do jasnych pól, więc zostaje nietknięty.
+6. **Strefa przejścia** = piksele „podobne do tła” (`D < 60/255`) połączone z pewnym tłem + pas 4 px wokół tła
+   (krawędź z antyaliasingiem i miękka poświata). Kolor obiektu `F` = kolor najbliższego pewnego piksela obiektu
+   („rozlewanie” koloru 10 krokami), alfa z rzutu:
+   `α = clamp( ((I − B) · (F − B)) / |F − B|², 0, 1 )`; gdy `|F − B|²` ≤ 0,02 (np. biel na bieli), rzut jest
+   niepewny i wtedy `α = smoothstep(D; 10/255, 60/255)`. Kolor odkażony: `F' = (I − (1 − α) · B) / α` dla α ≥ 0,05.
+7. Wynik → § 5.5. Raport: „naprawiono fałszywą szachownicę (pole 24.0 px, pewność 0.96)”. Pewność 0,80–0,90 →
+   ostrzeżenie do ręcznej kontroli; ≥ 0,90 → info.
+
+Test `test_szachownica_ulamkowa_i_rozmyta` (§ 5.23) sprawdza przypadek najtrudniejszy: wzór przeskalowany do
+pola 23,6 px, rozmyty i zaszumiony — średni błąd alfy na krawędzi < 14/255, resztki wzoru w tle < 0,08.
 
 ### 5.4. Awaryjne usuwanie jednolitego tła
 
-Gdy obraz `ALFA` przyszedł z jednolitym tłem (białym, szarym, czarnym, kolorowym) albo jako JPEG:
+Gdy obraz `ALFA` przyszedł z jednolitym tłem (białym, szarym, czarnym, kolorowym — także z **kolorem klucza**
+z planu B w [03 § 10](03-prompty-chatgpt.md#101-zasady-planu-b), np. `#00FF00`) albo jako JPEG:
 
-1. **Model tła:** jeśli odchylenie pasa ≤ 3/255 → stały kolor (mediana pasa); inaczej powierzchnia kwadratowa
-   `B(x, y)` dopasowana metodą najmniejszych kwadratów do pikseli pasa (6 współczynników) — radzi sobie z lekką
-   winietą albo gradientem.
+1. **Model tła:** jeśli odchylenie pasa brzegowego (3%) ≤ 3/255 → stały kolor (mediana pasa); inaczej powierzchnia
+   kwadratowa `B(x, y)` dopasowana metodą najmniejszych kwadratów do pikseli pasa (6 współczynników) — radzi sobie
+   z lekką winietą albo gradientem. Średnia reszta dopasowania > 10/255 → tło nie jest jednolite: błąd Q06, obraz
+   zostaje bez zmian (do ponownego wygenerowania).
 2. **Odległość** ΔE76 w przestrzeni CIELAB (konwersja sRGB → Lab napisana w NumPy, ok. 15 linii).
-3. **Alfa** = `smoothstep(ΔE; 4, 18)`: ΔE < 4 → 0, ΔE > 18 → 1, pomiędzy płynnie.
-4. **Spójność:** za tło uznajemy tylko obszary połączone z brzegiem obrazu. Dzięki temu biały odblask na złocie przy
-   białym tle zostaje nietknięty.
-5. **Odkażenie koloru** krawędzi jak w § 5.3 (pkt 6), z `B` z modelu tła.
-6. **Ryzyko:** jeśli > 3% obrysu obiektu ma ΔE < 10 względem tła (ciemny obiekt na czerni, kremowe rękawiczki
-   maskotki na bieli), raport zgłasza „niski kontrast tła” i zalecamy ponowne wygenerowanie.
+3. **Pewne tło (spójność):** obszary z ΔE < 6 **połączone z brzegiem obrazu**. Dzięki temu biały odblask na złocie przy
+   białym tle zostaje nietknięty. Do tła dołączamy też „dziury” w obiekcie: przy kolorze klucza (nasycenie > 0,35)
+   — składowe ≥ 100 px (przy 1024²) o średnim ΔE < 4; przy ramkach — składowe ≥ 4% obrazu o średnim ΔE < 4 (okno);
+   zawsze — składowe ≥ 1% obrazu o średnim ΔE < 2.
+4. **Alfa w strefie przejścia** jak w § 5.3 pkt 6 (rzut na kierunek „tło → kolor obiektu”, strefa = piksele z ΔE < 30
+   połączone z tłem + pas 4 px); gdy rzut jest niepewny, `α = smoothstep(ΔE; 6, 30)`. Odkażenie koloru jak w § 5.3,
+   z `B` z modelu tła.
+5. **Usunięcie przebarwienia** (tylko kolor klucza): przy krawędzi (do 2 px od przezroczystości) dominujący kanał
+   tła (np. zielony) jest ograniczany do poziomu pozostałych kanałów, mocniej przy niższej alfie — bez zielonej obwódki.
+6. **Ryzyko:** jeśli > 30% pikseli obrysu obiektu ma ΔE < 10 względem tła (ciemny obiekt na czerni, kremowe rękawiczki
+   maskotki na bieli), raport zgłasza ostrzeżenie Q06 „niski kontrast obiektu z tłem” i zalecamy ponowne wygenerowanie.
 
 Plan B dla pojedynczych opornych obrazów: usuwanie tła modelem ML (np. pakiet `rembg`). Nie jest zależnością
 pipeline'u — wymaga pobrania modelu (~170 MB) i nie mamy pewności co do jakości na błyszczącym złocie.
@@ -841,40 +938,52 @@ pipeline'u — wymaga pobrania modelu (~170 MB) i nie mamy pewności co do jako�
 Na naszych prawie czarnych tłach (`#07060F`) jasna obwódka jest bardzo widoczna. Premultiplikacja alfy w Pixi
 naprawia artefakty filtrowania, ale **nie** usuwa koloru „wypalonego” w pliku.
 
-1. **Progi alfy:** α < 6 → 0, α > 249 → 255. Niewidoczny szum powiększa prostokąt przycięcia i wagę WebP.
-2. **„Pyłki”:** składowe alfy < 0,01% płótna (≈ 105 px przy 1024²) położone dalej niż 2% od głównego obiektu
-   są usuwane (raport Q10).
-3. **Odkażenie krawędzi** (piksele 0 < α < 255, gdy tło nie było znane z § 5.3–5.4): kolor odniesienia = kolor
-   najbliższego w pełni nieprzezroczystego piksela (transformata odległości), wygładzony medianą 3×3. Jeśli piksel
-   krawędzi jest jaśniejszy od odniesienia o > 12% i mniej nasycony (typowa szara/biała obwódka):
-   `RGB' = RGB + w · (ref − RGB)`, gdzie `w = (1 − α/255)^0,8` — im bardziej przezroczysty piksel, tym mocniejsza
-   korekta.
-4. **Zaciśnięcie** (tylko z `defringe = "mocny"` w manifeście): `α' = clamp((α − 32) · 255/223)` — zdejmuje
+Kolejność w 1.0.0 (po każdej ścieżce z § 5.2 — prawdziwa alfa, szachownica, jednolite tło):
+
+1. **Odkażenie krawędzi:** kolor odniesienia = kolor najbliższego w pełni kryjącego piksela (α ≥ 249/255),
+   „rozlany” 6 krokami. Jeśli piksel krawędzi (0 < α < 249/255) jest jaśniejszy od odniesienia o > 12% i nie bardziej
+   nasycony (typowa szara/biała obwódka): `RGB' = RGB + w · (ref − RGB)`, gdzie `w = (1 − α)^0,8` — im bardziej
+   przezroczysty piksel, tym mocniejsza korekta. Pod pikselami z α = 0 wpisujemy kolor sąsiada (lepiej się skaluje
+   i kompresuje).
+2. **Progi alfy:** α < 6/255 → 0, α > 249/255 → 1. Niewidoczny szum powiększa prostokąt przycięcia i wagę WebP.
+3. **„Pyłki”:** składowe alfy < 0,01% płótna (≈ 105 px przy 1024²) położone dalej niż 2% od prostokąta głównego
+   obiektu są usuwane (info Q10). Nie dotyczy arkuszy i cyfr (tam drobne elementy są treścią — np. przecinek).
+4. **[plan] Zaciśnięcie** (z `defringe = "mocny"` w `manifest.toml`): `α' = clamp((α − 32) · 255/223)` — zdejmuje
    ok. 1 px miękkiej krawędzi.
-5. **Miara obwódki** (Q09): na pierścieniu pikseli z α ∈ [0,1; 0,9] złożonych na `#07060F` liczymy średnią
-   jasność L\* i porównujemy z pierścieniem 3–6 px w głąb obiektu. Różnica > +8 → „jasna obwódka”, < −12 →
-   „ciemna obwódka”. Raport pokazuje wynik przed i po.
+5. **[plan] Miara obwódki** (Q09): na pierścieniu pikseli z α ∈ [0,1; 0,9] złożonych na `#07060F` liczymy średnią
+   jasność L\* i porównujemy z krawędzią „idealną” (kolor wnętrza zmieszany z tłem w tej samej proporcji). Różnica
+   > +8 → „jasna obwódka”, < −12 → „ciemna obwódka”. Funkcja `miara_obwodki` jest już w `kroki/alfa.py`, ale 1.0.0
+   jej nie wywołuje — obwódki oceniamy na miniaturach w raporcie (tło `#07060F` i białe).
 
 ### 5.6. Przycięcie, margines i normalizacja
 
-**Przycięcie:** prostokąt pikseli z α ≥ 8. Margines: pojedyncze pliki — max(4 px, 2% dłuższego boku) w skali źródła;
-sprite'y w atlasach — przycięte ciasno, z metadanymi `trimmed` / `spriteSourceSize` / `sourceSize`, dzięki którym
-Pixi ustawia je tak, jakby miały pełny rozmiar pola (rozmiar logiczny się nie zmienia).
+**Przycięcie:** prostokąt pikseli z α ≥ 8/255, potem margines zależny od roli:
+
+| Rola | Margines po przycięciu | Dlaczego |
+|---|---|---|
+| obiekty (logo, maskotka, skrzynia, ornament, napisy), emblemat | max(4 px, 2% dłuższego boku) w skali źródła | miejsce na antyaliasing i lekkie wyjście poświaty |
+| symbole, monety, SPIN/STOP, komórki arkuszy, rozszerzony WILD | 0 (ciasno) — obraz trafia na płótno o stałym rozmiarze pola (np. 256×256) | położenie w polu wyznacza normalizacja, nie margines |
+| ramki | 0, min. 2 px | krawędź obrazu = krawędź ramy, okno w ułamkach liczone od niej |
+| panel, przyciski 9-slice | 0 | krawędź obrazu = krawędź ramy, inaczej wycinki 9-slice byłyby przesunięte |
+
+Przy przycinaniu sprawdzamy **Q07**: α > 32/255 w pasie 2 px przy krawędzi płótna = obiekt ucięty przez generator
+(błąd dla symboli i obiektów, ostrzeżenie dla ramek). Przycięcie sprite'ów w atlasach z metadanymi `trimmed` /
+`spriteSourceSize` / `sourceSize` (rozmiar logiczny bez zmian) — [plan] razem z atlasami (§ 5.9).
 
 **Normalizacja** — w obrębie zestawu obrazy muszą mieć spójną wielkość i środek, inaczej podmiana albo
 sąsiedztwo zdradzają różnice:
 
-| Grupa | Reguła |
+| Grupa | Reguła w 1.0.0 |
 |---|---|
-| Symbole (osobno dla każdej gry i poziomu hierarchii) | 1) dłuższy bok prostokąta = 0,86 pola (niskie), 0,89 (wysokie), 0,92 (specjalne) — te same proporcje co wypełnienie kadru 80 : 83 : 85% w [01 § 5.1](01-kierunek-artystyczny.md#51-hierarchia-niskie-wysokie-specjalne), więc hierarchia wielkości zostaje zachowana; 2) **pokrycie alfą** (piksele z α > 127) wyrównane do mediany grupy z tolerancją ±12% ([01 § 5.3](01-kierunek-artystyczny.md#53-kadrowanie)) — skalowanie o `√(mediana / pokrycie)`, ale dłuższy bok nie więcej niż 0,94 pola; 3) środek = środek ciężkości alfy (środek optyczny) uśredniony 50/50 ze środkiem prostokąta; 4) ręczne korekty `skala`, `przesuniecie` |
-| `s2_wild_rozszerzony` | wysokość = 3 pola + 4% (lekko wychodzi za ramę), środek w osi bębna; szerokość > 1,3 pola → ostrzeżenie |
-| Monety (3 ujęcia) | wspólna skala z **wysokości** (pionowa średnica nie zmienia się przy obrocie wokół osi pionowej) i wspólny środek — klatki obrotu nie „skaczą” |
-| Maskotka (3 pozy) | wspólna skala (każda poza ma ~82% wysokości kadru, [01 § 2.7](01-kierunek-artystyczny.md#27-maskotka-pan-cebulion)), dół postaci na wspólnej linii; raport porównuje szerokość bulwy — różnica > 5% → korekta `skala` |
-| `g_ui_spin` + `g_ui_spin_stop` | wspólne koło dopasowane do alfy pierścienia: identyczny środek i średnica — podmiana nie może drgnąć o piksel |
-| Ikony `g_ui_ikony__*` | każda ikona to okrągły przycisk: okrąg dysku dopasowany do alfy = 0,96 komórki, wspólna średnica i środek dla wszystkich 12 (przełącznik dźwięku podmienia ikonę w miejscu, [01 § 7.5](01-kierunek-artystyczny.md#75-ikony-g_ui_ikony-sheet-43)) |
-| Awatary `g_awatary__*` | okrąg dopasowany do alfy = 0,96 komórki |
+| Symbole (osobno dla każdej gry i poziomu hierarchii; grupa `cel.grupa` w katalogu) | 1) dłuższy bok prostokąta = 0,86 pola (niskie), 0,89 (wysokie), 0,92 (specjalne) — te same proporcje co wypełnienie kadru 80 : 83 : 85% w [01 § 5.1](01-kierunek-artystyczny.md#51-hierarchia-niskie-wysokie-specjalne), więc hierarchia wielkości zostaje zachowana; 2) **pokrycie alfą** (odsetek pola z α > 0,5) porównane z medianą grupy: jeśli odbiega o więcej niż ±12% ([01 § 5.3](01-kierunek-artystyczny.md#53-kadrowanie)), skala jest korygowana o `√(cel / pokrycie)`, gdzie `cel` = mediana × 1,12 albo × 0,88 (dociągamy do granicy tolerancji, nie do samej mediany), ale dłuższy bok nie więcej niż 0,94 pola; 3) środek = środek ciężkości alfy (środek optyczny) uśredniony 50/50 ze środkiem prostokąta; 4) ręczne korekty `skala`, `przesuniecie` — [plan] (`manifest.toml`) |
+| `s2_wild_rozszerzony` | wysokość ciasno przyciętego obrazu = dokładnie 576 px @1x (3 pola); szerokość z proporcji. [plan]: +4% wysokości (lekkie wyjście za ramę) i ostrzeżenie przy szerokości > 1,3 pola |
+| Monety (3 ujęcia) | wspólna skala z **wysokości przodu** (`0,94 × 256 / wysokość g_moneta_przod`; pionowa średnica nie zmienia się przy obrocie wokół osi pionowej), każda klatka wyśrodkowana na płótnie 256×256 — klatki obrotu nie „skaczą” |
+| Maskotka (3 pozy) | każda poza osobno: wysokość (z marginesem) = 480 px (`powitanie`) albo 420 px (`wygrana`, `bankrut`). [plan]: wspólna skala z porównaniem szerokości bulwy (różnica > 5% → korekta) i dół postaci na wspólnej linii ([01 § 2.7](01-kierunek-artystyczny.md#27-maskotka-pan-cebulion)) |
+| `g_ui_spin` + `g_ui_spin_stop` | wspólna skala z `g_ui_spin` (dłuższy bok = 0,98 × 144 px), oba wyśrodkowane na płótnie 144×144 — przy identycznym kadrze z generatora podmiana nie drga. [plan]: koło dopasowane do alfy pierścienia (odporne na różnice kadru) |
+| Ikony `g_ui_ikony__*` | każda ikona osobno: dłuższy bok = 0,96 komórki (56 px), wyśrodkowana na płótnie 56×56 (przełącznik dźwięku podmienia ikonę w miejscu, [01 § 7.5](01-kierunek-artystyczny.md#75-ikony-g_ui_ikony-sheet-43)). [plan]: wspólna średnica i środek dysku dla wszystkich 12 |
+| Awatary `g_awatary__*` | dłuższy bok = 0,96 komórki (64 px), wyśrodkowany |
 | Napisy `g_win_*` | dopasowanie w prostokącie 960×640 px @1x (napis w dwóch wierszach, [01 § 7.8](01-kierunek-artystyczny.md#78-banery-wygranych-g_win_)); różnicę wielkości między poziomami robi kod (skala przy eskalacji E31) |
-| Konfetti, odłamki | dłuższy bok = rozmiar docelowy, bez wyrównywania pokrycia |
+| Konfetti, odłamki | dłuższy bok = rozmiar docelowy (48 / 64 px), bez wyrównywania pokrycia |
 
 ### 5.7. Skalowanie @1x / @2x
 

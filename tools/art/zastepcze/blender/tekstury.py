@@ -62,13 +62,13 @@ def relief_monety(N: int = 1024) -> Path:
         return p
     jedn = N / (2 * 0.82)                     # 1 jednostka modelu w pikselach
     c = N / 2
-    ceb, kor = sylwetka_cebuli_w_koronie(N, c, c + 0.06 * jedn, 0.62 * jedn)
+    ceb, kor = sylwetka_cebuli_w_koronie(N, c, c + 0.07 * jedn, 0.8 * jedn)
     h = B.kopula(ceb, 1.0, 0.12 * jedn) * 0.9
     h = np.maximum(h, B.wysokosc(kor, 0.03 * jedn, "okragly") / (0.03 * jedn) * 0.75)
 
     def gwiazdy(d, k):
         for sx in (-1, 1):
-            x0, y0, R = c + sx * 0.5 * jedn, c + 0.02 * jedn, 0.075 * jedn
+            x0, y0, R = c + sx * 0.56 * jedn, c + 0.06 * jedn, 0.07 * jedn
             pts = []
             for i in range(10):
                 a = -math.pi / 2 + i * math.pi / 5

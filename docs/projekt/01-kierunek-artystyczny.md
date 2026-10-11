@@ -1,17 +1,18 @@
 # 01 — Kierunek artystyczny (biblia stylu)
 
-> Ten dokument ustala, jak wygląda Cebulion Casino: logotyp, moneta, maskotka, światło, materiały, każdy symbol
-> trzech automatów. Przeczytaj go, zanim wygenerujesz albo przyjmiesz jakikolwiek obraz. Prompty z
-> [03-prompty-chatgpt.md](03-prompty-chatgpt.md) są „skompilowane” z tych zasad. Sekcje 1–8 dotyczą całego projektu,
+> Ten dokument ustala, jak wygląda Cebulion Casino — logotyp, moneta, maskotka, światło, materiały i każdy symbol
+> trzech automatów — a prompty z [03-prompty-chatgpt.md](03-prompty-chatgpt.md) są z niego „skompilowane”.
+> Przeczytaj go, zanim wygenerujesz albo przyjmiesz jakikolwiek obraz. Sekcje 1–8 dotyczą całego projektu,
 > 9–11 opisują poszczególne gry, a 12–13 służą do kontroli jakości.
 
 | Metryka | |
 |---|---|
 | Projekt | Cebulion Casino, symulator kasyna z wirtualną walutą (przedmiot „Wprowadzenie do technologii backendowych”, Uniwersytet WSB Merito Wrocław) |
 | Zespół | Konrad Paulus (112960, s428425@student.wroclaw.merito.pl) · Dominik Pacanowski (112961, s433776@student.wroclaw.merito.pl) · Dawid Majewski (113154, s156704@student.wroclaw.merito.pl) |
-| Wersja dokumentu | 1.0 (2026-10-11) |
+| Wersja dokumentu | 1.1 (2026-10-11) |
 | Zakres | 93 obrazy: 8 makiet + 85 assetów (pełna lista: [02-lista-obrazow.md](02-lista-obrazow.md)) |
-| Hierarchia źródeł | brief projektu → ten dokument → prompt. Przy rozbieżności poprawiamy prompt, a nie styl. |
+| Hierarchia źródeł | brief projektu (wiążące decyzje właściciela: marka, paleta, fonty, gry, ID symboli, lista obrazów — wszystkie powtórzone w tym dokumencie i w [02](02-lista-obrazow.md)) → ten dokument → prompt. Przy rozbieżności poprawiamy prompt, a nie styl. |
+| Zmiany w 1.1 | ramki mieszczą się w marginesie 6% (§ 6.9, § 9.6, § 10.8, § 11.8 — liczby zgodne z [03](03-prompty-chatgpt.md)), reguła detalu dla pól 56–96 px (§ 4.9), plan jasności i pary ryzyka symboli (§ 5.2, § 5.8), jaśniejszy ametyst S3 `#C77DFF` (§ 11.2), nadpisania Style DNA per gra (§ 4.10), strefy jasności teł pod UI (§ 6.1, § 6.2, § 6.5) |
 
 ## Spis treści
 
@@ -56,7 +57,7 @@ częścią grafiki?”.
 | Cień rzucany na podłoże | **nie** | sprite cienia wygenerowany z kanału alfa podczas obróbki (§ 4.7) |
 | Poświata wokół obiektu | tylko delikatna, mieszcząca się w marginesie | sprite poświaty w trybie `add` albo filtr bloom (poziom High) |
 | Teksty interfejsu, saldo, zakład, kwoty w panelu | **nie** | HTML (lobby, panele) i `BitmapText` (scena gry) |
-| Tekst na obrazie | wyłącznie: `WILD`, `SCATTER`, `BAR`, `7`, `10`/`J`/`Q`/`K`/`A`, logotypy, banery wygranych, cyfry `g_font_cyfry` | — |
+| Tekst na obrazie | wyłącznie: `WILD`, `SCATTER`, `BAR`, `7`, `10`/`J`/`Q`/`K`/`A`, logotypy (także logo na okładkach `s*_okladka`), banery wygranych, cyfry `g_font_cyfry`; na makietach `m01`–`m08` teksty UI jako podgląd (literówki dopuszczalne) | — |
 | Stany hover / pressed / focus / disabled | **nie** | CSS i Pixi (§ 7.2) |
 | Animacje, cząsteczki, błyski, drżenie ekranu | **nie** | [04-efekty-wizualne.md](04-efekty-wizualne.md) |
 | Linie wygrywające, obwódki wygrywających pól, separatory bębnów | **nie** | `Graphics` w Pixi |
@@ -73,7 +74,8 @@ a tekst jest dostępny dla czytników ekranu.
 | Kto | Co czytać |
 |---|---|
 | Właściciel generujący obrazy | § 2 i § 9–11 (co ma być na obrazie), § 12 (czego unikać), § 13 (checklista przed wysłaniem pliku) |
-| Programista frontu | § 3 (tokeny), § 4.7 (cienie w kodzie), § 5.7 (stany symbolu), § 6.4 (kadrowanie teł), § 7 (UI), § 8 (fonty) |
+| Programista frontu | § 3 (tokeny), § 4.7 (cienie w kodzie), § 5.7 (stany symbolu), § 6.4 (kadrowanie teł), § 6.9 (ramki i okno bębnów), § 7 (UI), § 8 (fonty) |
+| Osoba obrabiająca pliki (pipeline) | § 4.9 (alfa, detal), § 5.2–5.3 i § 5.8 (pomiary symboli), § 6.1–6.2 (pomiary jasności teł), § 6.9 (ramki), § 13 |
 | Osoba broniąca projektu | akapity „Dlaczego” w każdej sekcji |
 
 Słowa kluczowe: **MUSI** = warunek akceptacji obrazu, **POWINIEN** = domyślnie tak (odstępstwo trzeba uzasadnić),
@@ -89,18 +91,35 @@ nazwom plików z [02-lista-obrazow.md](02-lista-obrazow.md).
 3. **Czat 2 — GLOBAL B** (UI, banery, efekty), potem **Czat 3 — S1** (P0), **Czat 4 — S2** (P1),
    **Czat 5 — S3** (P2).
 
-**Kotwice stylu** to trzy zaakceptowane obrazy, które dołączamy jako obraz referencyjny na początku każdego
-kolejnego czatu (ChatGPT przyjmuje obrazy w wiadomości). Każdą kotwicę dołączamy od chwili, gdy istnieje:
-`m05_s1_desktop` od czatu 1, `g_moneta_przod` od czatu 2, `g_ui_spin` od czatu 3.
+**Kotwice stylu** to zaakceptowane obrazy, które dołączamy jako obraz referencyjny na początku każdego
+kolejnego czatu (ChatGPT przyjmuje obrazy w wiadomości). Każdą kotwicę dołączamy od chwili, gdy istnieje.
+Pełna lista załączników per czat jest w [03 § 1.2 i § 1.5](03-prompty-chatgpt.md); obowiązują te zasady:
 
-| Kotwica | Co utrwala |
-|---|---|
-| `g_moneta_przod` | barwę i połysk złota, kierunek światła key |
-| `g_ui_spin` | połączenie złota ze szkłem, poziom detalu UI |
-| `m05_s1_desktop` | skalę kontrastu, gęstość detalu tła i ogólną „temperaturę” sceny |
+| Kotwica | Od czatu | Co utrwala |
+|---|---|---|
+| `m05_s1_desktop` (albo najlepsza makieta ekranu gry) | 1 | skalę kontrastu, gęstość detalu tła i ogólną „temperaturę” sceny |
+| makieta zakresu czatu: `m01_lobby_desktop` / `m03_bonus_powitalny` (czat 1), `m08_big_win` (czat 2), `m06_s2_desktop` (czat 4), `m07_s3_mobile` (czat 5) | 1 | nastrój danego zakresu (makieta S1 nie może narzucać neonu grom S2 i S3) |
+| `g_moneta_przod` | 2 | barwę i połysk złota, kierunek światła key |
+| `g_font_cyfry` | 2 | krój, fazę i ciemnofioletowy kontur złotych liter (wzorzec dla `g_win_*`, § 7.8–7.9) |
+| `g_ui_spin` | 3 | połączenie złota ze szkłem, poziom detalu UI |
 
 Plan B: jeśli obraz referencyjny zaczyna „przeciekać” do wyników (np. każdy symbol S2 dostaje neonowy obrys
-z makiety S1), w danym czacie wyłączamy referencję i opieramy się na samym tekście z § 4.10.
+z makiety S1), w danym czacie wyłączamy `m05_s1_desktop`, zostawiamy makietę danej gry, `g_moneta_przod`
+i `g_ui_spin` i opieramy się na tekście z § 4.10 (z nadpisaniem dla danej gry).
+
+**Makiety — co każda musi pokazać.** Makieta jest dobra, jeśli da się z niej odczytać układ stref z § 6 i materiały
+z § 4; szczegóły (dokładny wygląd symboli, teksty) mogą się różnić od assetów.
+
+| ID | Kluczowe elementy (muszą być) | Co z niej bierzemy |
+|---|---|---|
+| `m01_lobby_desktop` | tło jak § 6.5, ciemny pasek górny z „Zaloguj” w prawym górnym rogu, duże logo z hasłem w górnej połowie (maskotka obok), 3 kafle gier (okładki 2:3) obok siebie w dolnej połowie | strefy lobby (§ 6.5), proporcje kafli, ilość złota w UI |
+| `m02_logowanie` | modal z ramą jak `g_ui_panel` (§ 7.6) na rozmytym i przyciemnionym lobby, jedno pole „Nazwa gracza”, złoty przycisk-pigułka „Wejdź do kasyna” | szkło + złoto modala, poziom rozmycia tła |
+| `m03_bonus_powitalny` | skrzynia jak § 2.6 w centrum, deszcz monet cebulion, saldo w prawym górnym rogu, ciemne tło lobby | skala efektów bonusu, kolor poświaty skrzyni |
+| `m04_lobby_mobile` | ten sam styl w pionie: pasek górny z saldem i awatarem, baner karuzeli, pod nim karty gier jedna pod drugą | układ mobilny, gęstość elementów na 2:3 |
+| `m05_s1_desktop` | tło S1 (§ 9.5), ramka 3×3 w środku, logo S1 nad ramką, panel sterowania u dołu (~18% wysokości) z okrągłym SPIN na środku | **główna kotwica kontrastu**; strefy § 6.2 |
+| `m06_s2_desktop` | tło S2 (§ 10.6), ramka 5×3, logo nad oknem (na nadprożu ramy), panel jak w `m05` | nastrój S2, ciepło pochodni, brak neonu |
+| `m07_s3_mobile` | tło S3 (§ 11.6) w pionie, ramka 6×5 na prawie całą szerokość, panel w dolnej ⅓ | czytelność 6×5 na telefonie, ciemność strefy bębnów |
+| `m08_big_win` | przyciemniona gra, w centrum baner „MEGA WIN” (§ 7.8), promienie, monety, kwota złotymi cyframi | skala i kolorystyka sekwencji wygranej (§ 3.5) |
 
 ### 1.5. Słowniczek
 
@@ -121,7 +140,10 @@ z makiety S1), w danym czacie wyłączamy referencję i opieramy się na samym t
 | **Bokeh** | rozmyte, okrągłe plamy świateł poza ostrością |
 | **Sylwetka** | obrys obiektu wypełniony jednym kolorem; test rozpoznawalności kształtu |
 | **Jasność (value)** | jak jasny jest kolor po zamianie na skalę szarości |
+| **L\*** | jasność w przestrzeni CIELAB, 0 = czerń, 100 = biel; liczymy ją skryptem (np. Pillow: konwersja do `LAB`) albo pipetą w edytorze. Różnica ΔL\* ≈ 10 to próg „wyraźnie inna jasność” |
+| **Średnia L\* symbolu** | średnia L\* pikseli z alfą > 50% (sam obiekt, bez tła) |
 | **ALFA / CZARNE / PELNE / SHEET** | typy tła obrazu z briefu: przezroczyste / czarne #000000 / pełny obraz / arkusz z siatką elementów |
+| **SHEET K×W** | arkusz o K kolumnach i W wierszach, komórki numerowane od lewej-górnej wierszami (np. `g_fx_blyskawice` 3×1 = trzy wysokie komórki 512×1024 obok siebie) |
 
 ---
 
@@ -396,6 +418,11 @@ mieścić się w tej rampie (od świateł do cieni):
 Złoto **ciepłe żółte** (ok. 22–24 karaty), nie różowe, nie miedziane, nie zielonkawe. W promptach: *warm yellow
 polished gold, not copper, not rose gold, not lemon yellow*.
 
+**Jedyny wyjątek: białe złoto / platyna w S3.** Chłodny srebrzystobiały metal (światła `#F2F6FA`, baza `#C9D3DE`,
+cienie `#5E6B7A`) wolno stosować tylko w S3: oprawa `s3_sym_diament`, listwa okna `s3_ramka`, ramka tabliczki
+`s3_sym_scatter`. To osobny metal, a nie „złe złoto” — zawsze sąsiaduje z cienką żółtą krawędzią z rampy powyżej,
+żeby zestaw nadal czytał się jako „nasz”. Chrom S1 (§ 9.2) to również osobny materiał, nie odcień złota.
+
 ### 3.5. Kolory poziomów wygranej
 
 Te barwy definiują banery `g_win_*` i domyślny odcień (tint) promieni i cząsteczek danego poziomu. Dokładne użycie
@@ -503,7 +530,7 @@ Wszystkie obrazy (symbole, UI, postacie, logotypy, ramki) używają tego samego 
 | Gra | Key | Rim główny | Rim akcentowy |
 |---|---|---|---|
 | S1 Cebulowy 777 | ciepły biały, nieco chłodniejszy (~4500 K) | `--cyan` | `--magenta`, mocniejszy (do 70%) — neon |
-| S2 Złoty Faraon | blask pochodni, ~2400 K (≈ `#FFA45C`) | turkus `#2EC4B6` (cyjan „egipski”) | ciepły bursztyn zamiast magenty |
+| S2 Złoty Faraon | blask pochodni, ~2400 K (≈ `#FFA45C`) | turkus `#2EC4B6` (cyjan „egipski”) | ciepły bursztyn ≈ `#FFB03B` zamiast magenty, 30–50% |
 | S3 Kryształowa Kaskada | ciepły złoty snop (~3500 K) | `--cyan` / bioluminescencyjny teal `#19F5D2` | ametystowy fiolet `#A64DFF` |
 
 **Dlaczego jeden kierunek światła:** symbole z różnych czatów stoją obok siebie na bębnach. Jeden oświetlony z lewej,
@@ -615,8 +642,19 @@ często zamienia się w twardą krawędź.
   odrzucenie albo ręczną naprawę — generatory czasem ją rysują.
 * Gradienty w tłach płynne, bez pasm (banding). Przy kompresji do WebP używamy jakości ≥ 85 dla teł; w razie
   pasm dodajemy w obróbce 1–2% szumu (dithering).
-* Najdrobniejszy detal symbolu ≥ 1/100 jego rozmiaru (w 1024 px: ≥ ~10 px). Mniejszy zniknie albo zamieni się
-  w szum przy 64 px.
+* **Dwa progi wielkości detalu** (płótno 1024 px, symbol wypełnia ~80–85% kadru):
+
+  | Rodzaj detalu | Przykłady | Minimum na płótnie 1024 px | Co zostaje w polu 64 px / 96 px |
+  |---|---|---|---|
+  | **Identyfikujący** — bez niego symbolu nie da się nazwać | szypułka i listek wiśni, serduszko dzwonu, spirala i „łza” oka Horusa, pasy nemes, uszy Anubisa, główne fasety odróżniające szlif | ≥ 1/24 płótna (**≥ 43 px** szerokości kreski lub plamy) | ≥ 2,7 px / ≥ 4 px — widoczne |
+  | **Kreski liter i cyfr** na symbolach (`WILD`, `BAR`, `7`, `J` …) | litera czyta się kształtem całego znaku | ≥ 1/40 płótna (≥ 26 px) | ≥ 1,6 px / ≥ 2,4 px |
+  | **Dekoracyjny** — dodaje „drożyznę” na dużym ekranie | grawer, perełkowanie, drobne hieroglify, faktura skórki, filigran | ≥ 1/100 płótna (≥ 10 px) | ~0,6 px / ~1 px — zlewa się w fakturę |
+
+  Detal dekoracyjny widać dopiero w polach desktopowych (110–220 px CSS, czyli 1,1–2,2 px na każde 10 px płótna)
+  i **nie może być potrzebny do rozpoznania symbolu**. Poniżej 1/100 detal znika nawet na desktopie i po kompresji
+  WebP zamienia się w szum. **Dlaczego dwa progi:** reguła „≥ 1/100” sama w sobie nie chroni telefonu — przy polu
+  56–64 px detal 1/100 ma 0,6 px, czyli nie istnieje. Rozpoznawalność w 56–96 px dają wyłącznie sylwetka, 1–2 duże
+  plamy koloru i detal identyfikujący.
 
 ### 4.10. Rdzeń stylu (Style DNA) — kanoniczny akapit do promptów
 
@@ -638,6 +676,27 @@ ALWAYS: no text unless specified, no watermark, no signature, no cast shadow, no
 below the object, no painted checkerboard, nothing cropped by the image edge.
 ```
 
+**Nadpisania per gra.** Akapit STYLE DNA opisuje markę i obrazy globalne. W czatach gier dopisujemy **zaraz po nim**
+blok nadpisania z § 4.2 — inaczej generator nałoży neonowy cyjan i magentę na Egipt i jaskinię.
+
+```text
+S1 OVERRIDE (Cebulowy 777): key light slightly cooler warm-white (~4500 K) from the upper left; cyan rim on
+the right edges, stronger magenta rim on the lower left (up to 70%); neon allowed on larger areas; chrome
+reflects pink and blue neon.
+```
+
+```text
+S2 OVERRIDE (Zloty Faraon): THIS GAME HAS NO NEON - no hot pink, no electric blue, no neon tubes. Key light
+is torchlight ~2400 K (#FFA45C) from the upper left; main rim turquoise #2EC4B6 on the right edges; accent
+rim warm amber (#FFB03B) on the lower left instead of magenta; shadows in deep lapis-blue tones, never black.
+```
+
+```text
+S3 OVERRIDE (Krysztalowa Kaskada): key light is a warm golden shaft (~3500 K) from the upper left; main rim
+bioluminescent teal #19F5D2 on the right edges; accent rim amethyst violet #A64DFF on the lower left;
+gems glow softly from inside but never brighter than the specular highlights.
+```
+
 ---
 
 ## 5. Symbole: zasady wspólne
@@ -654,25 +713,35 @@ materiałem, kolorem i światłem:
 |---|---|---|---|
 | Rola | najczęstsze, najniższe wypłaty | rzadsze, wyższe wypłaty | funkcje gry |
 | Detal | 2 poziomy: bryła + główne podziały | 3 poziomy: + ornament, grawer, inkrustacja | 3 poziomy + napis + elementy świecące |
-| Materiał | emalia, kamień albo pojedynczy klejnot bez oprawy | metal szlachetny, inkrustacje, oprawy | złoto + klejnot + światło |
-| Kolor | jeden dominujący kolor, nasycenie średnie | 2–3 kolory, więcej złota | pełna paleta, najjaśniejsze punkty na planszy |
+| Materiał | emalia, kamień albo pojedynczy klejnot bez oprawy | metal szlachetny (w S1 także chrom, zawsze z akcentem złota), inkrustacje, oprawy | złoto + klejnot + światło |
+| Kolor | jeden dominujący kolor; nasycenie nie wyższe niż u symboli wysokich tej gry | 2–3 kolory, więcej złota | pełna paleta, najjaśniejsze punkty na planszy |
 | Poświata na obrazie | brak lub minimalna | rim + wyraźniejsze odblaski | zwarta aura (≤ 6% rozmiaru) |
 | Wypełnienie kadru 1024 px | ≈ 80% | ≈ 82–84% | ≈ 85% (zawsze z marginesem ≥ 6%) |
 | Animacja wygranej (kod) | puls skali i obwódka pola | puls + przesuwający się błysk (shine) | własna animacja lądowania (E33, E34, E72) + sprite poświaty |
 
 Najwyższy symbol każdej gry (`siodemka`, `faraon`, `cebula`) ma najbogatszy detal i najmocniejszy kontrast
-wśród symboli zwykłych. Symbole specjalne są najjaśniejsze na planszy i mają najmocniejszą emisję (zwartą aurę);
-emisja symboli zwykłych (neon w S1, wewnętrzny blask klejnotów w S3) jest zawsze słabsza.
+wśród symboli zwykłych. Symbole specjalne mają najjaśniejsze punkty na planszy (rdzenie emisji, odblaski) i najmocniejszą
+emisję (zwartą aurę); emisja symboli zwykłych (neon w S1, wewnętrzny blask klejnotów w S3) jest zawsze słabsza.
+
+**Wartość to kontrast, nie średnia jasność.** „Najjaśniejszy” oznacza najjaśniejsze punkty i największy lokalny
+kontrast (różnica L\* między najjaśniejszym odblaskiem a najciemniejszym cieniem w obrębie symbolu), a nie najwyższą
+średnią jasność. Jasnożółta cytryna S1 może mieć wyższą średnią L\* niż WILD, ale jest płaska (lokalny kontrast
+~30), a WILD łączy lustrzane złoto, czarną wstęgę i biały rdzeń neonu (lokalny kontrast ≥ 70). Docelowe średnie
+jasności każdego symbolu podaje plan jasności w § 5.8.
+
+**Drabina wartości w każdej grze** (od najniższego): niski = jeden materiał i jeden kolor → wysoki = + metal
+szlachetny i ornament → najwyższy = najwięcej złota i najbogatszy detal wśród zwykłych → specjalny = + napis
+(albo liczba rysowana przez kod na kuli mnożnika) i emisja. Gracz, który widzi dwa sąsiednie poziomy obok siebie, MUSI bez tabeli wskazać, który jest cenniejszy.
 
 ### 5.2. Czytelność: pięć testów
 
 | Test | Jak | Kryterium |
 |---|---|---|
-| **T1 — 64 px** | zmniejsz do 64×64 px (S3: 56×56 px, bo tyle ma pole na telefonie) | osoba, która nie zna zestawu, nazywa symbol w < 1 s |
-| **T2 — skala szarości** | zamień na odcienie szarości | w jednej grze żadne dwa symbole nie mają jednocześnie podobnej sylwetki i średniej jasności różniącej się o mniej niż 10% |
-| **T3 — sylwetka** | wypełnij kanał alfa jednolitą czernią | każda sylwetka w grze jest unikalna (wyjątek: litery S2, które różnią się kształtem znaku) |
-| **T4 — daltonizm** | symulacja deuteranopii, protanopii i tritanopii (Chrome DevTools) | symbole o podobnej sylwetce różnią się jasnością |
-| **T5 — na tle gry** | połóż symbol na docelowym tle z podkładem bębna (§ 6.6) | symbol wyraźnie odcina się od tła dzięki rimowi i jaśniejszej krawędzi |
+| **T1 — 64 px** | zmniejsz do 64×64 px (S3: 56×56 px, bo tyle ma pole na telefonie) i do 96×96 px; oglądaj w 100% powiększenia, bez lupy | osoba, która nie zna zestawu, nazywa symbol w < 1 s; w 96 px widać też poziom (niski / wysoki / specjalny) |
+| **T2 — skala szarości** | zamień na odcienie szarości, zmierz średnią L\* (§ 1.5) | w jednej grze żadne dwa symbole nie mają jednocześnie podobnej sylwetki (T3: pokrycie > 80%) i średniej L\* różniącej się o mniej niż **10 jednostek** (ΔL\* < 10); wartości docelowe w § 5.8 |
+| **T3 — sylwetka** | wypełnij kanał alfa jednolitą czernią; nałóż wyśrodkowane sylwetki parami | każda sylwetka w grze jest unikalna: dwie sylwetki po nałożeniu pokrywają się w ≤ 80% (część wspólna / suma) — wyjątek: litery S2, które różnią się kształtem znaku |
+| **T4 — daltonizm** | symulacja deuteranopii, protanopii i tritanopii (Chrome DevTools) na całym zestawie gry ułożonym w siatkę | żadna para z tabeli „pary ryzyka” poniżej nie zlewa się: różnią się sylwetką **albo** ΔL\* ≥ 10 w symulacji |
+| **T5 — na tle gry** | połóż symbol na docelowym tle z podkładem bębna (§ 6.6), także w stanie przyciemnionym (jasność 45%, desaturacja 40% — § 5.7) | symbol wyraźnie odcina się od tła dzięki rimowi i jaśniejszej krawędzi; po przyciemnieniu nadal przechodzi T1 |
 
 **Docelowe rozmiary pola symbolu** (na nie projektujemy poziom detalu):
 
@@ -682,8 +751,28 @@ emisja symboli zwykłych (neon w S1, wewnętrzny blask klejnotów w S3) jest zaw
 | S2 (5×3) | 150–190 | 64–76 |
 | S3 (6×5) | 110–140 | 56–62 |
 
-**Dlaczego:** w S3 na telefonie pole ma około 58 px. Detal mniejszy niż ~1/100 rozmiaru zamienia się tam w szum,
-a dwa klejnoty o tej samej sylwetce i podobnej jasności zlewają się w kaskadzie.
+**Dlaczego:** w S3 na telefonie pole ma około 58 px. Każdy detal mniejszy niż ~1/24 płótna (§ 4.9) ma tam mniej
+niż 2–3 px i zamienia się w szum, a dwa klejnoty o podobnej sylwetce i podobnej jasności zlewają się w kaskadzie.
+Na telefonie pionowo okno bębnów zajmuje prawie całą szerokość ekranu, dlatego boki ramek mogą wychodzić poza
+ekran (§ 6.9) — te rozmiary pól są ważniejsze niż kompletna ramka.
+
+**Pary ryzyka** — pary symboli, które łatwo pomylić; każdą sprawdzamy w T2 i T4, a projekt ma wbudowane
+zabezpieczenie:
+
+| Gra | Para | Ryzyko | Zabezpieczenie w projekcie |
+|---|---|---|---|
+| S1 | `wisnie` – `siodemka` | obie czerwone (L\* 43 / 48), w protanopii obie ciemnooliwkowe | dwa koła + szypułka kontra ukośna „7” w grubej złotej obwódce (złoto L\* ≈ 82) |
+| S1 | `cytryna` – `dzwonek` – `wild` | trzy jasne żółto-złote (L\* 86 / 82 / złoto) | poziomy owal kontra dzwon z rozszerzonym dołem i czerwoną kokardą kontra koło neonowego pierścienia z poziomą czarną wstęgą |
+| S1 | `sliwka` – `bar` | dwa najciemniejsze | pionowy owal kontra poziomy prostokąt w jasnej chromowanej ramie ze złotą listwą (§ 9.4) |
+| S2 | `j` (malachit) – `q` (karneol) | w deuteranopii oba oliwkowe, ΔL\* ≈ 7 | różny znak (T3 wyjątek); malachit jaśniejszy w protanopii (62 / 36) |
+| S2 | `q` (karneol) – `a` (ametyst) | prawie ta sama L\* (45 / 47) | różny znak; w daltonizmie różna barwa (oliwka / niebieski) |
+| S2 | `ankh` – `oko` – `faraon` – `wild` | cztery głównie złote | pętla nad „T” kontra poziome oko ze spiralą kontra trapez nemes kontra cebula z poziomą tabliczką |
+| S2 | `anubis` – podkład bębna | czarny obsydian na ciemnogranatowym podkładzie | złote obrysy, kołnierz usech i turkusowy rim (§ 10.4), średnia L\* ≥ 35 |
+| S3 | `szafir` – `ametyst` | w protanopii i deuteranopii fiolet staje się niebieski; przy pierwotnych kolorach (`#2F6BFF` / `#A64DFF`) ΔL\* ≈ 3 | ametyst rozjaśniony do `#C77DFF` (L\* 65 kontra 50; deuteranopia 66 / 49, protanopia 64 / 55) + kropla czubkiem w górę kontra poziomy sześciokąt (§ 11.2, § 11.4) |
+| S3 | `ametyst` – `szmaragd` | ΔL\* ≈ 9 w skali szarości, oba wielokąty | poziomy sześciokąt (szer. : wys. ≈ 1,25 : 1) kontra pionowy prostokąt ze ściętymi rogami (≈ 0,72 : 1) |
+| S3 | `szmaragd` – `topaz` | w deuteranopii oba żółtooliwkowe, ΔL\* 3–9 | pionowy prostokąt ze ściętymi rogami kontra ukośne wrzeciono pod 45° |
+| S3 | `diament` – `mnoznik` | oba białe | brylant z ciemnymi fasetami (średnia L\* 70–78) kontra gładka kula ze świecącym środkiem w złotej klatce (§ 11.4) |
+| S3 | `diament` – `scatter` | oba z tęczową dyspersją | dyspersja diamentu tylko na krawędziach faset (≤ 15% powierzchni); scatter to jedyny symbol z wachlarzem tęczy |
 
 ### 5.3. Kadrowanie
 
@@ -700,6 +789,15 @@ a dwa klejnoty o tej samej sylwetce i podobnej jasności zlewają się w kaskadz
 
 Wszystkie symbole jednej gry mają ten sam kąt kamery: frontalnie, obrót 3/4 ≤ 15°, kamera 5–10° nad środkiem.
 Widać lekko górną płaszczyznę bryły i grubość obiektu. Nie wolno mieszać symboli „z góry” z symbolami „z boku”.
+
+**Dwa świadome wyjątki** (kamera zostaje ta sama, obraca się tylko obiekt):
+
+| Symbol | Obrót obiektu | Dlaczego |
+|---|---|---|
+| `s2_sym_anubis` | głowa obrócona o ~35–40° (ujęcie 3/4), pysk skierowany w lewo, ku światłu key | szakal en face traci długi pysk — najważniejszą cechę sylwetki; pysk w lewo jest oświetlony, a nie w cieniu |
+| `s3_sym_diament` | brylant pochylony koroną ku kamerze (~20°), widać koronę i ostry spód (pawilon) | tak wygląda „ikona diamentu”; brylant od góry to koło, które myli się z kulą mnożnika |
+
+Wszystkie pozostałe symbole, także litery S2, trzymają się reguły ≤ 15°.
 
 ### 5.5. Spójność zestawu
 
@@ -722,9 +820,18 @@ Widać lekko górną płaszczyznę bryły i grubość obiektu. Nie wolno miesza�
 | S2 | `s2_sym_scatter` | `SCATTER` | jak wyżej |
 | S3 | `s3_sym_scatter` | `SCATTER` | kapitały w duchu Marcellus, kryształowe |
 
-Zasady: tylko wersaliki, jedno słowo, poprawna pisownia (sprawdzamy literę po literze). Wysokość liter na tabliczce
-≥ 18% wysokości symbolu, inaczej napis nie przejdzie testu 64 px. Żaden symbol nie ma polskich znaków, więc nie
-ryzykujemy błędów generatora w diakrytykach.
+Zasady: tylko wersaliki, jedno słowo, poprawna pisownia (sprawdzamy literę po literze). Żaden symbol nie ma polskich
+znaków, więc nie ryzykujemy błędów generatora w diakrytykach.
+
+| Napis | Minimalna wysokość wersalików | Dlaczego tyle |
+|---|---|---|
+| `BAR`, `WILD`, `7`, `10`/`J`/`Q`/`K`/`A` | **≥ 18%** wysokości symbolu (≥ 184 px na płótnie 1024) | 1–4 znaki mieszczą się w szerokości; w polu 64 px litera ma ≥ 11 px |
+| `SCATTER` | **≥ 12%** (≥ 123 px), litery wolno lekko zwęzić | 7 szeryfowych wersalików ma łącznie ~5,5 × wysokość litery; przy 18% napis miałby ~1020 px i nie zmieściłby się w 88% kadru (901 px) z ramką tabliczki — generator przyciąłby go albo zmniejszył losowo. Scatter i tak rozpoznajemy po sylwetce (piramida, pryzmat) |
+
+**Kontrast napisu z tabliczką:** litery i tło tabliczki różnią się o ΔL\* ≥ 40 albo kontrastem ≥ 4,5 : 1 (np. złoto
+`--gold-2` na lapisie `#1B3FA0` = 5,7 : 1, różowy neon na czarnym lakierze = 5,3 : 1). Litery z kryształu (S3)
+MUSZĄ mieć jasny, prawie biały rdzeń (L\* ≥ 85) na ciemnej tabliczce (L\* ≤ 25) — przezroczysty kryształ na
+ciemnym tle znika w 64 px. Grubość głównych kresek liter ≥ 1/40 płótna (≥ 26 px, czyli ≥ 1,6 px w polu 64 px, § 4.9).
 
 ### 5.7. Stany symbolu, które robi kod
 
@@ -737,8 +844,72 @@ Obraz jest jeden, ale symbol w grze ma kilka stanów. Projekt obrazu musi je „
 | lądowanie | ściśnięcie 0,92 / rozciągnięcie 1,06, 80–120 ms | brak elementów wystających poza margines |
 | wygrana | puls skali 1,00 → 1,12 → 1,00, błysk shine, poświata | jasna górna-lewa część, po której „przejedzie” błysk |
 | przyciemnienie (symbole niewygrywające) | jasność 45%, desaturacja 40% | symbol nadal rozpoznawalny po przyciemnieniu (nie projektujemy symboli zbyt ciemnych) |
-| antycypacja (E27) | drżenie i poświata scatterów | — |
+| antycypacja (E27) | drżenie i poświata scatterów (S2, S3) albo WILD-ów (S1, który nie ma scattera) | — |
 | pęknięcie S3 (E70) | odłamki `s3_fx_odlamki` z tintem w kolorze symbolu | wyraźny dominujący kolor symbolu (z niego bierzemy tint) |
+
+### 5.8. Plan jasności symboli (skala szarości i daltonizm)
+
+Studia slotowe projektują zestaw symboli najpierw w skali szarości („value plan”), a dopiero potem w kolorze.
+Poniższe tabele to nasz plan: L\* koloru dominującego policzyliśmy z wartości hex (wzór CIELAB), a symulacje
+deuteranopii i protanopii — macierzami Machado (2009), tymi samymi, których używa Chrome DevTools.
+**Średnia L\* symbolu** to cel dla gotowego renderu (z cieniami jest zwykle o 10–20 niżej niż L\* koloru
+dominującego); po akceptacji kotwicy gry zapisujemy zmierzone wartości w raporcie pipeline'u
+([02-lista-obrazow.md](02-lista-obrazow.md)).
+
+**Reguły twarde (warunek akceptacji):**
+
+1. Średnia L\* każdego symbolu **≥ 35**. Podkład bębna ma L\* 3–8 (§ 6.6), więc ciemniejszy symbol zlewa się z nim
+   i po przyciemnieniu (§ 5.7) znika.
+2. Każdy symbol ma **jasną krawędź** (rim, metal, emisja) o L\* ≥ 50 na co najmniej 60% obrysu — to ona odcina go od
+   podkładu, nie czarny kontur (§ 5.5).
+3. Symbole o podobnej sylwetce różnią się o ΔL\* ≥ 10 (T2) — także w symulacji daltonizmu (T4).
+4. Symbol specjalny ma największy lokalny kontrast w grze (§ 5.1); najwyższy symbol zwykły — drugi największy.
+
+**S1 Cebulowy 777**
+
+| Symbol | Kolor dominujący | L\* koloru | Deuteranopia / protanopia L\* | Średnia L\* symbolu (cel) | Klasa |
+|---|---|---|---|---|---|
+| `wisnie` | `#C8102E` | 43 | 47 / 32 | 35–45 | ciemna |
+| `cytryna` | `#FFD23F` | 86 | 88 / 83 | 65–78 | jasna, płaska |
+| `sliwka` | `#7B2CBF` | 37 | 39 / 39 | 35–42 | ciemna |
+| `arbuz` | `#E8384F` + zieleń skórki | 52 | 58 / 43 | 42–52 | średnia |
+| `dzwonek` | złoto `--gold-2` | 82 | 83 / 79 | 60–72 | jasna |
+| `bar` | czarny lakier + chrom `#E6ECF5` | 6 / 93 | — | 35–45 | ciemna z jasną ramą |
+| `siodemka` | `#E3122B` + złota obwódka | 48 | 54 / 37 | 45–55 | średnia, najwyższy kontrast wśród zwykłych |
+| `wild` | złoto + czarna wstęga + neon | 82 | — | 55–70 | specjalna, lokalny kontrast ≥ 70 |
+
+**S2 Złoty Faraon**
+
+| Symbol | Kolor dominujący | L\* koloru | Deuteranopia / protanopia L\* | Średnia L\* symbolu (cel) | Klasa |
+|---|---|---|---|---|---|
+| `10` | turkus `#2EC4B6` na piaskowcu `#C89B5A` | 72 | 70 / 75 | 55–65 | średnio-jasna |
+| `j` | malachit `#1FA35B` | 59 | 57 / 62 | 50–58 | średnia |
+| `q` | karneol `#C8321E` | 45 | 50 / 36 | 42–50 | średnio-ciemna |
+| `k` | lapis jasny `#2649C9` | 37 | 37 / 42 | 38–46 | ciemna (rozjaśnia ją piaskowiec) |
+| `a` | ametyst `#8E4BD8` | 47 | 47 / 47 | 42–50 | średnio-ciemna |
+| `ankh` | złoto + turkus | 82 | 83 / 79 | 60–70 | jasna |
+| `oko` | złoto + lapis | 82 / 30 | — | 55–65 | jasna |
+| `skarabeusz` | zielono-czarny kamień + skrzydła złoto/turkus/lapis | — | — | 45–55 | średnia, wielobarwna |
+| `anubis` | obsydian `#15121C` + złoto | 6 / 82 | — | 35–45 | ciemna z jasnymi krawędziami |
+| `faraon` | złoto + pasy lapisu | 82 | — | 60–72 | jasna, najwyższy kontrast wśród zwykłych |
+| `wild` | złoto + tabliczka z lapisu | 82 | — | 60–72 | specjalna |
+| `scatter` | chłodny piaskowiec + wiązka `#9FE8FF` | — | — | 55–70 | specjalna, jedyna chłodno oświetlona |
+
+**S3 Kryształowa Kaskada**
+
+| Symbol | Kolor dominujący | L\* koloru | Deuteranopia / protanopia L\* | Średnia L\* symbolu (cel) | Klasa |
+|---|---|---|---|---|---|
+| `szafir` | `#2F6BFF` | 50 | 49 / 55 | 40–50 | ciemna |
+| `szmaragd` | `#19D17A` | 74 | 72 / 77 | 58–68 | średnio-jasna |
+| `ametyst` | `#C77DFF` | 65 | 66 / 64 | 52–62 | średnia |
+| `topaz` | `#FFB23D` | 78 | 81 / 74 | 65–75 | jasna |
+| `rubin` | `#FF2D55` + złota oprawa | 56 | 62 / 45 | 48–58 | średnia |
+| `diament` | `#E8FBFF` + ciemne fasety | 97 | 97 / 98 | 70–78 | jasna (nie najjaśniejsza — § 11.4) |
+| `cebula` | kryształ + złote warstwy | — | — | 62–74 | jasna, najwyższy kontrast wśród zwykłych |
+| `scatter` | tęcza + ciemna tabliczka | — | — | 60–75 | specjalna |
+| `mnoznik` | neutralna biel + złota klatka | — | — | 75–85 | specjalna, najjaśniejszy środek |
+
+Pary, które w tych tabelach mają podobną jasność, są rozdzielone sylwetką — patrz „pary ryzyka” w § 5.2.
 
 ---
 
@@ -750,8 +921,10 @@ Tło to **scenografia, nie aktor**. Ma budować nastrój i nigdy nie konkurować
 
 * **Jasne brzegi, spokojny środek.** Źródła światła, neony i najbogatszy detal leżą na bokach i w górnych rogach.
   Środek, gdzie stoją bębny, jest najciemniejszy i najspokojniejszy.
-* **Jasność (cel mierzalny skryptem):** średnia jasność L\* (CIELAB) całego tła 12–22, strefy bębnów 6–14.
-  Symbole mają średnią jasność 45–75, więc zawsze są jaśniejsze od tła.
+* **Jasność (cel mierzalny skryptem):** średnia jasność L\* (CIELAB) całego tła 12–22, strefy bębnów 6–14,
+  a **najjaśniejszy piksel strefy bębnów ≤ L\* 35** (dopuszczalne tylko miękkie plamy bokeh o średnicy ≤ 2% szerokości
+  kadru). Strefy pod tekstem HTML (pasek górny, panel sterowania) mają średnią L\* ≤ 12. Symbole mają średnią L\*
+  35–85 i jasną krawędź (§ 5.8), więc zawsze odcinają się od podkładu i tła.
 * **Nasycenie** tła niższe niż symboli. Najbardziej nasycone piksele ekranu należą do symboli i efektów.
 * Na tłach nie ma tekstu, UI, ludzi, postaci ani prawdziwych logo.
 * **Tła gier nie zawierają automatu, bębnów ani ramki.** Ramka to osobny obraz, nakładany przez kod.
@@ -775,23 +948,27 @@ y:   +----------+---------------------------------------+----------+
 100% +-------------------------------------------------------------+
 ```
 
-| Strefa | Zakres | Zawartość |
-|---|---|---|
-| Pas górny | y 0–12% | ciemny, spokojny; tu kod kładzie logo gry (`s1_logo` itd.) |
-| Strefa bębnów | x 18–82%, y 12–80% | najciemniejsza, minimum detalu; za nią podkład bębna rysowany w kodzie (§ 6.6) |
-| Boki | x 0–18% i 82–100% | scenografia, źródła światła, najwięcej detalu |
-| Panel sterowania | y 80–100% | gradient do `--bg-0`, bez detalu |
-| Winieta | rogi | przyciemnienie ~20% na obrazie; kod może ją pogłębić gradientem radialnym |
+| Strefa | Zakres | Zawartość | Jasność (L\*) |
+|---|---|---|---|
+| Pas górny | y 0–12% | ciemny, spokojny; tu kod kładzie logo gry (`s1_logo` itd.), które może nachodzić na górę ramy (§ 6.9) | średnia ≤ 25; wyjątek: zamierzone podświetlenie za logo (łuki słońca S1, wiązka S2 FS, wodospad S3) do L\* 60 — wtedy logo MUSI mieć własny ciemny podkład lub kontur (§ 9.7, § 10.9, § 11.9) |
+| Strefa bębnów | x 18–82%, y 12–80% | najciemniejsza, minimum detalu; za nią podkład bębna rysowany w kodzie (§ 6.6) | średnia 6–14, maks. 35 |
+| Boki | x 0–18% i 82–100% | scenografia, źródła światła, najwięcej detalu | średnia 15–35, punktowe światła do 95 |
+| Panel sterowania | y 80–100% | gradient do `--bg-0`, bez detalu (stoją tu teksty HTML/Pixi: saldo, zakład, wygrana) | średnia ≤ 12, maks. 25 |
+| Winieta | rogi | przyciemnienie ~20% na obrazie; kod może ją pogłębić gradientem radialnym | — |
+
+**Dlaczego mierzymy L\*, a nie „na oko”:** monitory zespołu różnią się jasnością, a ciemne tła na laptopie
+wyglądają jaśniej niż na telefonie w słońcu. Skrypt z pipeline'u liczy średnią i maksimum L\* w każdej strefie
+i od razu mówi, czy tło przechodzi.
 
 ### 6.3. Kompozycja mobile 2:3 (1024×1536)
 
-| Strefa | Zakres | Zawartość |
-|---|---|---|
-| Pasek górny | y 0–10% | ciemny (saldo, menu w HTML) |
-| Scenografia i logo gry | y 10–20% | główny „widok” sceny, źródło światła, łuk; tu stoi logo gry |
-| Strefa bębnów | x 4–96%, y 20–66% | najciemniejsza, minimum detalu |
-| Panel sterowania | y 66–100% | ciemny gradient do `--bg-0` (przycisk SPIN, zakład, ikony) |
-| Boki | wąskie | elementy dekoracyjne, które mogą zostać przycięte (§ 6.4) |
+| Strefa | Zakres | Zawartość | Jasność (L\*) |
+|---|---|---|---|
+| Pasek górny | y 0–10% | ciemny (saldo, menu w HTML) | średnia ≤ 12 |
+| Scenografia i logo gry | y 10–20% | główny „widok” sceny, źródło światła, łuk; tu stoi logo gry | średnia 15–40; za logo do 60 (logo z ciemnym konturem) |
+| Strefa bębnów | x 4–96%, y 20–66% | najciemniejsza, minimum detalu | średnia 6–14, maks. 35 |
+| Panel sterowania | y 66–100% | ciemny gradient do `--bg-0` (przycisk SPIN, zakład, ikony) | średnia ≤ 12, maks. 25 |
+| Boki | wąskie | elementy dekoracyjne, które mogą zostać przycięte (§ 6.4) | jak boki desktopu |
 
 ### 6.4. Kadrowanie na różnych ekranach
 
@@ -830,6 +1007,18 @@ Luksusowe wnętrze kasyna nocą, oglądane z wysokości oczu, obiektyw szeroki (
 Wersja mobile: żyrandol u góry (y 0–20%), korytarz w środku, kolumny przy bokach (mogą zostać przycięte).
 Kod dokłada: powolny zoom, pył w świetle, unoszący się bokeh (E02).
 
+**Strefy pod UI lobby** (układ jak `m01_lobby_desktop` / `m04_lobby_mobile`):
+
+| Strefa | Desktop 3:2 | Mobile 2:3 | Co tu stoi (HTML) | Jasność tła (L\*) |
+|---|---|---|---|---|
+| Pasek górny | y 0–7% | y 0–7% | emblemat, napis marki, „Zaloguj” / saldo, awatar | średnia ≤ 12 |
+| Sekcja powitalna | x 25–75%, y 7–42% | x 8–92%, y 7–30% | `g_logo`, hasło, maskotka | średnia ≤ 25; żyrandole i złoty bokeh tylko nad i obok (górne rogi) |
+| Kafle / karty gier | x 12–88%, y 45–92% | x 5–95%, y 30–100% (treść przewijana nad nieruchomym tłem) | okładki `s*_okladka` / banery `s*_baner`, podpisy | średnia ≤ 14, maks. 35 — szczeliny między kaflami nie mogą błyszczeć |
+| Boki | x 0–12% i 88–100% | poza x 5–95% | — | średnia 15–35, bokeh w magencie i cyjanie |
+
+**Dlaczego tak ciemno pod kaflami:** okładki gier są kolorowe i świecące; jeśli tło między nimi ma jasne punkty,
+oko nie wie, gdzie kończy się kafel, a złote podpisy HTML tracą kontrast.
+
 ### 6.6. Tła gier i podkład bębna
 
 Tło gry pokazuje **otoczenie** automatu (ulicę Vegas, skarbiec, jaskinię), a ramka (`s1_ramka` itd.) jest
@@ -838,9 +1027,9 @@ na której leżą symbole:
 
 | Gra | Podkład bębna (kod) |
 |---|---|
-| S1 | `#0B0624`, krycie 0,88, pionowy gradient z lekkim rozjaśnieniem w środkowym rzędzie |
-| S2 | `#0E1530`, krycie 0,88, delikatna tekstura kamienia w 6% krycia |
-| S3 | `#070A1F`, krycie 0,82, subtelne kaustyki (falujące refleksy) animowane w kodzie |
+| S1 | `#0B0624` (L\* 3), krycie 0,88, pionowy gradient z lekkim rozjaśnieniem w środkowym rzędzie |
+| S2 | `#0E1530` (L\* 8), krycie 0,88, delikatna faktura kamienia w 6% krycia — szum proceduralny generowany w kodzie, bez osobnego obrazu (brief nie przewiduje takiego assetu) |
+| S3 | `#070A1F` (L\* 3), krycie 0,82, subtelne kaustyki (falujące refleksy) — shader albo przesuwany szum w kodzie, bez osobnego obrazu |
 
 **Dlaczego podkład:** symbole muszą być czytelne niezależnie od tego, co jest w tle. Podkład gwarantuje stały
 kontrast, a tło może być bogatsze.
@@ -863,6 +1052,32 @@ miejscu. Gdyby jeden baner miał bohatera po lewej, przykryłby go tekst.
 
 **Dlaczego ważne elementy ≥ 5% od krawędzi okładki:** przy najechaniu (E03) kafel przechyla się w 3D o kilka stopni
 i lekko powiększa (rogi „uciekają”), a CSS zaokrągla mu narożniki.
+
+**Logo na okładce.** Okładkę generujemy z dołączonym zaakceptowanym `s*_logo` jako referencją („the same logo as
+attached”). Logo na okładce MUSI wyglądać jak `s*_logo` (ten sam krój, kolory, układ wierszy) i mieć poprawne `Ł`.
+Plan B, gdy generator rysuje inne logo albo psuje litery: generujemy okładkę z pustym, ciemnym miejscem w y 8–30%
+i nakładamy `s*_logo` przy obróbce — plik wynikowy nadal jest okładką „z logo”, zgodnie z briefem.
+
+### 6.9. Ramki bębnów — zasady wspólne
+
+Dotyczy `s1_ramka`, `s2_ramka`, `s3_ramka`. Szczegóły każdej ramki: § 9.6, § 10.8, § 11.8. Okno wykrywa pipeline
+i zapisuje w `manifest.json` → `frames.<ID>.window`, a ramka jest rysowana w Pixi jako 9-slice
+([02 § 2.4–2.5](02-lista-obrazow.md), [09-kontrakt-api-i-assetow.md](09-kontrakt-api-i-assetow.md)).
+
+| Zasada | Wartość | Dlaczego |
+|---|---|---|
+| Margines | cała ramka (z koroną, grzebieniem i poświatą neonu) mieści się w **88% kadru**, ≥ 6% od każdej krawędzi | wymóg briefu dla `ALFA`; ramka dotykająca krawędzi zostałaby przycięta przez generator |
+| Okno | w 100% przezroczyste, prostokątne, krawędzie poziome i pionowe, proporcja dokładnie 1 : 1 (S1), 5 : 3 (S2), 6 : 5 (S3), tolerancja ±3% | pola symboli są kwadratowe; ±3% pipeline przyjmuje bez rozciągania |
+| Krawędź okna | cienka, ostra, prosta listwa (≥ 1,5% szerokości okna), bez kryształów, iskier i cieni wchodzących do okna | po niej pipeline wykrywa okno; symbole nie mogą być niczym przesłonięte |
+| Boki ramy | proste i powtarzalne w pionie (kolumna, listwa, rurka neonu); bez medalionów i napisów w połowie wysokości | przy odchyłce okna 3–15% pipeline rozciąga pasy 9-slice — okrągły ornament w środku boku zmieniłby się w owal |
+| Ozdoby główne | u góry (grzebień S1, nadproże S2, korona S3) i w narożnikach | na telefonie pionowo boki ramy mogą wyjść poza ekran (niżej) |
+| Logo gry | kod kładzie `s*_logo` nad oknem; logo może nachodzić na górną część ramy maks. o 30% swojej wysokości | dlatego środek góry ramy jest spokojny (bez tabliczki i napisu) |
+
+**Ramka na telefonie pionowo.** Pola symboli z § 5.2 (S1 100–120 px, S2 64–76 px, S3 56–62 px) wymagają okna
+szerokiego na ~90–97% ekranu (np. S3: 6 × 58 px = 348 px na ekranie o szerokości 360–390 px). Pełna ramka byłaby wtedy szersza
+niż ekran, więc boki ramy wychodzą poza krawędź albo kod je zwęża (9-slice). Widoczne zostają: listwa okna,
+górna ozdoba i dół. Dlatego żadna ważna ozdoba nie leży na bokach. Ostateczny układ ekranu gry na telefonie
+ustala [06-interfejs-ux.md](06-interfejs-ux.md), a składanie sceny — [10-runtime-gier.md](10-runtime-gier.md).
 
 ---
 
@@ -947,8 +1162,13 @@ lekko wypukły glif (~50% średnicy dysku). Dzięki temu ikony wyglądają jak r
 | 2 | dźwięk wł.: głośnik z dwiema falami | dźwięk wył.: głośnik z małym „×” | info: szeryfowe „i” | menu: trzy poziome kreski |
 | 3 | lobby / dom: domek | zamknij: „×” | ustawienia: koło zębate | historia: zegar z okrężną strzałką w lewo |
 
+Nazwy komórek po cięciu (wiążące dla kodu, [02 § 2.3](02-lista-obrazow.md), [09 § 3](09-kontrakt-api-i-assetow.md)):
+`autoplay`, `turbo`, `minus`, `plus` / `dzwiek_wl`, `dzwiek_wyl`, `info`, `menu` / `lobby`, `zamknij`, `ustawienia`,
+`historia` (np. `g_ui_ikony__turbo`).
+
 * Wszystkie dyski identyczne (ten sam rozmiar, otok, refleks), bo przełącznik dźwięku podmienia ikonę w miejscu.
-* Glif czytelny w 24 px: grube kreski, bez cienkich detali, bez tekstu (wyjątek: litera „i”).
+* Glif czytelny w 24 px: grube kreski (≥ 10% wysokości glifu, czyli ≥ 2 px przy dysku 40 px), bez cienkich detali,
+  bez tekstu (wyjątek: litera „i”). Glif ma jasność L\* ≥ 75 na dysku L\* ≤ 20 (kontrast ≥ 3 : 1 z WCAG 1.4.11).
 * Rozmiar na ekranie: 40–48 px (desktop), 44–52 px (telefon) — obszar dotyku zawsze ≥ 48 px.
 * Stan aktywny (turbo/auto/dźwięk) rysuje kod cyjanowym pierścieniem (§ 7.2), nie osobnym obrazem.
 
@@ -1009,6 +1229,9 @@ Przy eskalacji (E31) baner poprzedniego poziomu znika w błysku, a nowy wchodzi 
   **cyfry tabelaryczne**. **Dlaczego:** podczas liczenia wygranej (E30, E31) zmieniają się ostatnie cyfry. Przy
   różnych szerokościach cała liczba „pływałaby” w poziomie co klatkę.
 * Odstęp tysięcy (spację) wstawia kod (0,25 szerokości cyfry), bo spacji nie ma w arkuszu.
+* Do czego są znaki dodatkowe: `+` — kwoty bonusów („+10 000” w E07 i E10), `×` — mnożniki („×10” NEON JACKPOT,
+  „×2” w darmowych spinach S2, suma kul S3), `,` — przecinek dziesiętny mnożnika wygranej (np. „×23,5”; kwoty
+  w cebulionach są zawsze całkowite). Nazwy komórek po cięciu: `0`…`9`, `przecinek`, `plus`, `razy` ([02 § 2.3](02-lista-obrazow.md)).
 * Cyfry bitmapowe dla kwot o wysokości ≥ 32 px; mniejsze kwoty: Manrope 800 `tabular-nums`.
 
 ### 7.10. Awatary `g_awatary` (ALFA SHEET 4×2)
@@ -1025,11 +1248,13 @@ maskotki).
 | 3 | Baron Ziemniak | złotobrązowy, melonik, jedwabna poszetka w kieszonce marynarki | szafir `#1F4FD1` |
 | 4 | Lady Papryka | czerwona papryka, okulary „kocie oko”, złote kolczyki | szmaragd `#12A86B` |
 | 5 | Kapitan Por | zielono-biały, biała czapka kapitańska ze złotą kotwicą | ciemna magenta `#B3135C` |
-| 6 | Diuk Bakłażan | fioletowy, aksamitny beret z piórem | złoto `#F5C542` |
+| 6 | Diuk Bakłażan | fioletowy, aksamitny beret z piórem | ciepły bursztyn `#C7741A` (nie złoto — złote tło zlałoby się ze złotym otokiem) |
 | 7 | Madame Rzodkiewka | magentowo-biała, boa z piór | ciemny teal `#0E6E73` |
 | 8 | Pan Pieczarka | kremowy kapelusz grzyba, okulary przeciwsłoneczne, muszka w kropki | rubin `#A3122E` |
 
 Rozmiar na ekranie: 32–64 px, więc każda postać różni się sylwetką głowy i kolorem tła (test T1 z § 5.2 przy 32 px).
+Kolejność komórek (od lewej-górnej, wierszami) jest wiążąca: komórka *n* = `avatarIndex` *n* − 1, który serwer
+wyznacza z nazwy gracza ([09 § 2.1](09-kontrakt-api-i-assetow.md)); po cięciu pliki `g_awatary__0` … `g_awatary__7`.
 
 ---
 
@@ -1060,7 +1285,7 @@ brakuje: Cinzel Decorative → Cinzel, Marcellus → Cinzel, Bungee → Manrope 
 | H1 | Cinzel 700 | 40 px | 28 px | 1,15 | 0,03 em | „Wybierz grę” |
 | H2 | Cinzel 700 | 28 px | 22 px | 1,20 | 0,03 em | tytuł modala „Witaj w Cebulion Casino” |
 | H3 | Cinzel 700 | 22 px | 18 px | 1,25 | 0,02 em | nazwa gry na kaflu |
-| Etykieta | Manrope 700, wersaliki | 12 px | 11 px | 1,30 | 0,14 em | „SALDO”, „ZAKŁAD”, „WYGRANA” |
+| Etykieta | Manrope 700, wersaliki | 12 px | 12 px | 1,30 | 0,14 em | „SALDO”, „ZAKŁAD”, „WYGRANA” |
 | Tekst | Manrope 500 | 16 px | 16 px | 1,50 | 0 | opisy, zasady gry |
 | Tekst mały | Manrope 500 | 14 px | 13 px | 1,45 | 0,01 em | podpisy, stopka |
 | Mikro (minimum) | Manrope 600 | 12 px | 12 px | 1,40 | 0,02 em | dopisek „Symulator. Wirtualna waluta bez wartości.” |

@@ -44,10 +44,11 @@ def lin(h: str, a: float = 1.0):
 # Schematy świateł (01 § 4.2 i modyfikacje per gra): (kolor key, kolor rimu głównego, kolor rimu akcentowego,
 # siła rimu akcentowego względem key).
 SWIATLA = {
-    "global": ("#FFC489", "#7FEFFF", "#FF2E88", 0.45),
-    "s1": ("#FFE3C4", "#5CEBFF", "#FF2E88", 0.7),
-    "s2": ("#FFA45C", "#2EC4B6", "#FFB347", 0.45),
-    "s3": ("#FFD38A", "#19F5D2", "#A64DFF", 0.55),
+    "global": ("#FFC489", "#7FEFFF", "#FF2E88", 0.45, 1.0),
+    "s1": ("#FFE3C4", "#5CEBFF", "#FF2E88", 0.7, 1.0),
+    "s2": ("#FFA45C", "#2EC4B6", "#FFB347", 0.45, 1.0),
+    "s2_noc": ("#B9CCFF", "#9FE8FF", "#2EC4B6", 0.5, 0.25),   # scatter S2: chłodne nocne światło (01 § 10.4)
+    "s3": ("#FFD38A", "#19F5D2", "#A64DFF", 0.55, 1.0),
 }
 
 
@@ -75,11 +76,12 @@ def nowa_scena(rozdz=(512, 512), probki=48, swiatlo="global", przezroczyste=True
     sc.render.image_settings.file_format = "PNG"
     sc.render.image_settings.color_mode = "RGBA"
     sc.render.image_settings.color_depth = "8"
+    # Khronos PBR Neutral: zachowuje nasycenie kolorów bazowych (emalia, neon) i łagodnie kompresuje odblaski —
+    # najbliżej „cukierkowego” wyglądu topowych slotów (AgX za mocno odbarwia jasne żółcie i neony).
     try:
-        sc.view_settings.view_transform = "AgX"
-        sc.view_settings.look = "AgX - Punchy"
+        sc.view_settings.view_transform = "Khronos PBR Neutral"
     except TypeError:
-        pass
+        sc.view_settings.view_transform = "Standard"
     _swiat(sc)
     _swiatla(sc, swiatlo)
     if karty:
@@ -135,9 +137,9 @@ def swiatlo_obszarowe(nazwa, poz, kolor, moc, rozmiar=3.0, cel=(0, 0, 0)):
 
 
 def _swiatla(sc, schemat):
-    key, rim1, rim2, sila2 = SWIATLA[schemat]
+    key, rim1, rim2, sila2, sila_fill = SWIATLA[schemat]
     swiatlo_obszarowe("key", (-4.5, -5.5, 5.5), key, 1400, 4.0)
-    swiatlo_obszarowe("fill", (5.5, -5.0, 1.0), KOLORY["fill"], 380, 5.0)
+    swiatlo_obszarowe("fill", (5.5, -5.0, 1.0), KOLORY["fill"], 380 * sila_fill, 5.0)
     swiatlo_obszarowe("rim", (4.5, 4.0, 3.0), rim1, 900, 2.0)
     swiatlo_obszarowe("rim2", (-4.5, 3.5, -2.5), rim2, 1100 * sila2, 2.0)
 
@@ -346,6 +348,7 @@ def przypisz(ob, mat):
 # Geometria
 # ------------------------------------------------------------------------------------------------
 def z_bmesh(nazwa, bm, gladko=True):
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)     # spójne normalne na zewnątrz (inaczej płaskie światło)
     me = bpy.data.meshes.new(nazwa)
     bm.to_mesh(me)
     bm.free()
@@ -531,6 +534,28 @@ def klejnot(nazwa, obrys, h_korony=0.18, tafla=0.55, h_pawilonu=0.45, rondysta=0
         bm.faces.new((p1[i], p1[j], kolet))                # pawilon — do koletu
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     ob = z_bmesh(nazwa, bm, gladko=False)
+    if mat:
+        przypisz(ob, mat)
+    return ob
+
+
+def bryla_z_obrysu(nazwa, punkty, glebokosc=0.1, faza=0.02, mat=None):
+    """Płaski kształt 2D (x, z) wyciągnięty w głąb (oś Y) z fazą — np. sylwetka korony czytelna en face."""
+    bm = bmesh.new()
+    przod = [bm.verts.new((x, -glebokosc / 2, z)) for x, z in punkty]
+    tyl = [bm.verts.new((x, glebokosc / 2, z)) for x, z in punkty]
+    bm.faces.new(przod)
+    bm.faces.new(list(reversed(tyl)))
+    n = len(punkty)
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new((przod[i], przod[j], tyl[j], tyl[i]))
+    ob = z_bmesh(nazwa, bm, gladko=False)
+    if faza:
+        mod = ob.modifiers.new("faza", "BEVEL")
+        mod.width = faza
+        mod.segments = 3
+        mod.limit_method = "ANGLE"
     if mat:
         przypisz(ob, mat)
     return ob
