@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -39,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -81,6 +83,7 @@ class SpinServiceTest {
         when(machines.findByCodeAndActiveTrue(GAME)).thenReturn(Optional.of(machine));
         when(accounts.findById(PLAYER_ID)).thenReturn(Optional.of(player));
         when(rounds.save(any(SpinRound.class))).thenAnswer(invocation -> TestData.withId(invocation.getArgument(0), ROUND_ID));
+        when(wallet.lockWallet(PLAYER_ID)).thenReturn(Money.of(10_000));
         when(wallet.debit(anyLong(), any(), anyString(), anyLong())).thenReturn(Money.of(9_900));
         when(wallet.credit(anyLong(), any(), anyString(), anyLong())).thenAnswer(invocation ->
                 Money.of(9_900).add(invocation.getArgument(1)));
@@ -197,7 +200,7 @@ class SpinServiceTest {
         existing.resolve(Money.of(300), "{\"saved\":true}");
         existing.settle(NOW);
         when(rounds.findByPlayerAndIdempotencyKey(PLAYER_ID, "k-1")).thenReturn(Optional.of(existing));
-        when(wallet.balance(PLAYER_ID)).thenReturn(Money.of(10_200));
+        when(wallet.lockWallet(PLAYER_ID)).thenReturn(Money.of(10_200));
 
         SpinResult result = service.spin(command(100, "k-1"));
 
@@ -205,11 +208,24 @@ class SpinServiceTest {
         assertThat(result.replayed()).isTrue();
         assertThat(result.win()).isEqualByComparingTo("300");
         assertThat(result.resultJson()).isEqualTo("{\"saved\":true}");
+        // saldo w powtórce: aktualne, odczytane pod blokadą portfela
         assertThat(result.balance()).isEqualByComparingTo("10200");
         verify(wallet, never()).debit(anyLong(), any(), anyString(), anyLong());
         verify(rounds, never()).save(any());
         assertThat(engine.calls()).isEmpty();
         verifyNoInteractions(events);
+    }
+
+    @Test
+    @DisplayName("klucz idempotencji sprawdzany dopiero pod blokadą portfela (równoległe duplikaty czekają w kolejce)")
+    void idempotencyIsCheckedUnderWalletLock() {
+        service.spin(command(100, "k-1"));
+
+        InOrder order = inOrder(wallet, rounds);
+        order.verify(wallet).lockWallet(PLAYER_ID);
+        order.verify(rounds).findByPlayerAndIdempotencyKey(PLAYER_ID, "k-1");
+        order.verify(rounds).save(any(SpinRound.class));
+        order.verify(wallet).debit(PLAYER_ID, Money.of(100), GAME, ROUND_ID);
     }
 
     @Test

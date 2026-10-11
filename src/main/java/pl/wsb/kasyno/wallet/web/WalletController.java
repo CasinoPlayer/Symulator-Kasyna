@@ -47,10 +47,12 @@ public class WalletController {
     @GetMapping("/transactions")
     public PageResponse<TransactionResponse> transactions(
             @CurrentPlayer Long playerId,
-            @RequestParam(name = "page", defaultValue = "0") @Min(value = 0, message = "Numer strony nie może być ujemny") int page,
+            @RequestParam(name = "page", defaultValue = "0")
+            @Min(value = 0, message = "Numer strony nie może być ujemny")
+            @Max(value = PageResponse.MAX_PAGE, message = "Numer strony jest za duży") int page,
             @RequestParam(name = "size", defaultValue = "20")
             @Min(value = 1, message = "Rozmiar strony musi wynosić co najmniej 1")
-            @Max(value = 100, message = "Rozmiar strony może wynosić najwyżej 100") int size) {
+            @Max(value = PageResponse.MAX_SIZE, message = "Rozmiar strony może wynosić najwyżej 100") int size) {
         return PageResponse.from(walletService.history(playerId, page, size), TransactionResponse::from);
     }
 }

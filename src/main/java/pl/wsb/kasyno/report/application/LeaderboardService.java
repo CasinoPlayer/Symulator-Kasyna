@@ -1,6 +1,7 @@
 package pl.wsb.kasyno.report.application;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.wsb.kasyno.shared.config.CasinoProperties;
 import pl.wsb.kasyno.slots.api.BigWin;
 import pl.wsb.kasyno.slots.api.SlotsFacade;
@@ -12,9 +13,10 @@ import java.util.List;
  * Ranking graczy i feed dużych wygranych do lobby.
  *
  * <p>Moduł {@code report} tylko czyta: nie ma własnych tabel, korzysta z fasad modułów {@code slots}
- * i {@code wallet} (nie z ich encji ani repozytoriów).
+ * i {@code wallet} (nie z ich encji ani repozytoriów). Dlatego transakcja jest tylko do odczytu.
  */
 @Service
+@Transactional(readOnly = true)
 public class LeaderboardService {
 
     private final SlotsFacade slots;

@@ -10,7 +10,8 @@ import java.util.Locale;
  *
  * <p>Po co: front-end nie powinien rozpoznawać błędów po treści komunikatu (ta może się zmienić), tylko po stałym
  * kodzie. Pierwsze dziesięć wartości to tabela z kontraktu {@code docs/projekt/09-kontrakt-api-i-assetow.md} § 1,
- * jeden do jednego. Kolejne dotyczą sytuacji spoza tabeli (gra bez silnika, nieznany adres, zła metoda HTTP).
+ * jeden do jednego. Kolejne dotyczą sytuacji spoza tabeli (gra bez silnika, nieznany adres, zła metoda HTTP,
+ * równoległe żądanie czekające na blokadę).
  * Status HTTP jest przypisany do kodu tutaj, więc jest jedno źródło prawdy dla całej aplikacji.
  */
 public enum ErrorCode {
@@ -31,7 +32,13 @@ public enum ErrorCode {
     /** Nieznany adres (np. literówka w ścieżce albo brak pliku statycznego). */
     NOT_FOUND(HttpStatus.NOT_FOUND, "Nie znaleziono"),
     /** Metoda HTTP nieobsługiwana pod tym adresem (np. GET zamiast POST). */
-    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Niedozwolona metoda HTTP");
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Niedozwolona metoda HTTP"),
+    /**
+     * Równoległe żądanie tego samego gracza trzyma blokadę portfela dłużej, niż baza chce czekać (albo ktoś zmienił
+     * portfel w międzyczasie). Stan jest spójny, nic się nie zapisało; wystarczy ponowić żądanie po
+     * {@code retryAfterSeconds} (przy spinie z tym samym {@code Idempotency-Key}, więc bez ryzyka podwójnego zakładu).
+     */
+    CONCURRENT_REQUEST(HttpStatus.CONFLICT, "Równoległe żądanie w toku");
 
     private final HttpStatus status;
     private final String title;

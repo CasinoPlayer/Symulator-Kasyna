@@ -1,6 +1,7 @@
 package pl.wsb.kasyno.report.application;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.wsb.kasyno.slots.api.GamePopularity;
 import pl.wsb.kasyno.slots.api.GameRtp;
 import pl.wsb.kasyno.slots.api.HourlyActivity;
@@ -24,8 +25,12 @@ import java.util.List;
  * </ol>
  * Same zapytania (JPQL z {@code GROUP BY}) są w repozytoriach modułów, które są właścicielami danych;
  * ten serwis tylko je zbiera przez fasady.
+ *
+ * <p>{@code @Transactional(readOnly = true)}: raport złożony z kilku zapytań (np. pytanie 3 i 4) wykonuje się
+ * w jednej transakcji i na jednym połączeniu z bazy, a transakcje fasad do niej dołączają.
  */
 @Service
+@Transactional(readOnly = true)
 public class InvestorReportService {
 
     private final SlotsFacade slots;

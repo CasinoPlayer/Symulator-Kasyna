@@ -1,15 +1,21 @@
 package pl.wsb.kasyno;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.lang.ArchCondition;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
 import jakarta.persistence.Entity;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.repository.Repository;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
@@ -101,5 +107,55 @@ class ArchitectureTest {
     void conventions() {
         classes().that().areAnnotatedWith(RestController.class).should().resideInAPackage("..web..").check(classes);
         classes().that().areAnnotatedWith(Entity.class).should().resideInAPackage("..domain..").check(classes);
+    }
+
+    @Test
+    @DisplayName("warstwa application nie zależy od web (serwisy nie znają HTTP)")
+    void applicationDoesNotDependOnWeb() {
+        noClasses().that().resideInAPackage("..application..")
+                .should().dependOnClassesThat().resideInAPackage("..web..")
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("kontrolery nie używają repozytoriów wprost (tylko serwisów)")
+    void webDoesNotUseRepositories() {
+        noClasses().that().resideInAPackage("..web..")
+                .should().dependOnClassesThat().areAssignableTo(Repository.class)
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("pakiety api (kontrakty modułów) nie odsłaniają encji ani innych klas z domain")
+    void apiDoesNotExposeDomain() {
+        noClasses().that().resideInAPackage("..api..")
+                .should().dependOnClassesThat().resideInAPackage("..domain..")
+                .check(classes);
+    }
+
+    /**
+     * Encja w odpowiedzi HTTP to wyciek: klient zobaczyłby pola techniczne (np. {@code version}), a Jackson
+     * próbowałby czytać relacje LAZY poza transakcją. Reguła sprawdza też typy generyczne, np.
+     * {@code List<SpinRound>} albo {@code PageResponse<WalletTransaction>}.
+     */
+    @Test
+    @DisplayName("kontrolery REST nie zwracają encji JPA (także w List<...> i PageResponse<...>), tylko DTO")
+    void controllersDoNotReturnEntities() {
+        methods().that().areDeclaredInClassesThat().areAnnotatedWith(RestController.class)
+                .and().arePublic()
+                .should(notReturnEntities())
+                .check(classes);
+    }
+
+    private static ArchCondition<JavaMethod> notReturnEntities() {
+        return new ArchCondition<>("nie zwracać encji JPA") {
+            @Override
+            public void check(JavaMethod method, ConditionEvents events) {
+                method.getReturnType().getAllInvolvedRawTypes().stream()
+                        .filter(type -> type.isAnnotatedWith(Entity.class))
+                        .forEach(entity -> events.add(SimpleConditionEvent.violated(method,
+                                method.getFullName() + " zwraca encję " + entity.getSimpleName())));
+            }
+        };
     }
 }

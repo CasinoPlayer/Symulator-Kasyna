@@ -3,21 +3,26 @@ package pl.wsb.kasyno.shared.error;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.method.ParameterErrors;
 import org.springframework.validation.method.ParameterValidationResult;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.List;
@@ -45,6 +50,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     static final String GENERIC_DETAIL = "Wystąpił nieoczekiwany błąd. Spróbuj ponownie za chwilę.";
 
+    /** Po ilu sekundach klient może ponowić żądanie odrzucone przez {@link ErrorCode#CONCURRENT_REQUEST}. */
+    static final long RETRY_AFTER_CONCURRENT_SECONDS = 1;
+
     /** Jedno błędne pole lub parametr żądania (element listy {@code errors}). */
     public record FieldViolation(String field, String message) {
     }
@@ -69,6 +77,23 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             headers.set(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()));
         }
         return ResponseEntity.status(code.status()).headers(headers).body(problem);
+    }
+
+    /**
+     * Równoległe żądania tego samego gracza: baza nie doczekała się blokady portfela (np. kilka spinów naraz)
+     * albo blokada optymistyczna ({@code @Version}) wykryła zmianę w międzyczasie. Transakcja jest wycofana,
+     * więc dane są spójne, a klient może po prostu ponowić żądanie. To nie jest błąd w kodzie, więc zamiast
+     * {@code 500} ze stack trace w logu dajemy {@code 409 CONCURRENT_REQUEST} z {@code Retry-After}.
+     */
+    @ExceptionHandler(ConcurrencyFailureException.class)
+    public ResponseEntity<Object> handleConcurrency(ConcurrencyFailureException ex) {
+        log.warn("Równoległe żądanie odrzucone: {}", ex.getClass().getSimpleName());
+        ProblemDetail problem = problem(ErrorCode.CONCURRENT_REQUEST,
+                "Poprzednie żądanie jeszcze trwa. Spróbuj ponownie za chwilę.");
+        problem.setProperty("retryAfterSeconds", RETRY_AFTER_CONCURRENT_SECONDS);
+        return ResponseEntity.status(ErrorCode.CONCURRENT_REQUEST.status())
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(RETRY_AFTER_CONCURRENT_SECONDS))
+                .body(problem);
     }
 
     /** Wszystko, czego się nie spodziewaliśmy: 500 bez szczegółów technicznych, pełny wyjątek w logu. */
@@ -106,7 +131,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     /**
      * Pozostałe błędy Spring MVC (zły JSON, zły typ parametru, nieznany adres, zła metoda…): klasa bazowa
-     * buduje już ProblemDetail, a my dopisujemy kod i polski tytuł. Dla 5xx podmieniamy treść na ogólną.
+     * buduje już ProblemDetail, a my dopisujemy kod, polski tytuł i polski opis. Dla 5xx podmieniamy treść na ogólną.
      */
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(Exception ex, @Nullable Object body, HttpHeaders headers,
@@ -122,9 +147,36 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             if (statusCode.is5xxServerError()) {
                 log.error("Błąd serwera w warstwie web", ex);
                 problem.setDetail(GENERIC_DETAIL);
+            } else {
+                problem.setDetail(polishDetail(ex, statusCode, problem.getDetail()));
             }
         }
         return response;
+    }
+
+    /**
+     * Polski opis typowych błędów Spring MVC. Klasa bazowa daje angielskie teksty („Failed to read request”),
+     * a reszta API odpowiada po polsku; front może pokazać {@code detail} graczowi bez tłumaczenia.
+     * Nazwy parametrów pochodzą z naszego kodu (adnotacje kontrolerów), nie z danych od klienta.
+     */
+    private static String polishDetail(Exception ex, HttpStatusCode status, String fallback) {
+        if (ex instanceof HttpMessageNotReadableException) {
+            return "Treść żądania nie jest poprawnym JSON-em albo któreś pole ma zły typ.";
+        }
+        if (ex instanceof MethodArgumentTypeMismatchException mismatch) {
+            return "Parametr „%s” ma niepoprawny format.".formatted(mismatch.getName());
+        }
+        if (ex instanceof MissingServletRequestParameterException missing) {
+            return "Brakuje parametru „%s”.".formatted(missing.getParameterName());
+        }
+        if (ex instanceof HttpMediaTypeNotSupportedException) {
+            return "Dane wysyłaj jako JSON (nagłówek Content-Type: application/json).";
+        }
+        return switch (status.value()) {
+            case 404 -> "Nie ma takiego adresu.";
+            case 405 -> "Ta metoda HTTP nie jest obsługiwana pod tym adresem.";
+            default -> fallback;
+        };
     }
 
     private ResponseEntity<Object> validationFailed(List<FieldViolation> errors) {

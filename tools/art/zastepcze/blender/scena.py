@@ -44,8 +44,8 @@ def lin(h: str, a: float = 1.0):
 # Schematy świateł (01 § 4.2 i modyfikacje per gra): (kolor key, kolor rimu głównego, kolor rimu akcentowego,
 # siła rimu akcentowego względem key).
 SWIATLA = {
-    "global": ("#FFC489", "#21E6FF", "#FF2E88", 0.45),
-    "s1": ("#FFE3C4", "#21E6FF", "#FF2E88", 0.7),
+    "global": ("#FFC489", "#7FEFFF", "#FF2E88", 0.45),
+    "s1": ("#FFE3C4", "#5CEBFF", "#FF2E88", 0.7),
     "s2": ("#FFA45C", "#2EC4B6", "#FFB347", 0.45),
     "s3": ("#FFD38A", "#19F5D2", "#A64DFF", 0.55),
 }
@@ -102,9 +102,9 @@ def _swiat(sc):
     ramp = nt.nodes.new("ShaderNodeValToRGB")
     el = ramp.color_ramp.elements
     # od dołu: ciemny fiolet → jasny pas horyzontu (daje złotu jasną linię odbicia) → jasne „niebo” studia
-    el[0].position, el[0].color = 0.0, lin("#120E24")
-    el[1].position, el[1].color = 1.0, lin("#E4DCEF")
-    for poz, kol in ((0.42, "#251C44"), (0.52, "#6E628E"), (0.58, "#3A3060"), (0.8, "#8E84AE")):
+    el[0].position, el[0].color = 0.0, lin("#4E3420")
+    el[1].position, el[1].color = 1.0, lin("#F2EAF6")
+    for poz, kol in ((0.38, "#3C2C3C"), (0.49, "#9A8AA6"), (0.55, "#3E3258"), (0.78, "#A49ABF")):
         e = el.new(poz)
         e.color = lin(kol)
     bg = nt.nodes.new("ShaderNodeBackground")
@@ -138,7 +138,7 @@ def _swiatla(sc, schemat):
     key, rim1, rim2, sila2 = SWIATLA[schemat]
     swiatlo_obszarowe("key", (-4.5, -5.5, 5.5), key, 1400, 4.0)
     swiatlo_obszarowe("fill", (5.5, -5.0, 1.0), KOLORY["fill"], 380, 5.0)
-    swiatlo_obszarowe("rim", (4.5, 4.0, 3.0), rim1, 1100, 2.0)
+    swiatlo_obszarowe("rim", (4.5, 4.0, 3.0), rim1, 900, 2.0)
     swiatlo_obszarowe("rim2", (-4.5, 3.5, -2.5), rim2, 1100 * sila2, 2.0)
 
 
@@ -157,6 +157,7 @@ def _karty_odbic():
     karta("karta_gora", (-2.0, -3.0, 6.0), (5, 2.2), "#FFF1DC", 2.2)
     karta("karta_prawa", (6.0, -1.0, 1.5), (1.0, 5), "#D6E8FF", 1.4)
     karta("karta_lewa", (-6.0, -2.0, 0.5), (1.4, 4), "#FFE2C0", 1.0)
+    karta("karta_dol", (0.5, -3.5, -5.5), (6, 2.5), "#FFB878", 0.9)   # ciepłe odbicie od dołu (złoto nie czernieje)
 
 
 def tlo_dla_szkla(kolor_gora="#E8F6FF", kolor_dol="#5A4C8C", moc=2.5, odl=4.0, rozmiar=14.0):
