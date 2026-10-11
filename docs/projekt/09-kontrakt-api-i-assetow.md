@@ -108,7 +108,7 @@ dla kolejnych bębnów, np. S1: `[[1,1,1],[0,0,0],[2,2,2],[0,1,2],[2,1,0]]`. Num
 
 `POST /api/slots/{code}/spins` — ciało `{ "bet": 100 }`, nagłówek `Idempotency-Key: <uuid>`.
 Ten sam klucz idempotencji zwraca tę samą rundę zamiast losować nową (podwójne kliknięcie, ponowienie po zerwanym
-połączeniu). Format odpowiedzi — § 2.4.
+połączeniu): identyczną treść i nagłówek `Idempotent-Replayed: true`. Format odpowiedzi — § 2.4.
 
 ### 2.4. Odpowiedź spinu (kroki animacji) — wspólna dla wszystkich gier
 
@@ -149,7 +149,7 @@ rundy po tym kroku), żeby licznik na ekranie rósł razem z animacją.
 |---|---|---|
 | `spin` | `phase` (`base` / `free`), `grid`, `anticipation` (lista bębnów do spowolnienia, może być pusta), `freeSpinIndex` i `freeSpinsLeft` (tylko `free`), `orbs` (S3: `[{ "pos": [b, r], "value": 5 }]`) | obrót bębnów / zrzut planszy |
 | `expandWild` | `reels` (lista bębnów), `grid` (siatka po rozszerzeniu) | S2: WILD rozszerza się na cały bęben (darmowe spiny), przed oceną wygranych |
-| `feature` | `name` (`neonJackpot`), `multiplier` | S1: cały ekran tego samego symbolu (×10) |
+| `feature` | `name` (`neonJackpot`, `maxWin`), `multiplier` (+ `win`, `totalWin` dla `neonJackpot`) | S1: cały ekran tego samego symbolu (×10); `maxWin`: osiągnięty limit wygranej rundy, runda się kończy (szczegóły w `07`) |
 | `win` | `wins` (lista), `win`, `totalWin` | ocena wygranych po obrocie lub po kaskadzie |
 | `cascade` | `removed` (pozycje usuwane), `newSymbols` (dla każdego bębna lista nowych symboli od góry), `grid` (siatka po opadzie), `orbs` (nowe kule) | S3: pęknięcie wygranych i opad |
 | `applyMultiplier` | `orbsSum`, `baseWin`, `win`, `totalWin` | S3: koniec sekwencji kaskad w darmowych spinach, suma kul mnoży wygraną sekwencji |

@@ -81,6 +81,24 @@ public class SlotMachine {
     private boolean active;
 
     /**
+     * Taśmy bębnów gry podstawowej (tylko {@link EngineType#LINES}); kolumna tekstowa, uzasadnienie
+     * w {@link ReelStrips}. Gry klastrowe losują każde pole z wag symboli ({@link SlotSymbol#getWeight()}).
+     */
+    @Convert(converter = ReelStripsConverter.class)
+    @Column(name = "reel_strips", length = 4000)
+    private ReelStrips reelStrips;
+
+    /** Osobne taśmy darmowych spinów (np. więcej WILD); {@code null} = te same co w grze podstawowej. */
+    @Convert(converter = ReelStripsConverter.class)
+    @Column(name = "free_reel_strips", length = 4000)
+    private ReelStrips freeReelStrips;
+
+    /** Linie wygrywające (tylko {@link EngineType#LINES}), zwracane też w {@code GET /api/slots/{code}}. */
+    @Convert(converter = PaylinesConverter.class)
+    @Column(name = "paylines", length = 1000)
+    private Paylines paylines;
+
+    /**
      * Symbole automatu (strona „jeden” relacji 1:N). {@code mappedBy}: kluczem obcym zarządza
      * {@link SlotSymbol#getSlotMachine()}. Kolekcje są domyślnie LAZY, więc lista gier nie ładuje symboli.
      */
@@ -126,6 +144,28 @@ public class SlotMachine {
 
     public void deactivate() {
         this.active = false;
+    }
+
+    /**
+     * Ustawia taśmy i linie gry liniowej (w aplikacji robi to {@code data.sql}, w testach ta metoda).
+     *
+     * @param base     taśmy gry podstawowej, po jednej na bęben
+     * @param free     taśmy darmowych spinów albo {@code null} (wtedy te same co {@code base})
+     * @param paylines linie wygrywające, dokładnie {@link #getLines()} sztuk
+     */
+    public void defineReels(ReelStrips base, ReelStrips free, Paylines paylines) {
+        if (engineType != EngineType.LINES) {
+            throw new IllegalStateException("Taśmy i linie mają tylko automaty liniowe");
+        }
+        if (base.reelCount() != reels || (free != null && free.reelCount() != reels)) {
+            throw new IllegalArgumentException("Liczba taśm musi być równa liczbie bębnów (" + reels + ")");
+        }
+        if (paylines.count() != lines) {
+            throw new IllegalArgumentException("Liczba linii musi wynosić " + lines);
+        }
+        this.reelStrips = base;
+        this.freeReelStrips = free;
+        this.paylines = paylines;
     }
 
     public Long getId() {
@@ -178,6 +218,18 @@ public class SlotMachine {
 
     public boolean isActive() {
         return active;
+    }
+
+    public ReelStrips getReelStrips() {
+        return reelStrips;
+    }
+
+    public ReelStrips getFreeReelStrips() {
+        return freeReelStrips;
+    }
+
+    public Paylines getPaylines() {
+        return paylines;
     }
 
     /** Symbole tylko do odczytu (dodaje się je przez zapis {@link SlotSymbol}). */

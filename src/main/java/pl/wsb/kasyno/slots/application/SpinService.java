@@ -41,7 +41,8 @@ import java.util.Optional;
  *       Unikalny indeks (gracz, klucz) w bazie zostaje jako ostatni bezpiecznik;</li>
  *   <li>zapis rundy {@code STARTED} i pobranie zakładu z portfela ({@code 409 INSUFFICIENT_FUNDS}, a wtedy
  *       transakcja się wycofuje, więc nie zostaje ani runda, ani wpis w portfelu);</li>
- *   <li>silnik liczy wynik z wylosowanego ziarna → runda {@code RESOLVED};</li>
+ *   <li>silnik liczy wynik z wylosowanego ziarna → runda {@code RESOLVED}; jej {@code resultJson} to od razu
+ *       cała odpowiedź HTTP z kontraktu § 2.4 ({@link SpinDocument}: kroki animacji, saldo przed i po, seed);</li>
  *   <li>wypłata wygranej do portfela → runda {@code SETTLED};</li>
  *   <li>zdarzenie {@link SpinCompleted} (statystyki gracza aktualizuje {@code StatsUpdater}, w tej samej transakcji).</li>
  * </ol>
@@ -100,10 +101,17 @@ public class SpinService {
         BigDecimal balance = wallet.debit(player.getId(), round.getBet(), machine.getCode(), round.getId());
 
         SpinOutcome outcome = engine.play(new SpinContext(machine, round.getBet(), seed));
-        round.resolve(outcome.totalWin(), outcome.resultJson());
+        // resultJson = cała odpowiedź z kontraktu § 2.4 (z saldem po wypłacie), więc powtórka zwraca ją bez zmian
+        BigDecimal expectedBalance = balance.add(outcome.totalWin());
+        round.resolve(outcome.totalWin(), SpinDocument.compose(round.getId(), machine.getCode(), round.getBet(),
+                outcome.totalWin(), balanceBefore, expectedBalance, seed, outcome.resultJson()));
 
         if (round.hasWin()) {
             balance = wallet.credit(player.getId(), round.getTotalWin(), machine.getCode(), round.getId());
+        }
+        if (balance.compareTo(expectedBalance) != 0) {
+            // nie powinno się zdarzyć (portfel jest zablokowany); wycofujemy całą transakcję zamiast zapisać złe saldo
+            throw new IllegalStateException("Saldo po rundzie " + round.getId() + " nie zgadza się z wyliczonym");
         }
         round.settle(clock.instant());
 

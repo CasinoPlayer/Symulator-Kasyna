@@ -51,7 +51,8 @@ GET {{host}}/api/slots/zloty-faraon
 ### 9. Nieznana gra: 404 GAME_NOT_FOUND
 GET {{host}}/api/slots/nie-ma-takiej
 
-### 10. Spin z kluczem idempotencji (dopóki gra nie ma silnika: 503 GAME_NOT_READY)
+### 10. Spin z kluczem idempotencji: odpowiedź z kontraktu § 2.4 (kroki animacji, saldo przed i po, seed);
+# ten sam klucz drugi raz = identyczna odpowiedź z nagłówkiem Idempotent-Replayed: true
 POST {{host}}/api/slots/cebulowy-777/spins
 Content-Type: application/json
 Idempotency-Key: {{$uuid}}

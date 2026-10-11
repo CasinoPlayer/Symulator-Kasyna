@@ -127,7 +127,12 @@ class SpinServiceTest {
         assertThat(result.tier()).isEqualTo("big");
         assertThat(result.balance()).isEqualByComparingTo("11900");
         assertThat(result.replayed()).isFalse();
-        assertThat(result.resultJson()).contains("\"seed\":42");
+        // resultJson = cała odpowiedź z kontraktu § 2.4 (seed szesnastkowo, saldo przed i po rundzie)
+        assertThat(result.resultJson())
+                .startsWith("{\"roundId\":100,\"gameCode\":\"cebulowy-777\",\"bet\":100,\"totalWin\":2000,"
+                        + "\"multiplier\":20,\"tier\":\"big\",\"balanceBefore\":10000,\"balanceAfter\":11900,"
+                        + "\"seed\":\"000000000000002a\"")
+                .contains("\"steps\":[]");
 
         ArgumentCaptor<SpinCompleted> event = ArgumentCaptor.forClass(SpinCompleted.class);
         verify(events).publishEvent(event.capture());
