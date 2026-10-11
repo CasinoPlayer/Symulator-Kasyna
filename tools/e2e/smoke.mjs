@@ -327,16 +327,16 @@ async function main() {
         await page.waitForTimeout(600);
         const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         check(`strona gry bez poziomego przewijania @${w}×${h}`, over <= 0, over > 0 ? `nadmiar ${over}px` : '');
-        // napis nad planszą mieści się w scenie i nie nachodzi na SPIN; SPIN nie wychodzi poza ekran
+        // SPIN i płótno sceny mieszczą się w całości na ekranie (scena zastępcza z napisem #scena-opis
+        // zniknęła po scaleniu runtime gier — teraz sprawdzamy prawdziwą scenę PixiJS)
         const layout = await page.evaluate(() => {
-          const r = (s) => document.querySelector(s).getBoundingClientRect();
-          const note = r('#scena-opis');
-          const stage = r('#scena');
+          const r = (s) => document.querySelector(s)?.getBoundingClientRect();
+          const canvas = r('#scena canvas');
           const spin = r('#btn-spin');
-          const apart = note.bottom <= spin.top || note.top >= spin.bottom || note.right <= spin.left || note.left >= spin.right;
-          return { noteOk: note.top >= stage.top && note.bottom <= stage.bottom && apart, spinOk: spin.bottom <= innerHeight && spin.top >= 0 };
+          const inView = (b) => !!b && b.top >= -1 && b.left >= -1 && b.bottom <= innerHeight + 1 && b.right <= innerWidth + 1;
+          return { canvasOk: inView(canvas), spinOk: inView(spin) };
         });
-        check(`strona gry: napis i SPIN bez nachodzenia @${w}×${h}`, layout.noteOk && layout.spinOk, JSON.stringify(layout));
+        check(`strona gry: scena i SPIN w całości na ekranie @${w}×${h}`, layout.canvasOk && layout.spinOk, JSON.stringify(layout));
         await shot(page, name);
       }
       for (const code of ['zloty-faraon', 'krysztalowa-kaskada']) {

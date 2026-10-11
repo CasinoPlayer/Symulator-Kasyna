@@ -15,12 +15,12 @@ przewodnik po kodzie, pytania) w [`../obrona/`](../obrona/README.md).
 | [`03-prompty-chatgpt.md`](03-prompty-chatgpt.md) | gotowe prompty do 6 czatów ChatGPT i prompty poprawkowe | wykorzystane (komplet wygenerowany) |
 | [`04-efekty-wizualne.md`](04-efekty-wizualne.md) | biblia efektów: systemy (cząsteczki, błyski, drżenie), karty zdarzeń E01–E73, choreografia Big Win, poziomy jakości | specyfikacja; realizacja w 10 |
 | [`05-dzwiek-i-muzyka.md`](05-dzwiek-i-muzyka.md) | biblia dźwięku: 59 efektów + 8 pętli, Web Audio, miks, mapowanie zdarzeń, pipeline syntezy; odstępstwa wykonania § 8.10 | specyfikacja + stan wykonania |
-| `06-interfejs-ux.md` | ekrany, komponenty, teksty, zachowanie na telefonie | **planowany** (jeszcze nie istnieje; odnośniki w innych dokumentach prowadzą donikąd) |
+| [`06-interfejs-ux.md`](06-interfejs-ux.md) | ekrany i przepływ, komponenty i stany, breakpointy i układy telefonu, dostępność, wszystkie teksty i komunikaty błędów, walidacja nazwy (front i backend), elementy → ID obrazów → zdarzenia E | **as-built** (lobby, logowanie, strona gry S1; S2/S3 — po scaleniu) |
 | [`07-gry-i-matematyka.md`](07-gry-i-matematyka.md) | trzy automaty tak, jak są zaimplementowane: zasady, tabele wypłat, taśmy, wagi, RTP z testów Monte Carlo, format odpowiedzi spinu | **as-built** |
-| `08-wydajnosc-i-jakosc.md` | 60 fps, poziomy jakości, pomiary, budżety | **planowany** (część treści: 10 § 7 i § 11) |
+| [`08-wydajnosc-i-jakosc.md`](08-wydajnosc-i-jakosc.md) | budżety i faktyczne wagi, architektura renderu, ładowanie, poziomy jakości i automat (dokładnie z kodu), strażnik błysków, cykl życia, cache, pułapki przeglądarek, pomiary e2e, checklista | **as-built** (pomiary z 2026-10-11 w WebGL programowym; 60 fps do potwierdzenia na urządzeniu) |
 | [`09-kontrakt-api-i-assetow.md`](09-kontrakt-api-i-assetow.md) | kontrakt backend ↔ front: endpointy, kody błędów, format spinu (§ 2.4), manifesty obrazów i audio, kto zmienia które katalogi | wiążący |
 | [`10-runtime-gier.md`](10-runtime-gier.md) | runtime gier w PixiJS (pętla, zasoby, bębny, kroki, efekty, jakość, dźwięk), gra S1, wyniki e2e i pomiarów | **as-built** (S1; S2/S3 w toku) |
-| [`../obrona/`](../obrona/README.md) | dokumentacja do obrony: 00 uruchomienie, 01 architektura, 02 przewodnik po kodzie, 03 silnik gier, 05 decyzje (ADR), 06 pytania, 07 podział i ściągi | gotowa (04 — po scaleniu S2/S3) |
+| [`../obrona/`](../obrona/README.md) | dokumentacja do obrony: 00 uruchomienie, 01 architektura, 02 przewodnik po kodzie, 03 silnik gier, 04 front, efekty i dźwięk, 05 decyzje (ADR), 06 pytania, 07 podział i ściągi | gotowa (w 04 sekcje S2/S3 — po scaleniu) |
 
 ## Od czego zacząć
 

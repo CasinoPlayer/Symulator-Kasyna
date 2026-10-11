@@ -448,6 +448,9 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
 @media (max-width: 480px) {
   .hero.is-bankrupt .hero__lead,
   .hero.is-bankrupt .hero__visual { display: none; }
+  /* prawdziwe logo z ChatGPT (emblemat + napis) jest wysokie — u bankruta zmniejszamy je, żeby przycisk
+     bonusu zmieścił się bez przewijania także na najniższych telefonach (320 × 640) */
+  .hero.is-bankrupt .hero__title-logo { width: auto; max-width: 100%; max-height: 24dvh; }
 }
 @media (min-width: 481px) {
   .rescue { grid-template-columns: auto minmax(0, 1fr); padding: 18px 20px; gap: 14px 18px; }

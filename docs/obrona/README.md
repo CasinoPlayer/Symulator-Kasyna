@@ -10,7 +10,7 @@ Wszystko opisuje **rzeczywisty kod** z odnośnikami `plik:linia` (stan z 2026-10
 | [`01-architektura.md`](01-architektura.md) | diagramy: warstwy, moduły, ERD, logowanie, spin, cykl życia rundy, zdarzenia LAB 06 | żeby zobaczyć całość |
 | [`02-przewodnik-po-kodzie.md`](02-przewodnik-po-kodzie.md) | mapa „gdzie czego szukać”, pakiet po pakiecie, klasa po klasie, trasa spinu przez kod | do chodzenia po plikach na obronie |
 | [`03-silnik-gier.md`](03-silnik-gier.md) | losowanie (seed, `SplittableRandom`), taśmy, linie, klastry, kaskady, darmowe spiny, mnożniki, limit, RTP i Monte Carlo | pytania o matematykę i uczciwość gry |
-| `04-front-efekty-dzwiek.md` | *w przygotowaniu* — po scaleniu S2 i S3; do tego czasu: [`../projekt/10-runtime-gier.md`](../projekt/10-runtime-gier.md), [`../projekt/04-efekty-wizualne.md`](../projekt/04-efekty-wizualne.md), [`../projekt/05-dzwiek-i-muzyka.md`](../projekt/05-dzwiek-i-muzyka.md) | — |
+| [`04-front-efekty-dzwiek.md`](04-front-efekty-dzwiek.md) | lobby i logowanie w przeglądarce, SPIN → `StepPlayer` → saldo, fizyka bębnów, cząsteczki, błyski, drżenie, Big Win, poziomy jakości, dźwięk (Web Audio, pętle, `keyTrack`, `syncPoint`), skąd grafika i dźwięk, 10 pytań o front (S2/S3 — po scaleniu) | pytania o front, efekty i dźwięk |
 | [`05-decyzje-projektowe.md`](05-decyzje-projektowe.md) | 14 decyzji (ADR): kontekst → decyzja → konsekwencje → alternatywy | pytania „dlaczego tak?” |
 | [`06-pytania-na-obrone.md`](06-pytania-na-obrone.md) | 58 pytań z odpowiedziami i „pokaż w kodzie” | do ćwiczenia |
 | [`07-podzial-pracy.md`](07-podzial-pracy.md) | propozycja podziału obrony, przebieg pokazu, ściąga dla każdej osoby (10 punktów + komendy) | na koniec, przed obroną |
