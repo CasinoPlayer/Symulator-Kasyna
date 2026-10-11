@@ -11,3 +11,6 @@ tools/e2e/zrzuty/
 # Skompilowany kod Pythona (skrypty tools/art, tools/audio) powstaje sam przy uruchomieniu
 __pycache__/
 *.pyc
+
+# Kopie robocze agentów (git worktree) — nie wchodzą do repozytorium
+.claude/worktrees/
