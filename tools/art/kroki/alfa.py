@@ -426,11 +426,15 @@ def napraw_alfe(rgba: np.ndarray, rola: str = "obiekt", pylki: bool = True) -> W
                 wynik.metoda = "jednolite"
                 wynik.uwagi.append(("info", "Q06", "usunięto jednolite tło (brak prawdziwej przezroczystości)"))
     out = progi_alfy(out)
-    obw = miara_obwodki(out)
-    if obw > 8:
-        wynik.uwagi.append(("ostrzezenie", "Q09", f"jasna obwódka na krawędzi (+{obw:.0f} L*) — sprawdź na ciemnym tle"))
-    elif obw < -12:
-        wynik.uwagi.append(("ostrzezenie", "Q09", f"ciemna obwódka na krawędzi ({obw:.0f} L*)"))
+    # Q09 tylko tam, gdzie krawędź alfy wyliczył pipeline (usunięta szachownica / jednolite tło) — wtedy obwódka
+    # jest artefaktem wycinania. Przy prawdziwej alfie krawędź jest decyzją autora (np. celowy ciemny kontur
+    # napisu), a miara nie odróżnia konturu od halo — taką krawędź oceniamy na miniaturach w raporcie.
+    if wynik.metoda in ("szachownica", "jednolite"):
+        obw = miara_obwodki(out)
+        if obw > 8:
+            wynik.uwagi.append(("ostrzezenie", "Q09", f"jasna obwódka na krawędzi (+{obw:.0f} L*) — sprawdź na ciemnym tle"))
+        elif obw < -12:
+            wynik.uwagi.append(("ostrzezenie", "Q09", f"ciemna obwódka na krawędzi ({obw:.0f} L*)"))
     if pylki:
         out, n = usun_pylki(out)
         if n:

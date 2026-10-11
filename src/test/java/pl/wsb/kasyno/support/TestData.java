@@ -30,7 +30,11 @@ public final class TestData {
                 BigDecimal.valueOf(15),
                 new CasinoProperties.Nick(3, 16,
                         List.of("admin", "administrator", "krupier", "cebulion"),
-                        List.of("kurw", "chuj", "pierdol")));
+                        List.of("kurw", "chuj", "pierdol")),
+                new CasinoProperties.Lobby(Duration.ofSeconds(30)),
+                new CasinoProperties.Schedule(false, "0 0 * * * *", "0 30 * * * *", Duration.ofHours(24)),
+                new CasinoProperties.Demo(false),
+                new CasinoProperties.StarterData(false));
     }
 
     public static UserAccount player(String nick) {

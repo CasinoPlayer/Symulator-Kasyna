@@ -3,6 +3,7 @@ package pl.wsb.kasyno.slots.domain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import pl.wsb.kasyno.slots.api.GamePopularity;
@@ -99,4 +100,21 @@ public interface SpinRoundRepository extends JpaRepository<SpinRound, Long> {
             """)
     List<RoundSummary> findBigWins(@Param("status") SpinStatus status, @Param("minMultiplier") BigDecimal minMultiplier,
                                    Pageable pageable);
+
+    /**
+     * Zadanie cykliczne (LAB 06): zapomina klucze idempotencji rund rozpoczętych przed {@code before}.
+     *
+     * <p>Zapytanie modyfikujące ({@code @Modifying}): jedno {@code UPDATE} w bazie zamiast wczytywania tysięcy encji.
+     * Rundy zostają nietknięte (historia, saldo, statystyki), znika tylko klucz z nagłówka {@code Idempotency-Key}.
+     * {@code clearAutomatically}: po zapytaniu kontekst utrwalania jest czyszczony, żeby nie trzymał encji ze starą
+     * wartością klucza (zapytanie omija Hibernate i zmienia wiersze bezpośrednio w bazie).
+     *
+     * @return liczba rund, którym usunięto klucz
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("""
+            update SpinRound r set r.idempotencyKey = null
+            where r.idempotencyKey is not null and r.createdAt < :before
+            """)
+    int clearIdempotencyKeysCreatedBefore(@Param("before") Instant before);
 }

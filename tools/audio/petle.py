@@ -31,8 +31,9 @@ def dodaj_zakladki(x: np.ndarray, zakladka_s: float) -> tuple[np.ndarray, float,
 # ------------------------------------------------------------------------------------------------
 # Pliki zewnętrzne (Suno / Udio): wycięcie pętli
 # ------------------------------------------------------------------------------------------------
-def obwiednia_uderzen(x: np.ndarray, krok: int = 256) -> tuple[np.ndarray, float]:
-    """Funkcja „nowości” (onset strength): dodatni przyrost energii w pasmach STFT. Zwraca (wartości, fs)."""
+def obwiednia_uderzen(x: np.ndarray, krok: int = 256, f_max: float | None = None) -> tuple[np.ndarray, float]:
+    """Funkcja „nowości” (onset strength): dodatni przyrost energii w pasmach STFT. Zwraca (wartości, fs).
+    f_max: tylko pasma poniżej f_max (np. 250 Hz — bas i stopa, które zmieniają się na „raz” taktu)."""
     s = dsp.mono(x)
     nfft = 1024
     ramki = (len(s) - nfft) // krok
@@ -40,6 +41,8 @@ def obwiednia_uderzen(x: np.ndarray, krok: int = 256) -> tuple[np.ndarray, float
         return np.zeros(1), SR / krok
     idx = np.arange(nfft)[None, :] + krok * np.arange(ramki)[:, None]
     S = np.log1p(100 * np.abs(np.fft.rfft(s[idx] * np.hanning(nfft), axis=1)))
+    if f_max:
+        S = S[:, : int(f_max / (SR / nfft)) + 1]
     nowosc = np.maximum(np.diff(S, axis=0), 0).sum(axis=1)
     nowosc -= np.convolve(nowosc, np.ones(16) / 16, mode="same")
     return np.maximum(nowosc, 0), SR / krok
@@ -67,10 +70,68 @@ def zmierz_tempo(x: np.ndarray, bpm_oczekiwane: float | None = None, zakres=(60,
                 v = ac[i0] + (lag - i0) * (ac[i0 + 1] - ac[i0])
                 if v > wart:
                     najlepszy, wart = bpm * bpm_oczekiwane / c, v
+        # doprecyzowanie: autokorelacja przy opóźnieniach 1, 2, 4 … 32 miar — błąd odczytu rozkłada się na długie
+        # opóźnienie, więc precyzja rośnie proporcjonalnie (0,1% tempa = 38 ms rozjazdu na 16 taktach)
+        def ocena(bpm_):
+            suma = 0.0
+            for k in (1, 2, 4, 8, 16, 32):
+                lag = k * 60.0 / bpm_ * fs
+                i0 = int(lag)
+                if i0 + 1 < n:
+                    suma += ac[i0] + (lag - i0) * (ac[i0 + 1] - ac[i0])
+            return suma
+        siatka = np.linspace(najlepszy * 0.996, najlepszy * 1.004, 401)
+        najlepszy = float(siatka[int(np.argmax([ocena(b_) for b_ in siatka]))])
         return float(najlepszy), float(max(0.0, wart))
     lagi = np.arange(int(60.0 / zakres[1] * fs), int(60.0 / zakres[0] * fs))
     i = lagi[np.argmax(ac[lagi])]
     return float(60.0 * fs / i), float(max(0.0, ac[i]))
+
+
+def _chroma(x: np.ndarray, krok: int = 1024, nfft: int = 8192) -> tuple[np.ndarray, float]:
+    """Chromagram: energia 12 klas wysokości (C, C♯, … H) w każdej ramce, z pasma 60–2000 Hz."""
+    s = dsp.mono(x)
+    ramki = (len(s) - nfft) // krok
+    idx = np.arange(nfft)[None, :] + krok * np.arange(ramki)[:, None]
+    S = np.abs(np.fft.rfft(s[idx] * np.hanning(nfft), axis=1))
+    f = np.fft.rfftfreq(nfft, 1.0 / SR)
+    sel = (f >= 60) & (f <= 2000)
+    klasy = (np.round(12 * np.log2(f[sel] / 440.0)) + 9) % 12
+    C = np.stack([S[:, sel][:, klasy == k].sum(axis=1) for k in range(12)], axis=1)
+    return C / (C.sum(axis=1, keepdims=True) + 1e-12), SR / krok
+
+
+def faza_taktu(x: np.ndarray, bpm: float, metrum: int = 4) -> float:
+    """Czas (s) pierwszej kreski taktowej w nagraniu.
+
+    1) Faza miary: obwiednię uderzeń w paśmie < 250 Hz składamy modulo długość miary — maksimum = chwile uderzeń.
+    2) Która z ``metrum`` miar jest „raz”: akordy zmieniają się na początku taktu, więc wybieramy fazę, przy której
+       różnica chromagramu (klas wysokości) między miarą przed a miarą po kresce jest średnio największa.
+       Samo „najmocniejsze uderzenie” zawodzi przy stopie na każdą miarę (werbel na 2 i 4, „pompowanie”)."""
+    miara = 60.0 / bpm
+    o, fs_o = obwiednia_uderzen(x, f_max=250.0)      # pasmo stopy/basu: hi-haty na „i” nie przesuną fazy o pół miary
+    okres_o = miara * fs_o
+    fazy = np.arange(int(okres_o))
+    wynik = [np.interp(np.arange(f, len(o), okres_o), np.arange(len(o)), o).sum() for f in fazy]
+    # przesunięcie ramki STFT względem chwili uderzenia (pół okna 1024 + opóźnienie narastania), skalibrowane na
+    # syntetycznych pętlach o znanym tempie i wstępie: bez niego start wypadał systematycznie ~8 ms za wcześnie
+    faza_miary = fazy[int(np.argmax(wynik))] / fs_o + 512 / SR + 0.008
+    C, fs_c = _chroma(x)
+    t_c = (np.arange(len(C)) * (SR / fs_c) + 4096) / SR                             # środki ramek chromagramu
+    dl = len(dsp.mono(x)) / SR
+    oceny = []
+    for k in range(metrum):
+        f0 = faza_miary + k * miara
+        roznice = []
+        takt = metrum * miara
+        for t in np.arange(f0 + takt, dl - takt, takt):
+            # całe takty przed i po kresce (bez 0,1 s wokół niej — ramki chromagramu mają 170 ms): przy właściwej
+            # fazie porównujemy dwa różne akordy, przy przesuniętej — dwie mieszanki akordów (mniejsza różnica)
+            przed = C[(t_c >= t - takt) & (t_c < t - 0.1)].mean(axis=0)
+            po = C[(t_c >= t + 0.1) & (t_c < t + takt)].mean(axis=0)
+            roznice.append(np.abs(przed - po).sum())
+        oceny.append(np.mean(roznice) if roznice else 0.0)
+    return float((faza_miary + int(np.argmax(oceny)) * miara) % (metrum * miara))
 
 
 def wytnij_petle(x: np.ndarray, bpm: float, takty: int, metrum: int = 4, start_s: float | None = None,
@@ -90,14 +151,21 @@ def wytnij_petle(x: np.ndarray, bpm: float, takty: int, metrum: int = 4, start_s
         raise ValueError(f"nagranie za krótkie: {n / SR:.1f} s, pętla potrzebuje {L / SR:.1f} s + zapas")
     info = {}
     if start_s is None:
+        # faza kreski taktowej: obwiednię uderzeń „składamy” modulo długość taktu — najsilniejsze uderzenia
+        # (stopa / taiko na „raz”) wskazują, gdzie zaczyna się takt
+        faza0 = n_probek(faza_taktu(x, bpm, metrum))
+        info["faza_taktu_s"] = faza0 / SR
         # kandydaci: kolejne kreski taktowe od 2. taktu; kryterium: stałość głośności krótkoterminowej
         krok = n_probek(takt)
         okno = n_probek(0.4)
-        e = np.convolve(dsp.mono(x) ** 2, np.ones(okno) / okno, mode="same")
-        e_db = 10 * np.log10(e[::krok // 4] + 1e-12)
+        kw = np.concatenate([[0.0], np.cumsum(dsp.mono(x) ** 2)])          # średnia krocząca przez sumy skumulowane
+        srodki = np.arange(0, n, krok // 4)
+        a_, b_ = np.clip(srodki - okno // 2, 0, n), np.clip(srodki + okno // 2, 0, n)
+        e = (kw[b_] - kw[a_]) / np.maximum(b_ - a_, 1)
+        e_db = 10 * np.log10(e + 1e-12)
         najlepszy, ocena = krok, np.inf
         pp = przenikanie_s
-        for s0 in range(krok, n - L - n_probek(pp) - 1, krok):
+        for s0 in range(faza0 + krok, n - L - n_probek(pp) - 1, krok):
             a, b = s0 // (krok // 4), (s0 + L) // (krok // 4)
             fr = e_db[a:b]
             if len(fr) < 4:

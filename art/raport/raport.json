@@ -1,7 +1,7 @@
 {
  "podsumowanie": {
   "pipeline": "1.0.0",
-  "uruchomienie": "2026-10-11T14:30:58Z",
+  "uruchomienie": "2026-10-11T14:50:35Z",
   "bledy": 0,
   "ostrzezenia": 0,
   "chatgpt": 0,
@@ -9,23 +9,23 @@
  },
  "budzety": {
   "lobby": {
-   "desktop": 1836274,
-   "telefon": 954606,
+   "desktop": 1999056,
+   "telefon": 1056618,
    "limit": 3000000
   },
   "s1": {
-   "desktop": 2218186,
-   "telefon": 1657736,
+   "desktop": 2321840,
+   "telefon": 1732532,
    "limit": 6000000
   },
   "s2": {
-   "desktop": 2448176,
-   "telefon": 1734110,
+   "desktop": 2514280,
+   "telefon": 1787850,
    "limit": 6000000
   },
   "s3": {
-   "desktop": 2505328,
-   "telefon": 1818872,
+   "desktop": 2586504,
+   "telefon": 1882838,
    "limit": 6000000
   }
  },
@@ -128,14 +128,14 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/global/g_tlo_lobby_desktop.png",
    "rozmiar": "1920×1280 +@2x (3 szer.)",
-   "waga": 237892,
-   "waga_desktop": 115096,
-   "waga_telefon": 79178,
+   "waga": 302476,
+   "waga_desktop": 145594,
+   "waga_telefon": 100608,
    "pliki": {
-    "global/g_tlo_lobby_desktop.w1280.webp": 45350,
-    "global/g_tlo_lobby_desktop.webp": 77446,
-    "global/g_tlo_lobby_desktop@2x.webp": 113364,
-    "global/g_tlo_lobby_desktop.rozmyte.webp": 1732
+    "global/g_tlo_lobby_desktop.w1280.webp": 58310,
+    "global/g_tlo_lobby_desktop.webp": 98572,
+    "global/g_tlo_lobby_desktop@2x.webp": 143558,
+    "global/g_tlo_lobby_desktop.rozmyte.webp": 2036
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -145,14 +145,14 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/global/g_tlo_lobby_mobile.png",
    "rozmiar": "1080×1620 +@2x (3 szer.)",
-   "waga": 182418,
-   "waga_desktop": 81478,
-   "waga_telefon": 67544,
+   "waga": 258346,
+   "waga_desktop": 115988,
+   "waga_telefon": 94566,
    "pliki": {
-    "global/g_tlo_lobby_mobile.w720.webp": 35574,
-    "global/g_tlo_lobby_mobile.webp": 65366,
-    "global/g_tlo_lobby_mobile@2x.webp": 79300,
-    "global/g_tlo_lobby_mobile.rozmyte.webp": 2178
+    "global/g_tlo_lobby_mobile.w720.webp": 50474,
+    "global/g_tlo_lobby_mobile.webp": 91884,
+    "global/g_tlo_lobby_mobile@2x.webp": 113306,
+    "global/g_tlo_lobby_mobile.rozmyte.webp": 2682
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -162,12 +162,12 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/global/g_maskotka_powitanie.png",
    "rozmiar": "350×480 +@2x",
-   "waga": 76864,
-   "waga_desktop": 54002,
+   "waga": 76868,
+   "waga_desktop": 54006,
    "waga_telefon": 22862,
    "pliki": {
     "global/g_maskotka_powitanie.webp": 22862,
-    "global/g_maskotka_powitanie@2x.webp": 54002
+    "global/g_maskotka_powitanie@2x.webp": 54006
    },
    "uwagi": [],
    "metoda_alfy": "alfa"
@@ -177,12 +177,12 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/global/g_maskotka_wygrana.png",
    "rozmiar": "410×420 +@2x",
-   "waga": 89708,
-   "waga_desktop": 62152,
-   "waga_telefon": 27556,
+   "waga": 89738,
+   "waga_desktop": 62168,
+   "waga_telefon": 27570,
    "pliki": {
-    "global/g_maskotka_wygrana.webp": 27556,
-    "global/g_maskotka_wygrana@2x.webp": 62152
+    "global/g_maskotka_wygrana.webp": 27570,
+    "global/g_maskotka_wygrana@2x.webp": 62168
    },
    "uwagi": [
     [
@@ -198,12 +198,12 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/global/g_maskotka_bankrut.png",
    "rozmiar": "288×420 +@2x",
-   "waga": 72856,
-   "waga_desktop": 50594,
-   "waga_telefon": 22262,
+   "waga": 72828,
+   "waga_desktop": 50564,
+   "waga_telefon": 22264,
    "pliki": {
-    "global/g_maskotka_bankrut.webp": 22262,
-    "global/g_maskotka_bankrut@2x.webp": 50594
+    "global/g_maskotka_bankrut.webp": 22264,
+    "global/g_maskotka_bankrut@2x.webp": 50564
    },
    "uwagi": [],
    "metoda_alfy": "alfa"
@@ -213,12 +213,12 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/global/g_skrzynia.png",
    "rozmiar": "412×480 +@2x",
-   "waga": 117732,
-   "waga_desktop": 85188,
-   "waga_telefon": 43726,
+   "waga": 117784,
+   "waga_desktop": 85204,
+   "waga_telefon": 43762,
    "pliki": {
-    "global/g_skrzynia.webp": 32544,
-    "global/g_skrzynia@2x.webp": 74006,
+    "global/g_skrzynia.webp": 32580,
+    "global/g_skrzynia@2x.webp": 74022,
     "global/g_skrzynia.glowzl.webp": 11182
    },
    "uwagi": [],
@@ -835,14 +835,14 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s1/s1_tlo_desktop.png",
    "rozmiar": "1920×1280 +@2x (3 szer.)",
-   "waga": 500208,
-   "waga_desktop": 244480,
-   "waga_telefon": 165710,
+   "waga": 666612,
+   "waga_desktop": 325266,
+   "waga_telefon": 220936,
    "pliki": {
-    "s1/s1_tlo_desktop.w1280.webp": 91810,
-    "s1/s1_tlo_desktop.webp": 163918,
-    "s1/s1_tlo_desktop@2x.webp": 242688,
-    "s1/s1_tlo_desktop.rozmyte.webp": 1792
+    "s1/s1_tlo_desktop.w1280.webp": 122616,
+    "s1/s1_tlo_desktop.webp": 218730,
+    "s1/s1_tlo_desktop@2x.webp": 323060,
+    "s1/s1_tlo_desktop.rozmyte.webp": 2206
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -852,14 +852,14 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s1/s1_tlo_mobile.png",
    "rozmiar": "1080×1620 +@2x (3 szer.)",
-   "waga": 149070,
-   "waga_desktop": 65838,
-   "waga_telefon": 53908,
+   "waga": 203276,
+   "waga_desktop": 88720,
+   "waga_telefon": 73462,
    "pliki": {
-    "s1/s1_tlo_mobile.w720.webp": 31450,
-    "s1/s1_tlo_mobile.webp": 51782,
-    "s1/s1_tlo_mobile@2x.webp": 63712,
-    "s1/s1_tlo_mobile.rozmyte.webp": 2126
+    "s1/s1_tlo_mobile.w720.webp": 43654,
+    "s1/s1_tlo_mobile.webp": 70902,
+    "s1/s1_tlo_mobile@2x.webp": 86160,
+    "s1/s1_tlo_mobile.rozmyte.webp": 2560
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -905,13 +905,13 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s1/s1_okladka.png",
    "rozmiar": "400×600 +@2x (3 szer.)",
-   "waga": 193010,
-   "waga_desktop": 89932,
-   "waga_telefon": 38768,
+   "waga": 213298,
+   "waga_desktop": 99184,
+   "waga_telefon": 43414,
    "pliki": {
-    "s1/s1_okladka.webp": 38768,
-    "s1/s1_okladka.w600.webp": 64310,
-    "s1/s1_okladka@2x.webp": 89932
+    "s1/s1_okladka.webp": 43414,
+    "s1/s1_okladka.w600.webp": 70700,
+    "s1/s1_okladka@2x.webp": 99184
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -921,15 +921,15 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s1/s1_baner.png",
    "rozmiar": "960×640 +@2x (2 szer.)",
-   "waga": 330478,
-   "waga_desktop": 207624,
-   "waga_telefon": 124540,
+   "waga": 384496,
+   "waga_desktop": 241020,
+   "waga_telefon": 145256,
    "pliki": {
-    "s1/s1_baner.webp": 62040,
-    "s1/s1_baner@2x.webp": 105226,
-    "s1/s1_baner.rozmyte.webp": 1686,
-    "s1/s1_baner.k169.webp": 60814,
-    "s1/s1_baner.k169@2x.webp": 100712
+    "s1/s1_baner.webp": 73548,
+    "s1/s1_baner@2x.webp": 123950,
+    "s1/s1_baner.rozmyte.webp": 1780,
+    "s1/s1_baner.k169.webp": 69928,
+    "s1/s1_baner.k169@2x.webp": 115290
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -1071,12 +1071,12 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s2/s2_sym_oko.png",
    "rozmiar": "192×192 +@2x",
-   "waga": 73070,
-   "waga_desktop": 57164,
+   "waga": 73068,
+   "waga_desktop": 57162,
    "waga_telefon": 39862,
    "pliki": {
     "s2/s2_sym_oko.webp": 10912,
-    "s2/s2_sym_oko@2x.webp": 22296,
+    "s2/s2_sym_oko@2x.webp": 22294,
     "s2/s2_sym_oko.ruch1.webp": 7036,
     "s2/s2_sym_oko.ruch2.webp": 7216,
     "s2/s2_sym_oko.syl.webp": 5008,
@@ -1219,14 +1219,14 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s2/s2_tlo_desktop.png",
    "rozmiar": "1920×1280 +@2x (3 szer.)",
-   "waga": 176600,
-   "waga_desktop": 90432,
-   "waga_telefon": 57602,
+   "waga": 219076,
+   "waga_desktop": 109674,
+   "waga_telefon": 72718,
    "pliki": {
-    "s2/s2_tlo_desktop.w1280.webp": 30306,
-    "s2/s2_tlo_desktop.webp": 55862,
-    "s2/s2_tlo_desktop@2x.webp": 88692,
-    "s2/s2_tlo_desktop.rozmyte.webp": 1740
+    "s2/s2_tlo_desktop.w1280.webp": 38648,
+    "s2/s2_tlo_desktop.webp": 70754,
+    "s2/s2_tlo_desktop@2x.webp": 107710,
+    "s2/s2_tlo_desktop.rozmyte.webp": 1964
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -1236,14 +1236,14 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s2/s2_tlo_mobile.png",
    "rozmiar": "1080×1620 +@2x (3 szer.)",
-   "waga": 86678,
-   "waga_desktop": 40362,
-   "waga_telefon": 32288,
+   "waga": 133300,
+   "waga_desktop": 60614,
+   "waga_telefon": 49398,
    "pliki": {
-    "s2/s2_tlo_mobile.w720.webp": 16072,
-    "s2/s2_tlo_mobile.webp": 30244,
-    "s2/s2_tlo_mobile@2x.webp": 38318,
-    "s2/s2_tlo_mobile.rozmyte.webp": 2044
+    "s2/s2_tlo_mobile.w720.webp": 25988,
+    "s2/s2_tlo_mobile.webp": 46698,
+    "s2/s2_tlo_mobile@2x.webp": 57914,
+    "s2/s2_tlo_mobile.rozmyte.webp": 2700
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -1253,14 +1253,14 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s2/s2_tlo_fs_desktop.png",
    "rozmiar": "1920×1280 +@2x (3 szer.)",
-   "waga": 114134,
-   "waga_desktop": 59384,
-   "waga_telefon": 35696,
+   "waga": 148486,
+   "waga_desktop": 74394,
+   "waga_telefon": 47410,
    "pliki": {
-    "s2/s2_tlo_fs_desktop.w1280.webp": 20386,
-    "s2/s2_tlo_fs_desktop.webp": 34364,
-    "s2/s2_tlo_fs_desktop@2x.webp": 58052,
-    "s2/s2_tlo_fs_desktop.rozmyte.webp": 1332
+    "s2/s2_tlo_fs_desktop.w1280.webp": 28252,
+    "s2/s2_tlo_fs_desktop.webp": 45840,
+    "s2/s2_tlo_fs_desktop@2x.webp": 72824,
+    "s2/s2_tlo_fs_desktop.rozmyte.webp": 1570
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -1270,14 +1270,14 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s2/s2_tlo_fs_mobile.png",
    "rozmiar": "1080×1620 +@2x (3 szer.)",
-   "waga": 71556,
-   "waga_desktop": 32130,
-   "waga_telefon": 26116,
+   "waga": 100012,
+   "waga_desktop": 43888,
+   "waga_telefon": 36042,
    "pliki": {
-    "s2/s2_tlo_fs_mobile.w720.webp": 14826,
-    "s2/s2_tlo_fs_mobile.webp": 24600,
-    "s2/s2_tlo_fs_mobile@2x.webp": 30614,
-    "s2/s2_tlo_fs_mobile.rozmyte.webp": 1516
+    "s2/s2_tlo_fs_mobile.w720.webp": 21938,
+    "s2/s2_tlo_fs_mobile.webp": 34186,
+    "s2/s2_tlo_fs_mobile@2x.webp": 42032,
+    "s2/s2_tlo_fs_mobile.rozmyte.webp": 1856
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -1287,11 +1287,11 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s2/s2_ramka.png",
    "rozmiar": "1210×806 okno 961×576",
-   "waga": 36096,
-   "waga_desktop": 36096,
-   "waga_telefon": 36096,
+   "waga": 35954,
+   "waga_desktop": 35954,
+   "waga_telefon": 35954,
    "pliki": {
-    "s2/s2_ramka.webp": 36096
+    "s2/s2_ramka.webp": 35954
    },
    "uwagi": [
     [
@@ -1323,13 +1323,13 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s2/s2_okladka.png",
    "rozmiar": "400×600 +@2x (3 szer.)",
-   "waga": 154360,
-   "waga_desktop": 73344,
-   "waga_telefon": 30248,
+   "waga": 172076,
+   "waga_desktop": 81906,
+   "waga_telefon": 33510,
    "pliki": {
-    "s2/s2_okladka.webp": 30248,
-    "s2/s2_okladka.w600.webp": 50768,
-    "s2/s2_okladka@2x.webp": 73344
+    "s2/s2_okladka.webp": 33510,
+    "s2/s2_okladka.w600.webp": 56660,
+    "s2/s2_okladka@2x.webp": 81906
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -1339,15 +1339,15 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s2/s2_baner.png",
    "rozmiar": "960×640 +@2x (2 szer.)",
-   "waga": 215890,
-   "waga_desktop": 138332,
-   "waga_telefon": 78910,
+   "waga": 231226,
+   "waga_desktop": 147950,
+   "waga_telefon": 84698,
    "pliki": {
-    "s2/s2_baner.webp": 40174,
-    "s2/s2_baner@2x.webp": 70236,
-    "s2/s2_baner.rozmyte.webp": 1352,
-    "s2/s2_baner.k169.webp": 37384,
-    "s2/s2_baner.k169@2x.webp": 66744
+    "s2/s2_baner.webp": 43048,
+    "s2/s2_baner@2x.webp": 76062,
+    "s2/s2_baner.rozmyte.webp": 1422,
+    "s2/s2_baner.k169.webp": 40228,
+    "s2/s2_baner.k169@2x.webp": 70466
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -1386,18 +1386,18 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s3/s3_sym_szafir.png",
    "rozmiar": "144×144 +@2x",
-   "waga": 43108,
-   "waga_desktop": 33402,
-   "waga_telefon": 17744,
+   "waga": 41694,
+   "waga_desktop": 32212,
+   "waga_telefon": 17338,
    "pliki": {
-    "s3/s3_sym_szafir.webp": 6106,
-    "s3/s3_sym_szafir@2x.webp": 16168,
-    "s3/s3_sym_szafir.ruch1.webp": 3824,
-    "s3/s3_sym_szafir.syl.webp": 1498,
-    "s3/s3_sym_szafir.glow.webp": 1504,
-    "s3/s3_sym_szafir.cien.webp": 1212,
-    "s3/s3_sym_szafir.mini.webp": 3600,
-    "s3/s3_sym_szafir.mini@2x.webp": 9196
+    "s3/s3_sym_szafir.webp": 6022,
+    "s3/s3_sym_szafir@2x.webp": 15516,
+    "s3/s3_sym_szafir.ruch1.webp": 3776,
+    "s3/s3_sym_szafir.syl.webp": 1474,
+    "s3/s3_sym_szafir.glow.webp": 1458,
+    "s3/s3_sym_szafir.cien.webp": 1148,
+    "s3/s3_sym_szafir.mini.webp": 3460,
+    "s3/s3_sym_szafir.mini@2x.webp": 8840
    },
    "uwagi": [],
    "metoda_alfy": "alfa"
@@ -1407,18 +1407,18 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s3/s3_sym_szmaragd.png",
    "rozmiar": "144×144 +@2x",
-   "waga": 26200,
-   "waga_desktop": 19700,
-   "waga_telefon": 10930,
+   "waga": 24818,
+   "waga_desktop": 18828,
+   "waga_telefon": 10318,
    "pliki": {
-    "s3/s3_sym_szmaragd.webp": 4074,
-    "s3/s3_sym_szmaragd@2x.webp": 9556,
-    "s3/s3_sym_szmaragd.ruch1.webp": 2292,
-    "s3/s3_sym_szmaragd.syl.webp": 518,
-    "s3/s3_sym_szmaragd.glow.webp": 922,
-    "s3/s3_sym_szmaragd.cien.webp": 698,
-    "s3/s3_sym_szmaragd.mini.webp": 2426,
-    "s3/s3_sym_szmaragd.mini@2x.webp": 5714
+    "s3/s3_sym_szmaragd.webp": 3788,
+    "s3/s3_sym_szmaragd@2x.webp": 9072,
+    "s3/s3_sym_szmaragd.ruch1.webp": 2214,
+    "s3/s3_sym_szmaragd.syl.webp": 506,
+    "s3/s3_sym_szmaragd.glow.webp": 906,
+    "s3/s3_sym_szmaragd.cien.webp": 702,
+    "s3/s3_sym_szmaragd.mini.webp": 2202,
+    "s3/s3_sym_szmaragd.mini@2x.webp": 5428
    },
    "uwagi": [],
    "metoda_alfy": "alfa"
@@ -1560,18 +1560,18 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s3/s3_sym_mnoznik.png",
    "rozmiar": "144×144 +@2x",
-   "waga": 36032,
-   "waga_desktop": 27916,
-   "waga_telefon": 16388,
+   "waga": 35992,
+   "waga_desktop": 27888,
+   "waga_telefon": 16368,
    "pliki": {
-    "s3/s3_sym_mnoznik.webp": 5068,
-    "s3/s3_sym_mnoznik@2x.webp": 12326,
-    "s3/s3_sym_mnoznik.ruch1.webp": 3704,
+    "s3/s3_sym_mnoznik.webp": 5056,
+    "s3/s3_sym_mnoznik@2x.webp": 12312,
+    "s3/s3_sym_mnoznik.ruch1.webp": 3696,
     "s3/s3_sym_mnoznik.syl.webp": 1752,
     "s3/s3_sym_mnoznik.glow.webp": 1542,
     "s3/s3_sym_mnoznik.cien.webp": 1274,
     "s3/s3_sym_mnoznik.mini.webp": 3048,
-    "s3/s3_sym_mnoznik.mini@2x.webp": 7318
+    "s3/s3_sym_mnoznik.mini@2x.webp": 7312
    },
    "uwagi": [],
    "metoda_alfy": "alfa"
@@ -1581,14 +1581,14 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s3/s3_tlo_desktop.png",
    "rozmiar": "1920×1280 +@2x (3 szer.)",
-   "waga": 216388,
-   "waga_desktop": 107146,
-   "waga_telefon": 70664,
+   "waga": 302942,
+   "waga_desktop": 148032,
+   "waga_telefon": 99556,
    "pliki": {
-    "s3/s3_tlo_desktop.w1280.webp": 40500,
-    "s3/s3_tlo_desktop.webp": 68742,
-    "s3/s3_tlo_desktop@2x.webp": 105224,
-    "s3/s3_tlo_desktop.rozmyte.webp": 1922
+    "s3/s3_tlo_desktop.w1280.webp": 57684,
+    "s3/s3_tlo_desktop.webp": 97226,
+    "s3/s3_tlo_desktop@2x.webp": 145702,
+    "s3/s3_tlo_desktop.rozmyte.webp": 2330
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -1598,14 +1598,14 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s3/s3_tlo_mobile.png",
    "rozmiar": "1080×1620 +@2x (3 szer.)",
-   "waga": 103466,
-   "waga_desktop": 47220,
-   "waga_telefon": 38324,
+   "waga": 170250,
+   "waga_desktop": 75586,
+   "waga_telefon": 62696,
    "pliki": {
-    "s3/s3_tlo_mobile.w720.webp": 20106,
-    "s3/s3_tlo_mobile.webp": 36140,
-    "s3/s3_tlo_mobile@2x.webp": 45036,
-    "s3/s3_tlo_mobile.rozmyte.webp": 2184
+    "s3/s3_tlo_mobile.w720.webp": 34918,
+    "s3/s3_tlo_mobile.webp": 59746,
+    "s3/s3_tlo_mobile@2x.webp": 72636,
+    "s3/s3_tlo_mobile.rozmyte.webp": 2950
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -1615,14 +1615,14 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s3/s3_tlo_fs_desktop.png",
    "rozmiar": "1920×1280 +@2x (3 szer.)",
-   "waga": 324756,
-   "waga_desktop": 158660,
-   "waga_telefon": 107000,
+   "waga": 328954,
+   "waga_desktop": 160380,
+   "waga_telefon": 108668,
    "pliki": {
-    "s3/s3_tlo_fs_desktop.w1280.webp": 61570,
-    "s3/s3_tlo_fs_desktop.webp": 104526,
-    "s3/s3_tlo_fs_desktop@2x.webp": 156186,
-    "s3/s3_tlo_fs_desktop.rozmyte.webp": 2474
+    "s3/s3_tlo_fs_desktop.w1280.webp": 62346,
+    "s3/s3_tlo_fs_desktop.webp": 106228,
+    "s3/s3_tlo_fs_desktop@2x.webp": 157940,
+    "s3/s3_tlo_fs_desktop.rozmyte.webp": 2440
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -1632,14 +1632,14 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s3/s3_tlo_fs_mobile.png",
    "rozmiar": "1080×1620 +@2x (3 szer.)",
-   "waga": 183678,
-   "waga_desktop": 81866,
-   "waga_telefon": 67686,
+   "waga": 211978,
+   "waga_desktop": 94174,
+   "waga_telefon": 77742,
    "pliki": {
-    "s3/s3_tlo_fs_mobile.w720.webp": 37222,
-    "s3/s3_tlo_fs_mobile.webp": 64590,
-    "s3/s3_tlo_fs_mobile@2x.webp": 78770,
-    "s3/s3_tlo_fs_mobile.rozmyte.webp": 3096
+    "s3/s3_tlo_fs_mobile.w720.webp": 43390,
+    "s3/s3_tlo_fs_mobile.webp": 74414,
+    "s3/s3_tlo_fs_mobile@2x.webp": 90846,
+    "s3/s3_tlo_fs_mobile.rozmyte.webp": 3328
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -1685,13 +1685,13 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s3/s3_okladka.png",
    "rozmiar": "400×600 +@2x (3 szer.)",
-   "waga": 207568,
-   "waga_desktop": 101974,
-   "waga_telefon": 37504,
+   "waga": 237018,
+   "waga_desktop": 115596,
+   "waga_telefon": 43128,
    "pliki": {
-    "s3/s3_okladka.webp": 37504,
-    "s3/s3_okladka.w600.webp": 68090,
-    "s3/s3_okladka@2x.webp": 101974
+    "s3/s3_okladka.webp": 43128,
+    "s3/s3_okladka.w600.webp": 78294,
+    "s3/s3_okladka@2x.webp": 115596
    },
    "uwagi": [],
    "metoda_alfy": ""
@@ -1701,15 +1701,15 @@
    "zrodlo": "zastepcze",
    "plik_zrodla": "art/zastepcze/s3/s3_baner.png",
    "rozmiar": "960×640 +@2x (2 szer.)",
-   "waga": 291746,
-   "waga_desktop": 187930,
-   "waga_telefon": 105468,
+   "waga": 328352,
+   "waga_desktop": 211248,
+   "waga_telefon": 118940,
    "pliki": {
-    "s3/s3_baner.webp": 53096,
-    "s3/s3_baner@2x.webp": 95322,
-    "s3/s3_baner.rozmyte.webp": 1652,
-    "s3/s3_baner.k169.webp": 50720,
-    "s3/s3_baner.k169@2x.webp": 90956
+    "s3/s3_baner.webp": 59906,
+    "s3/s3_baner@2x.webp": 107160,
+    "s3/s3_baner.rozmyte.webp": 1836,
+    "s3/s3_baner.k169.webp": 57198,
+    "s3/s3_baner.k169@2x.webp": 102252
    },
    "uwagi": [],
    "metoda_alfy": ""

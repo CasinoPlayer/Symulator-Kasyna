@@ -1,5 +1,7 @@
 package pl.wsb.kasyno.slots.application;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +46,9 @@ import java.util.Optional;
  *   <li>silnik liczy wynik z wylosowanego ziarna → runda {@code RESOLVED}; jej {@code resultJson} to od razu
  *       cała odpowiedź HTTP z kontraktu § 2.4 ({@link SpinDocument}: kroki animacji, saldo przed i po, seed);</li>
  *   <li>wypłata wygranej do portfela → runda {@code SETTLED};</li>
- *   <li>zdarzenie {@link SpinCompleted} (statystyki gracza aktualizuje {@code StatsUpdater}, w tej samej transakcji).</li>
+ *   <li>zdarzenie {@link SpinCompleted}: statystyki gracza aktualizuje {@code StatsUpdater} synchronicznie, w tej samej
+ *       transakcji, a feed i ranking w lobby odświeżają się dopiero po jej zatwierdzeniu
+ *       ({@code @TransactionalEventListener(AFTER_COMMIT)} w module {@code report}).</li>
  * </ol>
  *
  * <p>Status {@code FAILED} jest częścią modelu, ale w tym przebiegu nie zostaje w bazie: każdy błąd po pobraniu
@@ -52,6 +56,8 @@ import java.util.Optional;
  */
 @Service
 public class SpinService {
+
+    private static final Logger log = LoggerFactory.getLogger(SpinService.class);
 
     private final SlotMachineRepository machines;
     private final SpinRoundRepository rounds;
@@ -94,7 +100,7 @@ public class SpinService {
 
         UserAccount player = accounts.findById(command.playerId()).orElseThrow(NotLoggedInException::new);
 
-        long seed = seeds.nextSeed();
+        long seed = seedFor(command);
         SpinRound round = rounds.save(new SpinRound(player, machine, command.bet(), seed,
                 command.idempotencyKey(), clock.instant()));
 
@@ -119,6 +125,21 @@ public class SpinService {
                 round.getBet(), round.getTotalWin(), round.getMultiplier(), round.getTier().code(),
                 round.getSettledAt()));
         return SpinResult.of(round, balance, false);
+    }
+
+    /**
+     * Ziarno rundy: zwykle z {@link SeedGenerator} ({@code SecureRandom}, nie do przewidzenia). Wyjątek to profil
+     * {@code demo}: skrypt nagrywający filmik podaje ziarno w nagłówku {@code X-Demo-Seed}, żeby pokazać wybraną rundę
+     * (np. darmowe spiny). O tym, czy nagłówek w ogóle trafi do polecenia, decyduje kontroler na podstawie
+     * {@code kasyno.demo.allow-seed}; tutaj tylko odnotowujemy w logu, że runda nie była losowa.
+     */
+    private long seedFor(SpinCommand command) {
+        if (command.demoSeed() == null) {
+            return seeds.nextSeed();
+        }
+        log.info("Profil demo: runda gracza {} w {} z ziarnem z nagłówka X-Demo-Seed ({})", command.playerId(),
+                command.gameCode(), SpinDocument.seedHex(command.demoSeed()));
+        return command.demoSeed();
     }
 
     /**

@@ -14,3 +14,11 @@
 
 ## Dokumenty
 - 04 otwarte kwestie 14-17 (przekazane recenzentowi 05)
+
+## Dźwięk — odstępstwa do naniesienia w docs/projekt/05 (z raportu wykonawcy)
+- sub pod C-dur: C2 zamiast 55 Hz (A1) w sfx_free_spins_koniec i sfx_bigwin_koniec
+- gong: dodatkowa warstwa „blasku” 0,7–5,5 kHz poza 12 parcjałami
+- chór w mus_s3_fs: cykl 3+3 takty (8 nie dzieli 12)
+- Opus constrained VBR, AAC koder fast
+- muzyka −14 LUFS (szyna 0,45 → ~−22 LUFS w sesji)
+- front: audio-engine.js musi używać loopStart/loopEnd z manifestu (przekazane agentowi S1)

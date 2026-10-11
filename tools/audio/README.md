@@ -191,10 +191,16 @@ python3 tools/audio/przetworz_zewnetrzne.py --usun mus_s2                       
 Skrypt kopiuje plik do `tools/audio/zrodla/<ID>.<rozszerzenie>` (sprawdzany jest też `audio/zrodla/`), dopisuje
 wiersz do `LICENCJE.md` (kontrola A14) i uruchamia pipeline dla tego ID. Plik zewnętrzny ma pierwszeństwo nad
 syntezą przy każdym kolejnym przebiegu. Dla muzyki: dekodowanie do 48 kHz → pomiar tempa (autokorelacja obwiedni
-uderzeń; jeśli różni się od zamówionego o > 0,4%, manifest dostaje tempo zmierzone) → wybór N taktów od kreski
-taktowej w części o najbardziej stałej głośności → dopasowanie szwu (korelacja ±20 ms) → przenikanie o stałej
+uderzeń, doprecyzowana na opóźnieniach do 32 miar; jeśli różni się od zamówionego o > 0,4%, manifest dostaje
+tempo zmierzone) → faza taktu (miary z uderzeń w paśmie < 250 Hz, „raz” z największej zmiany chromagramu —
+akordy zmieniają się na początku taktu) → wybór N taktów od kreski taktowej w części o najbardziej stałej
+głośności → dopasowanie szwu (korelacja ±20 ms) → przenikanie o stałej
 mocy 50 ms wypalone w pliku → ten sam mastering, zakładki, kodowanie i kontrole co przy syntezie. Efekt
 jednorazowy: przycięcie ciszy i normalizacja szczytu. Prompty do Suno: doc 05 § 11 (`mus_napiecie` zostaje syntezą).
+
+Sprawdzone na 7 syntetycznych „nagraniach” (nasze pętle z wstępem 0,7–5,1 s, tempem zmienionym o −0,5…+0,8%
+i kodowaniem MP3): tempo z błędem ≤ 0,01%, start pętli ≤ 3 ms od kreski taktowej, szew bez trzasku. Prawdziwe
+nagrania z generatora mogą mieć pływające tempo — skrypt ostrzega przy niepewnym pomiarze; wtedy odsłuch i `--start`.
 
 ## 8. Znane ograniczenia
 

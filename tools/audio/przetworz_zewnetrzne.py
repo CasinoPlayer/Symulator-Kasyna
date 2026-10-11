@@ -73,7 +73,10 @@ def przygotuj(sciezka: Path, przepis: dict, start_s: float | None = None) -> tup
             metrum = meta.get("beatsPerBar", 4)
             takty = int(round(okres / (metrum * 60.0 / bpm)))
             zmierzone, pewnosc = petle.zmierz_tempo(x, bpm)
-            if abs(zmierzone - bpm) / bpm > 0.004 and pewnosc > 0.1:
+            if pewnosc <= 0.1:
+                print(f"  UWAGA {sciezka.name}: tempo niepewne (pewność {pewnosc:.2f}) — utwór bez stałego pulsu? "
+                      f"Sprawdź pętlę na słuch, w razie potrzeby podaj --start albo poproś o nową wersję")
+            elif abs(zmierzone - bpm) / bpm > 0.004:
                 print(f"  {sciezka.name}: zmierzone tempo {zmierzone:.2f} BPM (zamówione {bpm}) — używam zmierzonego")
                 bpm = round(zmierzone, 3)
                 nadpisz["bpm"] = bpm
