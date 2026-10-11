@@ -432,7 +432,7 @@ start w czasie `cooldownMs` jest pomijany.
 
 | Dźwięk | `maxVoices` | `cooldownMs` | Dlaczego |
 |---|---|---|---|
-| `ui_hover` | 1 | 60 | szybkie przesuwanie myszy po kaflach nie może „terkotać” |
+| `ui_hover` | 1 | 80 | szybkie przesuwanie myszy po kaflach nie może „terkotać” (80 ms jak w 04) |
 | `sfx_moneta_1` … `_5` (łącznie, wspólna grupa) | 6 (Low: 3) | 25 | 36 monet w bonusie powitalnym przylatuje w ~1,5 s |
 | `sfx_beben_stop_*` (grupa) | 3 | 0 | przy szybkim zatrzymaniu bębny stają co 40 ms |
 | `sfx_s3_pekniecie_*` (grupa) | 3 | 25 | pęka nawet kilkanaście symboli naraz — 3 głosy brzmią pełniej niż 12 (§ 6.4) |
@@ -506,8 +506,8 @@ mniej niż 0: o tyle wcześniej planujemy dźwięk. Górna granica 150 ms, bo s�
 200–300 ms i pełna kompensacja przesuwałaby dźwięk przed gest gracza.
 
 **Szybkie zatrzymanie (slam stop).** Gdy gracz wciśnie STOP, pozostałe bębny stają co 40 ms (zamiast 180/200 ms).
-Gramy wszystkie stopy (każdy −3 dB), pętla bębnów gaśnie w 80 ms. Antycypacji przy szybkim zatrzymaniu nie skracamy
-do zera: narastanie gra od przesunięcia tak, by zakończyć się na stopie (§ 3.3, `sfx_antycypacja_narastanie`).
+Gramy wszystkie stopy (każdy −3 dB), pętla bębnów gaśnie w 80 ms. Antycypacja jest przy szybkim zatrzymaniu pomijana
+(04 § 2.14): jeśli narastanie już gra, gaśnie w 80 ms, a serce i warstwa napięcia wychodzą w 250 ms.
 
 **Turbo (brief § 4: czas ×0,45).** Oś czasu dźwięków skaluje się razem z animacją. Dźwięki nie są przyspieszane
 (zmieniłoby to wysokość), tylko: krótsze wyciszenie pętli bębnów (60 ms), narastanie antycypacji odtwarzane od
@@ -538,6 +538,8 @@ przesunięcia, dźwięki linii scalone w jeden `sfx_linia` na całą wygraną.
 | `duck(name, db, { attack, hold, release })` / `unduck(name)` | ducking nazwany (§ 5.3) | nie |
 | `setMusicFilter(hz, ms)` | filtr muzyki (antycypacja, okna) | nie |
 | `setKeyCents(c)` | transpozycja `keyTrack` | nie |
+| `postepLicznika(u)` | postęp liczenia wygranej 0…1, przekazywany co klatkę przez licznik (04 § 2.17) → prędkość pętli `sfx_licznik_tik` (§ 3.2) | nie |
+| `wibruj(id)` (moduł `ui/haptyka.js`) | wzorzec wibracji `H_*` (§ 10) | nie |
 | `setQuality(poziom)` — `'high'`, `'medium'` albo `'low'` | limit głosów, panorama | nie |
 | `stopAll(fadeMs)` | zatrzymanie wszystkich efektów (pominięcie sekwencji, błąd) | nie |
 | `getVolume` / `setVolume` / `isMuted` / `setMuted` / `toggleMuted` / `onChange` | ustawienia gracza (§ 9) | tak |
@@ -615,7 +617,7 @@ To drobiazg, który odróżnia dopracowany produkt od szablonu.
 | `sfx_moneta_3` | jw., nuta E7 | 200 ms | nie | sfx | −14 | 1 | jw. | jw., f0 = 2 300 Hz, nuta **E7** |
 | `sfx_moneta_4` | jw., nuta G7 | 190 ms | nie | sfx | −14 | 1 | jw. | jw., f0 = 2 500 Hz, nuta **G7** |
 | `sfx_moneta_5` | jw., nuta A7 | 180 ms | nie | sfx | −14 | 1 | jw. | jw., f0 = 2 700 Hz, nuta **A7** |
-| `sfx_licznik_tik` | szybkie, równe „tik-tik-tik” liczenia, naprzemiennie na dwóch wysokościach | 500 ms | **tak** | sfx | −16 | 2 | 1 plik; prędkość 1,0 → 1,6 (`setRate`) w trakcie liczenia; T | 8 tików co 62,5 ms (16 na sekundę): dzwonek FM 1:3,5 (I 1,5), 15 ms, naprzemiennie A6 i E7; + klik szumu 1 ms; bez pogłosu |
+| `sfx_licznik_tik` | szybkie, równe „tik-tik-tik” liczenia, naprzemiennie na dwóch wysokościach | 500 ms | **tak** | sfx | −16 | 2 | 1 plik; prędkość według postępu liczenia `u` = 0…1: 1,0 + 0,3·u, +0,15 na każdy poziom eskalacji, maks. 1,6 (`audio.postepLicznika(u)`, § 2.9); T | 8 tików co 62,5 ms (16 na sekundę): dzwonek FM 1:3,5 (I 1,5), 15 ms, naprzemiennie A6 i E7; + klik szumu 1 ms; bez pogłosu |
 | `sfx_licznik_koniec` | domknięcie liczenia: nuta E5 i jasny złoty akord | 800 ms | nie | sfx | −8 | 3 | 1 plik; ±5 c; T | E5 (110 ms) → akord C6 + E6 + G6, dzwony FM 1:2 (I 3 → 0 w 400 ms), τ 320 ms; miękkie uderzenie sinus 80 Hz, τ 60 ms; iskry 6 kHz; pogłos 1,2 s, mix 20% |
 | `sfx_saldo_puls` | miękki, okrągły „blup” pulsu salda | 180 ms | nie | sfx | −16 | 2 | 1 plik; ±5 c; T | sinus E5 → A5 (glissando 40 ms), τ 110 ms, LP 3 kHz; + powietrze: szum HP 5 kHz −24 dB, 60 ms |
 | `sfx_bankrut` | zabawny, ale z klasą „smutny” motyw: przytłumione dęte w dół, pusta kieszeń, wirująca moneta | 2 000 ms | nie | sfx | −6 | 5 | 1 plik | 0–900 ms: „dęte” (piła → LP 900 Hz, wibrato 5 Hz ±15 c): G4–F♯4–F4 po 200 ms i E4 trzymane 500 ms z wibratem narastającym do ±30 c; 300 ms: „klap” pustej kieszeni (szum LP 1,2 kHz, 50 ms); 900–2 000 ms: moneta wirująca na stole — uderzenia modelu monety coraz gęściej (odstęp 120 → 8 ms) i coraz ciszej, aż się położy |
@@ -639,14 +641,14 @@ wychodzi **melodyjny deszcz**, który nigdy nie fałszuje, a z muzyką lobby (a-
 | `sfx_beben_stop_5` | jw., nuta A5 (tylko S2, S3) | 280 ms | nie | sfx | −7 | 4 | jw. | jw., (c) **A5** |
 | `sfx_beben_stop_6` | jw., nuta C6 (tylko S3 — szósta kolumna) | 280 ms | nie | sfx | −7 | 4 | jw. | jw., (c) **C6** |
 | `sfx_antycypacja_narastanie` | narastające napięcie: wznoszący szum, drżące smyczki, coraz szybsze tremolo aż do uderzenia | 1 200 ms | nie | sfx | −6 | 4 | 1 plik, stereo; start od przesunięcia, gdy antycypacja trwa krócej (S1, S3, turbo) | szum → BP 400 → 6 000 Hz (Q 4, krzywa wykładnicza); klaster „smyczków” (6 pił E3–B3–E4, ±20 c → BP 1–3 kHz) z tremolo 8 → 16 Hz; ton Sheparda w górę (§ 4.3.8); głośność +12 dB w czasie pliku; **ostre ucięcie w 1 200 ms** — bez ogona, bo w tej chwili gra stop bębna |
-| `sfx_bicie_serca` | „lub-dub” serca, głębokie, słyszalne też na telefonie | 800 ms (75 uderzeń/min) | **tak** | sfx | −8 | 4 | 1 plik; prędkość 1,00 → 1,08 → 1,16 przy kolejnych bębnach antycypacji | „lub”: sinus 70 → 45 Hz w 80 ms, τ 90 ms; „dub” w 180 ms: sinus 60 → 42 Hz, −4 dB; LP 200 Hz; nasycenie tanh ×3 (harmoniczne 120–240 Hz) |
+| `sfx_bicie_serca` | „lub-dub” serca, głębokie, słyszalne też na telefonie | 600 ms (100 uderzeń/min — ten sam puls co bicie serca scatterów w 04) | **tak** | sfx | −8 | 4 | 1 plik; bez zmiany prędkości (zgodność z obrazem); każdy kolejny antycypowany bęben +2 dB | „lub”: sinus 70 → 45 Hz w 80 ms, τ 90 ms; „dub” w 150 ms: sinus 60 → 42 Hz, −4 dB; LP 200 Hz; nasycenie tanh ×3 (harmoniczne 120–240 Hz) |
 | `sfx_scatter_1` | pierwszy scatter: magiczny kryształowy „ting” z krótkim zasysającym narastaniem | 900 ms | nie | sfx | −6 | 4 | 1 plik; ±5 c; T; panorama według bębna; `syncPoint` 80 ms | 0–80 ms: odwrócony pogłos szumu (start 80 ms przed lądowaniem); 80 ms: dzwon FM 1:3,5 (I 4 → 0,5) **C6**, τ 500 ms + oktawa C7 −8 dB; pogłos 1,6 s, mix 30% |
 | `sfx_scatter_2` | drugi scatter: wyżej, pełniej, z basem — „coś się zbliża” | 1 100 ms | nie | sfx | −5 | 4 | jw. | jak `sfx_scatter_1`, nuta **E6** + A5 pod spodem, + sub sinus 65 Hz, τ 300 ms; pogłos 2,0 s |
 | `sfx_scatter_3` | trzeci (i każdy kolejny) scatter: akord-fanfara z chórem i uderzeniem — bonus! | 1 700 ms | nie | sfx | −3 | 5 | 1 plik; n-ty scatter (n ≥ 4): dodatkowo +100 c × (n − 3), maks. +300 c; T; `syncPoint` 80 ms | narastanie 80 ms; akord dzwonów FM C6–E6–G6–C7 rozłożony co 30 ms; chór: 6 odstrojonych pił przez dwa filtry formantowe (BP 700 Hz i 1 100 Hz — samogłoska „a”), atak 200 ms; sub 55 → 35 Hz; pogłos 2,4 s |
 | `sfx_wild` | złote „łuuup” narastania, uderzenie i błyszczący akord | 1 000 ms | nie | sfx | −5 | 4 | 1 plik; ±5 c; T; `syncPoint` 150 ms | 0–150 ms: narastanie (odwrócony pogłos szumu i akordu) — start 150 ms przed lądowaniem; 150 ms: uderzenie (sinus 80 → 40 Hz + trzask szumu 5 ms); akord dzwonów FM 1:2 (I 2,5) C5–G5–C6–E6, τ 700 ms; 10 iskier 4–8 kHz; pogłos 1,8 s, mix 25% |
-| `sfx_wygrana_small_1` | krótkie, przyjemne arpeggio dzwonka z szarpnięciem: C5–E5–G5 | 700 ms | nie | sfx | −9 | 4 | grupa 3 plików bez powtórzeń; ±5 c; T; wygrana < 1× zakładu: −6 dB | 3 nuty co 60 ms: dzwonek FM 1:1 (I 1,2 → 0 — ciepły, harmoniczny) + Karplus–Strong oktawę niżej −8 dB; τ 350 ms; pogłos 1,2 s, mix 18% |
-| `sfx_wygrana_small_2` | jw.: E5–G5–C6 | 750 ms | nie | sfx | −9 | 4 | jw. | jw. |
-| `sfx_wygrana_small_3` | jw.: G5–C6–E6 | 800 ms | nie | sfx | −9 | 4 | jw. | jw. |
+| `sfx_wygrana_small_1` | skromne arpeggio dzwonka z szarpnięciem: C5–E5–G5 (najniżej) | 700 ms | nie | sfx | −9 | 4 | wariant według mnożnika m (jak w 04): `_1` dla m < 1 — gra o 6 dB ciszej, bez linii i bez tiku (§ 1.4); ±5 c, ±1 dB; T | 3 nuty co 60 ms: dzwonek FM 1:1 (I 1,2 → 0 — ciepły, harmoniczny) + Karplus–Strong oktawę niżej −8 dB; τ 350 ms; pogłos 1,2 s, mix 18% |
+| `sfx_wygrana_small_2` | jw., wyżej: E5–G5–C6 | 750 ms | nie | sfx | −9 | 4 | `_2` dla 1 ≤ m < 2,5; ±5 c, ±1 dB; T | jw. |
+| `sfx_wygrana_small_3` | jw., najwyżej i najjaśniej: G5–C6–E6 | 800 ms | nie | sfx | −9 | 4 | `_3` dla 2,5 ≤ m < 5; ±5 c, ±1 dB; T | jw., dzwonek z indeksem I 1,6 (jaśniejszy) |
 | `sfx_wygrana_medium` | jaśniejsza fanfara: szybki bieg, akord supersaw, garść monet, uderzenie | 1 600 ms | nie | sfx | −6 | 4 | 1 plik; ±5 c; T | bieg C5–D5–E5–G5–C6 co 40 ms (dzwonki FM 1:2); 200 ms: akord C-dur (supersaw 7 ±12 c → LP 3 kHz, 300 ms) + sub 60 Hz; 250–700 ms: 6 monet (ziarna modelu monety); ogon dzwonów i pogłos 1,8 s |
 | `sfx_linia` | „laserowe” przeciągnięcie linii — czyste, krótkie „ziiing” | 340 ms | nie | sfx | −12 | 3 | 1 plik; +100 c × numer pokazywanej linii (maks. +700 c) | sinus 800 → 1 600 Hz (wykładniczo, 120 ms), τ 150 ms + szum BP 4 kHz (Q 6) o tej samej obwiedni, −8 dB; echo 90 ms, sprzężenie 25%, echo w panoramie ±0,4. Celowo prawie bez wysokości dźwięku — kolejne linie wznoszą się chromatycznie i nie gryzą się z muzyką |
 | `sfx_bigwin_wejscie` | wejście BIG WIN: zasysające narastanie, potężne uderzenie, akord „dętych” i motyw Cebuliona jako fanfara | 2 400 ms | nie | sfx | −3 | 5 | 1 plik, stereo; `syncPoint` 300 ms | 0–300 ms: odwrócony talerz (szum HP 3 kHz, obwiednia rosnąca wykładniczo); 300 ms: uderzenie — sinus 55 → 30 Hz (600 ms) + trzask + akord C3–G3–C4–E4–G4–C5 („dęte”: piła + kwadrat oktawę wyżej, LP 400 → 8 000 Hz w 80 ms); 500–1 300 ms: motyw G4–C5–E5–G5 po 120 ms (ostatnia nuta trzymana); do 2 400 ms: trzymany akord, migotanie (iskry 5–9 kHz), pogłos sali 2,5 s |
@@ -670,8 +672,8 @@ ostatni akord zawierałby C♯ i fałszowałby.
 
 | ID | Opis brzmienia | Długość | Pętla? | Szyna | Poziom dB | Prio | Warianty | Jak powstaje |
 |---|---|---|---|---|---|---|---|---|
-| `sfx_s1_neon_bzyk` | brzęczenie i trzaski zapalającej się świetlówki, zakończone 8-bitowym „zapem” mocy | 650 ms | nie | sfx | −9 | 3 | 1 plik; ±20 c | buczenie 100 Hz (piła → BP 1–3 kHz) z obwiednią migotania: wł. 0–60 ms, wył. 60–110, wł. 110–170, wył. 170–200, wł. od 200 ms; wzór migotania jest **wspólny z animacją** (jedna tablica czasów w kodzie gry, żeby obraz i dźwięk migały identycznie); 6 trzasków (impulsy 0,5 ms, losowo); 200–350 ms: „zap” — kwadrat 220 → 880 Hz, redukcja do 8 bitów i 11 025 Hz; ogon buczenia do 650 ms (τ 200 ms) |
-| `sfx_s1_jackpot` | NEON JACKPOT: przepięcie neonu, 8-bitowy podbieg i synthwave'owa fanfara w arpeggiach | 4 000 ms | nie | sfx | −3 | 5 | 1 plik, stereo | 0 ms: przepięcie (szum z rezonansem 2 kHz + sub 45 Hz); 100–600 ms: 8-bitowy podbieg (kwadrat 25%, C–E–G–C w górę przez 2 oktawy, po 31 ms); 600–3 600 ms: fanfara 120 BPM — akordy C → F → G → C po 750 ms, arpeggia szesnastkami (125 ms) supersaw + werbel z bramkowanym pogłosem na 2 i 4; do 4 000 ms: trzymany C-dur, migotanie |
+| `sfx_s1_neon_bzyk` | brzęczenie i trzaski zapalającej się świetlówki, z 8-bitowym „zapem” mocy na starcie | 650 ms | nie | sfx | −9 | 3 | 1 plik; ±20 c | buczenie 100 Hz (piła → BP 1–3 kHz) z obwiednią migotania **zgodną z animacją neonu w 04 (E50)**: zapalenie 0–40 ms, przygaszenie do 60% w 200–260 ms, drugie przygaszenie w 450–500 ms, potem stałe świecenie (jedna tablica czasów w kodzie gry dla obrazu i dźwięku); 0–150 ms: „zap” — kwadrat 220 → 880 Hz, redukcja do 8 bitów i 11 025 Hz; 6 trzasków (impulsy 0,5 ms) w chwilach przygaszeń; ogon buczenia do 650 ms (τ 200 ms) |
+| `sfx_s1_jackpot` | NEON JACKPOT: narastające przepięcie neonu, uderzenie, 8-bitowy podbieg i synthwave'owa fanfara w arpeggiach | 4 000 ms | nie | sfx | −3 | 5 | 1 plik, stereo; `syncPoint` 300 ms | 0–300 ms: narastające przepięcie (szum z rezonansem 2 kHz przestrajanym w górę + buczenie 100 Hz); 300 ms: uderzenie (sub 45 Hz + trzask) — w tej chwili `blysk_fs` w 04; 350–850 ms: 8-bitowy podbieg (kwadrat 25%, C–E–G–C w górę przez 2 oktawy, po 31 ms); 850–3 850 ms: fanfara 120 BPM — akordy C → F → G → C po 750 ms, arpeggia szesnastkami (125 ms) supersaw + werbel z bramkowanym pogłosem na 2 i 4; do 4 000 ms: trzymany C-dur, migotanie |
 
 ### 3.5. S2 „Złoty Faraon” (2 dźwięki)
 
@@ -693,7 +695,7 @@ Dźwięki S3 komponujemy od razu w E lidyjskiej, bez transpozycji T.
 | `sfx_s3_pekniecie_3` | jw., ciemniejszy, „grubszy” kryształ | 500 ms | nie | sfx | −10 | 3 | jw. | jw., parcjały 2–6 kHz, 12 odłamków |
 | `sfx_s3_pekniecie_4` | jw., najjaśniejszy, „cienkie szkło” | 650 ms | nie | sfx | −10 | 3 | jw. | jw., parcjały 4–10 kHz, 20 odłamków |
 | `sfx_s3_opad` | lekki, powietrzny świst w dół i ciche „plink” układających się klejnotów | 750 ms | nie | sfx | −12 | 3 | 1 plik; ±5 c | szum BP 3 000 → 800 Hz (0–400 ms); 400–750 ms: 6 „plinków” (dzwonek FM 1:3,5, 25 ms) na nutach E6–F♯6–G♯6–B6–C♯7 (1 318,5 / 1 480,0 / 1 661,2 / 1 975,5 / 2 217,5 Hz) |
-| `sfx_s3_mnoznik` | lądowanie kuli mnożnika: głęboki kryształowy dzwon z pulsującym „mmm” energii | 1 100 ms | nie | sfx | −7 | 4 | 1 plik; wysokość według wartości: ×2–×5 0 c, ×10–×20 +200 c, ×25 i więcej +400 c (×50 i ×100: dodatkowo `sfx_blysk`) | dzwon FM 1:3,5 (I 5 → 0,8) E4 + E5, τ 800 ms; „mmm”: sinus 82,4 Hz (E2) z tremolo 6 Hz, atak 60 ms, τ 600 ms; szklany klik na początku; pogłos jaskini 3 s, mix 30% |
+| `sfx_s3_mnoznik` | lądowanie kuli mnożnika: głęboki kryształowy dzwon z pulsującym „mmm” energii | 1 100 ms | nie | sfx | −7 | 4 | 1 plik; wysokość według wartości: ×2–×5 0 c, ×10–×25 +200 c, ×50–×100 +400 c i dodatkowo `sfx_blysk` (progi jak kolory kuli w 04) | dzwon FM 1:3,5 (I 5 → 0,8) E4 + E5, τ 800 ms; „mmm”: sinus 82,4 Hz (E2) z tremolo 6 Hz, atak 60 ms, τ 600 ms; szklany klik na początku; pogłos jaskini 3 s, mix 30% |
 | `sfx_s3_mnoznik_zbior` | kule lecą do licznika (świsty z wielu stron), łańcuch rozbłysków, potężne „zasilenie” mnożnika | 1 800 ms | nie | sfx | −4 | 5 | 1 plik, stereo; `syncPoint` 900 ms | 0–600 ms: 3 świsty (szum BP 1 → 5 kHz), panorama ±0,7 → 0; 600–900 ms: arpeggio E–G♯–B–D♯–F♯ (dzwony FM, po 60 ms); 900 ms: uderzenie (sub 41 → 30 Hz + trzask kryształu) + akord E–G♯–B–A♯ (dzwony + pad); pogłos 3 s |
 
 ### 3.7. Podsumowanie listy
@@ -702,11 +704,11 @@ Dźwięki S3 komponujemy od razu w E lidyjskiej, bez transpozycji T.
 |---|---|---|---|
 | UI (`ui_*`) | 8 | 1,27 s | — |
 | globalne | 13 | 10,23 s | `sfx_logowanie`, `sfx_skrzynia_otwarcie`, `sfx_monety_fontanna`, `sfx_przejscie_whoosh` |
-| wspólne dla gier | 27 | 28,17 s | `sfx_antycypacja_narastanie`, `sfx_bigwin_wejscie`, `sfx_bigwin_koniec`, `sfx_free_spins_start`, `sfx_free_spins_koniec` |
+| wspólne dla gier | 27 | 27,97 s | `sfx_antycypacja_narastanie`, `sfx_bigwin_wejscie`, `sfx_bigwin_koniec`, `sfx_free_spins_start`, `sfx_free_spins_koniec` |
 | S1 | 2 | 4,65 s | `sfx_s1_jackpot` |
 | S2 | 2 | 5,10 s | oba |
 | S3 | 7 | 5,95 s | `sfx_s3_mnoznik_zbior` |
-| **efekty razem** | **59** | **≈ 55,4 s** | 13 |
+| **efekty razem** | **59** | **≈ 55,2 s** | 13 |
 | muzyka (§ 4) | 8 | 235,8 s (pętle) | wszystkie |
 
 Wszystkie pozostałe efekty są **mono** — panoramę nadaje silnik (§ 5.5). Mono to połowa wagi pliku i pamięci,
@@ -983,8 +985,8 @@ stateDiagram-v2
 | 4 | CISZA → GRA | E21 intro gry (po odblokowaniu lub „Graj”) | utwór gry od `loopStart`, wejście; S2: start 300 ms po uderzeniu gongu | 1 500 ms | brak | S1: `sfx_s1_neon_bzyk`; S2: `sfx_s2_gong`; S3: `sfx_s3_opad` |
 | 5 | GRA → NAPIECIE | E27 antycypacja | `mus_napiecie` od `loopStart`, wejście; filtr muzyki 20 000 → 1 200 Hz (rampa wykładnicza); ducking „napięcie” −4 dB | 400 ms | **brak** — napięcie musi ruszyć razem z bębnem | `sfx_antycypacja_narastanie`, `sfx_bicie_serca` |
 | 6 | NAPIECIE → GRA | ostatni antycypowany bęben stanął bez bonusu | warstwa wyciszona; filtr 1 200 → 20 000 Hz; ducking zdjęty | 250 ms (warstwa), 600 ms (filtr) | brak | — |
-| 7 | GRA / NAPIECIE → FS | E35 start free spins | muzyka gry wyciszana od chwili 0 przez 800 ms; `mus_napiecie` ucięta w 100 ms w chwili uderzenia; utwór FS startuje od `loopStart` **dokładnie w chwili uderzenia stingera** (`syncPoint` 1 000 ms, po transpozycji 891 ms w S2 i 794 ms w S3 — § 2.6) | 800 ms | uderzenie stingera = „raz” nowego utworu | `sfx_free_spins_start` (+ S2: `sfx_s2_gong` na uderzeniu) |
-| 8 | GRA / NAPIECIE / FS → BIG_WIN | E30 wygrana ≥ 15× | zapamiętanie pozycji bieżącego utworu; utwór wyciszany 400 ms; `mus_bigwin` od `loopStart` w chwili uderzenia (`syncPoint` 300 ms); ducking „big win” −6 dB | 400 ms | **brak** — nagroda ma być natychmiast | `sfx_bigwin_wejscie`; S1 jackpot (E51): `sfx_s1_jackpot`, `mus_bigwin` startuje +2 000 ms |
+| 7 | GRA / NAPIECIE → FS | E35 start free spins | muzyka gry wyciszana od chwili 0 przez 800 ms; `mus_napiecie` ucięta w 100 ms w chwili uderzenia; utwór FS startuje od `loopStart` **dokładnie w chwili uderzenia stingera** (`syncPoint` 1 000 ms, po transpozycji 891 ms w S2 i 794 ms w S3 — § 2.6) | 800 ms | uderzenie stingera = „raz” nowego utworu | `sfx_free_spins_start` (+ na uderzeniu: `sfx_blysk`, S2: `sfx_s2_gong`, S3: `sfx_uderzenie_basu`) |
+| 8 | GRA / NAPIECIE / FS → BIG_WIN | E30 wygrana ≥ 15× | zapamiętanie pozycji bieżącego utworu; utwór wyciszany 400 ms; `mus_bigwin` od `loopStart` w chwili uderzenia (`syncPoint` 300 ms); ducking „big win” −6 dB | 400 ms | **brak** — nagroda ma być natychmiast | `sfx_bigwin_wejscie`; S1 jackpot (E51): `sfx_s1_jackpot`, `mus_bigwin` startuje w 1 820 ms (uderzenie banera BIG) |
 | 9 | BIG_WIN → GRA lub FS | E32 koniec lub pominięcie sekwencji | `mus_bigwin` wyciszana od najbliższej miary; utwór gry / FS wznawiany **od początku taktu, w którym go przerwano**, wejście startuje 800 ms po E32 | 600 ms (wyjście), 1 200 ms (wejście) | miara `mus_bigwin` (≤ 469 ms) | `sfx_bigwin_koniec` |
 | 10 | FS → PODSUMOWANIE | E37 | ducking „podsumowanie” −6 dB na muzyce FS | 300 ms | brak | `sfx_free_spins_koniec` |
 | 11 | PODSUMOWANIE → GRA | zamknięcie panelu podsumowania | przenikanie o stałej mocy FS → gra; utwór gry startuje **w tej samej pozycji siatki** co FS (to samo tempo i siatka akordów) | 2 000 ms | najbliższa kreska taktowa FS (≤ 2,4 s w S2, ≤ 2,67 s w S3) | — |
@@ -1208,45 +1210,45 @@ tutaj podajemy tylko, **który dźwięk** i **względem czego**.
 |---|---|---|---|
 | **E01** `lobby_intro` | — (cisza) | — | dźwięk jest zablokowany do pierwszego gestu (§ 2.3); celowo nie gramy i nie pokazujemy komunikatu „włącz dźwięk” |
 | **E02** `lobby_idle` | `mus_lobby` (pętla) | po zalogowaniu / pierwszym geście | bez dodatkowych dźwięków tła — lobby słucha się najdłużej, więc jest najoszczędniejsze |
-| **E03** `kafel_hover` | `ui_hover` | 0 ms (wejście kursora) | tylko mysz (`pointerType === 'mouse'`), `cooldownMs` 60; filmik w kaflu jest wyciszony (`muted`); dotyk: bez dźwięku (to zwykle przewijanie) |
+| **E03** `kafel_hover` | `ui_hover` | 0 ms (wejście kursora) | tylko mysz (`pointerType === 'mouse'`), `cooldownMs` 80; filmik w kaflu jest wyciszony (`muted`); dotyk: bez dźwięku (to zwykle przewijanie) |
 | **E04** `login_open` | `ui_otworz` | 0 ms | najpierw `unlock()` w tym samym kliknięciu |
 | **E05** `login_blad` | `ui_blad` | 0 ms (pokazanie błędu) | + wibracja (§ 10) |
 | **E06** `login_sukces` | `sfx_logowanie`, `mus_lobby`, `sfx_saldo_puls` | 0 ms; 0 ms (wejście 1 200 ms); +300 ms (puls salda) | stan muzyki CISZA → LOBBY |
 | **E07** `bonus_powitalny` | `sfx_skrzynia_otwarcie`, `sfx_blysk`, `sfx_uderzenie_basu`, `sfx_monety_fontanna`, `sfx_moneta_1` … `sfx_moneta_5`, `sfx_licznik_tik`, `sfx_licznik_koniec` | oś czasu § 6.7 | ducking `bigwin` −6 dB na `mus_lobby` przez całą sekwencję |
-| **E08** `saldo_zmiana` | `sfx_saldo_puls` | początek pulsu salda | tylko wzrost salda poza liczeniem wygranej (bonus, ratunek, zaksięgowanie małej wygranej); spadek (zakład) — cisza, bo gra już `sfx_spin_start`; `cooldownMs` 150 |
+| **E08** `saldo_zmiana` | `sfx_saldo_puls` | początek pulsu salda | tylko zalogowanie powracającego gracza (E06) i zaksięgowanie wygranej small (E28); przy medium, big+, E07, E10 i E37 saldo rośnie bez osobnego dźwięku (kwotę zamknął już `sfx_licznik_koniec`); spadek (zakład) — cisza, bo gra już `sfx_spin_start`; `cooldownMs` 150 |
 | **E09** `bankrut` | `sfx_bankrut` | 0 ms (pojawienie się `g_maskotka_bankrut`) | ducking `bankrut` −10 dB do odebrania bonusu lub zamknięcia panelu |
 | **E10** `bonus_ratunkowy` | jak E07 | jak E07 | ta sama oś czasu (wspólna funkcja `playReward` w `reward.js`) |
 | **E11** `ui_mikro` | `ui_hover`, `ui_klik`, `ui_przelacznik`, `ui_otworz`, `ui_zamknij` | 0 ms | hover tylko myszą; fokus klawiatury bez dźwięku (dźwięk przy każdym Tab męczy, a czytniki ekranu mają własne sygnały); przełącznik ±200 c |
 | **E12** `przejscie_do_gry` | `sfx_przejscie_whoosh` | 0 ms | muzyka: wyciszenie 300 ms (lobby → gra) lub 220 ms (gra → lobby), potem zmiana strony |
 | **E20** `gra_ladowanie` | — / `ui_klik` | — / kliknięcie „Graj” | w trakcie ładowania cisza; dekodujemy pakiet `gry-krytyczne` (§ 2.4) |
 | **E21** `gra_intro` | muzyka gry; S1: `sfx_s1_neon_bzyk`; S2: `sfx_s2_gong`; S3: `sfx_s3_opad` + `sfx_beben_stop_1` … `sfx_beben_stop_6` | muzyka 0 ms (S2: +300 ms); S1: w chwili zapalenia neonu logo; S2: gong 0 ms; S3: opad 0 ms, stopy kolumn według osi zrzutu planszy | stan CISZA → GRA |
-| **E22** `gra_idle` | — | — | po 60 s ducking `bezczynnosc` −3 dB; po 5 min muzyka wycisza się do zera (§ 2.8) |
+| **E22** `gra_idle` | S1: `sfx_s1_neon_bzyk` (−12 dB) | S1: co 8 s, razem z przelotem połysku po logo (04) | po 60 s ducking `bezczynnosc` −3 dB; po 5 min muzyka wycisza się do zera (§ 2.8) |
 | **E23** `zaklad_zmiana` | `ui_zaklad_gora` / `ui_zaklad_dol` | 0 ms | `detune` +100 c × poziom zakładu; na granicy (przycisk wyłączony) brak dźwięku |
 | **E24** `spin_start` | `sfx_spin_start` | 0 ms — wciśnięcie, **przed** odpowiedzią serwera | natychmiastowa reakcja na dotyk; autoplay −6 dB; w darmowych spinach nie gramy (gracz nic nie wcisnął) |
-| **E25** `bebny_obrot` | S1: `sfx_beben_petla_s1`; S2: `sfx_beben_petla_s2`; S3: `sfx_s3_opad` | S1, S2: +40 ms, wejście 60 ms; S3: 0 ms | pętla gra do ostatniego stopu; głośność pętli maleje z każdym stopem (S1: 100 → 66 → 33%; S2: −20 punktów procentowych na bęben) |
+| **E25** `bebny_obrot` | S1: `sfx_beben_petla_s1`; S2: `sfx_beben_petla_s2`; S3: `sfx_s3_opad` | S1, S2: +40 ms, wejście 60 ms; S3: 120 ms (start opadu nowej planszy, 04 § 2.15) | pętla gra do ostatniego stopu; głośność pętli maleje z każdym stopem (S1: 100 → 66 → 33%; S2: −20 punktów procentowych na bęben) |
 | **E26** `beben_stop` | `sfx_beben_stop_1` … `sfx_beben_stop_6` (numer = bęben / kolumna) | dokładnie w chwili lądowania bębna (planista, § 2.7) | panorama według pozycji (§ 5.5); po ostatnim stopie pętla gaśnie w 120 ms (turbo 60 ms); szybkie zatrzymanie: stopy co 40 ms, każdy −3 dB |
-| **E27** `antycypacja` | `sfx_antycypacja_narastanie`, `sfx_bicie_serca`, `mus_napiecie` | narastanie kończy się na stopie antycypowanego bębna (gdy antycypacja krótsza niż 1 200 ms — start od przesunięcia); serce i warstwa: 0 ms od początku antycypacji | stan GRA → NAPIECIE; każdy kolejny antycypowany bęben: nowe narastanie, serce ×1,08; S1 (2 WILD na linii) — 3. bęben; S2 (2 scattery) — kolejne bębny; S3 (3 scattery) — narastanie przed każdym opadem |
-| **E28** `wygrana_small` | `sfx_wygrana_small_1` … `sfx_wygrana_small_3`, `sfx_linia`, `sfx_licznik_tik`, `sfx_saldo_puls` | 0 ms (początek prezentacji); linie kolejno co 350 ms; tik, gdy liczenie trwa > 400 ms; puls przy zaksięgowaniu | ducking `wygrana` −3 dB; wygrana < 1× zakładu: dźwięk −6 dB, bez linii i bez tiku (§ 1.4) |
+| **E27** `antycypacja` | `sfx_antycypacja_narastanie`, `sfx_bicie_serca`, `mus_napiecie` | narastanie kończy się na stopie antycypowanego bębna; gdy wydłużenie jest krótsze niż 1 200 ms, start od przesunięcia: S1 900 ms (od 300 ms pliku), S3 700 ms na kolumnę (od 500 ms), turbo ×0,45; serce i warstwa: 0 ms od początku antycypacji | stan GRA → NAPIECIE; każdy kolejny antycypowany bęben: nowe narastanie, serce +2 dB; S1 (2 WILD na linii) — 3. bęben; S2 (2 scattery) — kolejne bębny; S3 (3 scattery) — pozostałe kolumny zrzutu; sukces: narastanie i serce gasną na rozładowaniu (E34 / E50), porażka: wyciszenie 250–600 ms |
+| **E28** `wygrana_small` | `sfx_wygrana_small_1` … `sfx_wygrana_small_3`, `sfx_linia`, `sfx_licznik_tik`, `sfx_saldo_puls` | 0 ms (początek prezentacji); linie kolejno co 350 ms; tik, gdy liczenie trwa > 400 ms; puls przy zaksięgowaniu | wariant według mnożnika m: `_1` m < 1 (−6 dB, bez linii i tiku), `_2` 1 ≤ m < 2,5, `_3` 2,5 ≤ m < 5; ducking `wygrana` −3 dB; w późniejszym cyklu po liniach (co 900 ms) `sfx_linia` −8 dB |
 | **E29** `wygrana_medium` | `sfx_wygrana_medium`, `sfx_linia`, `sfx_moneta_1` … `sfx_moneta_5`, `sfx_licznik_tik`, `sfx_licznik_koniec` | 0 ms; linie co 350 ms; 6 monet w 50–400 ms (razem z cząsteczkami); tik przez czas liczenia; koniec na kwocie końcowej | ducking `wygrana` −3 dB |
 | **E30** `wygrana_big` | `sfx_bigwin_wejscie`, `mus_bigwin`, `sfx_blysk`, `sfx_licznik_tik`, `sfx_monety_fontanna` | oś czasu § 6.5 | stan → BIG_WIN; ducking `bigwin` −6 dB |
 | **E31** `eskalacja_poziomu` | `sfx_poziom_w_gore` (MEGA 0 c, EPIC +200 c, ULTRA +400 c), `sfx_uderzenie_basu`, `sfx_blysk` | `sfx_poziom_w_gore` 250 ms **przed** przekroczeniem progu (jego uderzenie = zmiana banera); bas i błysk na uderzeniu | tik +0,15 prędkości na poziom; fontanna +2 dB na poziom |
-| **E32** `wygrana_koniec` | `sfx_licznik_koniec`; `sfx_bigwin_koniec` (tylko big i wyżej) | 0 ms (kwota końcowa albo pominięcie) | tik wyciszany 60 ms, fontanna 800 ms; przy pominięciu pozostałe efekty sekwencji gasną w 80 ms i gra ten sam koniec; stan → GRA / FS |
+| **E32** `wygrana_koniec` | `sfx_licznik_koniec`; `sfx_bigwin_koniec` (tylko big i wyżej); `sfx_przejscie_whoosh` | 0 ms (kwota końcowa albo pominięcie); whoosh przy odlocie banera po przytrzymaniu (BIG 1 500, MEGA 1 800, EPIC 2 100, ULTRA 2 600 ms — 04) | tik wyciszany 60 ms, fontanna 800 ms; przy pominięciu pozostałe efekty sekwencji gasną w 80 ms i gra ten sam koniec; stan → GRA / FS |
 | **E33** `wild_ladowanie` | `sfx_wild` | `syncPoint` 150 ms → start 150 ms przed lądowaniem | kilka WILD w jednym spinie: maks. 2 głosy, drugi +60 ms i +200 c |
 | **E34** `scatter_ladowanie` | `sfx_scatter_1` / `sfx_scatter_2` / `sfx_scatter_3` | `syncPoint` 80 ms → start 80 ms przed lądowaniem | numer = liczba scatterów do tej pory; 4. i kolejny: `sfx_scatter_3` z dodatkowym +100 c × (n − 3); panorama według bębna |
-| **E35** `free_spins_start` | `sfx_free_spins_start`, muzyka FS, S2: `sfx_s2_gong`, S3: `sfx_blysk` | oś czasu § 6.6 | stan → FS; banner `g_win_free_spins` na uderzeniu stingera |
+| **E35** `free_spins_start` | `sfx_free_spins_start`, muzyka FS, `sfx_blysk`; S2: `sfx_s2_gong`; S3: `sfx_uderzenie_basu`; `sfx_przejscie_whoosh` | oś czasu § 6.6 | stan → FS; banner `g_win_free_spins` ma szczyt skali dokładnie w chwili uderzenia stingera (`U` w 04) |
 | **E36** `free_spins_spin` | `sfx_saldo_puls` (+400 c, −4 dB), dalej jak E25–E26 | 0 ms (zmiana licznika spinów) | bez `sfx_spin_start` |
-| **E37** `free_spins_podsumowanie` | `sfx_free_spins_koniec`, `sfx_licznik_tik`, `sfx_licznik_koniec`; przy sumie ≥ 15× — sekwencja big win (E30–E32) | 0 ms; liczenie od 600 ms | stan → PODSUMOWANIE → GRA (przenikanie 2 000 ms w takcie) |
+| **E37** `free_spins_podsumowanie` | `sfx_free_spins_koniec`, `sfx_licznik_tik`, `sfx_licznik_koniec`, `ui_klik`, `sfx_przejscie_whoosh`; przy sumie ≥ 15× — najpierw sekwencja big win (E30–E32) | 0 ms; liczenie 600 → 1 800 ms (tik, potem koniec); klik „Dalej”; whoosh przy wyjściu | stan → PODSUMOWANIE → GRA (przenikanie 2 000 ms w takcie) |
 | **E38** `autoplay` | `ui_przelacznik` (wł. +200 c, wył. −200 c); zatrzymanie przez warunek: `ui_zamknij` | 0 ms | w autoplay `sfx_spin_start` −6 dB i wygrane small −3 dB (mniej męczące w długiej serii) |
 | **E39** `turbo` | `ui_przelacznik` (±200 c) | 0 ms | oś czasu dźwięków ×0,45 (§ 2.7) |
-| **E40** `blad_sieci` | `ui_blad`; pętla bębnów — „zjazd taśmy” | 0 ms | pętla: prędkość 1,0 → 0,5 w 300 ms (`setRate`) i wyciszenie 300 ms; ducking `okno` −6 dB do ponowienia |
-| **E50** `s1_neon_mnoznik` | `sfx_s1_neon_bzyk` | w chwili zapalenia neonu „×2” na linii | potem dźwięk progu wygranej |
-| **E51** `s1_neon_jackpot` | `sfx_s1_jackpot` → sekwencja big win | 0 ms; `mus_bigwin` i liczenie od +2 000 ms | `sfx_s1_jackpot` zastępuje `sfx_bigwin_wejscie`; ducking `stinger` do +2 000 ms |
-| **E60** `s2_wild_rozszerzenie` | `sfx_s2_wild_rozszerzenie`, `sfx_blysk` | `syncPoint` 600 ms = kolumna pełna; błysk w tej chwili | kilka bębnów: kolejne co 250 ms, maks. 2 naraz |
-| **E61** `s2_retrigger` | `sfx_s2_gong`, `sfx_scatter_3`, `sfx_poziom_w_gore` (+200 c) | 0 ms; 0 ms; +400 ms (napis „+10”) | ducking `stinger` −6 dB przez 1,5 s; +200 c daje akord kwintowy G (G+D), który należy do D hidżaz |
-| **E70** `s3_kaskada_pekniecie` | `sfx_s3_pekniecie_1` … `sfx_s3_pekniecie_4`, `sfx_linia` | pęknięcia 0 / 30 / 60 ms (maks. 3 głosy, warianty bez powtórzeń); linia 0 ms | panorama = środek klastra; linia +100 c × numer kaskady (maks. +700 c) — rosnąca „drabina” emocji |
+| **E40** `blad_sieci` | pętla bębnów — „zjazd taśmy”; `ui_blad`; `ui_klik` | pętla: 0 ms; `ui_blad`: 300 ms (pojawienie się okna); `ui_klik`: „Spróbuj ponownie” | pętla: prędkość 1,0 → 0,5 w 300 ms (`setRate`) i wyciszenie 300 ms; ducking `okno` −6 dB do ponowienia |
+| **E50** `s1_neon_mnoznik` | `sfx_s1_neon_bzyk`, `sfx_licznik_koniec` | bzyk: 0 ms (początek prezentacji linii z WILD — zapalenie „×2”); koniec: 400 ms (kwota linii podwaja się) | potem dźwięk progu wygranej całej rundy |
+| **E51** `s1_neon_jackpot` | `sfx_s1_jackpot`, `sfx_s1_neon_bzyk` → sekwencja big win | jackpot: 0 ms (uderzenie w pliku w 300 ms); bzyk: 1 500 ms; 1 820 ms (uderzenie banera BIG w 04): start `mus_bigwin` i dalej jak § 6.5 | `sfx_s1_jackpot` zastępuje `sfx_bigwin_wejscie`; ducking `stinger` do 1 820 ms |
+| **E60** `s2_wild_rozszerzenie` | `sfx_s2_wild_rozszerzenie`, `sfx_uderzenie_basu` (−6 dB) | start 0 ms (wszystkie bębny stoją); `syncPoint` 600 ms = kolumna pełna; bas w 600 ms | kilka WILD: kolejne co 250 ms, maks. 2 naraz; bez błysku ekranu (budżet błysków w 04) |
+| **E61** `s2_retrigger` | `sfx_s2_gong`, `sfx_scatter_3`, `sfx_poziom_w_gore` (+200 c), `sfx_licznik_koniec` | 0 ms; 0 ms; 400 ms (baner „+10”); 900 ms (licznik FS 3 → 13) | ducking `stinger` −6 dB przez 1,5 s; +200 c daje akord kwintowy G (G+D), który należy do D hidżaz |
+| **E70** `s3_kaskada_pekniecie` | `sfx_linia`, `sfx_licznik_tik` (krótko), `sfx_s3_pekniecie_1` … `sfx_s3_pekniecie_4` | linia 0 ms (obrys klastra); tik 120–420 ms (kwota klastra); pęknięcia 280 ms, +30 i +60 ms (maks. 3 głosy, warianty bez powtórzeń) | panorama = środek klastra; linia +100 c × numer kaskady (maks. +700 c) — rosnąca „drabina” emocji; klaster ≥ 10 symboli: pierwszy głos zawsze `sfx_s3_pekniecie_4` (najjaśniejszy) |
 | **E71** `s3_kaskada_opad` | `sfx_s3_opad` | 0 ms (początek opadu) | przy antycypacji S3 przed opadem gra narastanie |
-| **E72** `s3_mnoznik_ladowanie` | `sfx_s3_mnoznik` (+ `sfx_blysk` dla ×50 i ×100) | chwila lądowania kuli | wysokość według wartości (§ 3.6) |
-| **E73** `s3_mnoznik_zbior` | `sfx_s3_mnoznik_zbior` | 0 ms (start lotu kul); `syncPoint` 900 ms = pomnożenie kwoty | potem dźwięk progu wygranej całej sekwencji |
+| **E72** `s3_mnoznik_ladowanie` | `sfx_s3_mnoznik` (+ `sfx_blysk` dla ×50–×100) | chwila lądowania kuli | wysokość według wartości (§ 3.6): ×2–×5, ×10–×25, ×50–×100 — te same progi co kolory kuli w 04 |
+| **E73** `s3_mnoznik_zbior` | `sfx_s3_mnoznik_zbior`, `sfx_s3_mnoznik` (−8 dB), `sfx_licznik_koniec` (−6 dB), `sfx_uderzenie_basu` | zbiór: 0 ms (`syncPoint` 900 ms = licznik mnożnika uderza w kwotę); `sfx_s3_mnoznik`: wylot każdej kuli (maks. 2 głosy); 1 500 ms (slam kwoty): koniec + bas | potem dźwięk progu wygranej całej sekwencji (04: 1 900 ms) |
 
 ### 6.2. Oś czasu: spin S1 bez wygranej specjalnej
 
@@ -1271,7 +1273,7 @@ tutaj podajemy tylko, **który dźwięk** i **względem czego**.
 | 1 720 | E34 | `sfx_scatter_2` |
 | 1 800 | bęben 3 + 2. scatter → E27 | `sfx_beben_stop_3` (pan 0); start `sfx_bicie_serca`, `mus_napiecie` (wejście 400 ms), filtr muzyki → 1 200 Hz; pętla 40% |
 | 2 000 | narastanie dla bębna 4 | `sfx_antycypacja_narastanie` (1 200 ms, do 3 200) |
-| 3 200 | bęben 4 bez scattera | `sfx_beben_stop_4` (pan +0,2); serce ×1,08 |
+| 3 200 | bęben 4 bez scattera | `sfx_beben_stop_4` (pan +0,2); serce +2 dB |
 | 3 400 | narastanie dla bębna 5 | `sfx_antycypacja_narastanie` (do 4 600) |
 | 4 520 | E34 | `sfx_scatter_3` |
 | 4 600 | bęben 5 + 3. scatter | `sfx_beben_stop_5` (pan +0,4); pętla gaśnie; serce i warstwa napięcia czekają na uderzenie stingera |
@@ -1282,57 +1284,65 @@ Czasy bębnów 4 i 5 wynikają z briefu (§ 4): każdy kolejny bęben w antycypa
 
 ### 6.4. Oś czasu: spin S3 z dwiema kaskadami
 
-| t (ms, orientacyjnie) | Zdarzenie | Dźwięk |
-|---|---|---|
-| 0 | E24, E25 (zrzut planszy, 900 ms) | `sfx_spin_start`, `sfx_s3_opad` |
-| ok. 450–900 | E26 — kolumny lądują od lewej | `sfx_beben_stop_1` … `sfx_beben_stop_6` (pan −0,5 … +0,5) |
-| ok. 1 000 | E70 kaskada 1 | do 3 × `sfx_s3_pekniecie_*` (0 / 30 / 60 ms) + `sfx_linia` (0 c) |
-| ok. 1 500 | E71 | `sfx_s3_opad` |
-| ok. 2 100 | E70 kaskada 2 | pęknięcia + `sfx_linia` (+100 c) |
-| ok. 2 600 | E71 | `sfx_s3_opad` |
-| ok. 3 200 | wygrana całej sekwencji | E28 / E29 / E30 |
+Czasy zrzutu i kaskad pochodzą z 04 § 2.15 (fizyka planszy): kolumna c (0–5) startuje w 120 + 50·c ms i spada
+360 ms, kaskada trwa ~1 100 ms, a po niej jest 120 ms pauzy na ocenę.
 
-Jedna kaskada trwa ~1 100 ms (brief § 4); dokładne chwile lądowania kolumn i pęknięć podaje oś czasu w 04.
-W free spins kule mnożników lądują razem z opadem (E72 — `sfx_s3_mnoznik`), a przed wygraną gra E73
+| t (ms) | Zdarzenie | Dźwięk |
+|---|---|---|
+| 0 | E24 (stara plansza wypada 0–220 ms) | `sfx_spin_start` |
+| 120 | E25 — start opadu nowej planszy | `sfx_s3_opad` |
+| 480 / 530 / 580 / 630 / 680 / 730 | E26 — lądowanie dolnego symbolu kolumny 1…6 | `sfx_beben_stop_1` … `sfx_beben_stop_6` (pan −0,5 … +0,5) |
+| ≈ 900 | koniec zrzutu | — |
+| T₁ (≈ 1 020) | E70 kaskada 1: obrys klastra | `sfx_linia` (0 c) |
+| T₁ + 120 | kwota klastra | `sfx_licznik_tik` (krótko, ~300 ms) |
+| T₁ + 280 | pęknięcie | do 3 × `sfx_s3_pekniecie_*` (+0 / +30 / +60 ms) |
+| T₁ + 450 | E71 opad | `sfx_s3_opad` |
+| T₂ = T₁ + 1 200 | E70 kaskada 2 | `sfx_linia` (+100 c), tik, pęknięcia, opad — jak wyżej |
+| T₂ + 1 200 | brak nowych klastrów → wygrana całej sekwencji | E28 / E29 / E30 |
+
+W free spins kule mnożników lądują razem z opadem (E72 — `sfx_s3_mnoznik`), a przed prezentacją wygranej gra E73
 (`sfx_s3_mnoznik_zbior`, pomnożenie kwoty w 900 ms).
 
 **Dlaczego maks. 3 głosy pęknięć:** w klastrze pęka 5–15 symboli naraz. 15 jednoczesnych pęknięć to głośna
 „ściana” szumu, która zagłusza wszystko i zjada limit głosów. 3 warianty przesunięte o 30 ms brzmią jak bogate,
 wielowarstwowe pęknięcie, a ucho nie odróżni, czy pękło 6, czy 12 kryształów.
 
-### 6.5. Oś czasu: sekwencja big win z eskalacją (przykład: wygrana 72× → EPIC)
+### 6.5. Oś czasu: sekwencja big win z eskalacją
 
-`T_MEGA`, `T_EPIC`, `T_KONIEC` to chwile z krzywej liczenia w 04 (przekroczenie 30× i 60× zakładu, kwota końcowa).
-Krzywa jest deterministyczna, więc znamy je z wyprzedzeniem i możemy zaplanować dźwięk przed progiem.
+Przykład z 04 § 4.2 (zakład 100, wygrana 7 500 = 75×, poziom końcowy EPIC). Krzywa liczenia jest deterministyczna,
+więc chwile przekroczenia progów znamy z wyprzedzeniem i dźwięk eskalacji startuje 250 ms przed progiem.
 
-| t | Dźwięk i muzyka | Obraz (dla orientacji) |
+| t (ms) | Dźwięk i muzyka | Obraz (dla orientacji) |
 |---|---|---|
-| 0 | `sfx_bigwin_wejscie`; muzyka gry wyciszana 400 ms; ducking `bigwin` −6 dB | przyciemnienie, narastanie |
-| 300 ms | uderzenie stingera: start `mus_bigwin` (od `loopStart`), `sfx_blysk` | `g_win_big`, błysk |
-| 600 ms | start liczenia: `sfx_licznik_tik` (prędkość 1,0), `sfx_monety_fontanna` (−10 dB) | licznik, deszcz monet |
-| `T_MEGA` − 250 ms | `sfx_poziom_w_gore` (0 c) | |
-| `T_MEGA` | uderzenie: `sfx_uderzenie_basu`, `sfx_blysk`; tik ×1,15; fontanna +2 dB | `g_win_mega` |
-| `T_EPIC` − 250 ms | `sfx_poziom_w_gore` (+200 c) | |
-| `T_EPIC` | uderzenie: bas, błysk; tik ×1,30; fontanna +4 dB | `g_win_epic` |
-| `T_KONIEC` (E32) | tik gaśnie 60 ms; `sfx_licznik_koniec`, `sfx_bigwin_koniec`; fontanna gaśnie 800 ms; `mus_bigwin` wyciszana 600 ms od najbliższej miary | kwota końcowa |
-| `T_KONIEC` + 800 ms | utwór gry wraca od zapamiętanego taktu (wejście 1 200 ms); ducking zdjęty (800 ms) | powrót do automatu |
+| 0 | `sfx_bigwin_wejscie`; muzyka gry wyciszana 400 ms; ducking `bigwin` −6 dB | zasłona, narastanie |
+| 300 | uderzenie stingera: start `mus_bigwin` (od `loopStart`), `sfx_blysk` | szczyt skali `g_win_big`, błysk |
+| 600 | start liczenia: `sfx_licznik_tik` (prędkość wg `audio.postepLicznika(u)`), `sfx_monety_fontanna` (−10 dB) | licznik, deszcz monet |
+| 2 950 | `sfx_poziom_w_gore` (0 c) | |
+| 3 200 | uderzenie: `sfx_uderzenie_basu`, `sfx_blysk`; tik milknie na 80 ms *hit-stopu*, potem +0,15 prędkości; fontanna +2 dB | E31 → `g_win_mega` |
+| 5 430 | `sfx_poziom_w_gore` (+200 c) | |
+| 5 680 | uderzenie: bas, błysk; tik +0,15; fontanna +4 dB | E31 → `g_win_epic` |
+| 6 960 | E32: tik gaśnie w 60 ms; `sfx_licznik_koniec`, `sfx_bigwin_koniec`; fontanna gaśnie w 800 ms; `mus_bigwin` wyciszana 600 ms od najbliższej miary | slam „7 500” |
+| ≈ 7 760 | utwór gry wraca od zapamiętanego taktu (wejście 1 200 ms); ducking zdjęty (800 ms) | przytrzymanie EPIC (2 100 ms) |
+| 9 060 | `sfx_przejscie_whoosh` | wyjście: baner odlatuje, kwota leci do panelu |
 
-Błyski (`sfx_blysk`) mają `cooldownMs` 333 — tak samo jak limit 3 błysków ekranu na sekundę.
-Przy `prefers-reduced-motion` błyski ekranu są wyłączone, ale dźwięk `sfx_blysk` zostaje (to nie ruch); gracz
-nadal słyszy eskalację.
+Błyski (`sfx_blysk`) mają `cooldownMs` 333 — tak samo jak limit 3 błysków ekranu na sekundę (eskalacje i tak dzieli
+≥ 1 200 ms). Przy `prefers-reduced-motion` błyski ekranu są wyłączone, ale dźwięk `sfx_blysk` zostaje (to nie ruch) —
+gracz nadal słyszy eskalację.
 
 ### 6.6. Oś czasu: free spins (S2)
 
 | t | Dźwięk i muzyka |
 |---|---|
-| 0 (E35) | `sfx_free_spins_start` z transpozycją +200 c (plik trwa 2 851 ms, uderzenie w 891 ms); muzyka gry i warstwa napięcia: wyciszanie 800 ms; ducking `stinger` |
-| 891 ms | uderzenie: start `mus_s2_fs` od `loopStart`, `sfx_s2_gong`; `mus_napiecie` i `sfx_bicie_serca` ucięte w 100 ms; banner `g_win_free_spins` |
+| 0 (E35, koniec rundy bazowej) | `sfx_free_spins_start` z transpozycją +200 c (plik trwa 2 851 ms, uderzenie `U` w 891 ms); muzyka gry i warstwa napięcia: wyciszanie 800 ms; ducking `stinger` |
+| `U` = 891 ms | uderzenie: start `mus_s2_fs` od `loopStart`, `sfx_blysk`, `sfx_s2_gong`; `mus_napiecie` i `sfx_bicie_serca` ucięte w 100 ms; szczyt skali banera `g_win_free_spins` |
+| wyjście banera (dotknięcie albo auto po 3 800 ms) | `sfx_przejscie_whoosh` |
 | każdy spin (E36) | `sfx_saldo_puls` (+400 c, −4 dB) przy zmianie licznika, potem pętla bębnów i stopy (bez `sfx_spin_start`) |
-| retrigger (E61) | `sfx_s2_gong` + `sfx_scatter_3`, po 400 ms `sfx_poziom_w_gore` (+200 c) |
-| E37 | `sfx_free_spins_koniec`; ducking `podsumowanie` −6 dB; liczenie od 600 ms (tik → koniec) albo big win |
-| zamknięcie panelu | przenikanie `mus_s2_fs` → `mus_s2` 2 000 ms od najbliższej kreski taktowej, w tej samej pozycji siatki |
+| retrigger (E61) | `sfx_s2_gong` + `sfx_scatter_3`; 400 ms: `sfx_poziom_w_gore` (+200 c); 900 ms: `sfx_licznik_koniec` |
+| E37 | `sfx_free_spins_koniec`; ducking `podsumowanie` −6 dB; liczenie 600 → 1 800 ms (tik → koniec) albo najpierw big win |
+| „Dalej” | `ui_klik`, `sfx_przejscie_whoosh`; przenikanie `mus_s2_fs` → `mus_s2` 2 000 ms od najbliższej kreski taktowej, w tej samej pozycji siatki |
 
-S3: uderzenie w 794 ms (transpozycja +400 c), zamiast gongu `sfx_blysk`; muzyka `mus_s3_fs`. S1 nie ma free spinów.
+S3: `U` = 794 ms (transpozycja +400 c), na uderzeniu `sfx_blysk` i `sfx_uderzenie_basu` zamiast gongu; muzyka
+`mus_s3_fs`. S1 nie ma free spinów.
 
 ### 6.7. Oś czasu: bonus powitalny E07 (zgodnie z `reward.js`)
 
@@ -1432,7 +1442,7 @@ działają także, gdy kontekst pracuje z częstotliwością 44,1 kHz i przeglą
 | `sfx_licznik_tik` | 0,500 s | 0,1 s | 0,1 / 0,6 |
 | `sfx_beben_petla_s1` | 1,000 s | 0,1 s | 0,1 / 1,1 |
 | `sfx_beben_petla_s2` | 1,200 s | 0,1 s | 0,1 / 1,3 |
-| `sfx_bicie_serca` | 0,800 s | 0,1 s | 0,1 / 0,9 |
+| `sfx_bicie_serca` | 0,600 s | 0,1 s | 0,1 / 0,7 |
 
 Pętle muzyczne: tabela w § 4.2. Wszystkie modulacje w pętlach (tremolo, PWM, falowanie „taśmy”) mają całkowitą
 liczbę cykli na długość pętli — inaczej szew byłby słyszalny jako skok fazy modulacji.
@@ -1873,60 +1883,88 @@ nie zmieniła, a w zapisie dodajemy `"v": 2` i przeliczamy stare ustawienia raz 
 
 ## 10. Haptyka (wibracje)
 
+Wibracje to trzeci kanał informacji obok obrazu i dźwięku. **Wzorce i ich przypisanie do zdarzeń są wspólne
+z [04-efekty-wizualne.md § 1.6](04-efekty-wizualne.md#16-haptyka-wibracje)** (karty zdarzeń mają kolumnę „Haptyka”);
+tutaj zbieramy je w jednym miejscu od strony dźwięku: kiedy impuls ma trafić razem z transjentem dźwięku i jak to
+jest zaprogramowane.
+
 ### 10.1. Zasady
 
 * **API:** `navigator.vibrate(wzorzec)` (Vibration API), wzorzec = tablica `[wibracja, przerwa, wibracja, …]` w ms.
 * **Gdzie działa:** przeglądarki na Androidzie (Chrome, Firefox, Edge). **Safari na iPhonie nie obsługuje** tego
-  API (`navigator.vibrate` nie istnieje) — wtedy nic nie robimy i nie stosujemy obejść. Na komputerach zwykle nie ma
-  silnika wibracji — wywołanie nie ma efektu.
+  API (`navigator.vibrate` nie istnieje) — wtedy nic nie robimy i nie stosujemy obejść (nieudokumentowane sztuczki
+  mogą przestać działać z dnia na dzień). Na komputerach zwykle nie ma silnika wibracji — wywołanie nie ma efektu.
 * **Wykrycie:** `'vibrate' in navigator && matchMedia('(pointer: coarse)').matches` (ekran dotykowy).
-* **Gest:** Chrome ignoruje `vibrate()` przed pierwszym gestem na stronie (zwraca `false`) — tak jak z dźwiękiem;
-  po kliknięciu „Graj” / „Zaloguj” wibracje działają.
-* **Wyłączalne:** przełącznik „Wibracje” w ustawieniach (§ 9.1), domyślnie włączone tam, gdzie są obsługiwane.
-  Wibracje są niezależne od wyciszenia dźwięku (część graczy gra bez dźwięku, ale z wibracjami).
-* **Umiar:** maks. jeden wzorzec na 100 ms (nowy wzorzec przerywa poprzedni — tak działa API), łączny czas wibracji
-  w jednej sekwencji big win ≤ 1,2 s; w turbo i autoplay tylko zdarzenia od E30 wzwyż; `navigator.vibrate(0)` przy
-  pominięciu sekwencji, ukryciu karty i wyjściu ze strony.
+* **Gest:** przeglądarki ignorują `vibrate()` przed pierwszą interakcją na stronie (zwraca `false`) — tak jak
+  z dźwiękiem; po kliknięciu „Graj” / „Zaloguj” wibracje działają.
+* **Wyłączalne:** przełącznik „Wibracje” w ustawieniach (§ 9.1), domyślnie włączony tam, gdzie są obsługiwane;
+  niezależny od wyciszenia dźwięku (część graczy gra bez dźwięku, ale z wibracjami).
+* **Umiar (zgodnie z 04):** najwyżej jeden wzorzec na 120 ms; nowy wzorzec w trakcie trwania poprzedniego jest
+  **odrzucany** (bez kolejki — spóźniona wibracja jest gorsza niż żadna); tylko przy widocznej karcie;
+  `navigator.vibrate(0)` przy pominięciu sekwencji, ukryciu karty i wyjściu ze strony.
+* **Synchronizacja z dźwiękiem:** impuls startuje w tej samej chwili co transjent dźwięku (uderzenie, `syncPoint`),
+  a nie w chwili startu pliku — np. przy `sfx_wild` 150 ms po starcie dźwięku, przy `sfx_bigwin_wejscie` w 300 ms.
 
-### 10.2. Wzorce
+### 10.2. Wzorce (z 04 § 1.6)
 
-| Zdarzenie | Wzorzec (ms) | Moment | Odczucie |
+| ID | Wzorzec (ms) | Charakter |
+|---|---|---|
+| `H_tik` | `[8]` | ledwie wyczuwalny |
+| `H_lekki` | `[14]` | krótki stuk |
+| `H_sredni` | `[24]` | wyraźne puknięcie |
+| `H_mocny` | `[40]` | uderzenie |
+| `H_podwojny` | `[20, 60, 30]` | „ta-dam” |
+| `H_serce` | `[28, 110, 16]` | bicie serca |
+| `H_fanfara` | `[30, 40, 30, 40, 70]` | seria |
+| `H_eskalacja` | `[50, 30, 90]` | narastające uderzenie |
+| `H_blad` | `[25, 50, 25]` | dwa krótkie |
+
+### 10.3. Zdarzenia → wibracja → dźwięk, z którym trafia
+
+| Zdarzenie | Wzorzec | Moment | Dźwięk w tej samej chwili |
 |---|---|---|---|
-| E05 `login_blad` | `[30, 40, 30]` | z `ui_blad` | podwójne „nie” |
-| E07 / E10 bonus | `[20, 40, 20, 40, 80]` | 650 ms (uderzenie basu) | radosne trzepnięcie |
-| E09 `bankrut` | `[80, 60, 120]` | z `sfx_bankrut` | ciężkie, „puste kieszenie” |
-| E24 `spin_start` | `[12]` | wciśnięcie | klik fizycznego przycisku |
-| E26 `beben_stop` (S1, S2) | `[8]` | każdy stop | delikatne stuknięcie |
-| E26 `beben_stop` (S3, zrzut) | `[8, 82, 8, 82, 8, 82, 8, 82, 8, 82, 8]` | pierwsza kolumna | 6 stuknięć co 90 ms jednym wzorcem (osobne wywołania przerywałyby się) |
-| E27 `antycypacja` | `[25, 155, 18]` co 800 ms | razem z `sfx_bicie_serca` (szybciej ×1,08 z każdym bębnem) | bicie serca w dłoni |
-| E28 `wygrana_small` | — | — | celowo bez — za częste |
-| E29 `wygrana_medium` | `[20, 40, 30]` | z dźwiękiem wygranej | |
-| E30 `wygrana_big` | `[40, 60, 40, 60, 120]` | uderzenie stingera (300 ms) | |
-| E31 `eskalacja_poziomu` | `[60, 40, 90]` | uderzenie | |
-| E33 `wild_ladowanie` | `[15, 30, 25]` | lądowanie | |
-| E34 `scatter_ladowanie` | 1.: `[20]`; 2.: `[20, 40, 20]`; 3.+: `[20, 40, 20, 40, 60]` | lądowanie | rośnie z liczbą scatterów |
-| E35 `free_spins_start` | `[50, 50, 50, 50, 200]` | uderzenie stingera | |
-| E40 `blad_sieci` | `[100]` | z `ui_blad` | |
-| E51 `s1_neon_jackpot` | `[60, 40, 60, 40, 60, 40, 200]` | 0 ms | |
-| E60 `s2_wild_rozszerzenie` | `[20, 20, 30, 20, 60]` | ostatni impuls na `syncPoint` (600 ms) | |
-| E61 `s2_retrigger` | `[40, 60, 80]` | 0 ms | |
-| E70 `s3_kaskada_pekniecie` | `[10]` | raz na kaskadę | |
-| E73 `s3_mnoznik_zbior` | `[30, 50, 120]` | uderzenie (900 ms) | |
+| E04, E06, E10, E12 | `H_lekki` | 0 ms | `ui_otworz` / `sfx_logowanie` / `ui_klik` / `sfx_przejscie_whoosh` |
+| E05, E40 | `H_blad` | z komunikatem (E40: 300 ms) | `ui_blad` |
+| E07 bonus | `H_lekki` → `H_mocny` → `H_tik` co 3. moneta → `H_sredni` | 0 ms → R + 650 ms → przyloty → ostatnia moneta | skrzynia → `sfx_uderzenie_basu` → `sfx_moneta_*` → `sfx_licznik_koniec` |
+| E11, E23, E38, E39 | `H_tik` | 0 ms | `ui_klik`, `ui_przelacznik`, `ui_zaklad_*` |
+| E24 | `H_lekki` | 0 ms | `sfx_spin_start` |
+| E26 | `H_lekki`; ostatni bęben rundy z wygraną: `H_sredni` | stop | `sfx_beben_stop_1` … `sfx_beben_stop_6` |
+| E27 | `H_serce` co drugie uderzenie (co 1 200 ms) | | `sfx_bicie_serca` (100 uderzeń/min) |
+| E28 (tylko m ≥ 1) | `H_lekki` | 0 ms | `sfx_wygrana_small_2` / `_3` |
+| E29 | `H_sredni` | 0 ms | `sfx_wygrana_medium` |
+| E30, E35 | `H_fanfara` | 0 ms | `sfx_bigwin_wejscie` / `sfx_free_spins_start` |
+| E31 | `H_eskalacja` | próg (uderzenie) | uderzenie `sfx_poziom_w_gore` + `sfx_uderzenie_basu` |
+| E32 | `H_mocny`, potem `H_lekki` przy przylocie kwoty do panelu | slam / wyjście + 500 ms | `sfx_licznik_koniec` + `sfx_bigwin_koniec` |
+| E33 | `H_sredni` | lądowanie | uderzenie `sfx_wild` |
+| E34 | 1.: `H_lekki`; 2.: `H_sredni`; 3.+: `H_mocny` | lądowanie | uderzenie `sfx_scatter_1` / `sfx_scatter_2` / `sfx_scatter_3` |
+| E37 | `H_sredni` | 1 800 ms (slam sumy) | `sfx_licznik_koniec` |
+| E50 | `H_podwojny` | 400 ms | `sfx_licznik_koniec` |
+| E51, E61 | `H_eskalacja` | 0 ms | `sfx_s1_jackpot` / `sfx_s2_gong` |
+| E60 | `H_mocny` | 600 ms (kolumna pełna) | `syncPoint` `sfx_s2_wild_rozszerzenie` |
+| E70 | `H_sredni` (klaster ≥ 10: `H_podwojny`) | 280 ms (pęknięcie) | `sfx_s3_pekniecie_*` |
+| E71 | `H_lekki` | lądowanie opadu (~630 ms od początku kaskady) | plinki `sfx_s3_opad` |
+| E72 | `H_sredni` | lądowanie kuli | `sfx_s3_mnoznik` |
+| E73 | `H_tik` przy przylocie kuli, `H_mocny` w 900 ms | | `syncPoint` `sfx_s3_mnoznik_zbior` |
 
-### 10.3. Kod
+### 10.4. Kod
 
 ```js
 // ui/haptyka.js — wibracje (tylko Android); wszystkie wywołania przez tę funkcję
+const WZORCE = {
+  H_tik: [8], H_lekki: [14], H_sredni: [24], H_mocny: [40], H_podwojny: [20, 60, 30],
+  H_serce: [28, 110, 16], H_fanfara: [30, 40, 30, 40, 70], H_eskalacja: [50, 30, 90], H_blad: [25, 50, 25],
+};
 const obslugiwana = 'vibrate' in navigator && matchMedia('(pointer: coarse)').matches;
 let wlaczona = (() => { try { return localStorage.getItem('cebulion.haptyka') !== '0'; } catch { return true; } })();
-let ostatnia = 0;
+let zajetaDo = 0;                                         // koniec bieżącego wzorca (performance.now)
 
-export function wibruj(wzorzec) {
-  if (!obslugiwana || !wlaczona || document.hidden) return;
+export function wibruj(id) {
+  const wzorzec = WZORCE[id];
+  if (!wzorzec || !obslugiwana || !wlaczona || document.hidden) return;
   const teraz = performance.now();
-  if (teraz - ostatnia < 100) return;   // maks. 1 wzorzec na 100 ms
-  ostatnia = teraz;
-  navigator.vibrate(wzorzec);           // false = przeglądarka odmówiła (np. brak gestu) — ignorujemy
+  if (teraz < zajetaDo) return;                           // trwa poprzedni wzorzec (lub < 120 ms) → odrzucamy
+  zajetaDo = teraz + Math.max(120, wzorzec.reduce((a, b) => a + b, 0));
+  navigator.vibrate(wzorzec);                             // false = przeglądarka odmówiła (np. brak gestu) — ignorujemy
 }
 
 export function ustawHaptyke(wl) {
@@ -1937,6 +1975,9 @@ export function ustawHaptyke(wl) {
 
 document.addEventListener('visibilitychange', () => { if (document.hidden && obslugiwana) navigator.vibrate(0); });
 ```
+
+Wywołania planuje ten sam planista co dźwięki (§ 2.7): w osi czasu rundy wpis `{ haptyka: 'H_mocny', t_ms }` obok
+wpisu dźwięku, więc impuls i transjent trafiają w tę samą klatkę.
 
 ---
 
@@ -2182,7 +2223,7 @@ Wszystkie 67 ID z briefu (§ 10) w kolejności briefu: gdzie jest przepis i w kt
 | ID | Przepis | Zdarzenia |
 |---|---|---|
 | `ui_hover` | § 3.1 | E03, E11 |
-| `ui_klik` | § 3.1 | E11, E20 |
+| `ui_klik` | § 3.1 | E11, E20, E37, E40 |
 | `ui_otworz` | § 3.1 | E04, E11 |
 | `ui_zamknij` | § 3.1 | E11, E38 |
 | `ui_blad` | § 3.1 | E05, E40 |
@@ -2197,11 +2238,11 @@ Wszystkie 67 ID z briefu (§ 10) w kolejności briefu: gdzie jest przepis i w kt
 | `sfx_moneta_3` | § 3.2 | E07, E10, E29 |
 | `sfx_moneta_4` | § 3.2 | E07, E10, E29 |
 | `sfx_moneta_5` | § 3.2 | E07, E10, E29 |
-| `sfx_licznik_tik` | § 3.2 | E07, E10, E28, E29, E30, E37 |
-| `sfx_licznik_koniec` | § 3.2 | E07, E10, E29, E32, E37 |
+| `sfx_licznik_tik` | § 3.2 | E07, E10, E28, E29, E30, E37, E70 |
+| `sfx_licznik_koniec` | § 3.2 | E07, E10, E29, E32, E37, E50, E61, E73 |
 | `sfx_saldo_puls` | § 3.2 | E06, E08, E28, E36 |
 | `sfx_bankrut` | § 3.2 | E09 |
-| `sfx_przejscie_whoosh` | § 3.2 | E12 |
+| `sfx_przejscie_whoosh` | § 3.2 | E12, E32, E35, E37 |
 | `sfx_spin_start` | § 3.3 | E24, E38 |
 | `sfx_beben_petla_s1` | § 3.3 | E25 |
 | `sfx_beben_petla_s2` | § 3.3 | E25 |
@@ -2225,11 +2266,11 @@ Wszystkie 67 ID z briefu (§ 10) w kolejności briefu: gdzie jest przepis i w kt
 | `sfx_bigwin_wejscie` | § 3.3 | E30 |
 | `sfx_poziom_w_gore` | § 3.3 | E31, E61 |
 | `sfx_bigwin_koniec` | § 3.3 | E32 |
-| `sfx_blysk` | § 3.3 | E07, E10, E30, E31, E35, E60, E72 |
-| `sfx_uderzenie_basu` | § 3.3 | E07, E10, E31 |
+| `sfx_blysk` | § 3.3 | E07, E10, E30, E31, E35, E72 |
+| `sfx_uderzenie_basu` | § 3.3 | E07, E10, E31, E35, E60, E73 |
 | `sfx_free_spins_start` | § 3.3 | E35 |
 | `sfx_free_spins_koniec` | § 3.3 | E37 |
-| `sfx_s1_neon_bzyk` | § 3.4 | E21, E50 |
+| `sfx_s1_neon_bzyk` | § 3.4 | E21, E22, E50, E51 |
 | `sfx_s1_jackpot` | § 3.4 | E51 |
 | `sfx_s2_wild_rozszerzenie` | § 3.5 | E60 |
 | `sfx_s2_gong` | § 3.5 | E21, E35, E61 |
@@ -2238,7 +2279,7 @@ Wszystkie 67 ID z briefu (§ 10) w kolejności briefu: gdzie jest przepis i w kt
 | `sfx_s3_pekniecie_3` | § 3.6 | E70 |
 | `sfx_s3_pekniecie_4` | § 3.6 | E70 |
 | `sfx_s3_opad` | § 3.6 | E21, E25, E71 |
-| `sfx_s3_mnoznik` | § 3.6 | E72 |
+| `sfx_s3_mnoznik` | § 3.6 | E72, E73 |
 | `sfx_s3_mnoznik_zbior` | § 3.6 | E73 |
 | `mus_lobby` | § 4.3 | E02, E06, E07, E10 |
 | `mus_s1` | § 4.3 | E21 |

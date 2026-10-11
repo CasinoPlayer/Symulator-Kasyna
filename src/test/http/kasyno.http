@@ -74,6 +74,15 @@ Content-Type: application/json
 
 {}
 
+### 12a. Absurdalny zakład (miliard cyfr w 11 znakach JSON-a): od razu 400 VALIDATION_FAILED (@Digits),
+# zamiast budowania komunikatu z miliardem zer (OutOfMemoryError przed poprawką)
+POST {{host}}/api/slots/cebulowy-777/spins
+Content-Type: application/json
+
+{
+  "bet": 1e999999999
+}
+
 ### 13. Bonus ratunkowy przy pełnym saldzie: 409 RESCUE_NOT_AVAILABLE
 POST {{host}}/api/me/rescue
 
@@ -88,6 +97,9 @@ GET {{host}}/api/me/stats
 
 ### 17. Za duża strona: 400 VALIDATION_FAILED (maks. 100)
 GET {{host}}/api/me/history?size=500
+
+### 17a. Za duży numer strony (page × size nie mieści się w int): 400 VALIDATION_FAILED, a nie 500
+GET {{host}}/api/me/history?page=2147483647&size=100
 
 ### 18. Ranking: największa pojedyncza wygrana
 GET {{host}}/api/leaderboard?type=biggest-win&limit=10

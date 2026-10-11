@@ -28,6 +28,18 @@ class SlotValueObjectsTest {
     }
 
     @Test
+    @org.junit.jupiter.api.Timeout(2)
+    @DisplayName("BET_INVALID: komunikat bezpieczny także dla absurdalnego zakładu z żądania (1e999999999)")
+    void invalidBetMessageIsSafeForAbsurdBet() {
+        BetLevels levels = BetLevels.parse("10,20");
+
+        assertThat(new InvalidBetException(new BigDecimal("7"), levels).getMessage())
+                .isEqualTo("Zakład 7 jest niedozwolony. Dozwolone: 10,20.");
+        assertThat(new InvalidBetException(new BigDecimal("1e999999999"), levels).getMessage())
+                .isEqualTo("Zakład 1E+999999999 jest niedozwolony. Dozwolone: 10,20.");
+    }
+
+    @Test
     @DisplayName("BetLevels: puste albo ujemne poziomy są odrzucane")
     void betLevelsValidation() {
         assertThatThrownBy(() -> BetLevels.parse("")).isInstanceOf(IllegalArgumentException.class);

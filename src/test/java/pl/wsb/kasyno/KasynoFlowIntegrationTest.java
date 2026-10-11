@@ -280,6 +280,80 @@ class KasynoFlowIntegrationTest {
         assertThat(walletFacade.balance(playerId)).isEqualByComparingTo("0");
     }
 
+    /**
+     * Podwójne (tu: ośmiokrotne) kliknięcie „SPIN” z tym samym kluczem, wysłane naprawdę równolegle. Spiny gracza
+     * czekają w kolejce na blokadę portfela, więc tylko pierwsze losuje i pobiera zakład, a reszta dostaje powtórkę
+     * tej samej rundy, bez błędów 500 i bez opierania się na wyjątku z unikalnego indeksu.
+     */
+    @Test
+    @DisplayName("8 równoległych spinów z tym samym Idempotency-Key: jeden zakład, jedna runda, 7 powtórek")
+    void concurrentDuplicateSpinsAreReplayed() throws Exception {
+        MockHttpSession session = login("Dubel_Klik", true);
+        int threads = 8;
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        CountDownLatch start = new CountDownLatch(1);
+        List<Future<MvcResult>> results = new ArrayList<>();
+        for (int i = 0; i < threads; i++) {
+            results.add(pool.submit(() -> {
+                start.await();
+                return spin(session, "cebulowy-777", 100, "ten-sam-klucz").andReturn();
+            }));
+        }
+        start.countDown();
+        List<Long> roundIds = new ArrayList<>();
+        int fresh = 0;
+        for (Future<MvcResult> future : results) {
+            MvcResult result = future.get(30, TimeUnit.SECONDS);
+            assertThat(result.getResponse().getStatus()).isEqualTo(200);
+            roundIds.add(number(result, "$.roundId").longValue());
+            boolean replayed = JsonPath.read(result.getResponse().getContentAsString(), "$.replayed");
+            fresh += replayed ? 0 : 1;
+        }
+        pool.shutdown();
+
+        assertThat(fresh).isEqualTo(1);
+        assertThat(roundIds).containsOnly(roundIds.getFirst());
+        assertThat(engine.calls()).hasSize(1);
+        mvc.perform(get("/api/me").session(session)).andExpect(jsonPath("$.balance").value(9900));
+        mvc.perform(get("/api/me/history").session(session)).andExpect(jsonPath("$.totalItems").value(1));
+    }
+
+    /** Podwójne kliknięcie „Wejdź do kasyna” nowym graczem: jedno konto, jeden bonus powitalny. */
+    @Test
+    @DisplayName("8 równoległych logowań nowym nickiem: jedno konto, jeden bonus powitalny, wszystkie 200")
+    void concurrentFirstLoginsCreateOneAccount() throws Exception {
+        int threads = 8;
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        CountDownLatch start = new CountDownLatch(1);
+        List<Future<MvcResult>> results = new ArrayList<>();
+        for (int i = 0; i < threads; i++) {
+            results.add(pool.submit(() -> {
+                start.await();
+                return mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nick\":\"Rownoczesny\"}")).andReturn();
+            }));
+        }
+        start.countDown();
+        List<Long> playerIds = new ArrayList<>();
+        int newPlayers = 0;
+        MockHttpSession anySession = null;
+        for (Future<MvcResult> future : results) {
+            MvcResult result = future.get(30, TimeUnit.SECONDS);
+            assertThat(result.getResponse().getStatus()).isEqualTo(200);
+            playerIds.add(number(result, "$.player.id").longValue());
+            boolean isNew = JsonPath.read(result.getResponse().getContentAsString(), "$.newPlayer");
+            newPlayers += isNew ? 1 : 0;
+            anySession = (MockHttpSession) result.getRequest().getSession(false);
+        }
+        pool.shutdown();
+
+        assertThat(newPlayers).isEqualTo(1);
+        assertThat(playerIds).containsOnly(playerIds.getFirst());
+        mvc.perform(get("/api/me/transactions").session(anySession))
+                .andExpect(jsonPath("$.totalItems").value(1))
+                .andExpect(jsonPath("$.items[0].type").value("WELCOME_BONUS"));
+    }
+
     @Test
     @DisplayName("wylogowanie: sesja unieważniona, potem 401 NOT_LOGGED_IN")
     void logout() throws Exception {

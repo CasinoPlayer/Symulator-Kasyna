@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ActiveProfiles;
@@ -30,6 +31,8 @@ import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -38,6 +41,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -120,6 +125,36 @@ class SlotControllerTest {
                 .andExpect(jsonPath("$.errors[0].field").value("bet"));
     }
 
+    /**
+     * {@code 1e999999999} to 11 znaków JSON-a, ale „w zapisie zwykłym” miliard cyfr. Przed poprawką przechodził
+     * {@code @Positive}, a budowa komunikatu {@code BET_INVALID} kończyła się {@code OutOfMemoryError}.
+     */
+    @Test
+    @DisplayName("spin: zakład 1e999999999 (miliard cyfr) → od razu 400 VALIDATION_FAILED, serwis nie jest wołany")
+    void absurdBetIsRejectedByValidation() throws Exception {
+        spin("{\"bet\":1e999999999}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.errors[0].field").value("bet"));
+        spin("{\"bet\":100.001}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("bet"));
+        verifyNoInteractions(spinService);
+    }
+
+    @Test
+    @DisplayName("równoległe żądanie (blokada portfela zajęta) → 409 CONCURRENT_REQUEST z Retry-After, nie 500")
+    void lockTimeoutIsConflictNotServerError() throws Exception {
+        doThrow(new CannotAcquireLockException("Timeout trying to lock table")).when(spinService).spin(any());
+
+        spin("{\"bet\":100}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CONCURRENT_REQUEST"))
+                .andExpect(jsonPath("$.retryAfterSeconds").value(1))
+                .andExpect(header().string("Retry-After", "1"))
+                .andExpect(content().string(not(containsString("lock table"))));
+    }
+
     @Test
     @DisplayName("spin: Idempotency-Key dłuższy niż 64 znaki → 400 VALIDATION_FAILED")
     void idempotencyKeyTooLong() throws Exception {
@@ -182,6 +217,28 @@ class SlotControllerTest {
                 .andExpect(jsonPath("$.errors[0].field").value("size"));
         mvc.perform(get("/api/me/history").param("page", "abc").session(session))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.detail").value("Parametr „page” ma niepoprawny format."));
+    }
+
+    @Test
+    @DisplayName("historia: numer strony ponad limit (przepełnienie page × size) → 400, a nie 500")
+    void historyPageNumberLimit() throws Exception {
+        mvc.perform(get("/api/me/history").param("page", "2147483647").param("size", "100").session(session))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.errors[0].field").value("page"));
+        verifyNoInteractions(playerSlots);
+    }
+
+    @Test
+    @DisplayName("nagłówki bezpieczeństwa w każdej odpowiedzi: nosniff, SAMEORIGIN, Referrer-Policy")
+    void securityHeaders() throws Exception {
+        when(catalog.activeMachines()).thenReturn(List.of());
+
+        mvc.perform(get("/api/slots"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("X-Frame-Options", "SAMEORIGIN"))
+                .andExpect(header().string("Referrer-Policy", "same-origin"));
     }
 }

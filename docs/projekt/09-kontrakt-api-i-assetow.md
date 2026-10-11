@@ -103,9 +103,101 @@ Kształt `symbols`: `[{ "code": "siodemka", "kind": "NORMAL", "pays": { "3": 50 
 `SCATTER`, `MULTIPLIER`; `pays` mapuje liczbę symboli (linie) lub rozmiar klastra (S3) na mnożnik zakładu
 (szczegółowa semantyka per gra w `07`).
 
+Dla gier `LINES` odpowiedź zawiera też `paylines`: lista linii, każda jako lista indeksów rzędów (0 = górny)
+dla kolejnych bębnów, np. S1: `[[1,1,1],[0,0,0],[2,2,2],[0,1,2],[2,1,0]]`. Numer linii w wygranych = indeks w tej liście + 1.
+
 `POST /api/slots/{code}/spins` — ciało `{ "bet": 100 }`, nagłówek `Idempotency-Key: <uuid>`.
-Odpowiedź (kroki animacji, wygrane, saldo) — **zob. `07-gry-i-matematyka.md`**. Ten sam klucz idempotencji
-w ciągu sesji zwraca tę samą rundę zamiast losować nową (podwójne kliknięcie, ponowienie po zerwanym połączeniu).
+Ten sam klucz idempotencji zwraca tę samą rundę zamiast losować nową (podwójne kliknięcie, ponowienie po zerwanym
+połączeniu). Format odpowiedzi — § 2.4.
+
+### 2.4. Odpowiedź spinu (kroki animacji) — wspólna dla wszystkich gier
+
+Serwer liczy całą rundę naraz (obrót, wygrane, kaskady, darmowe spiny) i zwraca **listę kroków** w kolejności,
+w jakiej front ma je odegrać. Front niczego nie losuje i niczego nie liczy — tylko animuje kroki.
+
+```json
+{
+  "roundId": 1042,
+  "gameCode": "zloty-faraon",
+  "bet": 100,
+  "totalWin": 2350,
+  "multiplier": 23.5,
+  "tier": "big",
+  "balanceBefore": 10000,
+  "balanceAfter": 12250,
+  "seed": "5f3a9c0e7b21d4a8",
+  "steps": [ ... ]
+}
+```
+
+| Pole | Znaczenie |
+|---|---|
+| `bet` | zakład całkowity rundy (pobrany raz, także gdy runda zawiera darmowe spiny) |
+| `totalWin` | suma wszystkich wygranych rundy (liczba całkowita; ułamki zaokrąglamy w dół w silniku) |
+| `multiplier` | `totalWin / bet`, do wyboru poziomu prezentacji |
+| `tier` | `none`, `small` (< 5×), `medium` (≥ 5×), `big` (≥ 15×), `mega` (≥ 30×), `epic` (≥ 60×), `ultra` (≥ 100×) |
+| `balanceBefore` / `balanceAfter` | saldo przed pobraniem zakładu i po zaksięgowaniu wygranej |
+| `seed` | ziarno losowania rundy jako tekst szesnastkowy (64 bity nie mieszczą się bezpiecznie w liczbie JS) |
+
+**Siatka** zawsze jako `grid[bęben][rząd]`, rząd 0 = górny; wartości to kody symboli z `GET /api/slots/{code}`
+(np. `"siodemka"`). **Pozycja** to para `[bęben, rząd]`.
+
+Typy kroków (`type`) i ich pola. Każdy krok, który dodaje wygraną, ma `win` (ile dodał) i `totalWin` (suma narastająca
+rundy po tym kroku), żeby licznik na ekranie rósł razem z animacją.
+
+| `type` | Pola | Kiedy |
+|---|---|---|
+| `spin` | `phase` (`base` / `free`), `grid`, `anticipation` (lista bębnów do spowolnienia, może być pusta), `freeSpinIndex` i `freeSpinsLeft` (tylko `free`), `orbs` (S3: `[{ "pos": [b, r], "value": 5 }]`) | obrót bębnów / zrzut planszy |
+| `expandWild` | `reels` (lista bębnów), `grid` (siatka po rozszerzeniu) | S2: WILD rozszerza się na cały bęben (darmowe spiny), przed oceną wygranych |
+| `feature` | `name` (`neonJackpot`), `multiplier` | S1: cały ekran tego samego symbolu (×10) |
+| `win` | `wins` (lista), `win`, `totalWin` | ocena wygranych po obrocie lub po kaskadzie |
+| `cascade` | `removed` (pozycje usuwane), `newSymbols` (dla każdego bębna lista nowych symboli od góry), `grid` (siatka po opadzie), `orbs` (nowe kule) | S3: pęknięcie wygranych i opad |
+| `applyMultiplier` | `orbsSum`, `baseWin`, `win`, `totalWin` | S3: koniec sekwencji kaskad w darmowych spinach, suma kul mnoży wygraną sekwencji |
+| `freeSpinsStart` | `count`, `trigger` (pozycje scatterów) | aktywacja darmowych spinów |
+| `freeSpinsRetrigger` | `added`, `trigger`, `freeSpinsLeft` | dodatkowe darmowe spiny |
+| `freeSpinsEnd` | `freeSpinsWin` (suma wygranych z darmowych spinów) | koniec darmowych spinów |
+
+Element listy `wins`:
+
+| `kind` | Pola |
+|---|---|
+| `line` | `line` (numer od 1), `symbol`, `count`, `positions`, `amount`, `wildMultiplier` (1 albo 2 — S1 „neonowy mnożnik”), `freeSpinMultiplier` (1 albo 2 — S2) |
+| `scatter` | `symbol`, `count`, `positions`, `amount` |
+| `cluster` | `symbol`, `size`, `positions`, `amount` |
+
+**Jak liczymy kwoty:** wygrana liniowa = mnożnik z tabeli × (zakład / liczba linii) × `wildMultiplier` × `freeSpinMultiplier`;
+scatter i klastry = mnożnik z tabeli × zakład całkowity. Szczegóły i tabele: [`07-gry-i-matematyka.md`](07-gry-i-matematyka.md).
+
+Przykład S1 (wygrana na linii 1 z WILD):
+
+```json
+{
+  "roundId": 17, "gameCode": "cebulowy-777", "bet": 50, "totalWin": 200, "multiplier": 4.0, "tier": "small",
+  "balanceBefore": 9950, "balanceAfter": 10100, "seed": "0c1f22a9e3b4d5f6",
+  "steps": [
+    { "type": "spin", "phase": "base", "anticipation": [],
+      "grid": [["cytryna","dzwonek","sliwka"], ["arbuz","wild","cytryna"], ["bar","dzwonek","wisnie"]] },
+    { "type": "win", "win": 200, "totalWin": 200, "wins": [
+      { "kind": "line", "line": 1, "symbol": "dzwonek", "count": 3, "positions": [[0,1],[1,1],[2,1]],
+        "amount": 200, "wildMultiplier": 2, "freeSpinMultiplier": 1 } ] }
+  ]
+}
+```
+
+Przykład S3 (klaster → kaskada → brak dalszych wygranych):
+
+```json
+{
+  "steps": [
+    { "type": "spin", "phase": "base", "anticipation": [], "orbs": [], "grid": [["szafir", "..."], "..."] },
+    { "type": "win", "win": 40, "totalWin": 40, "wins": [
+      { "kind": "cluster", "symbol": "szafir", "size": 6, "positions": [[0,0],[0,1],[1,1],[1,2],[2,2],[2,3]], "amount": 40 } ] },
+    { "type": "cascade", "removed": [[0,0],[0,1],[1,1],[1,2],[2,2],[2,3]],
+      "newSymbols": [["topaz","rubin"], ["ametyst","szmaragd"], ["diament","szafir"], [], [], []],
+      "grid": [["topaz", "..."], "..."], "orbs": [] }
+  ]
+}
+```
 
 ### 2.3. Ranking, feed, raporty
 

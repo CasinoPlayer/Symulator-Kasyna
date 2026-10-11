@@ -108,7 +108,17 @@ class AuthControllerTest {
     void malformedJson() throws Exception {
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content("{nick:"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.detail").value("Treść żądania nie jest poprawnym JSON-em albo któreś pole ma zły typ."));
+    }
+
+    @Test
+    @DisplayName("ciało nie-JSON (np. formularz z obcej strony) → 415 z prośbą o application/json")
+    void nonJsonBodyIsRejected() throws Exception {
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_FORM_URLENCODED).content("nick=Kamil"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.detail").value("Dane wysyłaj jako JSON (nagłówek Content-Type: application/json)."));
     }
 
     @Test
@@ -161,7 +171,8 @@ class AuthControllerTest {
     void unknownPath() throws Exception {
         mvc.perform(get("/api/nie-ma-takiego"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.detail").value("Nie ma takiego adresu."));
     }
 
     @Test
