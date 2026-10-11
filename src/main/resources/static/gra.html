@@ -9,17 +9,20 @@
 <title>Gra · Cebulion Casino</title>
 <link rel="icon" href="icons/emblemat.svg" type="image/svg+xml">
 <link rel="preload" href="fonts/manrope-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/bungee-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="modulepreload" href="vendor/pixi/pixi.min.mjs">
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/gra.css">
+<link rel="stylesheet" href="css/game.css">
 <script type="module" src="js/gra.js"></script>
 </head>
 <body class="game-page">
 <!--
-  Szkielet strony gry. Ten etap: pasek górny, ekran ładowania, scena PixiJS z podglądem układu bębnów,
-  panel sterowania (bez logiki spinu). Silnik animacji gier (bębny, efekty, dźwięk) dochodzi w kolejnym etapie.
+  Strona gry: pasek górny, scena PixiJS (runtime gier: js/game/**), ekran ładowania (E20) i panel sterowania w HTML
+  nad płótnem (zakład, SPIN/STOP, AUTO, TURBO, dźwięk, zasady, ustawienia jakości). Wynik każdego spinu liczy serwer.
 -->
 <div class="page-bg game-bg" id="tlo" aria-hidden="true"></div>
 
@@ -43,6 +46,9 @@
       <button type="button" class="btn-icon" id="btn-dzwiek" aria-pressed="false" aria-label="Wycisz dźwięk">
         <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#dzwiek_wl"/></svg>
       </button>
+      <button type="button" class="btn-icon" id="btn-ustawienia" aria-label="Ustawienia grafiki i ruchu">
+        <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#ustawienia"/></svg>
+      </button>
       <button type="button" class="btn-icon" id="btn-info" aria-label="Zasady i tabela wypłat">
         <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#info"/></svg>
       </button>
@@ -59,16 +65,24 @@
         <div class="progress__shine"></div>
       </div>
       <p class="loader__step" id="ladowanie-krok">Łączenie z kasynem…</p>
+      <!-- przeglądarki wymagają gestu, zanim zagra dźwięk (05 § 2.3) — „Graj” odblokowuje audio i startuje intro -->
+      <button type="button" class="btn btn--primary btn--lg loader__play" id="btn-graj" hidden>Graj</button>
       <div class="loader__actions" id="ladowanie-akcje" hidden>
         <button type="button" class="btn btn--primary btn--sm" id="btn-ponow">Spróbuj ponownie</button>
         <a class="btn btn--secondary btn--sm" href="./">Wróć do lobby</a>
       </div>
       <p class="loader__tagline">Graj bez ryzyka. Wygrywaj z klasą.</p>
     </div>
-    <p class="chip stage__note" id="scena-opis" title="Animacje bębnów, efekty i dźwięk dochodzą w kolejnym etapie projektu" hidden>Podgląd układu bębnów</p>
+    <!-- utrata kontekstu WebGL (sterownik, przełączenie karty graficznej) -->
+    <div class="stage-overlay" id="gra-kontekst" role="alert" hidden>
+      <p class="stage-overlay__text">Odświeżamy grafikę automatu…</p>
+      <button type="button" class="btn btn--secondary btn--sm" id="btn-przeladuj" hidden>Załaduj ponownie</button>
+    </div>
+    <p class="chip chip--gold stage__fs" id="gra-fs" hidden></p>
+    <p class="stage__hint" id="gra-skip" hidden>Dotknij, aby przewinąć</p>
   </main>
 
-  <section class="controls" aria-label="Panel sterowania">
+  <section class="controls" id="panel" aria-label="Panel sterowania">
     <!-- Na telefonie pionowo saldo jest w panelu (jak w mobilnych slotach), na większych ekranach — w pasku górnym. -->
     <div class="controls__balance">
       <span class="controls__label">Saldo</span>
@@ -82,22 +96,50 @@
     <div class="controls__bet">
       <span class="controls__label" id="zaklad-etykieta">Zakład</span>
       <div class="bet" role="group" aria-labelledby="zaklad-etykieta">
-        <button type="button" class="btn-icon bet__btn" id="bet-minus" aria-label="Zmniejsz zakład">
+        <button type="button" class="btn-icon bet__btn" id="bet-minus" aria-label="Zmniejsz zakład" aria-keyshortcuts="Minus">
           <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#minus"/></svg>
         </button>
         <output class="bet__value num" id="bet-wartosc" aria-live="polite">10</output>
-        <button type="button" class="btn-icon bet__btn" id="bet-plus" aria-label="Zwiększ zakład">
+        <button type="button" class="btn-icon bet__btn" id="bet-plus" aria-label="Zwiększ zakład" aria-keyshortcuts="Plus">
           <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#plus"/></svg>
         </button>
       </div>
     </div>
 
     <div class="controls__main">
-      <button type="button" class="ctrl-toggle" id="btn-auto" aria-pressed="false">
-        <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#autoplay"/></svg><span>Auto</span>
-      </button>
+      <div class="auto-wrap">
+        <button type="button" class="ctrl-toggle" id="btn-auto" aria-pressed="false" aria-haspopup="dialog" aria-controls="auto-menu">
+          <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#autoplay"/></svg><span>Auto</span>
+        </button>
+        <!-- E38: menu autoplay (liczba spinów i warunek zatrzymania) -->
+        <div class="auto-menu" id="auto-menu" role="dialog" aria-label="Automatyczna gra" hidden>
+          <p class="auto-menu__title">Automatyczna gra</p>
+          <fieldset class="auto-menu__group">
+            <legend>Liczba spinów</legend>
+            <div class="seg">
+              <label><input type="radio" name="auto-ile" value="10" checked><span>10</span></label>
+              <label><input type="radio" name="auto-ile" value="25"><span>25</span></label>
+              <label><input type="radio" name="auto-ile" value="50"><span>50</span></label>
+              <label><input type="radio" name="auto-ile" value="100"><span>100</span></label>
+            </div>
+          </fieldset>
+          <fieldset class="auto-menu__group">
+            <legend>Zatrzymaj przy wygranej</legend>
+            <div class="seg">
+              <label><input type="radio" name="auto-stop" value="0" checked><span>nie</span></label>
+              <label><input type="radio" name="auto-stop" value="10"><span>≥10×</span></label>
+              <label><input type="radio" name="auto-stop" value="50"><span>≥50×</span></label>
+              <label><input type="radio" name="auto-stop" value="100"><span>≥100×</span></label>
+            </div>
+          </fieldset>
+          <p class="auto-menu__note">Autoplay zatrzyma się też, gdy zabraknie cebulionów na zakład.</p>
+          <button type="button" class="btn btn--primary btn--sm btn--block" id="auto-start">Start</button>
+        </div>
+      </div>
       <button type="button" class="spin" id="btn-spin" aria-label="Zakręć (spacja)" aria-keyshortcuts="Space">
-        <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-13.7 5.6"/><path d="M4 12a8 8 0 0 1 13.7-5.6"/><path d="M18 3v3.6h-3.6"/><path d="M6 21v-3.6h3.6"/></svg>
+        <svg class="icon spin__go" aria-hidden="true" viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-13.7 5.6"/><path d="M4 12a8 8 0 0 1 13.7-5.6"/><path d="M18 3v3.6h-3.6"/><path d="M6 21v-3.6h3.6"/></svg>
+        <svg class="icon spin__stop" aria-hidden="true" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="2.2"/></svg>
+        <span class="spin__count num" id="spin-licznik" hidden></span>
       </button>
       <button type="button" class="ctrl-toggle" id="btn-turbo" aria-pressed="false">
         <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#turbo"/></svg><span>Turbo</span>
@@ -109,6 +151,7 @@
       <output class="controls__win-value num" id="wygrana">0</output>
     </div>
   </section>
+  <p class="sr-only" id="ogloszenia" aria-live="polite"></p>
 </div>
 
 <!-- Okno: zasady i tabela wypłat (dane z GET /api/slots/{code}) -->
@@ -122,6 +165,58 @@
     <p class="modal__lead" id="info-opis"></p>
     <div id="info-tresc"></div>
     <p class="modal__note">Symulator: cebuliony nie mają wartości. Wynik każdego spinu liczy serwer.</p>
+  </div>
+</div>
+
+<!-- Okno: ustawienia grafiki, ruchu i wibracji (04 § 2.2, § 1.5, § 1.6) -->
+<div class="modal" id="modal-ustawienia" role="dialog" aria-modal="true" aria-labelledby="ust-tytul" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__panel">
+    <button type="button" class="btn-icon modal__close" data-close aria-label="Zamknij ustawienia">
+      <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#zamknij"/></svg>
+    </button>
+    <h2 class="modal__title" id="ust-tytul">Ustawienia</h2>
+    <fieldset class="settings-group">
+      <legend>Jakość grafiki</legend>
+      <div class="seg seg--wide">
+        <label><input type="radio" name="jakosc" value="auto"><span>Auto</span></label>
+        <label><input type="radio" name="jakosc" value="high"><span>Wysoka</span></label>
+        <label><input type="radio" name="jakosc" value="medium"><span>Średnia</span></label>
+        <label><input type="radio" name="jakosc" value="low"><span>Niska</span></label>
+      </div>
+      <p class="settings-note" id="ust-jakosc-opis"></p>
+    </fieldset>
+    <fieldset class="settings-group">
+      <legend>Ruch i błyski</legend>
+      <div class="seg seg--wide">
+        <label><input type="radio" name="ruch" value="auto"><span>Jak w systemie</span></label>
+        <label><input type="radio" name="ruch" value="reduced"><span>Ogranicz</span></label>
+        <label><input type="radio" name="ruch" value="full"><span>Pełny</span></label>
+      </div>
+      <p class="settings-note">„Ogranicz” wyłącza błyski ekranu, drżenie i migotanie neonów.</p>
+    </fieldset>
+    <label class="switch settings-switch">
+      <input type="checkbox" id="ust-wibracje">
+      <span class="switch__track"><span class="switch__thumb"></span></span>
+      <span>Wibracje (telefon)</span>
+    </label>
+  </div>
+</div>
+
+<!-- Okno: za mało cebulionów (409 INSUFFICIENT_FUNDS) — z bonusem ratunkowym, gdy dostępny -->
+<div class="modal" id="modal-srodki" role="dialog" aria-modal="true" aria-labelledby="srodki-tytul" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__panel">
+    <button type="button" class="btn-icon modal__close" data-close aria-label="Zamknij">
+      <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#zamknij"/></svg>
+    </button>
+    <h2 class="modal__title" id="srodki-tytul">Za mało cebulionów</h2>
+    <p class="modal__lead" id="srodki-opis">Twoje saldo nie wystarcza na ten zakład.</p>
+    <div class="funds-actions">
+      <button type="button" class="btn btn--primary" id="btn-ratunek-gra" hidden>Odbierz 10 000 cebulionów</button>
+      <button type="button" class="btn btn--secondary" id="btn-zmniejsz">Zmniejsz zakład</button>
+    </div>
+    <p class="modal__note" id="srodki-uwaga"></p>
   </div>
 </div>
 </body>

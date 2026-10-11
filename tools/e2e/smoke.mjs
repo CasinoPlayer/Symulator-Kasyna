@@ -309,6 +309,8 @@ async function main() {
       await page.click('#kafle .tile[data-code="cebulowy-777"]');
       await page.waitForURL(/gra\.html\?gra=cebulowy-777/, { timeout: 5000 }).catch(() => {});
       check('kafel po zalogowaniu prowadzi do gra.html?gra=cebulowy-777', page.url().includes('gra.html?gra=cebulowy-777'), page.url());
+      // ekran ładowania kończy się przyciskiem „Graj” — gest odblokowuje dźwięk (05 § 2.3, runtime gier: docs/projekt/10)
+      await page.click('#btn-graj', { timeout: 30_000 }).catch(() => {});
       await page.waitForSelector('#ladowanie.is-done', { timeout: 15_000 }).catch(() => {});
       check('strona gry ładuje się (ekran ładowania znika)', await page.locator('#ladowanie.is-done').count() === 1);
       check('scena PixiJS ma płótno', await page.locator('#scena canvas').count() === 1);
@@ -340,6 +342,7 @@ async function main() {
       for (const code of ['zloty-faraon', 'krysztalowa-kaskada']) {
         await page.setViewportSize({ width: 1366, height: 768 });
         await page.goto(`${BASE}/gra.html?gra=${code}`);
+        await page.click('#btn-graj', { timeout: 30_000 }).catch(() => {});
         await page.waitForSelector('#ladowanie.is-done', { timeout: 15_000 }).catch(() => {});
         await page.waitForTimeout(400);
         await shot(page, `gra-${code}-1366`);

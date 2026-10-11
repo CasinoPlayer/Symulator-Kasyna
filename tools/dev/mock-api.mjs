@@ -17,7 +17,9 @@
 //   * endpointy z kontraktu: /api/auth/login, /api/auth/logout, /api/me, /api/me/rescue, /api/me/history,
 //     /api/me/transactions, /api/me/stats, /api/slots, /api/slots/{code}, /api/leaderboard, /api/feed/big-wins,
 //   * POST /api/dev/gracz — TYLKO W ATRAPIE: ustawia saldo / odliczanie bonusu ratunkowego zalogowanego gracza,
-//     żeby e2e mogło sprawdzić ekran bankructwa bez grania setek spinów.
+//     żeby e2e mogło sprawdzić ekran bankructwa bez grania setek spinów,
+//   * POST /api/slots/{code}/spins — odpowiedź z krokami animacji (09 § 2.4) z generatora tools/dev/mock-spins.mjs;
+//     TYLKO W ATRAPIE wynik można wymusić nagłówkiem `X-Mock-Force: big|mega|epic|ultra|jackpot|…` albo `?force=`.
 // =====================================================================================================
 
 import http from 'node:http';
@@ -26,6 +28,7 @@ import { stat } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { generateSpin, PAYLINES } from './mock-spins.mjs';
 
 // ----------------------------------------------------------------------------------------------------- konfiguracja
 
@@ -269,6 +272,7 @@ async function handleApi(req, res, url) {
       ...slot,
       symbols: d.symbols.map(([code, kind, pays]) => ({ code, kind, pays })),
       features: d.features,
+      ...(PAYLINES[slot.code] ? { paylines: PAYLINES[slot.code] } : {}),
     });
   }
 
@@ -289,16 +293,14 @@ async function handleApi(req, res, url) {
     return send(res, 200, DEMO_FEED.slice(0, limit));
   }
 
-  if (req.method === 'POST' && /^\/api\/slots\/[^/]+\/spins$/.test(url.pathname)) {
-    return problem(res, 501, 'NOT_IMPLEMENTED_IN_MOCK', 'Atrapa nie liczy spinów',
-      'Spiny liczy serwer w Javie. Uruchom aplikację Spring Boot albo rozbuduj atrapę w kolejnym etapie.');
-  }
-
   // --- poniżej endpointy wymagające zalogowanego gracza
   const p = currentPlayer(req);
-  if (url.pathname.startsWith('/api/me') || url.pathname.startsWith('/api/dev')) {
+  const spinMatch = req.method === 'POST' && url.pathname.match(/^\/api\/slots\/([a-z0-9-]+)\/spins$/);
+  if (url.pathname.startsWith('/api/me') || url.pathname.startsWith('/api/dev') || spinMatch) {
     if (!p) return problem(res, 401, 'NOT_LOGGED_IN', 'Nie jesteś zalogowany', 'Zaloguj się nazwą gracza, aby kontynuować.');
   }
+
+  if (spinMatch) return handleSpin(req, res, url, p, spinMatch[1]);
 
   if (route === 'GET /api/me') return send(res, 200, playerDto(p));
 
@@ -330,6 +332,37 @@ async function handleApi(req, res, url) {
   }
 
   return problem(res, 404, 'NOT_FOUND', 'Nie ma takiego zasobu', `Atrapa nie obsługuje ${route}.`);
+}
+
+/** Zapamiętane odpowiedzi według Idempotency-Key (ten sam klucz = ta sama runda, 09 § 2.2). */
+const idempotency = new Map();
+let nextRoundId = 5000;
+
+/** POST /api/slots/{code}/spins — walidacja jak w kontrakcie, wynik z generatora atrapy, księgowanie salda. */
+async function handleSpin(req, res, url, p, code) {
+  const slot = SLOTS.find((s) => s.code === code);
+  if (!slot) return problem(res, 404, 'GAME_NOT_FOUND', 'Nie ma takiej gry', `Nie znaleziono automatu „${code}”.`);
+  const body = await readBody(req);
+  const bet = Number(body?.bet);
+  const key = String(req.headers['idempotency-key'] ?? '');
+  if (!key) return problem(res, 400, 'VALIDATION_FAILED', 'Brak klucza idempotencji', 'Nagłówek Idempotency-Key jest wymagany.', { errors: [{ field: 'Idempotency-Key', message: 'wymagany' }] });
+  const fingerprint = `${p.id}:${code}:${bet}`;
+  const saved = idempotency.get(key);
+  if (saved) {
+    if (saved.fingerprint !== fingerprint) return problem(res, 409, 'IDEMPOTENCY_CONFLICT', 'Konflikt klucza idempotencji', 'Ten klucz był użyty z innym żądaniem.');
+    return send(res, 200, saved.response);
+  }
+  if (!slot.betLevels.includes(bet)) return problem(res, 400, 'BET_INVALID', 'Niedozwolony zakład', `Dozwolone zakłady: ${slot.betLevels.join(', ')}.`);
+  if (p.balance < bet) return problem(res, 409, 'INSUFFICIENT_FUNDS', 'Za mało cebulionów', 'Saldo jest mniejsze niż zakład.');
+  const force = req.headers['x-mock-force'] ?? url.searchParams.get('force') ?? null;
+  const response = generateSpin({ code, bet, force, symbols: DETAILS[code].symbols, roundId: nextRoundId++, balanceBefore: p.balance });
+  p.balance = response.balanceAfter;
+  idempotency.set(key, { fingerprint, response });
+  p.history.unshift({
+    roundId: response.roundId, gameCode: code, gameName: slot.name, bet, win: response.totalWin, multiplier: response.multiplier,
+    tier: response.tier === 'none' ? null : response.tier, status: 'SETTLED', createdAt: new Date().toISOString(),
+  });
+  return send(res, 200, response);
 }
 
 /** Przykładowa historia rund (tylko przez /api/dev/gracz) — do oglądania wyglądu okna „Historia gry”. */

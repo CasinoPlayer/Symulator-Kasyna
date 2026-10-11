@@ -23,11 +23,11 @@ Wystarczy otworzyć repozytorium na gałęzi `claude/dazzling-bell-be3okd` i nap
 | Pipeline grafiki `tools/art/przetworz.py` + generatory grafiki zastępczej (Blender `bpy` + Pillow) | w budowie | `tools/art/**`, wynik w `static/assets/img/` |
 | Dźwięki i muzyka (67 ID, Opus + AAC) | pierwsza wersja; do naniesienia poprawki z 05 § 8.4 | `tools/audio/**`, `static/assets/audio/` |
 | Silniki 3 automatów w Javie + endpoint spinu + testy Monte Carlo + doc 07 | **scalone**, `mvn verify` zielone (213 testów); RTP: S1 94,9%, S2 96,2%, S3 96,3% | `slots/application/engine/**`, `docs/projekt/07-gry-i-matematyka.md` |
-| Runtime gier w PixiJS + Cebulowy 777 + doc 10 | w budowie, zapisane jako łata | `wip/gra-s1-przegladarka.patch` |
+| Runtime gier w PixiJS + Cebulowy 777 + doc 10 | **scalone**; e2e `tools/e2e/gra-s1.mjs` 35/35 z prawdziwą grafiką i dźwiękiem | `static/js/game/**`, `docs/projekt/10-runtime-gier.md` |
 
 ## Co zostało (kolejność)
 
-1. **Scalić łatę gry S1** z `wip/gra-s1-przegladarka.patch` (`git apply --3way`, baza `7f66301`), rozwiązać konflikty. (Silniki gier już scalone.)
+1. ~~Scalić silniki i grę S1~~ — zrobione.
 2. **Dokończyć recenzję backendu i lobby**: test curl (login → me → spin → saldo), smoke e2e na prawdziwym backendzie.
 3. **Pipeline grafiki**: dokończyć generatory, uruchomić `przetworz.py`, poprawki z `wip/todo-integracja.md`.
 4. **Dźwięk**: naniesienie zmian z 05 § 8.4 i przegenerowanie.

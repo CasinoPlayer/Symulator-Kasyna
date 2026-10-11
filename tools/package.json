@@ -11,7 +11,8 @@
     "vendor": "node vendor.mjs",
     "dev": "node dev/mock-api.mjs",
     "dev:pusty": "node dev/mock-api.mjs --pusty",
-    "e2e": "node e2e/smoke.mjs"
+    "e2e": "node e2e/smoke.mjs",
+    "e2e:gra": "node e2e/gra-s1.mjs"
   },
   "devDependencies": {
     "@fontsource/bungee": "5.3.0",
