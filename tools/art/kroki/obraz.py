@@ -279,13 +279,15 @@ def otsu(wartosci: np.ndarray, biny: int = 256) -> float:
     h, kraw = np.histogram(wartosci, bins=biny, range=(0.0, 1.0))
     h = h.astype(np.float64)
     srodki = (kraw[:-1] + kraw[1:]) / 2
+    kraw = kraw.astype(np.float64)
     w0 = np.cumsum(h)
     w1 = w0[-1] - w0
     m0 = np.cumsum(h * srodki)
     mu0 = m0 / np.maximum(w0, 1)
     mu1 = (m0[-1] - m0) / np.maximum(w1, 1)
     miedzy = w0 * w1 * (mu0 - mu1) ** 2
-    return float(srodki[int(np.argmax(miedzy))])
+    # próg = GÓRNA krawędź ostatniego binu grupy ciemnej (wartość równa środkowi binu trafia do grupy ciemnej)
+    return float(kraw[int(np.argmax(miedzy)) + 1])
 
 
 def pas_brzegowy(H: int, W: int, szer: int) -> np.ndarray:

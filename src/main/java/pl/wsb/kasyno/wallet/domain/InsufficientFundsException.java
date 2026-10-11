@@ -1,5 +1,6 @@
 package pl.wsb.kasyno.wallet.domain;
 
+import pl.wsb.kasyno.shared.domain.Money;
 import pl.wsb.kasyno.shared.error.CasinoException;
 import pl.wsb.kasyno.shared.error.ErrorCode;
 
@@ -13,6 +14,6 @@ public class InsufficientFundsException extends CasinoException {
 
     public InsufficientFundsException(BigDecimal balance, BigDecimal requested) {
         super(ErrorCode.INSUFFICIENT_FUNDS, "Masz %s cebulionów, a zakład wynosi %s."
-                .formatted(balance.stripTrailingZeros().toPlainString(), requested.stripTrailingZeros().toPlainString()));
+                .formatted(Money.describe(balance), Money.describe(requested)));
     }
 }

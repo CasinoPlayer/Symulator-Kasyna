@@ -14,6 +14,21 @@ import java.util.List;
 public interface WalletFacade {
 
     /**
+     * Blokuje portfel gracza ({@code SELECT ... FOR UPDATE}) do końca bieżącej transakcji i zwraca saldo.
+     *
+     * <p>Po co: spin woła to <b>na samym początku</b>, zanim sprawdzi klucz idempotencji. Dzięki temu wszystkie
+     * spiny jednego gracza wykonują się po kolei: drugie żądanie z tym samym {@code Idempotency-Key} czeka, aż
+     * pierwsze się zatwierdzi, i dopiero wtedy szuka rundy, więc ją znajduje (powtórka zamiast drugiego zakładu).
+     * Bez tego oba żądania mogłyby jednocześnie nie znaleźć rundy i dopiero unikalny indeks w bazie odrzuciłby
+     * drugie (błąd w logu przy każdym podwójnym kliknięciu). Wymaga trwającej transakcji (inaczej blokada
+     * skończyłaby się od razu i nic by nie dała).
+     *
+     * @return aktualne saldo (odczytane już pod blokadą)
+     * @throws pl.wsb.kasyno.shared.error.NotLoggedInException gdy gracz nie ma portfela (nieaktualna sesja)
+     */
+    BigDecimal lockWallet(Long playerId);
+
+    /**
      * Pobiera zakład.
      *
      * @param spinRoundId identyfikator rundy, której dotyczy zakład (może być {@code null})

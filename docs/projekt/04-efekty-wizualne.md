@@ -246,14 +246,17 @@ export default {
   id: 'E29',
   turbo: true,                 // w TURBO czasy × 0,45 (oprócz błysków, § 1.4)
   kroki: [
-    { t: 0,   akcja: 'linie.rysuj',    czas: 220 },
-    { t: 0,   akcja: 'dzwiek',         id: 'sfx_linia' },
-    { t: 200, akcja: 'symbole.puls',   skala: 1.12, czas: 420 },
-    { t: 200, akcja: 'dzwiek',         id: 'sfx_wygrana_medium' },
-    { t: 200, akcja: 'blysk.lokalny',  cel: 'wygrywajace', alfa: 0.6 },
-    { t: 200, akcja: 'czastki.wybuch', emiter: 'iskry_wybuch', ile: { H: 24, M: 14, L: 6 }, na: 'kazdy_symbol' },
-    { t: 200, akcja: 'kamera.trauma',  ile: 0.25 },
-    { t: 200, akcja: 'haptyka',        wzorzec: 'H_sredni' },
+    { t: 0,  akcja: 'przyciemnij',        czas: 200 },
+    { t: 0,  akcja: 'dzwiek',             id: 'sfx_wygrana_medium' },
+    { t: 0,  akcja: 'symbole.puls',       skala: 1.12, czas: 420 },
+    { t: 0,  akcja: 'blysk.lokalny',      cel: 'wygrywajace', alfa: 0.6 },
+    { t: 0,  akcja: 'czastki.wybuch',     emiter: 'iskry_wybuch', ile: { H: 24, M: 14, L: 6 }, na: 'kazdy_symbol' },
+    { t: 0,  akcja: 'kamera.trauma',      ile: 0.25 },
+    { t: 0,  akcja: 'haptyka',            wzorzec: 'H_sredni' },
+    { t: 0,  akcja: 'linie.rysujKolejno', odstep: 350, czas: 220, dzwiek: 'sfx_linia' },
+    { t: 50, akcja: 'czastki.porcje',     emiter: 'monety_wybuch', ile: { H: 16, M: 10, L: 4 }, porcji: 6, przez: 350,
+           dzwiek: 'sfx_moneta_' },
+    { t: 60, akcja: 'licznik.start',      punch: 0.2, minipromienie: true },   // czas liczenia T z § 2.17
   ],
 };
 ```
@@ -276,7 +279,7 @@ Wartości z briefu (§ 5) są wiążące; pozostałe ustawienia to nasze rozwini
 |---|---|---|---|
 | Rozdzielczość renderowania (DPR) | ≤ 2 | ≤ 1,5 | 1 |
 | **Limit cząsteczek (łącznie)** | **≤ 600** | **≤ 300** | **≤ 120** |
-| Limit cząsteczek w lobby (Canvas 2D, § 2.3) | ≤ 300 | ≤ 150 | ≤ 60 |
+| Limit cząsteczek w lobby (Canvas 2D, § 2.3) | ≤ 360 (komputer) | ≤ 180 (telefon) | ≤ 60 |
 | Bloom | **filtr** na warstwach `add` (§ 2.6) | **pre-baked** `glow` w trybie `add` | brak |
 | Drżenie kamery | tak | tak | **brak** |
 | Filtry dodatkowe (fala uderzeniowa, desaturacja przyciemnienia) | tak | nie | nie |
@@ -734,9 +737,11 @@ linie z `Graphics` miałyby poszarpane krawędzie; miękka tekstura daje gładki
 | Rysowanie | 220 ms, `easeOutCubic`: koniec wstęgi wędruje od lewej do prawej (przebudowa ≤ 60 punktów na klatkę) | jak S1 |
 | Numer linii | przy krawędzi okna (wygląd i położenie: 06) | jak S1 |
 
-**Cykl prezentacji wygranej:** (a) wszystkie wygrywające linie naraz, 700 ms, wszystkie wygrywające symbole
-pulsują; (b) każda linia osobno po 900 ms, od najwyżej płatnej, z kwotą linii przy środku linii; (c) pętla (b)
-do następnego spinu. W autoplay i TURBO tylko (a), skrócone do 700 × 0,45 = 315 ms w TURBO.
+**Cykl prezentacji wygranej:** (a) wszystkie wygrywające symbole pulsują od 0 ms, a linie rysują się
+**kolejno co 350 ms** (każda w 220 ms, od najwyżej płatnej; najwyżej 5 osobno, pozostałe razem z piątą), każda
+z dźwiękiem `sfx_linia` (05); narysowane linie zostają; (b) 600 ms po ostatniej linii — każda linia osobno po
+900 ms (pozostałe przygasają do alfy 0,25), z kwotą linii przy jej środku; (c) pętla (b) do następnego spinu.
+W autoplay i TURBO tylko (a); w TURBO odstęp linii 350 × 0,45 ≈ 158 ms.
 
 **Obrys klastra (S3).** Krawędzie pól klastra sąsiadujące z polem spoza klastra (albo z krawędzią planszy)
 łączymy w zamknięte łamane, wcięte o 3 px, z narożnikami zaokrąglonymi promieniem 0,12 pola. Rysujemy je jak
@@ -949,11 +954,11 @@ zatrzymany, wideo z `src` usuniętym (zwalnia dekoder).
 
 | ms | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
-| 0 | modal | treść przycisku znika (100 ms), rysuje się ptaszek (SVG `stroke-dashoffset`, 220 ms) | `sfx_logowanie` | `H_lekki` |
+| 0 | modal | treść przycisku znika (100 ms), rysuje się ptaszek (SVG `stroke-dashoffset`, 220 ms) | `sfx_logowanie`; start `mus_lobby` (wejście 1200 ms — 05) | `H_lekki` |
 | 250 | modal | panel: skala 1 → 0,96, alfa → 0 (200 ms `easeInCubic`); zasłona → 0 (300 ms) | — | — |
 | 250 | pasek górny | „Zaloguj” zamienia się w chip gracza (awatar `g_awatary__N` + nazwa + saldo): technika FLIP (zmierz → odwróć → animuj), 400 ms `easeInOutCubic` | — | — |
+| 300 | pasek górny | saldo pojawia się od razu właściwą wartością (to nie wygrana — bez liczenia od zera); puls pigułki salda (E08) | `sfx_saldo_puls` | — |
 | 450 | pasek górny | awatar: skala 0,6 → 1, 300 ms `easeOutBack` | — | — |
-| 500 | pasek górny | saldo pojawia się od razu właściwą wartością (to nie wygrana — bez liczenia od zera); puls ikony monety (E08) | `sfx_saldo_puls` | — |
 | 600 | toast | „Witaj ponownie, …!” (06): y −12 px → 0, alfa, 300 ms; znika po 3 s | — | — |
 | 600 | pasek górny | `g_maskotka_powitanie` przy „Zaloguj” gaśnie (300 ms) — układ zalogowanego lobby jest inny (06) | — | — |
 | 700 | kafle | przyciski „Graj” na kaflach: przelot połysku po kolei co 120 ms | — | — |
@@ -965,44 +970,44 @@ zatrzymany, wideo z `src` usuniętym (zwalnia dekoder).
 
 **Cel:** najważniejszy moment lobby — nowy gracz dostaje **10 000 cebulionów** i ma to poczuć jak wygraną
 w kasynie: skrzynia, wybuch światła, fontanna monet, monety lecące do salda (brief § 0, makieta
-`m03_bonus_powitalny`). **Technika:** HTML/CSS + Canvas 2D (lobby bez Pixi). **Czas:** ≈ 4,4 s do pojawienia
-się przycisku; przewinięcie od 500 ms.
+`m03_bonus_powitalny`). **Technika:** HTML/CSS + Canvas 2D (lobby bez Pixi) — funkcja `playReward` w
+`static/js/ui/reward.js` i silnik cząsteczek `static/js/fx-lite.js` (już istnieją; ta karta opisuje je
+i rozszerza). **Czas:** ≈ 3,5 s od zalogowania; przewinięcie w każdej chwili.
+
+Czas `R` = start `playReward`, **450 ms po** `sfx_logowanie` — motyw logowania musi wybrzmieć, zanim zagra
+skrzynia (05 § 6.7).
 
 | ms | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
-| 0 | modal | ptaszek w przycisku (jak E06), panel zamyka się w 200 ms; chip gracza w pasku górnym pojawia się jak w E06, ale z saldem **0** | `sfx_logowanie` | `H_lekki` |
-| 150 | zasłona | przyciemnienie rośnie do `rgba(7,6,15,.72)` (300 ms), lobby w tle wyciszone, wideo pauza | — | — |
-| 300 | scena bonusu | `g_skrzynia` (wysokość 260 px desktop / 200 px telefon) wpada z y −60 px: skala 0 → 1,08 (380 ms `easeOutBack`) → 1,00 (160 ms); cień-elipsa alfa 0 → 0,35 | — | — |
-| 680 | scena bonusu | lądowanie skrzyni: squash 1,06 / 0,94 → 1 w 120 ms; 4 drobinki `pyl` przy podstawie | początek `sfx_skrzynia_otwarcie` (05: stuk lądowania przed głównym transjentem) | `H_sredni` |
-| 700–900 | scena bonusu | napięcie: `g_skrzynia.glowzl` dwa szybkie pulsy (alfa 0,3 ↔ 0,7 co 100 ms), skrzynia drży ± 2 px | — | — |
-| **900** | scena bonusu | **wybuch światła:** błysk lokalny nad skrzynią (radialny `div`, alfa 0,6, atak 40 ms, wygaszanie 360 ms; przez strażnika), flara `g_fx_flara` 600 px, `glowzl` → 1, promienie `g_fx_promienie` za skrzynią: skala 0 → 1 (500 ms), obrót 6°/s | **transjent `sfx_skrzynia_otwarcie`** | `H_mocny` |
-| 900 | cząsteczki | `iskry_wybuch` 60 / 36 / 16 (tint `--gold-1`); start `monety_fontanna` z otworu skrzyni 90 / 50 / 22 na s | `sfx_monety_fontanna` (pętla do 2700 ms, wygaszanie 300 ms) | — |
-| 1000 | scena bonusu | „+10 000” złotymi cyframi (HTML, klasy `.cy-*` z 02 § 5.14; wysokość 96 px desktop / 64 px telefon) nad skrzynią: skala 0,6 → 1 (250 ms `easeOutBack`), liczenie 0 → 10 000 w 1600 ms `easeOutCubic`; pod spodem napis „Bonus powitalny” (Cinzel 700) | `sfx_licznik_tik` (pętla) | — |
-| 2600 | scena bonusu | koniec liczenia: slam `punch(0,3)` 380 ms, przelot połysku po cyfrach, `iskry_wybuch` 30 / 18 / 8 | `sfx_licznik_koniec` | `H_sredni` |
-| 2700 | cząsteczki | koniec strumienia fontanny; monety w powietrzu spadają i gasną przy dolnej krawędzi | — | — |
-| 2800 | cząsteczki | `monety_lot`: 24 / 16 / 8 monet z otworu skrzyni do ikony salda w chipie gracza, 700 ms każda, odstęp 35 ms | przy każdym przylocie `sfx_moneta_1` … `sfx_moneta_5` losowo, najwyżej 1 na 70 ms | `H_tik` co 4. moneta |
-| 3500–4300 | pasek górny | E08: saldo liczy 0 → 10 000 w 800 ms; ikona monety pulsuje przy przylotach (najwyżej co 120 ms) | — | — |
-| 3600 | cząsteczki | opad `konfetti` z górnej krawędzi: 120 / 70 / 30 sztuk, życie 2,5–4 s | — | — |
-| 4300 | pasek górny | ostatnia moneta: puls salda 1,0 → 1,18 → 1,0 (240 ms), tekst salda `--win-green` przez 400 ms | `sfx_saldo_puls` | — |
-| 4400 | scena bonusu | przycisk „Zaczynamy!” (`g_ui_przycisk_glowny`): alfa, y +12 px → 0, 300 ms; przelot połysku co 2,4 s; `g_maskotka_powitanie` wskakuje obok skrzyni (y +40 px → 0, 420 ms `easeOutBack`) | — | — |
-| klik lub 8000 | scena bonusu | wyjście: skrzynia skala → 0,9 + alfa → 0 (300 ms `easeInCubic`), promienie gasną (400 ms), zasłona → 0 (400 ms) | `ui_klik` (przy kliknięciu) | — |
+| 0 | modal | ptaszek w przycisku (jak E06), panel zamyka się w 200 ms; chip gracza w pasku górnym pojawia się jak w E06, ale z saldem sprzed bonusu (0) | `sfx_logowanie`; start `mus_lobby` (05) | `H_lekki` |
+| R (450) | scena nagrody (`z-index: var(--z-overlay)` = 45, **pod** paskiem górnym) | zasłona (`reward__veil`: gradient radialny `rgba(34,22,80,.93)` → `rgba(4,3,10,.97)`) przenika w 320 ms; za sceną promienie `g_fx_promienie` (`plus-lighter`, 130 vmax) — obrót **6°/s** i przenikanie 700 ms; **jeden** rozbłysk (`reward__flash`, radialny, szczyt alfa 0,6, 620 ms, start po 120 ms; przez strażnika) | `sfx_skrzynia_otwarcie` + `sfx_blysk` (głośność 0,7); ducking muzyki (05) | — |
+| R + 100 | scena nagrody | `g_skrzynia` (wysokość 220–300 px desktop / 180–220 px telefon) wskakuje ze sprężyną: skala 0 → 1,08 → 1,00, 760 ms `cubic-bezier(0.34, 1.56, 0.64, 1)` (`--ease-spring`); cień-elipsa pod spodem | — | — |
+| R + 250 → R + 1750 | scena nagrody | kwota „+0” → „+10 000” nad skrzynią liczy w 1500 ms `easeOutCubic` (docelowo złote cyfry `.cy-*` z 02 § 5.14, 64–96 px; zapas: Manrope 800 `tabular-nums` z ikoną monety); napis nad kwotą i podpis wjeżdżają (`rise` 600 ms, opóźnienia 250 / 420 ms) | `sfx_licznik_tik` (prędkość 1,0 → 1,3 — 05) | — |
+| **R + 650** | scena nagrody, Canvas 2D (`--z-fx` = 60) | **uderzenie:** złoty pierścień fali z otworu skrzyni (42% wysokości obrazu; promień 45% z `min(szerokość, 560 px)`, 700 ms); `iskry_wybuch` 44 cząsteczki (złoto, biel, magenta, cyjan; 640 px/s); `g_skrzynia.glowzl` → 1 | **`sfx_uderzenie_basu`**; start pętli `sfx_monety_fontanna` (głośność 0,8) | `H_mocny` |
+| R + 650 | Canvas 2D | fontanna: 24 / 16 / 8 monet wylatuje z otworu skrzyni (parametry `monety_fontanna`, § 2.3); każda po 420–670 ms (w szczycie lotu) przechodzi w lot do pigułki salda po krzywej Béziera trwający 600–900 ms (`monety_lot`); monety startują strumieniem co 35 ms. Canvas 2D leży **nad** paskiem górnym, więc monety przelatują nad pigułką | — | — |
+| ≈ R + 1700 → ≈ R + 2600 (najpóźniej R + 3000) | pasek górny | przyloty: każda moneta dolicza `10 000 / n` do salda (licznik 240 ms), co 3. przylot — puls pigułki | przy każdym przylocie `sfx_moneta_1` … `sfx_moneta_5` (wariant losowy, wysokość 0,94–1,06) | `H_tik` co 3. moneta |
+| ≈ R + 2600 (ostatnia moneta) | pasek górny, scena | koniec: saldo dochodzi do wartości końcowej (320 ms), puls pigułki, chip „+10 000” pod pigułką (E08); scena nagrody gaśnie (`is-leaving`, 420 ms) | stop `sfx_monety_fontanna` (250 ms); `sfx_licznik_koniec` po 320 ms; zdjęcie duckingu (05) | `H_sredni` |
+| MOŻE (High) | Canvas 2D | przy końcu salwa `konfetti` 120 sztuk opadająca z górnej krawędzi (2,5–4 s) | — | — |
 
-**Przewinięcie** (dotknięcie ekranu po 500 ms): licznik od razu 10 000 ze slamem, fontanna i lot monet pominięte
-(monety w powietrzu gasną w 200 ms), saldo od razu 10 000 z pulsem i `sfx_saldo_puls`, przycisk od razu widoczny.
+* **Przewinięcie:** kliknięcie w scenę, Esc, Enter, Spacja albo przycisk „Pomiń” (pojawia się po 900 ms) →
+  od razu koniec: kwota „+10 000”, saldo właściwe, cząsteczki gasną (`finishAll`). Saldo zawsze kończy się
+  poprawną wartością.
+* **Bezpiecznik:** po 7000 ms sekwencja kończy się sama, nawet gdyby jakaś moneta „zgubiła” cel.
+* **Zdarzenia** `reward:start` / `reward:end` na `document` wstrzymują inne animacje lobby (pył E02, wideo kafli).
+* **Dlaczego sekwencja trwa ~3 s, a nie dłużej:** to nagroda „na wejście” — gracz przyszedł grać. Krótka,
+  mocna sekwencja z przewinięciem robi lepsze wrażenie niż długi spektakl, na który się czeka.
 
-**Assety:** `g_skrzynia` (+ `glowzl`), `g_fx_promienie`, `g_fx_flara`, `g_fx_iskry`, `g_moneta_przod`, `g_moneta_skos`,
-`g_moneta_bok` (`male`), `g_font_cyfry`, `g_fx_konfetti`, `g_maskotka_powitanie`, `g_ui_przycisk_glowny`, `g_awatary`,
-`g_tlo_lobby_*` (`rozmyte`).
+**Assety:** `g_skrzynia` (+ `glowzl`), `g_fx_promienie`, `g_fx_iskry`, `g_moneta_przod`, `g_moneta_skos`,
+`g_moneta_bok` (`male`), `g_font_cyfry`, `g_fx_konfetti` (MOŻE), `g_awatary`; referencja: `m03_bonus_powitalny`.
 
-| Jakość | High | Medium | Low |
+| Jakość | High | Medium (telefon) | Low |
 |---|---|---|---|
-| Fontanna (na s) / lot monet / konfetti | 90 / 24 / 120 | 50 / 16 / 70 | 22 / 8 / 30 |
-| Flara, połysk cyfr | tak | tak | brak |
-| Limit lobby (Canvas 2D) | 300 | 150 | 60 |
+| Monety / iskry | 24 / 44 | 16 / 30 | 8 / 16 |
+| Limit lobby (Canvas 2D) | 360 | 180 | 60 |
+| Konfetti (MOŻE) | 120 | — | — |
 
-**RM:** skrzynia pojawia się przenikaniem (300 ms) bez upadku i drżenia; zamiast błysku i flary — poświata
-`glowzl` rośnie w 400 ms; promienie bez obrotu; 20 wolnych monet zamiast fontanny; liczenie 960 ms; zamiast lotu
-monet saldo przenika ze starej wartości w nową; bez konfetti.
+**RM:** bez zasłony, skrzyni i cząsteczek — saldo ustawia się od razu, pigułka pulsuje, pokazuje się „+10 000”
+i komunikat (toast). Dźwięk `sfx_logowanie` i `sfx_saldo_puls` zostają.
 
 ### E08 `saldo_zmiana`
 
@@ -1011,7 +1016,7 @@ górny lobby i panel gry). **Czas:** 300–1200 ms.
 
 | ms | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
-| 0 (wzrost) | saldo | liczenie od starej do nowej wartości, `T = clamp(250 + 150 · log₂(1 + Δ / minBet), 300, 1200)` ms, `easeOutQuart`; tekst `--win-green` przez 400 ms, potem `--gold-1` | `sfx_saldo_puls` **tylko** przy bonusie (E07, E10), na końcu big+ (E32) i po podsumowaniu FS (E37); przy small/medium cisza (wygrana ma już swój dźwięk) | — |
+| 0 (wzrost) | saldo | liczenie od starej do nowej wartości, `T = clamp(250 + 150 · log₂(1 + Δ / minBet), 300, 1200)` ms, `easeOutQuart`; tekst `--win-green` przez 400 ms, potem `--gold-1` | `sfx_saldo_puls` **tylko** przy wzroście poza liczeniem wygranej: zalogowanie powracającego gracza (E06) i zaksięgowanie wygranej small (E28); przy medium, big+, E07, E10 i E37 saldo rośnie bez osobnego dźwięku — kwota zabrzmiała już `sfx_licznik_koniec` (05 § 6.1, `cooldownMs` 150) | — |
 | 0 (wzrost) | saldo | ikona `g_moneta_przod.ikona`: `punch(0,18)` w 240 ms | — | — |
 | 0 (wzrost) | saldo | chip „+1 250” (`--win-green`, Manrope 800, 14 px) nad saldem: y 0 → −24 px, alfa 1 → 0, 900 ms `easeOutCubic` | — | — |
 | 0 (spadek — zakład) | saldo | natychmiastowa zmiana wartości, liczba na 150 ms przygasa do alfy 0,7; bez liczenia, bez dźwięku | — | — |
@@ -1047,29 +1052,19 @@ Bez błysków, drżenia i wibracji. Odliczanie w neutralnych kolorach (`--text-2
 
 ### E10 `bonus_ratunkowy`
 
-**Cel:** jak E07, ale skromniej — to pomoc, nie nagroda. **Technika:** w lobby HTML + Canvas 2D, w grze Pixi
-(ten sam rdzeń cząsteczek, § 2.3). **Czas:** ≈ 3,1 s; przewinięcie od 500 ms (jak w E07).
+**Cel:** jak E07, ale to pomoc, nie nagroda — ta sama sekwencja, bez fanfar ponad nią. **Technika:** ta sama
+funkcja `playReward` (HTML + Canvas 2D) w lobby i w grze (w grze scena nagrody leży nad kanwą Pixi). **Czas:**
+≈ 3,3 s od kliknięcia; przewinięcie jak w E07.
 
 | ms | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
-| 0 | modal | klik „Odbierz 10 000”: ptaszek w przycisku | `ui_klik` | `H_lekki` |
-| 100 | modal | panel i `g_maskotka_bankrut` gasną (200 ms) | — | — |
-| 250 | scena bonusu | `g_skrzynia` (200 px) wpada: skala 0 → 1,08 → 1 (380 + 160 ms) | — | — |
-| 640 | scena bonusu | wybuch: błysk lokalny (przez strażnika), flara 480 px, promienie 6°/s, `iskry_wybuch` 40 / 24 / 10 | `sfx_skrzynia_otwarcie` | `H_sredni` |
-| 640–1840 | cząsteczki | `monety_fontanna` 60 / 34 / 14 na s | `sfx_monety_fontanna` | — |
-| 700 | scena bonusu | „+10 000” liczy 0 → 10 000 w 1100 ms | `sfx_licznik_tik` | — |
-| 1800 | scena bonusu | slam licznika | `sfx_licznik_koniec` | — |
-| 1900 | cząsteczki | `monety_lot` 16 / 10 / 6 do salda, 600 ms, odstęp 35 ms | `sfx_moneta_1` … `sfx_moneta_5` | `H_tik` co 4. |
-| 2500–3050 | saldo | E08: liczenie 550 ms; po ostatniej monecie puls | `sfx_saldo_puls` | — |
-| 3100 | scena bonusu | skrzynia i promienie gasną (300 ms), zasłona → 0 | — | — |
+| 0 | modal | klik „Odbierz 10 000”: ptaszek w przycisku; panel i `g_maskotka_bankrut` gasną (200 ms) | `ui_klik` | `H_lekki` |
+| R (250) → ≈ R + 2600 | scena nagrody | dokładnie oś czasu E07 od `R` (zasłona, rozbłysk, skrzynia, kwota „+10 000”, uderzenie w R + 650, fontanna i lot monet do salda, koniec) z napisem „Bonus ratunkowy” | jak E07 od `R` (bez `sfx_logowanie`) | jak E07 |
 
-Bez konfetti i bez maskotki świętującej. **Assety:** jak E07 bez `g_fx_konfetti` i `g_maskotka_powitanie`.
+W grze, jeśli bonus został odebrany w trakcie przyciemnionej planszy (E09), po zakończeniu sceny przyciemnienie
+`L12` gaśnie w 300 ms, a SPIN staje się aktywny. Bez konfetti i bez maskotki świętującej.
 
-| Jakość | High | Medium | Low |
-|---|---|---|---|
-| Fontanna / lot monet | 60 / 16 | 34 / 10 | 14 / 6 |
-
-**RM:** jak E07.
+**Assety:** jak E07 bez `g_fx_konfetti`. **Jakość:** jak E07. **RM:** jak E07.
 
 ### E11 `ui_mikro`
 
@@ -1095,43 +1090,49 @@ i `filter` na małych elementach.
 
 ### E12 `przejscie_do_gry`
 
-**Cel:** płynne przejście lobby ↔ gra bez „białego mrugnięcia” strony, z ukryciem ładowania. **Technika:**
-HTML/CSS (kurtyna) + Pixi (wyjście z gry). Szczegóły i diagram stanów: § 5. **Czas:** lobby → gra 650 ms do
-ekranu ładowania; gra → lobby 700 ms.
+**Cel:** płynne przejście lobby ↔ gra bez „białego mrugnięcia” przeładowania. **Technika:** lobby
+(`index.html`) i gra (`gra.html?gra=<kod>`) to **osobne strony**; przejście = zasłona w kolorze `--bg-0`
+(pseudo-element `body::after`, `z-index: 200`, animowana `opacity`) + zmiana adresu; nowa strona „wyłania się
+z czerni”. Szczegóły: § 5. **Czas:** lobby → gra 300 ms do zmiany strony + 480 ms odsłonięcia; gra → lobby 220 ms
++ skrócone E01.
 
 **Lobby → gra:**
 
 | ms | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
-| 0 | kafel | kliknięty kafel: wciśnięcie (E11), potem jego okładka rośnie do pełnego ekranu techniką FLIP (`transform`), 450 ms `easeInOutCubic` | `sfx_przejscie_whoosh` | `H_lekki` |
-| 0 | lobby | pozostałe kafle: skala 0,96 + alfa → 0 (200 ms); pasek górny alfa → 0,3 | `mus_lobby` wycisza się (05) | — |
-| 300 | kurtyna | koło w kolorze `--bg-0` (średnica = przekątna ekranu × 2) rośnie od środka kafla: `scale` 0 → 1, 350 ms `easeInCubic`; na kole wyśrodkowany `g_emblemat` (alfa 0 → 1) | — | — |
-| 300 | kurtyna | kurtyna z dymu: 6 kłębów `g_fx_dym` (CSS, `plus-lighter`, alfa 0,2) przesuwa się z obu boków do środka | — | — |
-| 650 | — | pełna kurtyna → E20 (ekran ładowania pojawia się na kurtynie) | — | — |
+| 0 | kafel | wciśnięcie (E11); okładka klikniętego kafla rośnie 1,04 → 1,10 (300 ms `easeInCubic`), pozostałe kafle: alfa → 0,4 (200 ms) | `sfx_przejscie_whoosh` | `H_lekki` |
+| 0 | zasłona | `body::after`: alfa 0 → 1 w 280 ms; MOŻE: na środku zasłony `g_emblemat` (alfa 0 → 1, skala 0,9 → 1) | wyciszenie `mus_lobby` w 300 ms (05) | — |
+| 300 | — | zmiana strony na `gra.html?gra=<kod>` | — | — |
+| strona gry: 0 | zasłona | strona startuje zakryta (`body.game-page::after`); zasłona gaśnie: alfa 1 → 0 w 420 ms po 60 ms opóźnienia — pod nią ekran ładowania (E20) albo od razu scena (E21) | dźwięk na nowej stronie: odblokowanie i start muzyki według 05 | — |
 
 **Gra → lobby** (przycisk `g_ui_ikony__lobby`, aktywny tylko między rundami):
 
 | ms | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
-| 0 | scena gry | kontener `swiat` skala 1,00 → 1,04, scena gaśnie do czerni (zasłona `L14` alfa 0 → 1), 350 ms `easeInCubic`; 4 kłęby `dym_klab` | `sfx_przejscie_whoosh` | `H_lekki` |
-| 0 | panel HTML | panel gry zjeżdża w dół o 24 px i gaśnie, 250 ms | muzyka gry wycisza się, wraca `mus_lobby` (05) | — |
-| 350 | kurtyna | kurtyna HTML (koło `--bg-0`) kurczy się do pozycji kafla gry w lobby: `scale` 1 → 0, 350 ms `easeOutCubic` | — | — |
-| 350 | lobby | kafle wchodzą po kolei co 60 ms (y +16 px → 0, alfa, 300 ms), kafel gry, z której wracamy — ostatni, z przelotem połysku | — | — |
-| 700 | lobby | lobby aktywne; Canvas 2D i wideo wznawiają się | — | — |
+| 0 | scena gry, zasłona | zasłona `body::after`: alfa 0 → 1 w 260 ms; MOŻE: kontener `swiat` skala 1,00 → 1,04 i 4 kłęby `dym_klab` pod zasłoną | `sfx_przejscie_whoosh` | `H_lekki` |
+| 0 | panel HTML | panel gry zjeżdża o 24 px i gaśnie (220 ms) | wyciszenie muzyki gry w 220 ms (05) | — |
+| 220 | — | zmiana strony na lobby | — | — |
+| lobby: 0 | lobby | E01 w wersji skróconej (flaga w `sessionStorage`): wszystko przenika w 300 ms; kafel gry, z której wracamy, dostaje przelot połysku | `mus_lobby` (05) | — |
 
-**Assety:** `s1_okladka` / `s2_okladka` / `s3_okladka`, `g_emblemat`, `g_fx_dym`, `g_ui_ikony` (`__lobby`).
-**Jakość:** Low — kurtyna bez dymu. **RM:** przenikanie lobby ↔ kurtyna ↔ gra po 250 ms, bez FLIP, koła
-i skali.
+* **Powrót „Wstecz” i bfcache:** przeglądarka może przywrócić poprzednią stronę z pamięci razem z zakrytą
+  zasłoną — obsługa zdarzenia `pageshow` (`event.persisted`) zdejmuje zasłonę (kod już to robi).
+* **Dlaczego osobne strony:** lobby nie ładuje Pixi ani assetów gier (brief § 5: LCP < 2,5 s), a po wyjściu
+  z gry przeglądarka sama zwalnia kontekst WebGL i tekstury — nie ma ręcznego sprzątania pamięci.
+
+**Assety:** `s1_okladka` / `s2_okladka` / `s3_okladka`, `g_ui_ikony` (`__lobby`); MOŻE: `g_emblemat`, `g_fx_dym`.
+**Jakość:** bez różnic (MOŻE-elementy tylko High/Medium). **RM:** zmiana strony od razu, bez zasłony i skali;
+nowa strona bez odsłaniania.
 
 ### E20 `gra_ladowanie`
 
 **Cel:** ładowanie gry wygląda jak część spektaklu, a w tle przygotowujemy wszystko, co mogłoby później zaciąć
-animację. **Technika:** HTML/CSS na kurtynie z E12. **Czas:** tyle, ile ładowanie; minimum 700 ms, jeśli ekran
-w ogóle się pokazuje (ładowanie z pamięci podręcznej < 300 ms → ekran pomijamy, kurtyna przechodzi od razu w E21).
+animację. **Technika:** HTML/CSS na stronie gry, pod odsłanianą zasłoną z E12. **Czas:** tyle, ile ładowanie;
+minimum 700 ms, jeśli ekran w ogóle się pokazuje (ładowanie z pamięci podręcznej < 300 ms → ekran pomijamy,
+zasłona odsłania od razu scenę E21).
 
 | ms | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
-| 0 | ekran ładowania | tło: `s1_baner` / `s2_baner` / `s3_baner` w wariancie `rozmyte` (`cover`) + zasłona `rgba(7,6,15,.55)`, przenikanie 250 ms | — | — |
+| 0 | ekran ładowania | tło: `s1_baner` / `s2_baner` / `s3_baner` w wariancie `rozmyte` (`cover`) + przyciemnienie `rgba(7,6,15,.55)`; widoczne, gdy zasłona E12 gaśnie | — | — |
 | 0 | ekran ładowania | logo gry `s*_logo` (HTML, 480–640 px desktop / 280–360 px telefon): skala 0,96 → 1, alfa, 400 ms `easeOutCubic`; statyczna poświata `drop-shadow` w kolorze akcentu gry | — | — |
 | 0 | ekran ładowania | loader `g_emblemat` (wariant `loader`, 96 px): `rotateY` 0 → 360° w 1400 ms `easeInOutCubic` + pauza 300 ms, w pętli (obrót jak moneta); złota poświata oddycha co 1,7 s | — | — |
 | ciągle | ekran ładowania | pasek postępu (gradient `--gold-grad`, wysokość 6 px, szerokość 320–420 px): wyświetlana wartość goni rzeczywisty postęp wygładzaniem wykładniczym (τ = 120 ms) i nigdy się nie cofa; przelot połysku co 1200 ms; na końcu paska świecący punkt (`g_fx_iskry__2`, `plus-lighter`) | — | — |
@@ -1155,12 +1156,12 @@ spinu to nawet 50–200 ms zacięcia (brief § 5: brak *long tasks* > 50 ms w tr
 
 | ms | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
-| 0 | `L14` | zasłona: alfa 1 → 0, 500 ms `easeOutQuad` | start `mus_s1` / `mus_s2` / `mus_s3` (narastanie 800 ms — 05) | — |
+| 0 | `L14` | zasłona: alfa 1 → 0, 500 ms `easeOutQuad` | start muzyki gry `mus_s1` / `mus_s2` / `mus_s3` (S2: +300 ms) i S2: `sfx_s2_gong` (05) | — |
 | 0 | `L0` | tło `s*_tlo_desktop` / `_mobile`: skala 1,06 → 1,00, 900 ms `easeOutCubic` | — | — |
 | 150 | `L7` | ramka `s*_ramka`: y +40 px → 0, alfa 0 → 1, 500 ms `easeOutBack(1,2)` | — | — |
-| 250 | `L3` | plansza startowa (ustalona w kliencie, bez wygranych układów): S1/S2 — każdy bęben opada z góry o 1 pole z odbiciem (240 ms, `easeOutBack`), kolejne co 70 ms; S3 — zrzut jak E25 skrócony do 600 ms | `sfx_beben_stop_1` … `sfx_beben_stop_5` (S3: `_6`) przy lądowaniu kolejnych bębnów — krótkie rosnące „arpeggio” | — |
-| 450 | `L8` | logo `s*_logo`: `punch` skala 0,6 → 1,08 → 1,00 w 500 ms; promienie za logo (1 warstwa, alfa 0,4 przez 1200 ms, tint akcentu gry); flara 500 px | `sfx_blysk` | — |
-| 500 | `L1`, `L10` | mgła przyziemna (3 kłęby `g_fx_dym`) przy dolnej krawędzi ramki; S1 — sekwencja zapalania neonów (§ 6.1); S2 — strużki piasku z nadproża (600 ms, `piasek`); S3 — pojawiają się `swietliki` | S1: `sfx_s1_neon_bzyk` | — |
+| 250 | `L3` | plansza startowa (ustalona w kliencie, bez wygranych układów): S1/S2 — każdy bęben opada z góry o 1 pole z odbiciem (240 ms, `easeOutBack`), kolejne co 70 ms, bez dźwięku; S3 — zrzut jak E25 skrócony do 600 ms | S3: `sfx_s3_opad` na starcie zrzutu, `sfx_beben_stop_1` … `sfx_beben_stop_6` przy lądowaniu kolumn (05) | — |
+| 450 | `L8` | logo `s*_logo`: `punch` skala 0,6 → 1,08 → 1,00 w 500 ms; promienie za logo (1 warstwa, alfa 0,4 przez 1200 ms, tint akcentu gry); flara 500 px; S1 — w tej chwili zapala się neon logo (sekwencja z § 6.1) | S1: `sfx_s1_neon_bzyk` (w chwili zapalenia neonu) | — |
+| 500 | `L1`, `L10` | mgła przyziemna (3 kłęby `g_fx_dym`) przy dolnej krawędzi ramki; S1 — zapalają się rurki neonu ramki; S2 — strużki piasku z nadproża (600 ms, `piasek`); S3 — pojawiają się `swietliki` | — | — |
 | 700 | `L8` | przelot połysku po logo, 700 ms | — | — |
 | 800 | panel HTML | panel gry wjeżdża z dołu: y +24 px → 0, alfa, 350 ms `easeOutCubic`; jednorazowy puls poświaty SPIN | — | — |
 | **1000** | — | **SPIN aktywny** | — | — |
@@ -1226,7 +1227,8 @@ Zakład większy niż saldo: obrys pola `--danger`, SPIN wyłączony (komunikat:
 | 0 | `L3` | S1/S2: bęben 1 zaczyna zamach (§ 2.14), kolejne co 50 ms (S1) / 60 ms (S2); S3: stara plansza unosi się o 6 px w 80 ms i wypada (E25) | — | — |
 | 0 | `L7` | S1: biegnące światła × 3 przez 600 ms; S2: złoty przelot połysku po nadprożu ramki (700 ms); S3: 3 `iskry_migot` na koronie kryształów ramki | — | — |
 | 0 | — | `POST /api/slots/{code}/spins` z `Idempotency-Key` — animacja nie czeka na odpowiedź | — | — |
-| 320 (S1) / 340 (S2) | `L3` | bęben 1 osiąga `v_max` | start pętli `sfx_beben_petla_s1` / `sfx_beben_petla_s2` (narastanie 80 ms) | — |
+| 40 | — | — | start pętli `sfx_beben_petla_s1` / `sfx_beben_petla_s2` (wejście 60 ms — 05; S3: `sfx_s3_opad` w 0 ms) | — |
+| 320 (S1) / 340 (S2) | `L3` | bęben 1 osiąga `v_max` | — | — |
 
 **Assety:** `g_ui_spin`, `g_ui_spin_stop` (+ `glowzl`), symbole (`ruch1`, `ruch2`).
 **Jakość:** bez różnic. **RM:** bez zamachu (bębny od razu przyspieszają), bez przyspieszenia świateł ramki.
@@ -1309,15 +1311,15 @@ i dźwięk.
 (panel). **Czas:** 500–1300 ms liczenia + pętla linii; **SPIN aktywny od 0 ms** (wciśnięcie przerywa prezentację).
 W S3 pojedyncze klastry pokazuje E70 w trakcie kaskad, a E28 prezentuje **sumę rundy** po ostatniej kaskadzie.
 
-| ms (od osiadania ostatniego bębna; S3: od końca kaskad) | Warstwa | Co widać | Dźwięk | Haptyka |
+| ms (0 = początek prezentacji: osiadanie ostatniego bębna; S3: koniec kaskad) | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
-| 0 | `L4` | przyciemnienie niewygrywających (200 ms, § 2.13) | — | — |
-| 0 | `L6` | S1/S2: wszystkie wygrywające linie rysują się (220 ms, § 2.16); S3: obrysy wszystkich klastrów rundy pojawiają się na 600 ms | `sfx_linia` | — |
-| 180 | `L5` | wygrywające symbole: puls 420 ms, `glow` tint `--gold-1`, przelot połysku; `iskry_migot` 6–12 na symbol (tylko `m ≥ 1`) | `sfx_wygrana_small_1` (`m < 1`), `sfx_wygrana_small_2` (`1 ≤ m < 2,5`), `sfx_wygrana_small_3` (`2,5 ≤ m < 5`) | `H_lekki` (tylko `m ≥ 1`) |
-| 200 | `L11` | kwota na środku okna bębnów: `m ≥ 1` — „+120” złotymi cyframi 48 px; `m < 1` — Manrope 800 28 px w kolorze `--text-1`, bez złota (R3); skala 0,6 → 1 (250 ms `easeOutBack`) | `sfx_licznik_tik` (w trakcie liczenia) | — |
-| 200 → 200 + T | panel HTML | pole „WYGRANA” liczy (T z § 2.17: 500–1300 ms) | — | — |
-| 200 + T | panel, saldo | koniec liczenia, saldo rośnie (E08, bez dźwięku); kwota w scenie po 400 ms odpływa (y −20 px, alfa → 0, 300 ms) | `sfx_licznik_koniec` (tylko `m ≥ 1`) | — |
-| 900 | `L5`, `L6` | gdy linii jest kilka (i nie autoplay/TURBO) — cykl po liniach co 900 ms z kwotą linii (§ 2.16) | `sfx_linia` (cicho, przy każdej linii) | — |
+| 0 | `L4` | przyciemnienie niewygrywających (200 ms, § 2.13) | `sfx_wygrana_small_1` (`m < 1`, ciszej o 6 dB — 05), `sfx_wygrana_small_2` (`1 ≤ m < 2,5`), `sfx_wygrana_small_3` (`2,5 ≤ m < 5`) | `H_lekki` (tylko `m ≥ 1`) |
+| 0 | `L5` | wygrywające symbole: puls 420 ms, `glow` tint `--gold-1`, przelot połysku; `iskry_migot` 6–12 na symbol (tylko `m ≥ 1`) | — | — |
+| 0, 350, 700 … | `L6` | S1/S2: linie rysują się kolejno co 350 ms (każda w 220 ms, § 2.16); S3: obrysy wszystkich klastrów rundy naraz na 600 ms | `sfx_linia` przy każdej linii (`m < 1`: bez — 05) | — |
+| 100 | `L11` | kwota na środku okna bębnów: `m ≥ 1` — „+120” złotymi cyframi 48 px; `m < 1` — Manrope 800 28 px w kolorze `--text-1`, bez złota (R3); skala 0,6 → 1 (250 ms `easeOutBack`) | — | — |
+| 100 → 100 + T | panel HTML | pole „WYGRANA” liczy (T z § 2.17: 500–1300 ms) | `sfx_licznik_tik`, gdy T > 400 ms (`m < 1`: bez tiku — 05) | — |
+| 100 + T | panel, saldo | koniec liczenia: saldo rośnie z pulsem (E08); kwota w scenie po 400 ms odpływa (y −20 px, alfa → 0, 300 ms) | `sfx_saldo_puls` (zaksięgowanie) | — |
+| po ostatniej linii + 600 | `L5`, `L6` | gdy linii jest kilka (i nie autoplay/TURBO) — cykl po liniach co 900 ms z kwotą linii (§ 2.16) | `sfx_linia` (cicho, przy każdej linii) | — |
 
 **Assety:** symbole (`glow`), `g_font_cyfry`, `g_fx_iskry`.
 **Jakość:** Low — bez migotań; puls `syl` zamiast `glow` i połysku. **RM:** puls do 1,05, bez migotań.
@@ -1328,20 +1330,20 @@ W S3 pojedyncze klastry pokazuje E70 w trakcie kaskad, a E28 prezentuje **sumę 
 Pixi + HTML. **Czas:** 1300–1800 ms liczenia + pętla linii; SPIN aktywny od 0 ms. Oś czasu = plik
 `fx/osie/e29-wygrana-medium.js` z § 2.1.
 
-| ms | Warstwa | Co widać | Dźwięk | Haptyka |
+| ms (0 = początek prezentacji) | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
-| 0 | `L4` | przyciemnienie (200 ms) | — | — |
-| 0 | `L6` | linie / obrysy rysują się (220 ms), poświata linii alfa 0,5 | `sfx_linia` | — |
-| 200 | `L5` | puls wygrywających symboli (420 ms), `glow` tint `--gold-2`, przelot połysku | `sfx_wygrana_medium` | `H_sredni` |
-| 200 | `L10` | błysk lokalny `syl` (alfa 0,6) na wszystkich wygrywających symbolach naraz — jeden błysk przez strażnika | — | — |
-| 200 | `L10` | `iskry_wybuch` 24 / 14 / 6 na każdy wygrywający symbol, tint `--cyan` (01 § 3.5: złoto + chłodne iskry) | — | — |
-| 200 | kamera | trauma 0,25 | — | — |
-| 260 | `L9` | `monety_wybuch`: salwa 16 / 10 / 4 ze środka kwoty | 2–3 losowe `sfx_moneta_1` … `sfx_moneta_5` rozłożone w 300 ms | — |
-| 260 | `L11` | kwota „+1 250” złotymi cyframi 56 px: wejście `punch(0,2)` 300 ms; za nią mini promienie (360 px, alfa 0,5, 6°/s, tint `--gold-2`) wchodzą w 400 ms | `sfx_licznik_tik` | — |
-| 260 → 260 + T | panel HTML | „WYGRANA” liczy (T = 1300–1800 ms) | — | — |
+| 0 | `L4` | przyciemnienie (200 ms) | `sfx_wygrana_medium` | `H_sredni` |
+| 0 | `L5` | puls wygrywających symboli (420 ms), `glow` tint `--gold-2`, przelot połysku | — | — |
+| 0 | `L10` | błysk lokalny `syl` (alfa 0,6) na wszystkich wygrywających symbolach naraz — jeden błysk przez strażnika | — | — |
+| 0 | `L10` | `iskry_wybuch` 24 / 14 / 6 na każdy wygrywający symbol, tint `--cyan` (01 § 3.5: złoto + chłodne iskry) | — | — |
+| 0 | kamera | trauma 0,25 | — | — |
+| 0, 350, 700 … | `L6` | linie / obrysy rysują się kolejno co 350 ms, poświata linii alfa 0,5 | `sfx_linia` przy każdej linii | — |
+| 50–400 | `L9` | `monety_wybuch`: 16 / 10 / 4 monety z miejsca kwoty, wyrzucane w 6 porcjach rozłożonych w 350 ms | 6 × `sfx_moneta_1` … `sfx_moneta_5` (losowo) w 50–400 ms, razem z porcjami monet (05) | — |
+| 60 | `L11` | kwota „+1 250” złotymi cyframi 56 px: wejście `punch(0,2)` 300 ms; za nią mini promienie (360 px, alfa 0,5, 6°/s, tint `--gold-2`) wchodzą w 400 ms | — | — |
+| 60 → 60 + T | panel HTML | „WYGRANA” liczy (T = 1300–1800 ms) | `sfx_licznik_tik` | — |
 | ciągle | `L7` | S1: biegnące światła 2 okrążenia/s; S2: pochodnie +20% jasności; S3: kryształy ramki migoczą (`iskry_migot` 6/s) | — | — |
-| 260 + T | `L11` | slam kwoty `punch(0,3)` + `iskry_wybuch` 24 / 14 / 6; mini promienie gasną w 400 ms; saldo rośnie (E08, cicho) | `sfx_licznik_koniec` | — |
-| 260 + T + 600 | `L5`, `L6` | cykl po liniach (jeśli kilka) | `sfx_linia` | — |
+| 60 + T | `L11` | slam kwoty `punch(0,3)` + `iskry_wybuch` 24 / 14 / 6; mini promienie gasną w 400 ms; saldo rośnie (E08, bez osobnego dźwięku) | `sfx_licznik_koniec` | — |
+| 60 + T + 600 | `L5`, `L6` | cykl po liniach (jeśli kilka) | `sfx_linia` | — |
 
 **Assety:** symbole (`glow`, `syl`), `g_fx_iskry`, `g_moneta_*` (`male`), `g_fx_promienie`, `g_font_cyfry`.
 
@@ -1361,15 +1363,15 @@ Tutaj oś wejścia; liczenie, eskalacje i zakończenie — E31, E32 i § 4.
 
 | ms | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
-| 0 | `L12` | zasłona `#07060F`: alfa 0 → 0,62 (300 ms `easeOutQuad`); panel HTML przygasa do alfy 0,35 (przyciski poza przewinięciem nieaktywne) | `sfx_bigwin_wejscie` (narastanie do uderzenia w 470 ms); muzyka gry wycisza się, start `mus_bigwin` (05) | `H_fanfara` |
-| 100 | `L12` | pierścień dymu: 8 kłębów `dym_klab` ze środka (§ 2.11) | — | — |
-| 150 | `L12` | promienie BIG: 2 warstwy, wejście skali 500 ms (`easeOutBack` 1,4), 4°/s, tint `#FFF3D1` | — | — |
-| 250 | `L12` | baner `g_win_big` (pole 960×640 px, na telefonie ≤ 92% szerokości ekranu): skala 0,2 → 1,15 w 220 ms (`easeOutCubic`); pod nim `cien` (przesunięcie y +4%, alfa 0,6) i `glow` (alfa 1 → 0,5) | — | — |
-| **470** | `L12`, `L13`, kamera | **uderzenie** (szczyt skali banera): `blysk_big` (radialny, 0,40); trauma 0,45; `iskry_wybuch` 60 / 36 / 16 (tint `--gold-1`) i flara 900 px ze środka banera; pierścień fali 600 px; fala uderzeniowa (High) | **`sfx_uderzenie_basu` + `sfx_blysk`** | — |
-| 470–650 | `L12` | baner osiada 1,15 → 1,00 (180 ms `easeInOutSine`) | — | — |
-| 520 | `L12` | licznik „0” złotymi cyframi (120 px / 72 px) pod banerem: skala 0,8 → 1, alfa, 150 ms | — | — |
+| 0 | `L12` | zasłona `#07060F`: alfa 0 → 0,62 (300 ms `easeOutQuad`); panel HTML przygasa do alfy 0,35 (przyciski poza przewinięciem nieaktywne) | `sfx_bigwin_wejscie` (narastanie do uderzenia w 300 ms); muzyka gry wyciszana w 400 ms, ducking (05) | `H_fanfara` |
+| 50 | `L12` | pierścień dymu: 8 kłębów `dym_klab` ze środka (§ 2.11) | — | — |
+| 80 | `L12` | baner `g_win_big` (pole 960×640 px, na telefonie ≤ 92% szerokości ekranu): skala 0,2 → 1,15 w 220 ms (`easeOutCubic`); pod nim `cien` (przesunięcie y +4%, alfa 0,6) i `glow` (alfa 1 → 0,5) | — | — |
+| 100 | `L12` | promienie BIG: 2 warstwy, wejście skali 500 ms (`easeOutBack` 1,4), 4°/s, tint `#FFF3D1` | — | — |
+| **300** | `L12`, `L13`, kamera | **uderzenie** (szczyt skali banera): `blysk_big` (radialny, 0,40); trauma 0,45; `iskry_wybuch` 60 / 36 / 16 (tint `--gold-1`) i flara 900 px ze środka banera; pierścień fali 600 px; fala uderzeniowa (High) | **uderzenie stingera: start `mus_bigwin`, `sfx_blysk`** (05 § 6.5) | — |
+| 300–480 | `L12` | baner osiada 1,15 → 1,00 (180 ms `easeInOutSine`) | — | — |
+| 450 | `L12` | licznik „0” złotymi cyframi (120 px / 72 px) pod banerem: skala 0,8 → 1, alfa, 150 ms | — | — |
 | **600** | `L12` | **start liczenia** (§ 4.2) | `sfx_licznik_tik` (pętla) | — |
-| 600 → | `L12` | `monety_deszcz` (strumień BIG, § 4.4) + `monety_fontanna` z dołu środka ekranu (30 / 16 / 8 na s) | `sfx_monety_fontanna` (pętla) | — |
+| 600 → | `L12` | `monety_deszcz` (strumień BIG, § 4.4) + `monety_fontanna` z dołu środka ekranu (30 / 16 / 8 na s) | `sfx_monety_fontanna` (pętla, cicho — 05) | — |
 | 750, potem co 2400 ms | `L12` | przelot połysku po banerze (700 ms) | — | — |
 | ciągle | `L12` | `iskry_migot` wokół banera 20 / 12 / 4 na s; baner unosi się ± 4 px (okres 2,4 s) | — | — |
 
@@ -1386,10 +1388,11 @@ wyżej”: podmiana banera, błysk, uderzenie basu, więcej monet, mocniejsze dr
 | ms (0 = licznik osiąga próg) | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
 | −400 | `L12` | zapowiedź: promienie przyspieszają × 1,5, poświata pod cyframi rośnie do 0,6; podłoga traumy 0,1 (High/Medium) | (05: tiki licznika przyspieszają) | — |
+| −250 | — | — | start `sfx_poziom_w_gore` (MEGA 0 c, EPIC +200 c, ULTRA +400 c — 05); jego uderzenie wypada w 0 ms | — |
 | −150 | `L12` | stary baner „ładuje się”: skala 1,00 → 1,06, `glow` → 1,0 i tint w stronę bieli | — | — |
-| **0** | `L12`, `L13` | ***hit-stop* 80 ms**: licznik i cząsteczki zamrożone (muzyka gra dalej); błysk poziomu (`blysk_mega` 0,45 / `blysk_epic` 0,50 / `blysk_ultra` 0,55); stary baner znika: jego `glow` rozdyma się (skala 1 → 1,4, alfa 1 → 0, 200 ms) | **`sfx_blysk` + `sfx_uderzenie_basu`** | — |
-| 80 | `L12` | nowy baner (`g_win_mega` / `g_win_epic` / `g_win_ultra`): skala 0,3 → 1,22 (200 ms `easeOutCubic`) → skala poziomu (220 ms `easeOutBack`) | `sfx_poziom_w_gore` | `H_eskalacja` |
-| 80 | kamera, `L10` | trauma +0,35 / +0,45 / +0,55; pierścień fali 600 px; fala uderzeniowa (High); `iskry_wybuch` 80 / 48 / 20 w kolorze akcentu poziomu; 2 flary | — | — |
+| **0** | `L12`, `L13` | ***hit-stop* 80 ms**: licznik i cząsteczki zamrożone (muzyka gra dalej); błysk poziomu (`blysk_mega` 0,45 / `blysk_epic` 0,50 / `blysk_ultra` 0,55); stary baner znika: jego `glow` rozdyma się (skala 1 → 1,4, alfa 1 → 0, 200 ms); **nowy baner** (`g_win_mega` / `g_win_epic` / `g_win_ultra`): skala 0,3 → 1,22 (200 ms `easeOutCubic`) → skala poziomu (220 ms `easeOutBack`) | **`sfx_uderzenie_basu` + `sfx_blysk`** (+ uderzenie `sfx_poziom_w_gore`) | `H_eskalacja` |
+| 0 | kamera | trauma +0,35 / +0,45 / +0,55 (kamera nie jest zamrażana przez *hit-stop*) | — | — |
+| 80 | `L10`, `L12` | po *hit-stop*: pierścień fali 600 px; fala uderzeniowa (High); `iskry_wybuch` 80 / 48 / 20 w kolorze akcentu poziomu; 2 flary | — | — |
 | 120 | `L12` | promienie: przenikanie tintu do koloru poziomu (300 ms) i przyspieszenie do prędkości poziomu (§ 2.8); ULTRA — start cyklu tęczy | — | — |
 | 150 | `L9` | od MEGA: salwa `konfetti` z dolnych rogów (220 / 110 / 40) | — | — |
 | 150 | `L10` | od EPIC: 2–3 pioruny od krawędzi banera na zewnątrz, jednocześnie (§ 2.10), tint `#8F3DFF` z białym rdzeniem | — | — |
@@ -1411,16 +1414,16 @@ przytrzymanie 1500–2600 ms + wyjście 600–700 ms.
 
 | ms (0 = licznik osiąga kwotę końcową) | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
-| 0 | `L12` | slam licznika: skala 1,0 → 1,3 (120 ms `easeOutCubic`) → 1,0 (260 ms `easeOutBack`); `blysk_koniec` (tint poziomu, 0,35) | `sfx_licznik_koniec` + `sfx_bigwin_koniec`; stop `sfx_licznik_tik` | `H_mocny` |
+| 0 | `L12` | slam licznika: skala 1,0 → 1,3 (120 ms `easeOutCubic`) → 1,0 (260 ms `easeOutBack`); `blysk_koniec` (tint poziomu, 0,35) | `sfx_licznik_koniec` + `sfx_bigwin_koniec`; `sfx_licznik_tik` gaśnie w 60 ms, `sfx_monety_fontanna` w 800 ms (05) | `H_mocny` |
 | 0 | `L12`, `L10` | `monety_wybuch` 60 / 34 / 14 z licznika; `iskry_wybuch` 40 / 24 / 10; trauma 0,30 | — | — |
 | 0 | `L12` | panel HTML: pole „WYGRANA” pokazuje kwotę końcową | — | — |
 | 400 | `L12` | przelot połysku po cyfrach i banerze | — | — |
-| 600 | `L12` | koniec strumieni monet (spadające dolatują) | stop `sfx_monety_fontanna` (wygaszenie 600 ms) | — |
-| przytrzymanie | `L12` | baner unosi się ± 4 px, `iskry_migot` 20 / 12 / 4 na s, promienie obracają się dalej; przytrzymanie: BIG 1500, MEGA 1800, EPIC 2100, ULTRA 2600 ms | `mus_bigwin` gra dalej | — |
+| 600 | `L12` | koniec strumieni monet (spadające dolatują) | — | — |
+| przytrzymanie | `L12` | baner unosi się ± 4 px, `iskry_migot` 20 / 12 / 4 na s, promienie obracają się dalej; przytrzymanie: BIG 1500, MEGA 1800, EPIC 2100, ULTRA 2600 ms | `mus_bigwin` wycisza się od najbliższej miary po slamie (600 ms), muzyka gry wraca po ~800 ms (05 § 6.5) | — |
 | koniec przytrzymania (wyjście 0) | `L12` | baner: skala → 0,85, alfa → 0 (300 ms `easeInCubic`); promienie: skala → 0,6, alfa → 0 (400 ms) | `sfx_przejscie_whoosh` | — |
 | wyjście 0 | `L12` → panel | licznik leci do pola „WYGRANA” w panelu: Bézier 500 ms (`easeInCubic`), skala → 0,3, `iskry_smuga` za nim | — | — |
-| wyjście 400 | `L12` | zasłona → 0 (400 ms); panel HTML wraca do pełnej alfy | `mus_bigwin` wygasa, wraca muzyka gry (05) | — |
-| wyjście 500 | panel | przylot licznika: puls pola „WYGRANA”; E08 — saldo rośnie | `sfx_saldo_puls` | `H_lekki` |
+| wyjście 400 | `L12` | zasłona → 0 (400 ms); panel HTML wraca do pełnej alfy | — | — |
+| wyjście 500 | panel | przylot licznika: puls pola „WYGRANA”; E08 — saldo rośnie (bez osobnego dźwięku) | — | `H_lekki` |
 | wyjście 600–700 | — | koniec; SPIN aktywny; pętla linii z E28 (bez dźwięku) | — | — |
 
 **Assety:** jak E30–E31. **Jakość i RM:** § 4.6.
@@ -1439,7 +1442,8 @@ Dotyczy S1 i S2 (S3 nie ma WILD). **Technika:** Pixi. **Czas:** 400 ms + ciągł
 | 120 | `L5` | start poświaty WILD (§ 2.13): S1 tint magenta ↔ cyjan, S2 złoto + hieroglif co 900 ms | — | — |
 | 120 | `L10` | S2: 2 hieroglify (`hieroglify`) wznoszą się z boków symbolu | — | — |
 
-Kilka WILD w kolejnych bębnach (stopy co 180/200 ms): strażnik dopuści najwyżej 3 błyski na sekundę, pozostałe
+Dźwięk `sfx_wild` startuje 150 ms przed lądowaniem (punkt synchronizacji pliku, 05), żeby jego uderzenie wypadło
+w klatce stopu. Kilka WILD w kolejnych bębnach (stopy co 180/200 ms): strażnik dopuści najwyżej 3 błyski na sekundę, pozostałe
 dostaną wariant łagodny — iskry i flara zostają.
 
 **Assety:** `s1_sym_wild`, `s2_sym_wild` (+ `glow`, `syl`), `g_fx_flara`, `g_fx_iskry`, `s2_fx_hieroglify`.
@@ -1530,7 +1534,7 @@ i gaśnie w miejscu.
 | 1900 | modal HTML | przycisk „Dalej” (`g_ui_przycisk_glowny`); w autoplay — auto po 3 s | — | — |
 | klik (0) | modal HTML | panel gaśnie (200 ms) | `ui_klik` | — |
 | +100 | `L0`, `L11` | tło FS → bazowe (przenikanie 900 ms); licznik FS w HUD gaśnie | `sfx_przejscie_whoosh`; muzyka `mus_s2_fs` → `mus_s2` / `mus_s3_fs` → `mus_s3` (05) | — |
-| +300 | saldo | E08: wzrost o sumę | `sfx_saldo_puls` | — |
+| +300 | saldo | E08: wzrost o sumę (bez osobnego dźwięku) | — | — |
 | +1000 | — | gra bazowa, SPIN aktywny; tło FS zwalniane z pamięci (02) | — | — |
 
 **Assety:** `g_ui_panel`, `g_win_free_spins`, `g_maskotka_wygrana`, `g_font_cyfry`, `g_fx_konfetti`,
@@ -1749,4 +1753,534 @@ bez dźwięku — mnożnik bez wygranej nic nie znaczy i nie udajemy, że coś s
 **Assety:** `s3_sym_mnoznik`, `g_font_cyfry`, `g_fx_iskry`, `s3_ramka`.
 **Jakość:** Low — bez smug. **RM:** kule gasną, licznik zmienia wartość przenikaniem; bez lotu, błysku i drżenia.
 
-<!-- CIAG-DALSZY -->
+---
+
+## 4. Choreografia Big Win
+
+Sekwencja Big Win to „wizytówka” projektu — moment, w którym gracz ma powiedzieć „wow”, a nagranie do lobby
+wygląda jak z topowego slotu. Ten rozdział składa karty E30, E31 i E32 w jedną reżyserię: ile trwa każdy poziom,
+jak licznik rośnie w czasie, co dokładnie zmienia się przy eskalacji i jak działa przewinięcie.
+
+### 4.1. Przebieg
+
+```mermaid
+flowchart LR
+  A["E30 wejście<br/>0–600 ms"] --> B["segment BIG<br/>0 → 30×"]
+  B -- "m ≥ 30" --> C["E31 → MEGA<br/>hit-stop 80 ms"]
+  C --> D["segment MEGA<br/>30× → 60×"]
+  D -- "m ≥ 60" --> E["E31 → EPIC"]
+  E --> F["segment EPIC<br/>60× → 100×"]
+  F -- "m ≥ 100" --> G["E31 → ULTRA"]
+  G --> H["segment ULTRA<br/>100× → m"]
+  B -- "m < 30" --> Z["E32 slam,<br/>przytrzymanie, wyjście"]
+  D -- "m < 60" --> Z
+  F -- "m < 100" --> Z
+  H --> Z
+```
+
+Licznik zawsze startuje od 0 i przechodzi przez kolejne progi, więc gracz z wygraną 120× widzi całą drogę
+BIG → MEGA → EPIC → ULTRA. W chwili przekroczenia progu licznik na jedną klatkę zatrzymuje się **dokładnie** na
+wartości progu (np. „3 000” przy zakładzie 100) — okrągła liczba w momencie uderzenia czyta się lepiej niż
+przypadkowa.
+
+### 4.2. Czasy i krzywa liczenia
+
+| Segment | Zakres licznika | Czas, gdy segment nie jest ostatni | Czas, gdy kwota kończy się w tym segmencie | Krzywa |
+|---|---|---|---|---|
+| BIG | 0 → 30× zakładu | 2600 ms | `2600 · clamp(m / 30, 0,6, 1)` → 1560–2600 ms | nieostatni: liniowa, pierwsze 300 ms `easeInQuad`; ostatni: Hermite z `s₀ = 3` (= `easeOutCubic`) |
+| MEGA | 30× → 60× | 2400 ms | `2400 · clamp((m − 30) / 30, 0,5, 1)` → 1200–2400 ms | nieostatni: liniowa; ostatni: Hermite |
+| EPIC | 60× → 100× | 2400 ms | `2400 · clamp((m − 60) / 40, 0,5, 1)` → 1200–2400 ms | jak wyżej |
+| ULTRA | 100× → m | — (zawsze ostatni) | `clamp(2400 + 600 · log₂(m / 100), 2400, 4200)` ms → 100×: 2400, 200×: 3000, 400×: 3600, ≥ 800×: 4200 | Hermite |
+
+**Krzywa ostatniego segmentu (Hermite).** Chcemy, żeby licznik wjechał w ostatni segment z dotychczasową
+prędkością i łagodnie wyhamował na kwocie końcowej. Używamy wielomianu Hermite'a:
+
+```text
+f(u) = s₀ · (u³ − 2u² + u) + (3u² − 2u³),   u = t / T ∈ [0, 1]
+s₀ = min(3, prędkość_wejściowa · T / Δ)     // znormalizowana prędkość na wejściu, Δ = zakres segmentu
+```
+
+`f(0) = 0`, `f(1) = 1`, `f'(1) = 0` (miękkie zatrzymanie), `f'(0) = s₀` (ciągłość prędkości). Dla `s₀ = 3`
+wzór daje dokładnie `easeOutCubic` (`1 − (1 − u)³`), a warunek `s₀ ≤ 3` gwarantuje, że licznik nigdy się nie
+cofa. **Dlaczego to ważne:** przy zwykłym `easeOutCubic` licznik w ostatnim segmencie nagle przyspieszałby ~3×
+względem poprzedniego — wygląda to jak błąd.
+
+**Łączny czas sekwencji** = wejście 600 ms + liczenie + 80 ms *hit-stop* na każdą eskalację + przytrzymanie
++ wyjście:
+
+| Poziom końcowy | Liczenie | Przytrzymanie | Wyjście | **Razem** | TURBO (× 0,45, przytrzymanie ≥ 900 ms, wyjście ≥ 300 ms) |
+|---|---|---|---|---|---|
+| BIG (15× ≤ m < 30×) | 1560–2600 ms | 1500 ms | 600 ms | **4,3–5,3 s** | ≈ 2,2–2,6 s |
+| MEGA (30× ≤ m < 60×) | 3800–5000 ms | 1800 ms | 600 ms | **6,9–8,1 s** | ≈ 3,3–3,8 s |
+| EPIC (60× ≤ m < 100×) | 6200–7400 ms | 2100 ms | 600 ms | **9,7–10,9 s** | ≈ 4,5–5,0 s |
+| ULTRA (m ≥ 100×) | 9800–11 600 ms | 2600 ms | 700 ms | **13,9–15,7 s** | ≈ 6,4–7,2 s |
+
+**Przykład** (zakład 100, wygrana 7 500 = 75×, poziom EPIC):
+
+| ms | Moment |
+|---|---|
+| 0 | E30: zasłona, `sfx_bigwin_wejscie` |
+| 300 | uderzenie banera BIG: błysk 0,40, trauma 0,45, start `mus_bigwin`, `sfx_blysk` |
+| 600 | start liczenia (segment BIG, 2600 ms, liniowo) |
+| 2950 | start `sfx_poziom_w_gore` (250 ms przed progiem) |
+| 3200 | licznik = 3 000 → E31 → MEGA (*hit-stop* do 3280) |
+| 3280–5680 | segment MEGA (2400 ms, liniowo) |
+| 5430 | start `sfx_poziom_w_gore` (+200 c) |
+| 5680 | licznik = 6 000 → E31 → EPIC (*hit-stop* do 5760) |
+| 5760–6960 | segment EPIC jako ostatni: zakres 60×–75×, `T = 2400 · clamp(15/40, 0,5, 1) = 1200 ms`, Hermite |
+| 6960 | E32: slam „7 500”, `sfx_licznik_koniec` + `sfx_bigwin_koniec` |
+| 6960–9060 | przytrzymanie EPIC 2100 ms |
+| 9060–9660 | wyjście: kwota leci do panelu, saldo rośnie |
+
+### 4.3. Eskalacje (E31) — co się zmienia na każdym poziomie
+
+| Poziom | Baner | Skala banera | Błysk (szczyt) | Trauma | Promienie (A / B, ω) | Nowy element | Dźwięk eskalacji |
+|---|---|---|---|---|---|---|---|
+| BIG (wejście E30) | `g_win_big` | 1,00 | `blysk_big` 0,40 | 0,45 | `#FFF3D1` / `#FFF3D1`, 4°/s | pierścień dymu, fontanna i deszcz monet | `sfx_bigwin_wejscie`, `sfx_blysk`, start `mus_bigwin` |
+| MEGA | `g_win_mega` | 1,06 | `blysk_mega` 0,45 | +0,35 | `#FFE08A` / `#FF2E88`, 5,5°/s | **konfetti** (salwa z dolnych rogów, potem opad 30 / 15 / 6 na s) | `sfx_blysk`, `sfx_uderzenie_basu`, `sfx_poziom_w_gore` |
+| EPIC | `g_win_epic` | 1,12 | `blysk_epic` 0,50 | +0,45 | `#FFE08A` / `#8F3DFF`, 7°/s | **pioruny** od krawędzi banera (co 1,2–1,8 s), **fioletowy dym** za banerem (2 kłęby, tint `#8F3DFF`, alfa 0,25) | jak wyżej |
+| ULTRA | `g_win_ultra` | 1,18 | `blysk_ultra` 0,55 | +0,55 | A: cykl tęczy w 4 s / B: `#FFFFFF`, 8°/s | **tęcza**: tęczowa poświata za cyframi, podwójna salwa konfetti, **korona iskier** (24 `iskry_migot` na okręgu wokół banera, obracającym się 20°/s) | jak wyżej |
+
+Skala banera jest dodatkowo ograniczona tak, żeby baner nie przekroczył 92% szerokości i 45% wysokości ekranu
+(telefon pionowo). Wszystkie eskalacje są od siebie oddalone o ≥ 1200 ms (najkrótszy segment), więc błyski
+eskalacji nigdy nie zbliżają się do limitu 3/s.
+
+### 4.4. Monety i limity cząsteczek w Big Win
+
+| Poziom | `monety_deszcz` (na s, H / M / L) | `monety_fontanna` z dołu (na s) | Konfetti |
+|---|---|---|---|
+| BIG | 36 / 18 / 9 | 30 / 16 / 8 | — |
+| MEGA | 60 / 30 / 15 | 40 / 20 / 10 | salwa 220 / 110 / 40 + opad |
+| EPIC | 85 / 42 / 21 | 50 / 25 / 12 | jak MEGA |
+| ULTRA | 110 / 55 / 27 | 60 / 30 / 15 | 2 salwy + opad |
+
+Podział limitu cząsteczek w najgorszym momencie (ULTRA):
+
+| Grupa | High (600) | Medium (300) | Low (120) |
+|---|---|---|---|
+| Monety | ≤ 240 | ≤ 120 | ≤ 60 |
+| Konfetti | ≤ 220 | ≤ 110 | ≤ 40 |
+| Iskry, migotania, smugi | ≤ 110 | ≤ 60 | ≤ 18 |
+| Dym | ≤ 12 | ≤ 6 | ≤ 2 |
+| Rezerwa (pozostałe emitery) | 18 | 4 | 0 |
+
+20% monet deszczu leci na warstwie przedniej (przed banerem), są o 30% większe i o 25% szybsze — daje to głębię
+bez filtrów rozmycia. Licznik leży zawsze nad przednią warstwą monet (R1).
+
+### 4.5. Przewinięcie (skip)
+
+| Kiedy | Co robi dotknięcie (ekran, Spacja, Enter, przycisk SPIN) |
+|---|---|
+| 0–400 ms od E30 | nic — chroni przed przypadkowym przewinięciem tym samym dotknięciem, które uruchomiło spin |
+| w trakcie liczenia | licznik skacze do kwoty końcowej; jeśli były jeszcze eskalacje — **jedna łączna eskalacja** od razu do poziomu końcowego (jeden błysk tego poziomu, jedno `sfx_poziom_w_gore`, trauma poziomu końcowego, bez banerów pośrednich); strumień monet na wartości poziomu końcowego przez 600 ms; potem E32 (slam) z przytrzymaniem skróconym do 1200 ms (ULTRA 1500 ms) |
+| w trakcie przytrzymania | natychmiastowe wyjście (faza wyjścia 400 ms zamiast 600 ms) |
+| w trakcie wyjścia | nic (wyjście i tak trwa < 0,7 s) |
+
+* Błysk przy przewinięciu przechodzi przez strażnika — jeśli ostatni błysk był < 333 ms wcześniej, dostaje
+  wariant łagodny.
+* Dźwięk: stop `sfx_licznik_tik`, od razu `sfx_licznik_koniec` + `sfx_bigwin_koniec`; muzyka gra dalej (05).
+* Autoplay: sekwencja przechodzi sama po przytrzymaniu; przewinięcie działa tak samo.
+* **Dlaczego przewinięcie nie kasuje eskalacji całkowicie:** gracz, który przewinie wygraną 120×, i tak powinien
+  zobaczyć baner ULTRA — to informacja o wielkości wygranej, nie ozdobnik.
+
+### 4.6. Big Win na poziomach jakości i w trybie RM
+
+| Element | High | Medium | Low | RM |
+|---|---|---|---|---|
+| Zasłona | 0,62 | 0,62 | 0,62 | 0,62 |
+| Promienie | 2 warstwy, 1,6 × krótszy bok | 2 warstwy (B alfa × 0,6), 1,3× | 1 warstwa, 1,1× | 1 warstwa bez obrotu, oddech alfy 4 s |
+| Dym (pierścień, fioletowy) | 8 + 2 | 5 + 2 | 2 + 0 | brak |
+| Błyski | tak | tak | tak | **brak** (zmiana jasności winiety ≤ 6% w ≥ 400 ms) |
+| Fala uderzeniowa (filtr) | tak | nie | nie | nie |
+| Bloom | filtr na warstwie `add` | `glow` banera (pre-baked) | brak | wg poziomu |
+| Drżenie | tak | tak | **brak** | **brak** |
+| Monety, konfetti | § 4.4 | § 4.4 | § 4.4 | monety × 0,3, bez fontanny i konfetti |
+| Pioruny (EPIC+) | 2–3 | 2 | 1 | brak |
+| *Hit-stop* | tak | tak | tak | tak (to nie ruch) |
+| Wejście banera | `punch` 0,2 → 1,15 → 1,00 | jak High | jak High | przenikanie + skala 0,96 → 1,00 (300 ms) |
+| Liczenie | pełne | pełne | pełne | czas × 0,6 |
+
+---
+
+## 5. Przejścia
+
+### 5.1. Mapa ekranów i przejść
+
+```mermaid
+stateDiagram-v2
+  [*] --> LobbyGosc: E01
+  LobbyGosc --> Logowanie: E04
+  Logowanie --> LobbyGosc: zamknięcie
+  Logowanie --> Bonus: E07 (nowy gracz)
+  Logowanie --> Lobby: E06 (powracający)
+  Bonus --> Lobby
+  Lobby --> Kurtyna: E12
+  Kurtyna --> Ladowanie: E20
+  Ladowanie --> Gra: E21
+  Gra --> DarmoweSpiny: E35
+  DarmoweSpiny --> Gra: E37
+  Gra --> Kurtyna2: E12 (powrót)
+  Kurtyna2 --> Lobby
+  Gra --> Bankrut: E09
+  Lobby --> Bankrut: E09
+  Bankrut --> Ratunek: E10
+  Ratunek --> Gra
+  Ratunek --> Lobby
+```
+
+### 5.2. Lobby → gra
+
+Oś czasu: karta E12, potem E20 i E21 na stronie `gra.html`. Zasady techniczne:
+
+* **Dwa dokumenty HTML.** Lobby i gra to osobne strony. Lobby nie ładuje Pixi ani assetów gier (brief § 5), a
+  strona gry startuje „na czysto” — pamięć lobby (wideo, Canvas 2D) zwalnia przeglądarka.
+* **Zasłona** to pseudo-element `body::after` z animowaną `opacity` (komponowana przez GPU, bez przeliczania
+  układu strony). Zmiana adresu następuje dopiero po pełnym zakryciu (300 ms), więc gracz nie widzi
+  przeładowania.
+* **Strona gry zaczyna zakryta** i odsłania się (420 ms), gdy ma co pokazać: ekran ładowania albo scenę.
+* **MOŻE (P2):** płynne „rozrośnięcie” okładki kafla w scenę gry przez View Transitions API między dokumentami
+  (`@view-transition { navigation: auto; }`). Obsługa w przeglądarkach jest jeszcze niepełna, więc tylko jako
+  ulepszenie — obecna zasłona zostaje zapasem.
+* Wejście na adres gry bezpośrednio (zakładka, odświeżenie) przechodzi tę samą ścieżkę: zakryta strona → E20.
+
+### 5.3. Gra → lobby
+
+Oś czasu: druga tabela karty E12. Przycisk lobby jest aktywny tylko między rundami — nie da się wyjść w trakcie
+sekwencji wygranej ani darmowych spinów (runda i tak jest rozliczona na serwerze, ale przerwana animacja
+wyglądałaby jak błąd). Opuszczenie strony gry zwalnia kontekst WebGL automatycznie. Powrót do tej samej gry jest
+szybszy dzięki pamięci podręcznej HTTP (atlasy, dźwięki); ekran ładowania pojawia się wtedy tylko, jeśli
+ładowanie trwa ≥ 300 ms (E20).
+
+### 5.4. Wejście do darmowych spinów
+
+Oś czasu: E35. Najważniejsza zasada pochodzi z 01 § 6.7: **tła FS mają te same strefy, horyzont i punkt zbiegu
+co tła bazowe**, więc przenikanie tła pod błyskiem zmienia nastrój, a ramka, bębny i panel stoją w miejscu —
+nic nie „przeskakuje”. Muzyka przechodzi `mus_s2` → `mus_s2_fs` (S3: `mus_s3` → `mus_s3_fs`) w tym samym
+momencie co tło (crossfade — 05). Tła FS są doładowywane w tle po E21, więc przejście nie czeka na sieć; jeśli
+mimo to tło FS nie jest gotowe, przenikanie czeka na nie najwyżej 1 s, potem gra jedzie z tłem bazowym
+przyciemnionym i zabarwionym na chłodno (tint `#9FB8FF`).
+
+### 5.5. Wyjście z darmowych spinów
+
+Oś czasu: E37. Kolejność jest stała: (1) ostatni spin i jego prezentacja, (2) ewentualny Big Win z sumą FS,
+(3) panel podsumowania, (4) przycisk „Dalej”, (5) przenikanie tła i muzyki do gry bazowej, (6) saldo. Saldo
+zmienia się dopiero w kroku (6), mimo że serwer rozliczył rundę od razu — liczba w pasku musi zgadzać się z tym,
+co gracz widzi na ekranie w danej chwili.
+
+### 5.6. Modale i nakładki
+
+| Zasada | Wartość |
+|---|---|
+| Otwarcie | zasłona 200 ms + panel skala 0,94 → 1 (280 ms, `cubic-bezier(0.34, 1.56, 0.64, 1)`) |
+| Zamknięcie | panel skala 1 → 0,96 + alfa (160 ms `easeInCubic`), zasłona 200 ms |
+| Tło | `rgba(7,6,15,.6)` + wariant `rozmyte` tła lobby lub zasłona Pixi w grze (zamiast `backdrop-filter`) |
+| W grze | otwarcie modala pauzuje efekty otoczenia (E22) i ambient; bębny w ruchu kończą spin normalnie |
+| Dostępność | pułapka fokusu, Esc zamyka, blokada przewijania tła (06) |
+
+### 5.7. Zasady wspólne przejść
+
+1. **Nigdy białego mrugnięcia:** `<html>` ma tło `--bg-0` od pierwszego bajtu CSS; kanwa Pixi startuje z tłem
+   `#07060F`.
+2. Animujemy tylko `transform` i `opacity` (HTML) — wyjątki: krótkie zmiany `filter` na małych elementach.
+3. W trakcie przejścia kliknięcia są blokowane przez kurtynę (`pointer-events: auto` na kurtynie), Esc nie
+   przerywa przejścia.
+4. Przejście bez ładowania trwa ≤ 700 ms.
+5. Każde przejście ma wariant RM: przenikania po 250 ms.
+
+---
+
+## 6. Specyfika gier
+
+Każda gra ma własny „język” efektów, wynikający z nastroju z 01 (§ 9–11). Wspólne systemy z § 2 dostają tu
+parametry i kilka efektów, które istnieją tylko w danej grze. Położenia elementów tła i ramki (pochodnie, słońce,
+żarówki, wodospad, rurki neonu) poznamy dopiero po otrzymaniu grafik — zapisujemy je we współrzędnych
+znormalizowanych (0–1 względem obrazu) w `gry/s1/konfig.js`, `gry/s2/konfig.js`, `gry/s3/konfig.js`.
+
+### 6.1. S1 „Cebulowy 777” — neon, chrom, synthwave
+
+Kolory efektów: `--magenta` i `--cyan` (neon), złoto dla monet i wygranych; linie wygranych na zmianę magenta /
+cyjan (§ 2.16).
+
+**Neony — model „brzęczenia”.**
+
+| Element | Zachowanie | Parametry |
+|---|---|---|
+| Rurki neonu na ramce | nad rurkami narysowanymi na `s1_ramka` leżą świecące wstęgi z kodu (`MeshRope` po obrysie okna z przesunięciem z konfiguracji, miękka tekstura, `add`): zewnętrzna `--magenta`, wewnętrzna `--cyan` | alfa 0,55 w spoczynku, 0,8 przy wygranej medium, 1,0 przy NEON JACKPOT |
+| Brzęczenie (losowe przygaszenia) | każdy element neonowy (logo, rurka zewnętrzna, rurka wewnętrzna) ma losowe przygaszenia procesem Poissona `λ = 0,12/s`; przygaszenie do 60% jasności na 40–80 ms (01 § 9.4) | w spoczynku łącznie najwyżej **1 przygaszenie na sekundę**, przez strażnika błysków (logo jest duże — jego przygaszenie liczymy jako błysk) |
+| Sekwencja zapalania (E21) | rurka: zapalenie 30 ms → zgaszenie 80 ms → zapalenie 40 ms → zgaszenie 120 ms → stałe świecenie | 2 błyski w ~300 ms, przez strażnika; w RM — od razu stałe świecenie |
+| Dźwięk | każde przygaszenie wyzwala krótki `sfx_s1_neon_bzyk` (cicho, losowa wysokość ± 5% — 05) | |
+
+**Biegnące światła żarówek (grzebień ramki).** 16–24 żarówek (punkty z konfiguracji), każda to sprite
+`g_fx_iskry__2` (28 px, `add`, tint `#FFF3D1`). Jasność żarówki `i` z `N`:
+`b_i(t) = 0,55 + 0,45 · max(0, cos(2π (i/N − v·t)))⁴` — po łuku wędruje jasna plama. Prędkość `v`:
+0,6 okrążenia/s w spoczynku, 1,5 podczas obrotu, 2 przy wygranej medium, 3 przy NEON JACKPOT (wtedy dodatkowo
+układ „co druga” przełączany co 500 ms). Pojedyncze żarówki są małe, a łączna powierzchnia połowy żarówek
+(~9 400 px²) jest poniżej progu 1/36 ekranu — to nie są błyski.
+
+**Słońce i siatka.**
+* „Oddech” słońca: miękki sprite (`g_fx_iskry__2` × 12, tint `#FF7A3D`, `add`) za górną krawędzią ramki,
+  alfa 0,15 ↔ 0,25, okres 8 s.
+* Impuls światła na siatce podłogi (High/Medium): co 4 s pozioma świecąca linia (gradient `add`, tint
+  `#2B6BFF` → `--magenta`) jedzie od horyzontu (y 50%) do dołu (y 80%) w 2200 ms (`easeInQuad` — przyspiesza
+  w stronę widza), szerokość rośnie z 40% do 140% szerokości ekranu (perspektywa), alfa 0 → 0,35 → 0.
+
+**Idiomy symboli przy wygranej** (nakładane na wspólny puls z § 2.13):
+
+| Symbol | Dodatkowa animacja |
+|---|---|
+| `s1_sym_wisnie` | wahadło ± 6° z punktem obrotu u szczytu szypułki, 2 wahnięcia w 600 ms |
+| `s1_sym_cytryna` | podwójny squash 0,90 / 1,10, 2 × 200 ms |
+| `s1_sym_sliwka` | przelot połysku z góry na dół („nalot” błyszczy) |
+| `s1_sym_arbuz` | podskok o 8 px z lądowaniem squash |
+| `s1_sym_dzwonek` | kołysanie ± 12° z punktem obrotu u góry, `sprezyna(0,25; 3 Hz)` |
+| `s1_sym_bar` | chromowy połysk dwa razy szybciej (300 ms) + różowa poświata |
+| `s1_sym_siodemka` | mocniejszy `glow` w `--magenta` (alfa 1,0) + 2 gwiazdki `g_fx_iskry__1` w rogach |
+| `s1_sym_wild` | poświata z § 2.13 (barwa krąży magenta ↔ cyjan); przy E50 / E51 — karta zdarzenia |
+
+### 6.2. S2 „Złoty Faraon” — pochodnie, piasek, złoto
+
+Kolory efektów: złoto `--gold-1`/`--gold-2`, turkus `#2EC4B6`, światło pochodni `#FFA45C`; w FS chłodny błękit
+`#9FE8FF`.
+
+| Efekt | Jak | Parametry | Low |
+|---|---|---|---|
+| **Pochodnie** (kosze ognia na ~40% wysokości tła, 01 § 10.6) | miękkie sprite'y `g_fx_iskry__2` (220–320 px, `add`, tint `#FFA45C`) w punktach koszy | alfa `0,55 + 0,25 · n(t · 7 Hz)`, skala `1 ± 0,04 · n₂(t · 5 Hz)` (gładki szum — zmiany płynne, mała powierzchnia, to nie błysk); lewy kosz jaśniejszy × 1,2 (key light) | statyczne |
+| Światło pochodni na ramce | tint `s2_ramka` faluje między `#FFFFFF` a `#FFF1E0` według tego samego szumu | jasność 0,96–1,00 | brak |
+| Żar | `iskry_migot` z tintem `#FF7A1A` wznoszące się z koszy | 4 / 2 / 0 na s na kosz, vy −40…−90 px/s, życie 1,2–2 s | brak |
+| **Pył w snopach światła** (01 § 10.6: ukośne snopy z lewej) | `pyl` w równoległoboku wzdłuż snopa; dryf wzdłuż osi snopa 8 px/s + błądzenie; alfa maleje z odległością od osi snopa | 40 / 20 / 0 | brak |
+| **Piasek** | strużki `piasek` z nadproża ramki | E21 (600 ms), E26 (6 ziaren nad bębnem), E60 (600 ms nad bębnem) | brak |
+| **Rozszerzanie WILD** | karta E60 | | |
+| **Noc FS: gwiazdy** | `gwiazdy_migot` w górnych 45% tła | 40 / 20 / 0 | brak |
+| Noc FS: wiązka z piramidy (01 § 10.7) | pionowy gradient `add` w miejscu wiązki, alfa 0,25 ↔ 0,45 (okres 3 s) + drobinki światła wznoszące się wzdłuż wiązki (6 / 3 / 0 na s) | | sam gradient, bez ruchu |
+| Noc FS: spadająca gwiazda | co 12–20 s smuga `g_fx_iskry__5` przez górne niebo w 600 ms, alfa 0,6 | High/Medium | brak |
+| Logo w FS | `s2_logo.glow` tint `--gold-1`, alfa 0,3 ↔ 0,7, okres 1,6 s (02) | | statyczna poświata |
+
+**Idiomy symboli przy wygranej:**
+
+| Symbol | Dodatkowa animacja |
+|---|---|
+| `s2_sym_faraon` | mini promienie za maską (1 warstwa, 1,8 `S`, 6°/s, tint `--gold-1`) przez czas prezentacji |
+| `s2_sym_anubis` | `glow` w bursztynie `#FFB23D` (oczy i złoto „zapalają się”) |
+| `s2_sym_skarabeusz` | „rozpostarcie skrzydeł”: skala X 1,00 → 1,08 → 1,00 (300 ms) |
+| `s2_sym_oko` | poziomy przelot połysku (kąt 90°) |
+| `s2_sym_ankh` | pionowy przelot połysku (kąt 0°) |
+| `s2_sym_10`, `_j`, `_q`, `_k`, `_a` | `glow` w kolorze kamienia z 01 § 10.4 (turkus, malachit, karneol, lapis, ametyst) |
+| `s2_sym_scatter` | karta E34 (wiązka nad piramidą) |
+| `s2_sym_wild` | poświata złota + hieroglify (§ 2.13); w FS rozszerzenie E60 |
+
+### 6.3. S3 „Kryształowa Kaskada” — kryształy, kaskady, światło
+
+Kolory efektów: kolory klejnotów z 01 § 11.4 (szafir `#2F6BFF`, szmaragd `#19D17A`, ametyst `#A64DFF`, topaz
+`#FFB23D`, rubin `#FF2D55`, diament `#E8FBFF`, złoto cebuli), bioluminescencja `#19F5D2`, zorza `#5CFFB0` →
+`#B66BFF`.
+
+| Efekt | Jak | Parametry | Low |
+|---|---|---|---|
+| **Kaustyki na podkładzie** (01 § 6.6) | tekstura 256×256 generowana przy starcie (suma fal sinusoidalnych → wartość bezwzględna → potęga, bezszwowa), 2 warstwy `TilingSprite` w `add` na `L2`, tylko w oknie planszy | alfa 0,06 każda; przesuw 12 px/s i 8 px/s w różnych kierunkach; skale 1,0 i 1,4 | statyczna, 1 warstwa |
+| **Świetliki** (bioluminescencja) | emiter `swietliki` przy bokach tła | 36 / 18 / 0 | brak |
+| Błyski kryształów tła | w 6–10 punktach z konfiguracji co 1,5–4 s gwiazdka `g_fx_iskry__1` (tint `#A64DFF` / `#2F6BFF`, 400 ms) | | brak |
+| Migotanie wodospadu | pionowo przesuwana miękka smuga (tekstura generowana) w miejscu wodospadu za górą ramki | alfa 0,15, 60 px/s; tylko High | brak |
+| **Pękanie kryształów** | karta E70; rysy: start w losowym punkcie wewnętrznych 60% symbolu, 3–5 łamanych po 3–4 odcinki, kąty ± 35° od kierunku promieniowego, długości 0,15–0,35 `S`, `Graphics` 2 px biel `add`, rosną w 80 ms | | bez rys |
+| **Odłamki** | emiter `odlamki` (§ 2.3); na High jedno odbicie od dolnej krawędzi okna planszy (współczynnik 0,3), na Medium przelatują i gasną | | 3 na symbol |
+| **Opad z odbiciem** | fizyka § 2.15 | `g = 85 pól/s²`, odbicie 0,12 | bez zmian |
+| **Kule mnożników** | karty E72 i E73 | | bez smug |
+| Tęczowy scatter | tint `glow` scattera krąży po kolorach klejnotów: `#2F6BFF` → `#19D17A` → `#FFB23D` → `#FF2D55` → `#A64DFF` w 2,5 s | | stały kolor |
+| **Zorza FS** | 3 wstęgi (`MeshRope` po 24 punkty, miękka tekstura, tint gradientem `#5CFFB0` → `#B66BFF`, `add`) w górnych 35% ekranu; `y` punktów = suma 2 sinusów (amplitudy 20–40 px, długości fal 600 i 900 px, prędkości fazy 0,2–0,35 Hz) | alfa 0,18–0,28; High 3 wstęgi, Medium 2 | brak (zorza jest na obrazie tła) |
+| Korona kryształów ramki | 3–6 `iskry_migot` na koronie `s3_ramka` | E24, E35, E73 | brak |
+
+**Idiomy symboli przy wygranej:** każdy klejnot dostaje `glow` w swoim kolorze; `s3_sym_diament` — dodatkowo
+2 gwiazdki `g_fx_iskry__0` w szczytach szlifu i szybki połysk (300 ms); `s3_sym_rubin` — „bicie serca” (jak
+antycypacja, 1 cykl); `s3_sym_cebula` — złota poświata + przelot połysku ukazujący „warstwy” (2 przeloty
+w odstępie 150 ms).
+
+---
+
+## 7. Warstwy renderu i kolejność rysowania
+
+### 7.1. Stos HTML (`z-index`)
+
+Wartości to tokeny z `static/css/tokens.css` (stan kodu na 2026-10-11):
+
+| `z-index` | Element | Uwagi |
+|---|---|---|
+| `--z-bg` (−1) | tło lobby (`<picture>`) | |
+| `--z-content` (1) | treść lobby (kafle, sekcje); na stronie gry: kanwa Pixi i panel gry HTML (saldo, zakład, SPIN, ikony) | w Big Win panel gry ma alfę 0,35 (E30) |
+| `--z-overlay` (45) | scena nagrody E07 / E10 (zasłona, promienie, skrzynia, kwota, rozbłysk) | **pod** paskiem górnym, żeby pigułka salda była widoczna |
+| `--z-topbar` (50) | pasek górny z pigułką salda | |
+| `--z-fx` (60) | Canvas 2D cząsteczek lobby | **nad** paskiem: monety przelatują nad pigułką salda; `pointer-events: none` |
+| `--z-menu` (70) | menu | |
+| `--z-modal` (100) | modale i ich zasłona | logowanie, bankrut, ustawienia, tabela wypłat, podsumowanie FS, błąd sieci |
+| `--z-toast` (120) | toasty | |
+| 200 | zasłona przejść E12 (`body::after`) | ponad wszystkim |
+
+### 7.2. Scena Pixi — kolejność rysowania (od dołu)
+
+| Warstwa | Kontener | Zawartość | Mieszanie | Filtry | Drży | Wywołania rysowania (typowo) |
+|---|---|---|---|---|---|---|
+| `L0` | `tlo` | tło gry; efekty tła (pochodnie, słońce, impuls siatki, gwiazdy, wiązka FS, zorza) | normalne + podwarstwa `add` | — | tak | 2–4 |
+| `L1` | `tlo_czastki` | pył, świetliki, żar, bokeh | `add` (`ParticleContainer`, atlas `wspolne-fx`) | — | tak | 1 |
+| `L2` | `podklad` | podkład bębna (01 § 6.6), kaustyki S3 | normalne / `add` | — | tak | 1–3 |
+| `L3` | `bebny` | symbole i cienie; jedna prostokątna maska okna (bufor szablonu) | normalne | High: `ColorMatrixFilter` podczas przyciemnienia | tak | 2–4 |
+| `L4` | `przyciemnienie` | prostokąt przyciemnienia, gradient walca, smugi prędkości | normalne / `add` | — | tak | 1–2 |
+| `L5` | `wygrane` | wygrywające symbole, ich `glow`, rozszerzony WILD, kule mnożnika | normalne + `add` | — | tak | 2–3 |
+| `L6` | `linie` | linie wygranych, obrysy klastrów, kometa | `add` | — | tak | 1–2 |
+| `L7` | `ramka` | `s*_ramka`, neony, żarówki, flary narożne | normalne + `add` | — | tak | 2–3 |
+| `L8` | `logo` | `s*_logo` + `glow` | normalne + `add` | — | tak | 1–2 |
+| `L9` | `fx_normal` | monety, konfetti, odłamki | normalne (`ParticleContainer` × 2) | — | tak | 1–2 |
+| `L10` | `fx_add` | iskry, flary, pierścienie, pioruny, hieroglify, dym, słupy światła, promienie lokalne | `add` | **bloom (High)** | tak | 2–4 |
+| `L11` | `kwoty` | kwoty nad liniami i klastrami, licznik i HUD FS, napisy z kodu („×2”), winieta, reflektor | normalne (+ `add` poświaty) | — | tak (winieta i HUD nie) | 2–3 |
+| `L12` | `bigwin` | zasłona, promienie, dym, monety (tył), baner (+ `cien`, `glow`), licznik, monety (przód), konfetti (przód), iskry | mieszane | bloom na podwarstwie `add` (High) | 35%, licznik 0% | 6–10 |
+| `L13` | `blysk` | sprite błysku | `add` | — | nie | 0–1 |
+| `L14` | `przejscie` | zasłona przejść (wejście E21, wyjście E12) | normalne | — | nie | 0–1 |
+
+* Kontener `swiat` = `L0`–`L11`; to on drży (§ 2.5) i na nim działa fala uderzeniowa (High).
+* **Dlaczego warstwy pogrupowane według mieszania:** każda zmiana trybu mieszania przerywa paczkę rysowania
+  (batch). Trzymając elementy `add` razem, mamy kilkanaście wywołań rysowania zamiast setek.
+* Szacunek wywołań rysowania: spoczynek 12–18, obrót 15–22, Big Win 30–45 — z dużym zapasem do ~100, przy których
+  słabe telefony zaczynają tracić klatki.
+
+### 7.3. Kolejność prac w jednej klatce
+
+Jedno wywołanie tickera z ustalonymi priorytetami:
+
+1. `Zegar` — `deltaMS` (przycięte do 50 ms), skala czasu (TURBO, *hit-stop*),
+2. `OsCzasu` — wykonanie kroków osi, których `t` minęło,
+3. bębny / fizyka planszy S3,
+4. `Tween` — wszystkie animacje właściwości,
+5. `SilnikCzastek` — symulacja i zapis do `ParticleContainer`,
+6. `Kamera` — trauma → przesunięcie i obrót `swiat`,
+7. `StraznikBlyskow` — przesunięcie okna 1 s,
+8. pomiar czasu klatki dla `Jakosc` (§ 2.2),
+9. render Pixi.
+
+---
+
+## 8. Koszt efektów i co wyłączamy na Low
+
+### 8.1. Tabela kosztu
+
+Szacunki dla telefonu średniej klasy (rok 2022–2023) przy rozdzielczości poziomu Medium; „przerysowanie” =
+ile razy GPU zapisuje każdy piksel ekranu (1,0 = cały ekran raz). Liczby do potwierdzenia pomiarem w
+[08-wydajnosc-i-jakosc.md](08-wydajnosc-i-jakosc.md).
+
+| Efekt | CPU (ms/klatkę) | GPU: wywołania / przerysowanie | High | Medium | Low |
+|---|---|---|---|---|---|
+| Obrót bębnów (podmiana tekstur) | 0,1 | 2–4 / 0,6 | tak | tak | tak |
+| Cząsteczki (przy limicie) | 0,3 / 0,15 / 0,06 | 2–4 / 0,3–1,0 | 600 | 300 | 120 |
+| Błysk ekranu | ~0 | 1 / 1,0 przez ≤ 450 ms | tak | tak | tak |
+| Drżenie kamery | 0,01 | 0 | tak | tak | **nie** |
+| Bloom (filtr) | 0,05 | 6–10 przebiegów w ½ rozdzielczości / ~0,6 | tak | **pre-baked `glow`** | **nie** |
+| Fala uderzeniowa (filtr) | ~0 | 1 przebieg pełnoekranowy | tak | nie | nie |
+| Promienie | ~0 | 1–2 / 1,0–2,9 | 2 warstwy 1,6× | 2 warstwy 1,3× | 1 warstwa 1,1× |
+| Dym | ~0 | 1 / do 1,4 | ≤ 12 | ≤ 6 | ≤ 2 |
+| Przelot połysku (shader) | ~0 | 1 na przelot / pole obiektu | tak | tak | puls `syl` |
+| Przyciemnienie + desaturacja | ~0 | 1 + 1 przebieg okna | tak | bez filtra | bez filtra |
+| Linie i obrysy (`MeshRope`) | 0,05 przy rysowaniu | 1–2 / 0,1 | tak | tak | tak |
+| Licznik (`BitmapText`) | 0,05 przy zmianie liczby | 1 | tak | tak | tak |
+| Efekty tła gier (§ 6) | 0,05–0,1 | 2–4 / 0,2–0,5 | pełne | połowa elementów | statyczne |
+| Kaustyki S3 | ~0 | 2 / 2 × pole okna | 2 warstwy | 1 | statyczne |
+| Zorza FS S3 | 0,05 | 2–3 / 0,3 | 3 wstęgi | 2 | brak |
+| Pioruny | ~0 | 1–3 / 0,1 | tak | tak | 1 naraz |
+| Lobby: Canvas 2D | 0,5–1,5 | — | 360 | 180 | 60 |
+
+**Budżet efektów (propozycja dla 08):** CPU efektów ≤ 3 ms na klatkę na komputerze i ≤ 5 ms na telefonie (z
+16,7 ms); przerysowanie stałe ≤ 4× (High), ≤ 3× (Medium), ≤ 2× (Low), chwilowo (≤ 500 ms, np. błysk przy
+eskalacji) do 6× / 4× / 2,5×; wywołania rysowania ≤ 60 typowo, ≤ 100 w szczycie.
+
+**Miękka degradacja w obrębie poziomu (propozycja):** zanim automat obniży poziom (§ 2.2), przy p90 > 18 ms przez
+1 s mnożnik cząsteczek spada do 0,7, a fala uderzeniowa i druga warstwa promieni są wyłączane. Jeśli to nie
+pomoże — standardowe obniżenie poziomu.
+
+### 8.2. Co wyłączamy na Low
+
+* **Drżenie kamery i kopnięcia** (brief § 5) — także podłoga traumy antycypacji.
+* **Wszystkie filtry:** bloom, fala uderzeniowa, desaturacja przyciemnienia (brief § 5: „bez filtrów”).
+* Limit cząsteczek **120**; konfetti ≤ 40 na salwę; brak emiterów tła (pył, świetliki, gwiazdy, żar).
+* Promienie: jedna warstwa, mniejsza średnica.
+* Dym: najwyżej 2 kłęby.
+* Przeloty połysku → puls `syl`.
+* Efekty tła gier statyczne (pochodnie, kaustyki, siatka S1, wiązka FS); zorza FS wyłączona.
+* Pioruny: jeden naraz; smugi prędkości bębnów i `iskry_smuga` wyłączone.
+* DPR 1 i tekstury @1x.
+* **Zostaje** wszystko, co niesie informację: obrót z rozmyciem ruchu, lądowania, linie i obrysy, kwoty,
+  liczenie, banery, błyski (w limicie), monety i podstawowe iskry. Gracz na Low widzi tę samą grę, tylko
+  skromniej.
+
+### 8.3. Co robi tryb ograniczonego ruchu (skrót)
+
+| System | RM |
+|---|---|
+| Błyski, flary, pioruny, migotanie neonów | wyłączone |
+| Drżenie, kopnięcia, zoom kamery, paralaksa | wyłączone |
+| Punch, odbicia, squash | zastąpione przenikaniem lub skalą ≤ 1,05 |
+| Promienie | bez obrotu, wolny oddech alfy |
+| Cząsteczki | × 0,3, prędkość × 0,6, bez konfetti i lotu monet |
+| Obrót bębnów | zostaje, bez zamachu i overshootu |
+| Liczenie | zostaje, krócej (× 0,6) |
+| Dźwięk, haptyka | bez zmian |
+
+---
+
+## 9. Strojenie, testy i narzędzia
+
+**Narzędzia deweloperskie** (tylko w profilu `dev` / parametrem adresu, nigdy w wersji dla graczy):
+
+| Narzędzie | Co robi |
+|---|---|
+| `?fx=debug` | panel: FPS, p90 czasu klatki, poziom jakości, liczba cząsteczek, wywołania rysowania, aktualna trauma, log strażnika (błyski w ostatniej sekundzie), pasek osi czasu bieżącego zdarzenia; przyciski: wyzwól E29/E30/E31/E35/E51/E60/E73, przełącz RM / TURBO / jakość |
+| `?fx=zegar-reczny` | zegar efektów krokowy (klatka po klatce albo skok do zadanej ms) — do zrzutów ekranu w dokładnych momentach osi |
+| `?ziarno=123` | stałe ziarno generatora efektów (R10) |
+| scenariusze mocka | gotowe odpowiedzi spinu (BIG / MEGA / EPIC / ULTRA, FS z retriggerem, kaskada × 8 z 4 scatterami, NEON JACKPOT) w narzędziach front-endu (`tools/dev/**`, 09 § 4) |
+
+**Testy automatyczne** (Playwright, `tools/e2e`, uruchamiane lokalnie — plan projektu § 9):
+
+| Test | Scenariusz | Warunek zaliczenia |
+|---|---|---|
+| Limit błysków | ULTRA; S2 FS z 3 WILD i retriggerem; S3 kaskada × 8 z 4 scatterami; 20 spinów TURBO + autoplay | w logu strażnika w **każdym** oknie 1000 ms ≤ 3 zarejestrowane błyski; dodatkowo analiza nagrania (średnia jasność klatek) — ≤ 3 pary zmian ≥ 10% na sekundę |
+| Ograniczony ruch | jak wyżej z `reducedMotion: 'reduce'` | 0 błysków pełnoekranowych, trauma zawsze 0, przesunięcie kamery zawsze 0 |
+| Wydajność | ULTRA i S3 kaskada × 8 przy spowolnieniu CPU × 4 (CDP `Emulation.setCPUThrottlingRate`) | brak *long tasks* > 50 ms w trakcie spinu (brief § 5); po ewentualnym obniżeniu poziomu p90 klatki ≤ 20 ms |
+| Zrzuty referencyjne | stałe ziarno + zegar ręczny: E30 +300 ms, E31 +80 ms, E35 +900 ms, E70 +280 ms | różnica z wzorcem w tolerancji (np. ≤ 2% pikseli) |
+| Synchronizacja | log czasów zaplanowanych dźwięków i klatek szczytu efektów | różnica ≤ 17 ms (R6) |
+
+**Strojenie.** Wszystkie liczby z tego dokumentu żyją w `fx/konfig.js` i `gry/s*/konfig.js` (w trybie `dev`
+z przeładowaniem na żywo). Zasada: **zmiana liczby w kodzie = zmiana w tym dokumencie w tym samym commicie** —
+dokument ma pozostać jedynym źródłem prawdy, z którego się bronimy.
+
+---
+
+## 10. Otwarte kwestie
+
+| # | Kwestia | Stan / propozycja |
+|---|---|---|
+| 1 | 02 (§ 3.4, wiersze symboli) przewiduje błysk `syl` przy **każdym** stopie bębna (E26) | Zastąpiliśmy go ruchomym pasem połysku (WCAG, karta E26). Do ujednolicenia opisu użycia w 02. |
+| 2 | Liczba na kuli mnożnika: 01 § 8.4 / § 11.4 — Marcellus, kolor `--bg-0`; 02 (wiersz `s3_sym_mnoznik`) — złote cyfry `g_font_cyfry` | Przyjmujemy 01 na samej kuli (kontrast na jasnym środku) i złote cyfry w liczniku sumy (E73). Do ujednolicenia w 02. |
+| 3 | Położenia elementów tła i ramek (pochodnie, słońce, żarówki, rurki neonu, wodospad, kryształy) | Znane dopiero po dostarczeniu grafik; uzupełniamy `gry/s*/konfig.js`. |
+| 4 | Zgodność `pixi-filters` (bloom, fala) i API własnych shaderów z wendorowaną wersją Pixi 8 | Do sprawdzenia w krótkim prototypie; plany B w § 2.6, § 2.7, § 2.9. |
+| 5 | Możliwości `ParticleContainer` w Pixi 8 (tint i alfa na cząsteczkę) | Do sprawdzenia; plan B w § 2.3. |
+| 6 | Wydłużenie antycypacji w S1 (+900 ms) i S3 (+700 ms na kolumnę) | Nasza decyzja (brief określa tylko S2: +1200 ms). Do potwierdzenia z właścicielem i w 07. |
+| 7 | Kolejność E51 → E30, prezentacja poziomu w S3 na sumie rundy, moment E73 | Do potwierdzenia formatem kroków w 07. |
+| 8 | TURBO w Big Win (× 0,45 z minimalnym przytrzymaniem 900 ms) | Nasza interpretacja briefu § 4. |
+| 9 | Transjenty dźwięków w podanych milisekundach (np. `sfx_skrzynia_otwarcie`: stuk w 680 ms i wybuch w 900 ms — jeden plik z dwoma zdarzeniami) | Do uzgodnienia z 05. |
+| 10 | Budżety CPU i przerysowania z § 8.1 | Propozycja; pomiar i decyzja w 08. |
+| 11 | Haptyka na iPhonie | Niedostępna (Safari nie obsługuje Vibration API) — akceptujemy. |
+
+---
+
+## Powiązane dokumenty
+
+* [README.md](README.md) — spis dokumentacji projektu i wspólny język identyfikatorów.
+* [01-kierunek-artystyczny.md](01-kierunek-artystyczny.md) — wygląd: paleta i kolory poziomów wygranej (§ 3.5),
+  poświata (§ 4.5), cienie (§ 4.7), obrazy efektów (§ 4.8), stany symboli (§ 5.7), banery (§ 7.8), cyfry (§ 7.9),
+  style gier (§ 9–11).
+* [02-lista-obrazow.md](02-lista-obrazow.md) — manifest obrazów, warianty `glow` / `cien` / `syl` / `ruch1` /
+  `ruch2` / `male` (§ 2.7, § 5.15–5.16), atlasy tekstur (§ 5.9), font `CebulionCyfry` (§ 5.14).
+* [03-prompty-chatgpt.md](03-prompty-chatgpt.md) — prompty dla `g_fx_*`, `g_win_*`, `s2_fx_hieroglify`,
+  `s3_fx_odlamki`.
+* [05-dzwiek-i-muzyka.md](05-dzwiek-i-muzyka.md) — pliki dźwięków z kolumn „Dźwięk”, stany muzyki, miks.
+* [06-interfejs-ux.md](06-interfejs-ux.md) — ekrany, teksty, mikrointerakcje (E11), układ i responsywność.
+* [07-gry-i-matematyka.md](07-gry-i-matematyka.md) — zasady gier i kroki odpowiedzi spinu, z których
+  `RezyserEfektow` buduje zdarzenia.
+* [08-wydajnosc-i-jakosc.md](08-wydajnosc-i-jakosc.md) — architektura renderu, poziomy jakości, pomiary, budżety.
+* [09-kontrakt-api-i-assetow.md](09-kontrakt-api-i-assetow.md) — `Idempotency-Key`, `manifest.json`
+  (`blend: "add"`), podział katalogów.
+* [../plan-projektu.md](../plan-projektu.md) — plan całego projektu.

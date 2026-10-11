@@ -33,14 +33,19 @@ public interface SpinRoundRepository extends JpaRepository<SpinRound, Long> {
             """)
     Optional<SpinRound> findByPlayerAndIdempotencyKey(@Param("playerId") Long playerId, @Param("key") String key);
 
-    /** Historia gracza (od najnowszej), z automatem w tym samym zapytaniu, stronicowana. */
+    /**
+     * Historia gracza (od najnowszej), stronicowana. Projekcja {@link RoundSummary} zamiast encji: bez kolumny
+     * {@code result_json} (uzasadnienie w Javadoc rekordu), z nazwą gry w tym samym zapytaniu.
+     */
     @Query(value = """
-            select r from SpinRound r join fetch r.slotMachine
-            where r.player.id = :playerId
+            select new pl.wsb.kasyno.slots.domain.RoundSummary(r.id, p.displayName, m.code, m.name, r.bet,
+                   r.totalWin, r.multiplier, r.tier, r.status, r.createdAt, r.settledAt)
+            from SpinRound r join r.player p join r.slotMachine m
+            where p.id = :playerId
             order by r.createdAt desc, r.id desc
             """,
             countQuery = "select count(r) from SpinRound r where r.player.id = :playerId")
-    Page<SpinRound> findPlayerHistory(@Param("playerId") Long playerId, Pageable pageable);
+    Page<RoundSummary> findPlayerHistory(@Param("playerId") Long playerId, Pageable pageable);
 
     /**
      * Pytanie inwestora 1: które automaty są najpopularniejsze od {@code since} (np. ostatnie 7 dni)?
@@ -80,14 +85,18 @@ public interface SpinRoundRepository extends JpaRepository<SpinRound, Long> {
     List<HourlyActivity> findHourlyActivity(@Param("status") SpinStatus status);
 
     /**
-     * Feed dużych wygranych: ostatnie rundy z wygraną ≥ {@code minMultiplier} × zakład. {@code join fetch} gracza
-     * i automatu: jedno zapytanie zamiast 1 + 2·N (problem N+1).
+     * Feed dużych wygranych: ostatnie rundy z wygraną ≥ {@code minMultiplier} × zakład. Gracz i automat dołączone
+     * w tym samym zapytaniu (jedno zapytanie zamiast 1 + 2·N, problem N+1), a wynik to lekka projekcja
+     * {@link RoundSummary} bez kolumny {@code result_json}: lobby odpytuje feed co chwilę.
+     * Porównujemy {@code totalWin >= bet × próg} (dokładnie), a nie zaokrąglony {@code multiplier}.
      */
     @Query("""
-            select r from SpinRound r join fetch r.player join fetch r.slotMachine
+            select new pl.wsb.kasyno.slots.domain.RoundSummary(r.id, p.displayName, m.code, m.name, r.bet,
+                   r.totalWin, r.multiplier, r.tier, r.status, r.createdAt, r.settledAt)
+            from SpinRound r join r.player p join r.slotMachine m
             where r.status = :status and r.totalWin >= r.bet * :minMultiplier
             order by r.createdAt desc, r.id desc
             """)
-    List<SpinRound> findBigWins(@Param("status") SpinStatus status, @Param("minMultiplier") BigDecimal minMultiplier,
-                                Pageable pageable);
+    List<RoundSummary> findBigWins(@Param("status") SpinStatus status, @Param("minMultiplier") BigDecimal minMultiplier,
+                                   Pageable pageable);
 }

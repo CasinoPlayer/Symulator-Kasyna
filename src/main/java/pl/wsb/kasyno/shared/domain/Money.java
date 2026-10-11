@@ -32,4 +32,27 @@ public final class Money {
     public static boolean isPositive(BigDecimal amount) {
         return amount != null && amount.signum() > 0;
     }
+
+    /** Powyżej tylu cyfr (przed albo po przecinku) nie rozpisujemy liczby „w zapisie zwykłym”. */
+    private static final int MAX_PLAIN_DIGITS = 30;
+
+    /**
+     * Kwota do komunikatu dla człowieka: {@code 100.00 → "100"}, {@code 95.50 → "95.5"}.
+     *
+     * <p>Po co osobna metoda: kwota z żądania może być absurdalna, np. {@code 1e999999999}. Jej
+     * {@code toPlainString()} to tekst z miliardem zer, a więc {@code OutOfMemoryError} przy samym budowaniu
+     * komunikatu błędu. Rozsądne liczby rozpisujemy normalnie, a absurdalne zostają w zapisie naukowym
+     * ({@code 1E+999999999}), który ma kilkanaście znaków.
+     */
+    public static String describe(BigDecimal amount) {
+        if (amount == null) {
+            return "(brak)";
+        }
+        BigDecimal stripped = amount.stripTrailingZeros();
+        long integerDigits = (long) stripped.precision() - stripped.scale();
+        if (integerDigits > MAX_PLAIN_DIGITS || stripped.scale() > MAX_PLAIN_DIGITS) {
+            return stripped.toString();
+        }
+        return stripped.toPlainString();
+    }
 }

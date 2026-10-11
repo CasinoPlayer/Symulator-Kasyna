@@ -26,9 +26,11 @@ import pl.wsb.kasyno.slots.domain.PlayerMachineStats;
 import pl.wsb.kasyno.slots.domain.PlayerMachineStatsRepository;
 import pl.wsb.kasyno.slots.domain.SlotMachine;
 import pl.wsb.kasyno.slots.domain.SlotMachineRepository;
+import pl.wsb.kasyno.slots.domain.RoundSummary;
 import pl.wsb.kasyno.slots.domain.SpinRound;
 import pl.wsb.kasyno.slots.domain.SpinRoundRepository;
 import pl.wsb.kasyno.slots.domain.SpinStatus;
+import pl.wsb.kasyno.slots.domain.WinTier;
 import pl.wsb.kasyno.support.TestData;
 import pl.wsb.kasyno.wallet.api.BalanceLeader;
 import pl.wsb.kasyno.wallet.domain.TransactionType;
@@ -207,7 +209,7 @@ class InvestorQuestionsRepositoryTest {
     }
 
     @Test
-    @DisplayName("feed: tylko wygrane ≥ 15× zakładu, od najnowszej, jednym zapytaniem (brak N+1)")
+    @DisplayName("feed: tylko wygrane ≥ 15× zakładu, od najnowszej, jednym zapytaniem (brak N+1), bez ładowania encji")
     void bigWinsFeedWithoutNPlusOne() {
         settled(kamil, s1, 10, 150, NOW.minusSeconds(30));     // 15× → tak
         settled(ola, s3, 20, 299, NOW.minusSeconds(20));       // 14,95× → nie
@@ -218,13 +220,14 @@ class InvestorQuestionsRepositoryTest {
 
         Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
-        List<SpinRound> feed = rounds.findBigWins(SpinStatus.SETTLED, BigDecimal.valueOf(15), PageRequest.of(0, 10));
-        List<String> description = feed.stream()
-                .map(r -> r.getPlayer().getDisplayName() + "@" + r.getSlotMachine().getName())
-                .toList();
+        List<RoundSummary> feed = rounds.findBigWins(SpinStatus.SETTLED, BigDecimal.valueOf(15), PageRequest.of(0, 10));
+        List<String> description = feed.stream().map(r -> r.nick() + "@" + r.gameName()).toList();
 
         assertThat(description).containsExactly("Kuba@Cebulowy 777", "Kamil@Cebulowy 777", "Ola@Cebulowy 777");
+        assertThat(feed).extracting(RoundSummary::tier).containsExactly(WinTier.ULTRA, WinTier.BIG, WinTier.EPIC);
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
+        // projekcja: żadna encja SpinRound (z ciężką kolumną result_json) nie trafia do pamięci
+        assertThat(statistics.getEntityLoadCount()).isZero();
     }
 
     @Test
@@ -245,19 +248,25 @@ class InvestorQuestionsRepositoryTest {
     }
 
     @Test
-    @DisplayName("historia gracza: stronicowanie od najnowszej, z liczbą wszystkich rund")
+    @DisplayName("historia gracza: stronicowanie od najnowszej, z liczbą wszystkich rund, bez ładowania encji")
     void playerHistoryPaging() {
         for (int i = 0; i < 5; i++) {
             settled(kamil, s1, 10, i, NOW.plusSeconds(i));
         }
         settled(ola, s1, 10, 0, NOW);
         em.flush();
+        em.clear();
 
-        Page<SpinRound> page = rounds.findPlayerHistory(kamil.getId(), PageRequest.of(0, 2));
+        Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
+        statistics.clear();
+        Page<RoundSummary> page = rounds.findPlayerHistory(kamil.getId(), PageRequest.of(0, 2));
 
         assertThat(page.getTotalElements()).isEqualTo(5);
         assertThat(page.getTotalPages()).isEqualTo(3);
-        assertThat(page.getContent()).extracting(r -> r.getTotalWin().intValue()).containsExactly(4, 3);
+        assertThat(page.getContent()).extracting(r -> r.win().intValue()).containsExactly(4, 3);
+        assertThat(page.getContent()).extracting(RoundSummary::gameName).containsOnly("Cebulowy 777");
+        assertThat(page.getContent()).extracting(RoundSummary::status).containsOnly(SpinStatus.SETTLED);
+        assertThat(statistics.getEntityLoadCount()).isZero();
     }
 
     @Test

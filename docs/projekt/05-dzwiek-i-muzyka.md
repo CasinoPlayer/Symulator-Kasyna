@@ -712,3 +712,1556 @@ Dźwięki S3 komponujemy od razu w E lidyjskiej, bez transpozycji T.
 Wszystkie pozostałe efekty są **mono** — panoramę nadaje silnik (§ 5.5). Mono to połowa wagi pliku i pamięci,
 a pozycja w stereo i tak zależy od miejsca zdarzenia na ekranie (bęben, kolumna), więc nie może być „wypalona” w pliku.
 
+---
+
+## 4. Muzyka
+
+### 4.1. Zasady wspólne dla wszystkich pętli
+
+1. **Długość pętli = całkowita liczba taktów przy stałym tempie.** Dzięki temu siatka miar i taktów jest ciągła
+   przez kolejne powtórzenia, a kwantyzacja przejść (§ 4.6) działa bez liczenia reszty z dzielenia.
+2. **Ostatni takt prowadzi do pierwszego** (zwykle dominanta → tonika). Pętla nie ma „końca” — słuchacz nie
+   zauważa szwu, bo harmonia go nie akcentuje.
+3. **Bez wyciszeń i bez ogona na końcu pliku.** Pogłos z końcówki pętli jest „zawijany” na jej początek (render
+   dwóch przebiegów i wycięcie środkowego, § 7.3), więc pierwszy takt brzmi tak samo za pierwszym i za setnym razem.
+4. **Pary gra / free spins mają to samo tempo, tonację i siatkę akordów** (S2: 100 BPM, D hidżaz, 16 taktów;
+   S3: 90 BPM, E lidyjska, 12 taktów). Różnią się aranżacją. Dlatego przejście FS → gra może nastąpić w takcie,
+   z utworem gry wchodzącym w tym samym miejscu siatki (to tzw. pionowy remiks — technika z gier konsolowych).
+5. **Głośność:** każdy utwór znormalizowany do **−14 LUFS** (zintegrowana), szczyt prawdziwy ≤ −1 dBTP. W miksie
+   szyna `music` ma domyślnie 0,45 (≈ −7 dB), więc muzyka siedzi pod efektami (§ 5).
+6. **Miejsce dla efektów:** w każdym utworze korektor wycina −3 dB w paśmie 2,5–4 kHz (filtr szczytowy, Q 1),
+   filtr górnoprzepustowy 30 Hz; bez talerzy crash co takt (najwyżej co 8 taktów, cicho) — głośne akcenty muzyki
+   myliłyby się z efektami gry.
+7. **Mono-kompatybilność:** bas i stopa w środku (poniżej 150 Hz mono), szerokość tylko w padach, arpeggiach i
+   pogłosie; korelacja L/P ≥ 0,3 (sprawdza `sprawdz.py`, § 8.6).
+
+### 4.2. Zestawienie utworów
+
+| ID | Rola | Tempo | Metrum | Takty | Długość pętli | Próbki pętli (48 kHz) | Tonacja | Nastrój |
+|---|---|---|---|---|---|---|---|---|
+| `mus_lobby` | lobby | 96 BPM | 4/4 | 16 | 40,0 s | 1 920 000 | a-moll | elegancki, nocny, spokojny („wieczór w hotelu w Monako”) |
+| `mus_s1` | S1, gra bazowa | 120 BPM | 4/4 | 16 | 32,0 s | 1 536 000 | a-moll | nocna jazda neonową autostradą; energiczny, ale nie męczący |
+| `mus_s2` | S2, gra bazowa | 100 BPM | 4/4 | 16 | 38,4 s | 1 843 200 | D hidżaz | tajemniczy, ciepły, miarowy puls skarbca |
+| `mus_s2_fs` | S2, free spins | 100 BPM | 4/4 | 16 | 38,4 s | 1 843 200 | D hidżaz | epicki, triumfalny, nocny |
+| `mus_s3` | S3, gra bazowa | 90 BPM | 4/4 | 12 | 32,0 s | 1 536 000 | E lidyjska | magiczny, spokojny, połyskujący |
+| `mus_s3_fs` | S3, free spins | 90 BPM | 4/4 | 12 | 32,0 s | 1 536 000 | E lidyjska | euforyczny, unoszący się |
+| `mus_bigwin` | sekwencja big win (wszystkie gry) | 128 BPM | 4/4 | 8 | 15,0 s | 720 000 | C-dur | świętowanie, „deszcz złota” |
+| `mus_napiecie` | warstwa napięcia nakładana na muzykę gry | bez pulsu | — | — | 8,0 s | 384 000 | brak (ton Sheparda–Risseta) | suspens, „zaraz się stanie” |
+
+**Punkty pętli** (dla wszystkich utworów tak samo): plik = 0,25 s zakładki (koniec pętli) + pętla + 0,25 s zakładki
+(początek pętli). W manifeście: `loopStart` = 0,25 s (12 000 próbek), `loopEnd` = 0,25 s + długość pętli
+(np. `mus_s2`: 12 000 + 1 843 200 = 1 855 200 próbek = 38,65 s). Start utworu zawsze od `loopStart`
+(`source.start(when, loopStart)`). Uzasadnienie zakładek: § 7.3.
+
+| ID | `loopStart` (s) | `loopEnd` (s) | Długość pliku (s) |
+|---|---|---|---|
+| `mus_lobby` | 0,25 | 40,25 | 40,5 |
+| `mus_s1` | 0,25 | 32,25 | 32,5 |
+| `mus_s2`, `mus_s2_fs` | 0,25 | 38,65 | 38,9 |
+| `mus_s3`, `mus_s3_fs` | 0,25 | 32,25 | 32,5 |
+| `mus_bigwin` | 0,25 | 15,25 | 15,5 |
+| `mus_napiecie` | 0,25 | 8,25 | 8,5 |
+
+### 4.3. Utwory
+
+Zapis akordów: jeden takt = jedna komórka; „E7sus4 E7” = dwa akordy po pół taktu. Instrumenty są syntezowane przez
+`tools/audio/instrumenty.py` (§ 8.3), utwory składa sekwencer `tools/audio/muzyka.py` (§ 8.4).
+
+#### 4.3.1. `mus_lobby` — „Złoty salon”
+
+96 BPM · 4/4 · a-moll · 16 taktów (40,0 s) · lounge / deep house w wersji „do rozmowy”.
+
+| Takty | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| A (1–8) | Am9 | Fmaj7 | Cmaj7 | G6 | Am9 | Fmaj7 | Cmaj7 | G6 |
+| B (9–16) | Dm9 | Am9 | Fmaj7 | E7sus4 E7 | Dm9 | Am9 | B♭maj7 | E7(♭9) |
+
+Szew pętli: E7(♭9) → Am9 (dominanta → tonika). B♭maj7 w takcie 15 to „neapolitański” kolor — luksusowa,
+lekko filmowa barwa tuż przed powrotem.
+
+| Instrument | Technika | Rola | Poziom względny |
+|---|---|---|---|
+| piano elektryczne | FM: nośna 1:1 (I 1,8 → 0,4, τ 1,2 s) + „młoteczek” 14:1 (I 0,6, τ 15 ms) | akordy na „i” 2 i „i” 4 (synkopowany akompaniament), dynamika ±10% | 0 dB |
+| pad aksamitny | 2 piły ±7 c na nutę → LP 1 100 Hz, atak 600 ms, chorus 0,4 Hz | całe takty, dywan harmoniczny | −10 dB |
+| bas | sinus + 2. harmoniczna −9 dB, lekkie nasycenie | „raz” i „i” 3, pryma (czasem kwinta) | −4 dB |
+| stopa | sinus 58 → 42 Hz, τ 180 ms | 1 i 3 (miękka, „do rozmowy”) | −6 dB |
+| rimshot | szum BP 1,8 kHz + sinus 400 Hz, 20 ms | 2 i 4, bardzo cicho | −18 dB |
+| szczotki | szum HP 6 kHz z obwiednią „przeciągnięcia” 120 ms | ósemki ze swingiem 58% | −20 dB |
+| dzwonek motywu | dzwon FM 1:2 (I 2), echo 3/16 (469 ms) | motyw Cebuliona G4–C5–E5–G5 w taktach 1 i 9 | −12 dB |
+| hi-hat | szum HP 8 kHz, 20 ms | szesnastki tylko w taktach 13–16 (podniesienie przed powrotem) | −24 dB |
+
+Pogłos: sala 2,2 s, mix 18%.
+
+#### 4.3.2. `mus_s1` — „Neon Highway”
+
+120 BPM · 4/4 · a-moll · 16 taktów (32,0 s) · synthwave.
+
+| Takty | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| A (1–8) | Am | F | C | G | Am | F | C | G |
+| B (9–16) | F | G | Em | Am | F | G | Esus4 | E |
+
+| Instrument | Technika | Rola | Poziom względny |
+|---|---|---|---|
+| bas synthwave | piła → LP 700 Hz z obwiednią filtra (+1,2 kHz, τ 120 ms), „pompowanie” −4 dB przy stopie (obwiednia wpisana w syntezę) | pulsujące ósemki na prymie | −3 dB |
+| arpeggiator | kwadrat 25% z PWM, szesnastki akordu w górę i w dół (oktawy 4–5), echo 3/16 (375 ms), sprzężenie 35%, echo w panoramie ±0,5, redukcja do 12 bitów | sygnatura gatunku | −8 dB |
+| pad | supersaw 7 ±15 c → LP 2 500 Hz, chorus | całe takty | −9 dB |
+| lead (takty 9–16) | piła, wibrato 5,5 Hz ±12 c, portamento 40 ms | melodia z pentatoniki a-moll (A C D E G); w takcie 9 motyw Cebuliona | −5 dB |
+| stopa | sinus 120 → 45 Hz, τ 120 ms + klik | każda ćwierćnuta | 0 dB |
+| werbel | szum BP 1,8 kHz + sinus 180 Hz, τ 80 ms, pogłos 1,2 s ucięty bramką po 250 ms („gated reverb” lat 80.) | 2 i 4 | −4 dB |
+| hi-hat | zamknięty: szum HP 8 kHz, 25 ms; otwarty: τ 150 ms | ósemki; otwarty na „i” 4 co 2 takty | −16 dB |
+| tom-tomy | sinusy 180 / 140 / 110 Hz, τ 150 ms | przejście w takcie 16 | −8 dB |
+
+Cały miks: falowanie „taśmy” ±3 c przy 0,5 Hz (16 cykli na pętlę — całkowita liczba, więc szew jest niewidoczny).
+Pogłos: „sala lat 80.” 1,6 s, mix 15%.
+
+#### 4.3.3. `mus_s2` — „Skarbiec Faraona”
+
+100 BPM · 4/4 · D hidżaz (D E♭ F♯ G A B♭ C) · 16 taktów (38,4 s) · bordun D + A przez cały utwór.
+
+| Takty | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| A (1–8) | D | D | E♭ | D | Gm | Cm | E♭ | D |
+| B (9–16) | Gm | Gm | D | D | E♭ | Cm | E♭ | D |
+
+Szew: D → D na bordunie, z ozdobnikiem E♭ → D w „udzie” na ostatniej mierze (charakterystyczny półton hidżazu).
+
+| Instrument | Technika | Rola | Poziom względny |
+|---|---|---|---|
+| bordun smyczków | 4 piły D2 A2 D3 A3, ±10 c → LP 1 500 Hz, tremolo 4 Hz (głębokość 10%) | tło przez cały utwór | −12 dB |
+| bęben ramowy / darbuka | „dum”: sinus 95 → 60 Hz, τ 150 ms + szum LP 300 Hz; „tek”: szum BP 3 kHz (Q 3), τ 30 ms + sinus 900 Hz, τ 10 ms; „ka”: tek −6 dB, ciemniejszy | rytm **maqsum** na ósemkach: D T _ T D _ T _ | −3 dB |
+| taiko | sinus 70 → 38 Hz, τ 300 ms + szum LP 500 Hz | „raz” taktów 1, 5, 9, 13 | −2 dB |
+| „ud” | Karplus–Strong z jasnym atakiem; na początku nuty wysokość −30 c → 0 w 40 ms (szarpnięcie) | frazy 2-taktowe w taktach 1–8, odpowiedzi w 9–16 | −6 dB |
+| „ney” | sinus + szum oddechu (BP wokół nuty, Q 8, −14 dB), atak 150 ms, wibrato 5 Hz ±20 c od 200 ms | długie nuty w taktach 9–16 | −8 dB |
+| czynele palcowe | dzwon FM 1:2,76 (I 3), τ 250 ms | „raz” co 2 takty | −16 dB |
+| shaker piasku | szum HP 6 kHz | szesnastki, akcent na „i” | −22 dB |
+
+Pogłos: „skarbiec” 2,8 s, wczesne odbicia 25 / 41 / 67 ms (kamienne ściany), mix 22%.
+
+#### 4.3.4. `mus_s2_fs` — „Noc nad piramidami”
+
+100 BPM · 4/4 · D hidżaz · 16 taktów (38,4 s) · **ta sama siatka akordów co `mus_s2`**, aranżacja epicka.
+
+| Instrument | Technika | Rola | Poziom względny |
+|---|---|---|---|
+| zespół taiko | jak w `mus_s2`, dwa bębny (nisko 38 Hz, średnio 60 Hz) | ósemki naprzemiennie, akcent na 1 i 3 | 0 dB |
+| darbuka | jak w `mus_s2` | maqsum + szesnastkowe przejścia co 4 takty | −5 dB |
+| ostinato smyczków | piła → LP 2 500 Hz, staccato 80 ms | szesnastki D–E♭–F♯–G (oktawa 3–4) | −6 dB |
+| chór „aaa” | 6 odstrojonych pił przez formanty (BP 700 Hz i 1 100 Hz) | akordy całych taktów | −8 dB |
+| „dęte” | piły + kwadrat oktawę wyżej, LP z obwiednią | narastania (crescendo 1 takt) co 4 takty | −7 dB |
+| gwiazdy | dzwony FM 1:3,5, oktawa 6 | szesnastkowe arpeggio akordu | −14 dB |
+| gong | parcjały jak `sfx_s2_gong`, zaniki ×0,5 | „raz” taktów 1 i 9 | −10 dB |
+| bordun | jak w `mus_s2` | tło | −12 dB |
+
+Pogłos: „noc na pustyni” 3,5 s, mix 25%.
+
+#### 4.3.5. `mus_s3` — „Echo jaskini”
+
+90 BPM · 4/4 · E lidyjska (E F♯ G♯ A♯ B C♯ D♯) · 12 taktów (32,0 s) · ambient z pulsem.
+
+| Takty | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| 1–6 | Emaj9 | F♯/E | Emaj9 | F♯/E | G♯m7 | C♯m9 |
+| 7–12 | Bsus4 B | F♯/A♯ | Emaj9 | F♯/E | C♯m9 | Bsus4 B |
+
+Szew: B → Emaj9 (dominanta → tonika). Akord F♯ nad basem E to „podpis” skali lidyjskiej (zawiera A♯).
+
+| Instrument | Technika | Rola | Poziom względny |
+|---|---|---|---|
+| kryształowe dzwonki | dzwon FM 1:3,5 (I 3 → 0,6), τ 900 ms, panorama naprzemienna ±0,4 | ósemkowe arpeggio akordu (oktawy 5–6) | −10 dB |
+| celesta | dzwon FM 1:1 (I 2 → 0), τ 600 ms + parcjał ×4 −18 dB | melodia w taktach 5–12 (z A♯ jako „magiczną” nutą) | −6 dB |
+| kalimba | Karplus–Strong z krótkim buforem + sinus korpusu, τ 400 ms | 2-taktowe ostinato | −9 dB |
+| pad | 6 sinusów + 2 piły (−18 dB), ±6 c → LP 1 800 Hz, atak 1,2 s, chorus 0,2 Hz | całe takty | −11 dB |
+| sub bas | sinus | całe nuty prymy | −9 dB |
+| stopa | sinus 55 → 40 Hz, τ 220 ms | „raz” każdego taktu („bicie serca jaskini”) | −8 dB |
+| szklane tiki | dzwon FM 1:3,5, 10 ms, 7–9 kHz | ósemki | −24 dB |
+| krople wody | sinus 1 200 → 500 Hz w 30 ms | losowo ~0,3 na sekundę, losowa panorama (ziarno stałe → ta sama pętla przy każdym renderze) | −18 dB |
+
+Pogłos: jaskinia 3,5 s, opóźnienie wstępne 40 ms, mix 30%.
+
+#### 4.3.6. `mus_s3_fs` — „Komnata zorzy”
+
+90 BPM · 4/4 · E lidyjska · 12 taktów (32,0 s) · **ta sama siatka co `mus_s3`**.
+
+| Instrument | Technika | Rola | Poziom względny |
+|---|---|---|---|
+| bas pulsujący | piła → LP 600 Hz z obwiednią filtra | ósemki na prymie | −4 dB |
+| dzwonki | jak w `mus_s3` | szesnastkowe arpeggio przez 2 oktawy | −9 dB |
+| chór zorzy | piły przez formanty przechodzące z „a” (700 / 1 100 Hz) w „o” (450 / 800 Hz) w ciągu 4 taktów i z powrotem | całe takty | −8 dB |
+| stopa | jak w `mus_s3`, miękka | każda ćwierćnuta | −5 dB |
+| narastania | szum + ton Sheparda, 1 miara | ostatnia miara taktów 4, 8 i 12 | −12 dB |
+| migotanie | iskry 6–10 kHz | losowo ~4 na sekundę | −22 dB |
+| pad, celesta | jak w `mus_s3` | | −11 / −7 dB |
+
+Pogłos: 4,0 s, mix 32%.
+
+#### 4.3.7. `mus_bigwin` — „Złoty deszcz”
+
+128 BPM · 4/4 · C-dur · 8 taktów (15,0 s) · świąteczna fanfara elektroniczno-„orkiestrowa”.
+
+| Takty | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| 1–8 | C | G/B | Am | F | C/G | F | Dm7 | G7 |
+
+Szew: G7 → C. Muzyka gra w sekwencji z duckingiem −6 dB (§ 5.3) — dlatego miks jest „zwarty” i jasny w średnicy,
+żeby przebijał się spod efektów, a energię niosą efekty na szynie `sfx`.
+
+| Instrument | Technika | Rola | Poziom względny |
+|---|---|---|---|
+| „dęte” syntezatorowe | 3 piły ±8 c + kwadrat oktawę wyżej → LP z obwiednią 800 → 5 000 Hz, τ 150 ms | uderzenia akordów na „raz” i „i” 2 (synkopa) | 0 dB |
+| supersaw | 7 głosów ±12 c → LP 6 kHz, „pompowanie” −6 dB przy stopie | ósemki akordów | −8 dB |
+| stopa | sinus 110 → 45 Hz, τ 140 ms + klik | 4/4 | 0 dB |
+| klaśnięcia | 3 szumy BP 1,2 kHz co 8 ms + pogłos 0,6 s | 2 i 4 | −6 dB |
+| hi-hat otwarty | szum HP 7 kHz, τ 120 ms | na „i” | −16 dB |
+| dzwonki | dzwon FM 1:3,5 (I 2), τ 700 ms | motyw Cebuliona w taktach 1 i 5, poza tym szesnastkowe arpeggio | −10 dB |
+| kotły / tom-tomy | sinusy 100 / 80 / 65 Hz, τ 250 ms | przejścia w taktach 4 i 8 | −6 dB |
+| bas | piła → LP 500 Hz | ósemki oktawowe | −4 dB |
+
+Pogłos: 1,8 s, mix 15%.
+
+#### 4.3.8. `mus_napiecie` — warstwa napięcia
+
+Bez tempa · bez tonacji · 8,0 s · nakładana na muzykę gry podczas antycypacji (E27).
+
+**Dlaczego bez tempa i tonacji:** warstwa nakłada się na trzy różne utwory (120, 100 i 90 BPM; a-moll, D hidżaz,
+E lidyjska). Każdy rytm albo akord gryzłby się z którymś z nich. Ton Sheparda–Risseta i szumy nie mają ani pulsu,
+ani określonej tonacji, a dają wrażenie **nieustannego wznoszenia** — idealne na „zaraz się stanie”.
+
+| Warstwa | Technika | Poziom względny |
+|---|---|---|
+| ton Sheparda–Risseta | 9 sinusów w odstępach oktawy; każdy wznosi się o oktawę w 8 s: f_i(t) = 27,5 Hz × 2^(i + t/8), i = 0…8; amplituda — okno Gaussa w skali logarytmicznej (środek 440 Hz, σ = 1,2 oktawy), więc najniższy i najwyższy sinus mają poziom ≈ −48 dB i są niesłyszalne. Po 8 s zestaw częstotliwości jest identyczny jak na starcie → **pętla idealna z definicji** (fazy dobrane jak w § 8.4) | 0 dB |
+| tremolo smyczków | szum różowy → BP 1–3 kHz (Q 2), amplituda modulowana 12 Hz (96 cykli na pętlę), głębokość 60% | −10 dB |
+| dudnienie | szum brązowy → LP 80 Hz, pulsowanie 0,25 Hz (2 cykle na pętlę) | −6 dB |
+
+W silniku: `gainDb` −6 względem szyny `music`; wejście 400 ms, wyjście 250 ms; muzyka gry jednocześnie przechodzi
+przez filtr 1 200 Hz i ducking −4 dB, więc warstwa napięcia „wychodzi na pierwszy plan”, a melodia gry staje się
+odległa i stłumiona.
+
+### 4.4. Maszyna stanów muzyki
+
+Muzyką steruje jedna maszyna stanów w silniku (`audio.setMusicState(...)`). Gra zgłasza zdarzenia (E21, E27, E30…),
+a maszyna decyduje, co zrobić z muzyką. **Dlaczego maszyna stanów:** kombinacje są liczne (big win w free spinach,
+antycypacja zakończona big winem bez bonusu, wyciszenie w trakcie przenikania…); rozproszone `playMusic()` w kodzie
+gry szybko prowadzą do dwóch utworów naraz albo ciszy. Jedno miejsce z jawnymi przejściami łatwo przetestować i
+obronić.
+
+```mermaid
+stateDiagram-v2
+  [*] --> CISZA
+  CISZA : brak muzyki (przed gestem, wyciszone)
+  LOBBY : mus_lobby
+  GRA : mus_s1 / mus_s2 / mus_s3
+  NAPIECIE : muzyka gry przez filtr 1200 Hz + mus_napiecie
+  FS : mus_s2_fs / mus_s3_fs (S1 nie ma FS)
+  BIG_WIN : mus_bigwin, ducking -6 dB
+  PODSUMOWANIE : muzyka FS -6 dB
+  CISZA --> LOBBY : zalogowanie lub gest, wejście 1200-1500 ms
+  LOBBY --> CISZA : wylogowanie, wyciszenie 800 ms
+  LOBBY --> [*] : E12 do gry, wyciszenie 300 ms, zmiana strony
+  CISZA --> GRA : E21 intro na stronie gry, wejście 1500 ms
+  GRA --> NAPIECIE : E27, warstwa 400 ms
+  NAPIECIE --> GRA : brak bonusu, powrót 250-600 ms
+  GRA --> FS : E35, start na uderzeniu stingera
+  NAPIECIE --> FS : E35, start na uderzeniu stingera
+  GRA --> BIG_WIN : E30, start na uderzeniu
+  NAPIECIE --> BIG_WIN : E30
+  FS --> BIG_WIN : E30 w free spins
+  BIG_WIN --> GRA : E32, powrót od zapamiętanego taktu
+  BIG_WIN --> FS : E32, gdy big win był w free spins
+  FS --> PODSUMOWANIE : E37
+  PODSUMOWANIE --> GRA : zamknięcie panelu, przenikanie 2000 ms w takcie
+  GRA --> [*] : E12 do lobby, wyciszenie 220 ms
+```
+
+### 4.5. Tabela przejść
+
+| # | Z → do | Wyzwalacz | Co się dzieje z muzyką | Czas | Kwantyzacja | Efekt pomostowy |
+|---|---|---|---|---|---|---|
+| 1 | CISZA → LOBBY | zalogowanie (E06 / E07) albo pierwszy gest zalogowanego gracza po powrocie z gry | `mus_lobby` od `loopStart`, wejście | 1 200 ms (po logowaniu, jak w kodzie), 1 500 ms (powrót z gry) | brak — start utworu jest „na raz” | `sfx_logowanie` (przy logowaniu) |
+| 2 | LOBBY → wyjście | E12 przejście do gry | wyciszenie | 300 ms | brak | `sfx_przejscie_whoosh` |
+| 3 | LOBBY → CISZA | wylogowanie | wyciszenie | 800 ms | brak | — |
+| 4 | CISZA → GRA | E21 intro gry (po odblokowaniu lub „Graj”) | utwór gry od `loopStart`, wejście; S2: start 300 ms po uderzeniu gongu | 1 500 ms | brak | S1: `sfx_s1_neon_bzyk`; S2: `sfx_s2_gong`; S3: `sfx_s3_opad` |
+| 5 | GRA → NAPIECIE | E27 antycypacja | `mus_napiecie` od `loopStart`, wejście; filtr muzyki 20 000 → 1 200 Hz (rampa wykładnicza); ducking „napięcie” −4 dB | 400 ms | **brak** — napięcie musi ruszyć razem z bębnem | `sfx_antycypacja_narastanie`, `sfx_bicie_serca` |
+| 6 | NAPIECIE → GRA | ostatni antycypowany bęben stanął bez bonusu | warstwa wyciszona; filtr 1 200 → 20 000 Hz; ducking zdjęty | 250 ms (warstwa), 600 ms (filtr) | brak | — |
+| 7 | GRA / NAPIECIE → FS | E35 start free spins | muzyka gry wyciszana od chwili 0 przez 800 ms; `mus_napiecie` ucięta w 100 ms w chwili uderzenia; utwór FS startuje od `loopStart` **dokładnie w chwili uderzenia stingera** (`syncPoint` 1 000 ms, po transpozycji 891 ms w S2 i 794 ms w S3 — § 2.6) | 800 ms | uderzenie stingera = „raz” nowego utworu | `sfx_free_spins_start` (+ S2: `sfx_s2_gong` na uderzeniu) |
+| 8 | GRA / NAPIECIE / FS → BIG_WIN | E30 wygrana ≥ 15× | zapamiętanie pozycji bieżącego utworu; utwór wyciszany 400 ms; `mus_bigwin` od `loopStart` w chwili uderzenia (`syncPoint` 300 ms); ducking „big win” −6 dB | 400 ms | **brak** — nagroda ma być natychmiast | `sfx_bigwin_wejscie`; S1 jackpot (E51): `sfx_s1_jackpot`, `mus_bigwin` startuje +2 000 ms |
+| 9 | BIG_WIN → GRA lub FS | E32 koniec lub pominięcie sekwencji | `mus_bigwin` wyciszana od najbliższej miary; utwór gry / FS wznawiany **od początku taktu, w którym go przerwano**, wejście startuje 800 ms po E32 | 600 ms (wyjście), 1 200 ms (wejście) | miara `mus_bigwin` (≤ 469 ms) | `sfx_bigwin_koniec` |
+| 10 | FS → PODSUMOWANIE | E37 | ducking „podsumowanie” −6 dB na muzyce FS | 300 ms | brak | `sfx_free_spins_koniec` |
+| 11 | PODSUMOWANIE → GRA | zamknięcie panelu podsumowania | przenikanie o stałej mocy FS → gra; utwór gry startuje **w tej samej pozycji siatki** co FS (to samo tempo i siatka akordów) | 2 000 ms | najbliższa kreska taktowa FS (≤ 2,4 s w S2, ≤ 2,67 s w S3) | — |
+| 12 | GRA → wyjście | E12 powrót do lobby | wyciszenie | 220 ms (jak w `gra.js`) | brak | `sfx_przejscie_whoosh` |
+| 13 | dowolny → CISZA | wyciszenie przez gracza / ukrycie karty | master → 0 w 120 ms / `suspend()`; stan maszyny zostaje zapamiętany i po włączeniu dźwięku muzyka wraca do stanu | 120 ms | — | — |
+
+**Wznowienie od zapamiętanego taktu** (przejście 9): pozycja w pętli = `(t_przerwania − startedAt) mod długość_pętli`;
+numer taktu = `floor(pozycja / długość_taktu)`; wznawiamy `source.start(when, loopStart + takt × długość_taktu)`.
+Gracz po big winie słyszy „swoją” muzykę od początku frazy, w której ją zostawił — nie od początku utworu i nie
+w połowie taktu.
+
+### 4.6. Kwantyzacja i przenikanie — kod
+
+```js
+/** Najbliższa granica miary ('beat') albo taktu ('bar') bieżącego utworu, w czasie AudioContext. */
+nextBoundary(track, unit, minLead = 0.05) {
+  const beat = 60 / track.bpm;                                   // 100 BPM → 0,6 s
+  const len = unit === 'bar' ? beat * track.beatsPerBar : beat;  // takt 4/4 → 2,4 s
+  const elapsed = this.#ctx.currentTime + minLead - track.startedAt; // ile utworu już zagrało (s)
+  return track.startedAt + Math.ceil(elapsed / len) * len;       // pętla = całe takty → siatka ciągła
+}
+```
+
+`track.startedAt` to czas kontekstu, w którym zagrał `loopStart` (przy wznowieniu od taktu k:
+`startedAt = when − k × długość_taktu`). `minLead` (50 ms) chroni przed zaplanowaniem zmiany „w przeszłości”.
+
+Przenikanie o stałej mocy:
+
+```js
+const N = 64;
+const fadeIn = new Float32Array(N), fadeOut = new Float32Array(N);
+for (let i = 0; i < N; i++) {
+  const x = i / (N - 1);
+  fadeIn[i] = Math.sin(x * Math.PI / 2);   // 0 → 1
+  fadeOut[i] = Math.cos(x * Math.PI / 2);  // 1 → 0
+}
+// t = nextBoundary(...), dur = 2.0 (s)
+gainOut.gain.cancelScheduledValues(t);     // setValueCurveAtTime rzuca wyjątek, gdy nachodzi na inne zdarzenia
+gainIn.gain.cancelScheduledValues(t);
+gainOut.gain.setValueCurveAtTime(fadeOut, t, dur);
+gainIn.gain.setValueCurveAtTime(fadeIn, t, dur);
+```
+
+**Dlaczego stała moc, a nie liniowo:** przy liniowym przenikaniu dwóch niezależnych sygnałów w połowie przejścia
+łączna moc spada o 3 dB — słychać „dziurę”. Krzywe sin/cos utrzymują stałą sumę mocy (sin² + cos² = 1).
+
+---
+
+## 5. Miks
+
+### 5.1. Struktura poziomów (od pliku do głośnika)
+
+Poziom każdego dźwięku w głośniku to suma (w dB) kolejnych stopni. Ustalamy je raz, a stroimy na słuch tylko `gainDb`.
+
+| Stopień | Co ustala | Wartość |
+|---|---|---|
+| 1. normalizacja pliku | pipeline (§ 7.4) | jednorazowe: szczyt −1 dBTP; pętle efektów: −18 LUFS; muzyka: −14 LUFS |
+| 2. `gainDb` | manifest (tabele § 3) | −3 … −16 dB (muzyka 0 dB, `mus_napiecie` −6 dB) |
+| 3. kontekst | kod gry: `volume` w wywołaniu | np. autoplay −6 dB dla `sfx_spin_start` |
+| 4. szyna | suwak gracza (§ 9) | `ui` 0,6 (−4,4 dB), `sfx` 0,85 (−1,4 dB), `music` 0,45 (−6,9 dB) |
+| 5. ducking i filtr (tylko muzyka) | maszyna stanów, zdarzenia | 0 … −10 dB |
+| 6. kompresor efektów (tylko `sfx`) | § 5.4 | zwykle 0 dB, w gęstych momentach do −4 dB |
+| 7. limiter | § 5.4 | zwykle 0 dB (bezpiecznik) |
+| 8. master | suwak główny | 0,9 (−0,9 dB) |
+
+Przykłady przy ustawieniach domyślnych:
+
+| Dźwięk | Rachunek | Wynik |
+|---|---|---|
+| `sfx_beben_stop_3` | −1 dBTP − 7 − 1,4 − 0,9 | szczyt ≈ −10,3 dBFS |
+| `sfx_bigwin_wejscie` | −1 dBTP − 3 − 1,4 − 0,9 | szczyt ≈ −6,3 dBFS |
+| `ui_klik` | −1 dBTP − 8 − 4,4 − 0,9 | szczyt ≈ −14,3 dBFS |
+| `mus_s2` (sama muzyka) | −14 LUFS + 0 − 6,9 − 0,9 | ≈ −21,8 LUFS |
+| `mus_bigwin` w sekwencji | −14 LUFS − 6,9 − 6 (ducking) − 0,9 | ≈ −27,8 LUFS — pod efektami, które niosą energię |
+
+**Wniosek:** muzyka jest „dywanem” (−22 LUFS), a efekty wybijają się 8–15 dB ponad nią — tak jak w topowych slotach,
+gdzie informacja (stop, wygrana) jest zawsze czytelna.
+
+### 5.2. Szyny
+
+| Szyna | Domyślnie (kod v1) | W dB | Zawartość | Uwagi |
+|---|---|---|---|---|
+| master | 0,9 | −0,9 | wszystko, za limiterem | wyciszenie = rampa do 0 w 120 ms (jest w v1) |
+| `ui` | 0,6 | −4,4 | 8 dźwięków `ui_*` | w oknie ustawień sterowana suwakiem „Efekty” (`ui` = 0,7 × `sfx`, § 9) |
+| `sfx` | 0,85 | −1,4 | 51 efektów `sfx_*` | przez kompresor efektów |
+| `music` | 0,45 | −6,9 | 8 pętli `mus_*` | przez ducking i filtr muzyki |
+
+### 5.3. Ducking (ściszanie muzyki pod efektami)
+
+| Nazwa | Wyzwalacz | Głębokość | Atak | Trzymanie | Zwolnienie |
+|---|---|---|---|---|---|
+| `wygrana` | E28, E29 | **−3 dB** | 40 ms | czas dźwięku wygranej + liczenie | 500 ms |
+| `bigwin` | E30 → E32, także bonus E07 / E10 | **−6 dB** | 120 ms | cała sekwencja | 800 ms |
+| `napiecie` | E27 | −4 dB (+ filtr 1 200 Hz) | 400 ms | do rozstrzygnięcia | 600 ms |
+| `stinger` | E35, E51, E61 | −6 dB | 80 ms | do uderzenia stingera (dalej przejście stanu) | 400 ms |
+| `podsumowanie` | E37 | −6 dB | 300 ms | panel otwarty | 600 ms |
+| `bankrut` | E09 | −10 dB | 200 ms | panel bankructwa otwarty | 800 ms |
+| `okno` | okno modalne nad grą lub lobby, E40 | −6 dB (+ filtr 900 Hz) | 250 ms | okno otwarte | 400 ms |
+| `bezczynnosc` | E22 po 60 s | −3 dB | 4 000 ms | do interakcji | 300 ms |
+
+**Kilka naraz → bierzemy najgłębszy, nie sumę.** Gdyby się sumowały, big win z dźwiękiem wygranej dawałby −9 dB,
+a antycypacja z oknem −10 dB. Implementacja:
+
+```js
+#ducks = new Map();                                    // nazwa → głębokość w dB
+duck(name, db, { attack = 0.05 } = {}) {
+  this.#ducks.set(name, db);
+  this.#applyDuck(attack);
+}
+unduck(name, { release = 0.4 } = {}) {
+  this.#ducks.delete(name);
+  this.#applyDuck(release);
+}
+#applyDuck(seconds) {
+  const db = Math.min(0, ...this.#ducks.values());     // najgłębszy aktywny (0, gdy brak)
+  const g = this.#duckNode.gain, t = this.#ctx.currentTime;
+  g.cancelScheduledValues(t);
+  g.setValueAtTime(g.value, t);
+  g.setTargetAtTime(10 ** (db / 20), t, seconds / 3);  // ~95% celu po 3 stałych czasowych
+}
+```
+
+**Dlaczego ducking „programowy”, a nie kompresor z kluczowaniem (sidechain):** `DynamicsCompressorNode` w Web Audio
+nie ma wejścia kluczującego. Zresztą zdarzenia znamy z wyprzedzeniem (wynik z serwera), więc automatyka wzmocnienia
+jest dokładniejsza (zaczyna się razem z efektem, a nie po wykryciu jego głośności) i tańsza obliczeniowo.
+
+### 5.4. Kompresor efektów i limiter
+
+| Parametr | Kompresor efektów (szyna `sfx`) | Limiter (suma) |
+|---|---|---|
+| `threshold` | −14 dB | −3 dB |
+| `knee` | 6 dB | 0 dB |
+| `ratio` | 2,5 | 20 (maksimum w Web Audio) |
+| `attack` | 0,005 s | 0,001 s |
+| `release` | 0,15 s | 0,1 s |
+| korekta za węzłem | −5 dB | −1,7 dB |
+
+**Uwaga: `DynamicsCompressorNode` sam dodaje wzmocnienie wyrównawcze (makeup gain).** Algorytm ze specyfikacji
+Web Audio liczy, o ile krzywa ścisza sygnał o poziomie 0 dBFS, i podnosi wyjście o 0,6 tej wartości (w dB).
+Kompresor efektów ścisza 0 dBFS do ≈ −8,4 dB (−14 + 14/2,5), więc dodaje ≈ +5 dB; limiter ścisza 0 dBFS do −2,85 dB,
+więc dodaje ≈ +1,7 dB. Bez korekty kompresor **pogłaśniałby** ciche efekty o 5 dB. Dlatego za każdym węzłem stoi
+`GainNode` z korektą. Wartości weryfikujemy pomiarem w trybie `?audioDebug=1`: sinus 1 kHz o poziomie −30 dBFS
+(poniżej progu) musi wyjść z kompresora z korektą na tym samym poziomie ±0,5 dB. Jeśli przeglądarka liczy inaczej,
+korektę ustawiamy według pomiaru.
+
+**Ograniczenia, które znamy:** `DynamicsCompressorNode` nie jest limiterem typu brickwall z gwarancją szczytu
+prawdziwego (true peak) i wnosi kilka ms opóźnienia (tak samo dla wszystkich dźwięków, więc nie psuje synchronizacji).
+Dlatego głośność trzymamy przede wszystkim poziomami (§ 5.1) — limiter tylko łapie rzadkie nałożenia.
+
+### 5.5. Mono, stereo, panorama
+
+| Dźwięki | Panorama (`StereoPannerNode.pan`, −1 lewo … +1 prawo) |
+|---|---|
+| stopy bębnów S1 (3 bębny) | −0,3 / 0 / +0,3 |
+| stopy bębnów S2 (5 bębnów) | −0,4 / −0,2 / 0 / +0,2 / +0,4 |
+| stopy kolumn S3 (6 kolumn) | −0,5 / −0,3 / −0,1 / +0,1 / +0,3 / +0,5 |
+| `sfx_wild`, `sfx_scatter_*`, `sfx_s3_mnoznik` | według kolumny symbolu (jak stopy) |
+| `sfx_s3_pekniecie_*` | środek ciężkości klastra (kolumna średnia) |
+| monety (`sfx_moneta_*`) | losowo ±0,6 |
+| UI, wygrane, big win, muzyka | środek (stereo z pliku) |
+
+* **Na wąskim ekranie (telefon pionowo, szerokość < 600 px) wszystkie wartości panoramy × 0,5.** Głośniki telefonu
+  są blisko siebie albo jest tylko jeden — szeroka panorama nic nie daje, a na słuchawkach rozjeżdża się z obrazem,
+  który jest wąski.
+* **Pan law:** `StereoPannerNode` stosuje prawo stałej mocy, więc dźwięk przesuwany w bok nie zmienia głośności.
+* **Mono-kompatybilność plików stereo:** bez sztuczek fazowych (efekt Haasa > 15 ms, odwracanie fazy jednego kanału);
+  `sprawdz.py` wymaga korelacji L/P ≥ 0,3 i spadku głośności po zsumowaniu do mono ≤ 3 dB.
+* **Przełącznik „Mono” w ustawieniach** (dostępność: słuch jednym uchem, jedna słuchawka): węzeł mono z
+  `channelCount = 1` i `channelCountMode = 'explicit'` miesza sygnał do jednego kanału, a `destination` rozdziela go
+  na oba głośniki.
+
+### 5.6. Plan pasm (kto zajmuje jakie częstotliwości)
+
+| Pasmo | Kto | Zasada |
+|---|---|---|
+| 30–80 Hz (sub) | `sfx_uderzenie_basu`, uderzenia big win i free spins, `sfx_bicie_serca`, stopa muzyki | zawsze z warstwą harmonicznych 120–400 Hz (nasycenie), inaczej znika na telefonie |
+| 80–400 Hz | „tunk” stopów bębnów, bas muzyki, gong | bas muzyki ma „pompowanie” przy stopie, żeby nie zamulał |
+| 400 Hz – 2 kHz | ciało muzyki (pady, piano, ud), UI, chór | pady muzyki pod filtrem LP |
+| 2–5 kHz | **zarezerwowane dla informacji**: wygrane, scattery, WILD, `sfx_linia` | muzyka ma tu wycięcie −3 dB (§ 4.1) |
+| 5–12 kHz | iskry, monety, kryształ, szum „powietrza” | krótkie dźwięki, szybkie zaniki — długie wysokie tony męczą |
+
+### 5.7. Cele głośności i pomiar
+
+| Co | Cel | Jak mierzymy |
+|---|---|---|
+| plik efektu jednorazowego | szczyt ≤ −1,0 dBTP | `sprawdz.py` (nadpróbkowanie ×4) i `ffmpeg … ebur128=peak=true` |
+| pętla efektu | −18 LUFS ±0,5 | jw. |
+| utwór muzyczny | −14 LUFS ±0,5, szczyt ≤ −1,0 dBTP | jw. |
+| **sesja gry** (5 min typowego grania, ustawienia domyślne) | **−18 LUFS ±2** (zintegrowana), szczyt ≤ −1 dBTP | nagranie z trybu `?audioDebug=1` |
+| najgłośniejszy moment (ULTRA WIN) | ≤ −10 LUFS krótkoterminowo (okno 3 s) | jw. |
+| lobby (sama muzyka) | ≈ −22 LUFS | jw. |
+
+**Dlaczego −18 LUFS, a nie −14 jak w serwisach muzycznych:** gra działa obok innych kart i aplikacji; głośna
+strona, która „krzyczy” po kliknięciu, jest odbierana jako tania. −18 LUFS z dynamiką ±6 dB pozwala wygranym
+naprawdę „wybuchać” ponad tło. Gracz zawsze może pogłośnić suwakiem.
+
+**Tryb pomiarowy `?audioDebug=1`.** Silnik podpina pod master `MediaStreamAudioDestinationNode`, a `MediaRecorder`
+zapisuje strumień do pliku WebM (przycisk „Nagraj 5 min” w małym panelu debugowania). Plik mierzymy:
+
+```bash
+ffmpeg -hide_banner -i nagranie-sesji.webm -af ebur128=peak=true -f null - 2>&1 | tail -n 12
+```
+
+**Odsłuch kontrolny (przed każdym wydaniem):** głośnik telefonu (pionowo), głośniki laptopa, słuchawki douszne,
+słuchawki Bluetooth. Pytania: czy stop bębna jest słyszalny na telefonie? czy bas big win nie zniknął? czy po 10 min
+gry nic nie męczy? czy muzyka nie zagłusza wygranej?
+
+---
+
+## 6. Mapowanie zdarzeń E01–E73 na dźwięki
+
+Katalog zdarzeń pochodzi z briefu (§ 9) i jest wspólny dla [04-efekty-wizualne.md](04-efekty-wizualne.md) (obraz),
+tego dokumentu (dźwięk) i [06-interfejs-ux.md](06-interfejs-ux.md) (zachowanie UI). „Start” to moment względem
+początku zdarzenia; gdy podajemy `syncPoint`, dźwięk startuje wcześniej, tak by jego punkt synchronizacji trafił
+dokładnie w moment zdarzenia. Czasy animacji (lądowanie bębna, przekroczenie progu) bierzemy z osi czasu w 04 —
+tutaj podajemy tylko, **który dźwięk** i **względem czego**.
+
+### 6.1. Tabela zdarzeń
+
+| Zdarzenie | Dźwięki (ID) | Start | Szczegóły (warianty, muzyka, ducking) |
+|---|---|---|---|
+| **E01** `lobby_intro` | — (cisza) | — | dźwięk jest zablokowany do pierwszego gestu (§ 2.3); celowo nie gramy i nie pokazujemy komunikatu „włącz dźwięk” |
+| **E02** `lobby_idle` | `mus_lobby` (pętla) | po zalogowaniu / pierwszym geście | bez dodatkowych dźwięków tła — lobby słucha się najdłużej, więc jest najoszczędniejsze |
+| **E03** `kafel_hover` | `ui_hover` | 0 ms (wejście kursora) | tylko mysz (`pointerType === 'mouse'`), `cooldownMs` 60; filmik w kaflu jest wyciszony (`muted`); dotyk: bez dźwięku (to zwykle przewijanie) |
+| **E04** `login_open` | `ui_otworz` | 0 ms | najpierw `unlock()` w tym samym kliknięciu |
+| **E05** `login_blad` | `ui_blad` | 0 ms (pokazanie błędu) | + wibracja (§ 10) |
+| **E06** `login_sukces` | `sfx_logowanie`, `mus_lobby`, `sfx_saldo_puls` | 0 ms; 0 ms (wejście 1 200 ms); +300 ms (puls salda) | stan muzyki CISZA → LOBBY |
+| **E07** `bonus_powitalny` | `sfx_skrzynia_otwarcie`, `sfx_blysk`, `sfx_uderzenie_basu`, `sfx_monety_fontanna`, `sfx_moneta_1` … `sfx_moneta_5`, `sfx_licznik_tik`, `sfx_licznik_koniec` | oś czasu § 6.7 | ducking `bigwin` −6 dB na `mus_lobby` przez całą sekwencję |
+| **E08** `saldo_zmiana` | `sfx_saldo_puls` | początek pulsu salda | tylko wzrost salda poza liczeniem wygranej (bonus, ratunek, zaksięgowanie małej wygranej); spadek (zakład) — cisza, bo gra już `sfx_spin_start`; `cooldownMs` 150 |
+| **E09** `bankrut` | `sfx_bankrut` | 0 ms (pojawienie się `g_maskotka_bankrut`) | ducking `bankrut` −10 dB do odebrania bonusu lub zamknięcia panelu |
+| **E10** `bonus_ratunkowy` | jak E07 | jak E07 | ta sama oś czasu (wspólna funkcja `playReward` w `reward.js`) |
+| **E11** `ui_mikro` | `ui_hover`, `ui_klik`, `ui_przelacznik`, `ui_otworz`, `ui_zamknij` | 0 ms | hover tylko myszą; fokus klawiatury bez dźwięku (dźwięk przy każdym Tab męczy, a czytniki ekranu mają własne sygnały); przełącznik ±200 c |
+| **E12** `przejscie_do_gry` | `sfx_przejscie_whoosh` | 0 ms | muzyka: wyciszenie 300 ms (lobby → gra) lub 220 ms (gra → lobby), potem zmiana strony |
+| **E20** `gra_ladowanie` | — / `ui_klik` | — / kliknięcie „Graj” | w trakcie ładowania cisza; dekodujemy pakiet `gry-krytyczne` (§ 2.4) |
+| **E21** `gra_intro` | muzyka gry; S1: `sfx_s1_neon_bzyk`; S2: `sfx_s2_gong`; S3: `sfx_s3_opad` + `sfx_beben_stop_1` … `sfx_beben_stop_6` | muzyka 0 ms (S2: +300 ms); S1: w chwili zapalenia neonu logo; S2: gong 0 ms; S3: opad 0 ms, stopy kolumn według osi zrzutu planszy | stan CISZA → GRA |
+| **E22** `gra_idle` | — | — | po 60 s ducking `bezczynnosc` −3 dB; po 5 min muzyka wycisza się do zera (§ 2.8) |
+| **E23** `zaklad_zmiana` | `ui_zaklad_gora` / `ui_zaklad_dol` | 0 ms | `detune` +100 c × poziom zakładu; na granicy (przycisk wyłączony) brak dźwięku |
+| **E24** `spin_start` | `sfx_spin_start` | 0 ms — wciśnięcie, **przed** odpowiedzią serwera | natychmiastowa reakcja na dotyk; autoplay −6 dB; w darmowych spinach nie gramy (gracz nic nie wcisnął) |
+| **E25** `bebny_obrot` | S1: `sfx_beben_petla_s1`; S2: `sfx_beben_petla_s2`; S3: `sfx_s3_opad` | S1, S2: +40 ms, wejście 60 ms; S3: 0 ms | pętla gra do ostatniego stopu; głośność pętli maleje z każdym stopem (S1: 100 → 66 → 33%; S2: −20 punktów procentowych na bęben) |
+| **E26** `beben_stop` | `sfx_beben_stop_1` … `sfx_beben_stop_6` (numer = bęben / kolumna) | dokładnie w chwili lądowania bębna (planista, § 2.7) | panorama według pozycji (§ 5.5); po ostatnim stopie pętla gaśnie w 120 ms (turbo 60 ms); szybkie zatrzymanie: stopy co 40 ms, każdy −3 dB |
+| **E27** `antycypacja` | `sfx_antycypacja_narastanie`, `sfx_bicie_serca`, `mus_napiecie` | narastanie kończy się na stopie antycypowanego bębna (gdy antycypacja krótsza niż 1 200 ms — start od przesunięcia); serce i warstwa: 0 ms od początku antycypacji | stan GRA → NAPIECIE; każdy kolejny antycypowany bęben: nowe narastanie, serce ×1,08; S1 (2 WILD na linii) — 3. bęben; S2 (2 scattery) — kolejne bębny; S3 (3 scattery) — narastanie przed każdym opadem |
+| **E28** `wygrana_small` | `sfx_wygrana_small_1` … `sfx_wygrana_small_3`, `sfx_linia`, `sfx_licznik_tik`, `sfx_saldo_puls` | 0 ms (początek prezentacji); linie kolejno co 350 ms; tik, gdy liczenie trwa > 400 ms; puls przy zaksięgowaniu | ducking `wygrana` −3 dB; wygrana < 1× zakładu: dźwięk −6 dB, bez linii i bez tiku (§ 1.4) |
+| **E29** `wygrana_medium` | `sfx_wygrana_medium`, `sfx_linia`, `sfx_moneta_1` … `sfx_moneta_5`, `sfx_licznik_tik`, `sfx_licznik_koniec` | 0 ms; linie co 350 ms; 6 monet w 50–400 ms (razem z cząsteczkami); tik przez czas liczenia; koniec na kwocie końcowej | ducking `wygrana` −3 dB |
+| **E30** `wygrana_big` | `sfx_bigwin_wejscie`, `mus_bigwin`, `sfx_blysk`, `sfx_licznik_tik`, `sfx_monety_fontanna` | oś czasu § 6.5 | stan → BIG_WIN; ducking `bigwin` −6 dB |
+| **E31** `eskalacja_poziomu` | `sfx_poziom_w_gore` (MEGA 0 c, EPIC +200 c, ULTRA +400 c), `sfx_uderzenie_basu`, `sfx_blysk` | `sfx_poziom_w_gore` 250 ms **przed** przekroczeniem progu (jego uderzenie = zmiana banera); bas i błysk na uderzeniu | tik +0,15 prędkości na poziom; fontanna +2 dB na poziom |
+| **E32** `wygrana_koniec` | `sfx_licznik_koniec`; `sfx_bigwin_koniec` (tylko big i wyżej) | 0 ms (kwota końcowa albo pominięcie) | tik wyciszany 60 ms, fontanna 800 ms; przy pominięciu pozostałe efekty sekwencji gasną w 80 ms i gra ten sam koniec; stan → GRA / FS |
+| **E33** `wild_ladowanie` | `sfx_wild` | `syncPoint` 150 ms → start 150 ms przed lądowaniem | kilka WILD w jednym spinie: maks. 2 głosy, drugi +60 ms i +200 c |
+| **E34** `scatter_ladowanie` | `sfx_scatter_1` / `sfx_scatter_2` / `sfx_scatter_3` | `syncPoint` 80 ms → start 80 ms przed lądowaniem | numer = liczba scatterów do tej pory; 4. i kolejny: `sfx_scatter_3` z dodatkowym +100 c × (n − 3); panorama według bębna |
+| **E35** `free_spins_start` | `sfx_free_spins_start`, muzyka FS, S2: `sfx_s2_gong`, S3: `sfx_blysk` | oś czasu § 6.6 | stan → FS; banner `g_win_free_spins` na uderzeniu stingera |
+| **E36** `free_spins_spin` | `sfx_saldo_puls` (+400 c, −4 dB), dalej jak E25–E26 | 0 ms (zmiana licznika spinów) | bez `sfx_spin_start` |
+| **E37** `free_spins_podsumowanie` | `sfx_free_spins_koniec`, `sfx_licznik_tik`, `sfx_licznik_koniec`; przy sumie ≥ 15× — sekwencja big win (E30–E32) | 0 ms; liczenie od 600 ms | stan → PODSUMOWANIE → GRA (przenikanie 2 000 ms w takcie) |
+| **E38** `autoplay` | `ui_przelacznik` (wł. +200 c, wył. −200 c); zatrzymanie przez warunek: `ui_zamknij` | 0 ms | w autoplay `sfx_spin_start` −6 dB i wygrane small −3 dB (mniej męczące w długiej serii) |
+| **E39** `turbo` | `ui_przelacznik` (±200 c) | 0 ms | oś czasu dźwięków ×0,45 (§ 2.7) |
+| **E40** `blad_sieci` | `ui_blad`; pętla bębnów — „zjazd taśmy” | 0 ms | pętla: prędkość 1,0 → 0,5 w 300 ms (`setRate`) i wyciszenie 300 ms; ducking `okno` −6 dB do ponowienia |
+| **E50** `s1_neon_mnoznik` | `sfx_s1_neon_bzyk` | w chwili zapalenia neonu „×2” na linii | potem dźwięk progu wygranej |
+| **E51** `s1_neon_jackpot` | `sfx_s1_jackpot` → sekwencja big win | 0 ms; `mus_bigwin` i liczenie od +2 000 ms | `sfx_s1_jackpot` zastępuje `sfx_bigwin_wejscie`; ducking `stinger` do +2 000 ms |
+| **E60** `s2_wild_rozszerzenie` | `sfx_s2_wild_rozszerzenie`, `sfx_blysk` | `syncPoint` 600 ms = kolumna pełna; błysk w tej chwili | kilka bębnów: kolejne co 250 ms, maks. 2 naraz |
+| **E61** `s2_retrigger` | `sfx_s2_gong`, `sfx_scatter_3`, `sfx_poziom_w_gore` (+200 c) | 0 ms; 0 ms; +400 ms (napis „+10”) | ducking `stinger` −6 dB przez 1,5 s; +200 c daje akord kwintowy G (G+D), który należy do D hidżaz |
+| **E70** `s3_kaskada_pekniecie` | `sfx_s3_pekniecie_1` … `sfx_s3_pekniecie_4`, `sfx_linia` | pęknięcia 0 / 30 / 60 ms (maks. 3 głosy, warianty bez powtórzeń); linia 0 ms | panorama = środek klastra; linia +100 c × numer kaskady (maks. +700 c) — rosnąca „drabina” emocji |
+| **E71** `s3_kaskada_opad` | `sfx_s3_opad` | 0 ms (początek opadu) | przy antycypacji S3 przed opadem gra narastanie |
+| **E72** `s3_mnoznik_ladowanie` | `sfx_s3_mnoznik` (+ `sfx_blysk` dla ×50 i ×100) | chwila lądowania kuli | wysokość według wartości (§ 3.6) |
+| **E73** `s3_mnoznik_zbior` | `sfx_s3_mnoznik_zbior` | 0 ms (start lotu kul); `syncPoint` 900 ms = pomnożenie kwoty | potem dźwięk progu wygranej całej sekwencji |
+
+### 6.2. Oś czasu: spin S1 bez wygranej specjalnej
+
+| t (ms) | t turbo (ms) | Dźwięk | Uwagi |
+|---|---|---|---|
+| 0 | 0 | `sfx_spin_start` | E24, przed odpowiedzią serwera |
+| 40 | 18 | `sfx_beben_petla_s1` — start, wejście 60 ms | E25 |
+| 1 240 | 558 | `sfx_beben_stop_1` (pan −0,3); pętla → 66% | E26, brief: ostatni stop 1 600 ms, odstęp 180 ms |
+| 1 420 | 639 | `sfx_beben_stop_2` (pan 0); pętla → 33% | |
+| 1 600 | 720 | `sfx_beben_stop_3` (pan +0,3); pętla gaśnie w 120 ms (turbo 60 ms) | |
+| ok. 1 700 | ok. 765 | dźwięk progu wygranej (E28 / E29 / E30) | moment prezentacji według 04 |
+
+### 6.3. Oś czasu: spin S2 z antycypacją (scattery na bębnach 1 i 3, trzeci na bębnie 5)
+
+| t (ms) | Zdarzenie | Dźwięk |
+|---|---|---|
+| 0 | E24 | `sfx_spin_start` |
+| 40 | E25 | `sfx_beben_petla_s2` (wejście 60 ms) |
+| 1 320 | E34 (zapowiedź) | `sfx_scatter_1` — start 80 ms przed lądowaniem |
+| 1 400 | bęben 1 + scatter | `sfx_beben_stop_1` (pan −0,4); pętla 80% |
+| 1 600 | bęben 2 | `sfx_beben_stop_2` (pan −0,2); pętla 60% |
+| 1 720 | E34 | `sfx_scatter_2` |
+| 1 800 | bęben 3 + 2. scatter → E27 | `sfx_beben_stop_3` (pan 0); start `sfx_bicie_serca`, `mus_napiecie` (wejście 400 ms), filtr muzyki → 1 200 Hz; pętla 40% |
+| 2 000 | narastanie dla bębna 4 | `sfx_antycypacja_narastanie` (1 200 ms, do 3 200) |
+| 3 200 | bęben 4 bez scattera | `sfx_beben_stop_4` (pan +0,2); serce ×1,08 |
+| 3 400 | narastanie dla bębna 5 | `sfx_antycypacja_narastanie` (do 4 600) |
+| 4 520 | E34 | `sfx_scatter_3` |
+| 4 600 | bęben 5 + 3. scatter | `sfx_beben_stop_5` (pan +0,4); pętla gaśnie; serce i warstwa napięcia czekają na uderzenie stingera |
+| ok. 4 700 | E35 | `sfx_free_spins_start` → § 6.6 |
+
+Czasy bębnów 4 i 5 wynikają z briefu (§ 4): każdy kolejny bęben w antycypacji +1 200 ms (2 000 + 1 200 = 3 200;
+2 200 + 2 × 1 200 = 4 600). Narastanie ma dokładnie 1 200 ms, więc w S2 gra w całości.
+
+### 6.4. Oś czasu: spin S3 z dwiema kaskadami
+
+| t (ms, orientacyjnie) | Zdarzenie | Dźwięk |
+|---|---|---|
+| 0 | E24, E25 (zrzut planszy, 900 ms) | `sfx_spin_start`, `sfx_s3_opad` |
+| ok. 450–900 | E26 — kolumny lądują od lewej | `sfx_beben_stop_1` … `sfx_beben_stop_6` (pan −0,5 … +0,5) |
+| ok. 1 000 | E70 kaskada 1 | do 3 × `sfx_s3_pekniecie_*` (0 / 30 / 60 ms) + `sfx_linia` (0 c) |
+| ok. 1 500 | E71 | `sfx_s3_opad` |
+| ok. 2 100 | E70 kaskada 2 | pęknięcia + `sfx_linia` (+100 c) |
+| ok. 2 600 | E71 | `sfx_s3_opad` |
+| ok. 3 200 | wygrana całej sekwencji | E28 / E29 / E30 |
+
+Jedna kaskada trwa ~1 100 ms (brief § 4); dokładne chwile lądowania kolumn i pęknięć podaje oś czasu w 04.
+W free spins kule mnożników lądują razem z opadem (E72 — `sfx_s3_mnoznik`), a przed wygraną gra E73
+(`sfx_s3_mnoznik_zbior`, pomnożenie kwoty w 900 ms).
+
+**Dlaczego maks. 3 głosy pęknięć:** w klastrze pęka 5–15 symboli naraz. 15 jednoczesnych pęknięć to głośna
+„ściana” szumu, która zagłusza wszystko i zjada limit głosów. 3 warianty przesunięte o 30 ms brzmią jak bogate,
+wielowarstwowe pęknięcie, a ucho nie odróżni, czy pękło 6, czy 12 kryształów.
+
+### 6.5. Oś czasu: sekwencja big win z eskalacją (przykład: wygrana 72× → EPIC)
+
+`T_MEGA`, `T_EPIC`, `T_KONIEC` to chwile z krzywej liczenia w 04 (przekroczenie 30× i 60× zakładu, kwota końcowa).
+Krzywa jest deterministyczna, więc znamy je z wyprzedzeniem i możemy zaplanować dźwięk przed progiem.
+
+| t | Dźwięk i muzyka | Obraz (dla orientacji) |
+|---|---|---|
+| 0 | `sfx_bigwin_wejscie`; muzyka gry wyciszana 400 ms; ducking `bigwin` −6 dB | przyciemnienie, narastanie |
+| 300 ms | uderzenie stingera: start `mus_bigwin` (od `loopStart`), `sfx_blysk` | `g_win_big`, błysk |
+| 600 ms | start liczenia: `sfx_licznik_tik` (prędkość 1,0), `sfx_monety_fontanna` (−10 dB) | licznik, deszcz monet |
+| `T_MEGA` − 250 ms | `sfx_poziom_w_gore` (0 c) | |
+| `T_MEGA` | uderzenie: `sfx_uderzenie_basu`, `sfx_blysk`; tik ×1,15; fontanna +2 dB | `g_win_mega` |
+| `T_EPIC` − 250 ms | `sfx_poziom_w_gore` (+200 c) | |
+| `T_EPIC` | uderzenie: bas, błysk; tik ×1,30; fontanna +4 dB | `g_win_epic` |
+| `T_KONIEC` (E32) | tik gaśnie 60 ms; `sfx_licznik_koniec`, `sfx_bigwin_koniec`; fontanna gaśnie 800 ms; `mus_bigwin` wyciszana 600 ms od najbliższej miary | kwota końcowa |
+| `T_KONIEC` + 800 ms | utwór gry wraca od zapamiętanego taktu (wejście 1 200 ms); ducking zdjęty (800 ms) | powrót do automatu |
+
+Błyski (`sfx_blysk`) mają `cooldownMs` 333 — tak samo jak limit 3 błysków ekranu na sekundę.
+Przy `prefers-reduced-motion` błyski ekranu są wyłączone, ale dźwięk `sfx_blysk` zostaje (to nie ruch); gracz
+nadal słyszy eskalację.
+
+### 6.6. Oś czasu: free spins (S2)
+
+| t | Dźwięk i muzyka |
+|---|---|
+| 0 (E35) | `sfx_free_spins_start` z transpozycją +200 c (plik trwa 2 851 ms, uderzenie w 891 ms); muzyka gry i warstwa napięcia: wyciszanie 800 ms; ducking `stinger` |
+| 891 ms | uderzenie: start `mus_s2_fs` od `loopStart`, `sfx_s2_gong`; `mus_napiecie` i `sfx_bicie_serca` ucięte w 100 ms; banner `g_win_free_spins` |
+| każdy spin (E36) | `sfx_saldo_puls` (+400 c, −4 dB) przy zmianie licznika, potem pętla bębnów i stopy (bez `sfx_spin_start`) |
+| retrigger (E61) | `sfx_s2_gong` + `sfx_scatter_3`, po 400 ms `sfx_poziom_w_gore` (+200 c) |
+| E37 | `sfx_free_spins_koniec`; ducking `podsumowanie` −6 dB; liczenie od 600 ms (tik → koniec) albo big win |
+| zamknięcie panelu | przenikanie `mus_s2_fs` → `mus_s2` 2 000 ms od najbliższej kreski taktowej, w tej samej pozycji siatki |
+
+S3: uderzenie w 794 ms (transpozycja +400 c), zamiast gongu `sfx_blysk`; muzyka `mus_s3_fs`. S1 nie ma free spinów.
+
+### 6.7. Oś czasu: bonus powitalny E07 (zgodnie z `reward.js`)
+
+| t (od startu `playReward`) | Dźwięk | Stan w kodzie |
+|---|---|---|
+| 0 ms | `sfx_skrzynia_otwarcie`; `sfx_blysk` (volume 0,7 ≈ −3 dB); ducking `bigwin` na `mus_lobby` | jest (bez duckingu) |
+| 250–1 750 ms | `sfx_licznik_tik` (prędkość 1,0 → 1,3) pod liczeniem kwoty na środku ekranu | **dochodzi** |
+| 650 ms | `sfx_uderzenie_basu`; start pętli `sfx_monety_fontanna` (volume 0,8 ≈ −2 dB) | jest |
+| 650 ms + przyloty | `sfx_moneta_1` … `sfx_moneta_5` przy każdym przylocie monety do salda (36 monet, `maxVoices` 6) | jest (`playVariant`) |
+| koniec (`finish`) | fontanna gaśnie 250 ms | jest |
+| koniec + 320 ms | `sfx_licznik_koniec` (licznik salda doliczył) | jest |
+| koniec + 420 ms | zdjęcie duckingu (800 ms) | **dochodzi** |
+
+**Uwaga do kodu (`lobby.js`):** przy pierwszym logowaniu `sfx_logowanie` i `sfx_skrzynia_otwarcie` startują niemal
+równocześnie i motyw Cebuliona ginie pod skrzynią. Poprawka: dla nowego gracza wywołać `playReward` 450 ms po
+`sfx_logowanie` (motyw kończy się w 330 ms + wybrzmienie).
+
+---
+
+## 7. Formaty i eksport
+
+### 7.1. Formaty plików
+
+| Etap | Format | Parametry | Dlaczego |
+|---|---|---|---|
+| synteza (w pamięci) | NumPy `float64` | 48 000 Hz | pełna precyzja obliczeń, brak przesterowań w trakcie miksu warstw |
+| plik pośredni | WAV PCM 24 bit | 48 000 Hz, mono lub stereo, `target/audio/wav/<ID>.wav` | bezstratny, do odsłuchu i pomiarów; 24 bity = zapas dynamiki bez ditheringu |
+| aplikacja (1) | **Opus w WebM** — `<ID>.webm` | mono **64 kb/s**, stereo **96 kb/s**, VBR | najmniejsze pliki przy bardzo dobrej jakości; Opus pracuje wewnętrznie wyłącznie przy 48 kHz — stąd 48 kHz w całym pipeline (bez przepróbkowania) |
+| aplikacja (2) | **AAC-LC w MP4** — `<ID>.m4a` | mono **96 kb/s**, stereo **128 kb/s** | zapas dla przeglądarek bez Opus w WebM (Safari / iOS w części wersji) |
+
+**Wybór formatu w przeglądarce** (jest w v1): `canPlayType('audio/webm; codecs="opus"')` zwraca `"probably"`,
+`"maybe"` albo `""`. Niepusty wynik → `.webm`, w przeciwnym razie `.m4a`. Uzupełnienie w wersji docelowej: jeśli
+`decodeAudioData` odrzuci plik `.webm` (obsługa w `<audio>` i w Web Audio bywa różna), silnik jeden raz ponawia
+z `.m4a` i zapamiętuje wybór do końca wizyty.
+
+**Dlaczego WebM, a nie OGG:** kontrakt [09](09-kontrakt-api-i-assetow.md#3-assety-w-aplikacji) ustala pola `webm` i
+`m4a`, a obsługa Opus w Safari zmieniała się między wersjami (różne kontenery). Nie zgadujemy po nazwie
+przeglądarki — pytamy `canPlayType`, a AAC jest zawsze w zapasie. **Dlaczego nie MP3:** gorsza jakość przy tej samej
+wielkości i doklejana przez koder cisza na początku i końcu (opóźnienie kodera), która psuje bezszwowe pętle.
+
+### 7.2. Nazwy plików i ścieżki
+
+Zgodnie z kontraktem 09 pliki leżą **płasko** w jednym katalogu, nazwa = ID:
+
+```text
+src/main/resources/static/assets/audio/          ← WYŁĄCZNIE wynik tools/audio/buduj.py (09 § 4)
+├── manifest.json
+├── ui_hover.webm         ui_hover.m4a
+├── ui_klik.webm          ui_klik.m4a
+├── …
+├── sfx_beben_stop_1.webm sfx_beben_stop_1.m4a
+├── …
+├── sfx_s3_mnoznik_zbior.webm  sfx_s3_mnoznik_zbior.m4a
+├── mus_lobby.webm        mus_lobby.m4a
+├── …
+└── mus_napiecie.webm     mus_napiecie.m4a       (razem 67 ID × 2 formaty = 134 pliki + manifest)
+```
+
+* Nazwy: małe litery ASCII, cyfry i `_`, dokładnie jak ID w briefie (§ 10). Bez polskich znaków i spacji.
+* Nikt nie edytuje plików w `assets/audio/` ręcznie — każda zmiana to zmiana przepisu (albo pliku w
+  `audio/zrodla/`) i ponowne uruchomienie skryptu.
+* **Odświeżanie pamięci podręcznej:** silnik dokleja do adresu pliku `?v=<version>` z manifestu. Nowa wersja
+  dźwięków = nowy `version` = przeglądarka pobiera pliki na nowo, mimo że nazwy się nie zmieniły.
+
+### 7.3. Bezszwowe pętle
+
+**Problem.** Kodery Opus i AAC dodają na początku pliku próbki „rozbiegowe” (Opus: 312 próbek = 6,5 ms; AAC: zwykle
+1 024–2 112 próbek), a dekoder powinien je odciąć na podstawie metadanych. Nie każda przeglądarka robi to w
+`decodeAudioData` identycznie. Jeśli zapętlimy cały zdekodowany bufor, na szwie może powstać trzask albo przerwa
+kilkudziesięciu ms.
+
+**Rozwiązanie w trzech krokach:**
+
+1. **Sygnał dokładnie okresowy.** Pętlę o długości L renderujemy razem z ogonem (pogłos, wybrzmienia), a ogon
+   wychodzący poza L dodajemy na początek („zawijanie”). Ziarna dźwięków (monety w fontannie, krople w `mus_s3`)
+   wystające poza koniec też zawijamy. Wynik jest okresowy z okresem L co do próbki.
+2. **Zakładki z obu stron.** Przed pętlą doklejamy końcówkę pętli, a za nią jej początek: 0,1 s dla pętli efektów,
+   0,25 s dla muzyki.
+
+   ```text
+   | zakładka A |=============== pętla (L) ===============| zakładka B |
+   0         loopStart                                 loopEnd     koniec pliku
+     (= ostatnie 0,25 s pętli)                         (= pierwsze 0,25 s pętli)
+   ```
+
+3. **Pętla w Web Audio przez `loopStart` / `loopEnd`** (pola manifestu): `source.loop = true`,
+   `source.loopStart`, `source.loopEnd`, start `source.start(when, loopStart)`.
+
+**Dlaczego to działa nawet przy niedokładnym dekoderze:** jeśli dekoder zostawi albo utnie kilka ms rozbiegu,
+cały plik przesunie się o ε. Ponieważ sygnał wokół obu punktów pętli jest okresowy (dzięki zakładkom), pętla
+przesunięta o ε (|ε| < długość zakładki) nadal łączy się bez szwu. `loopStart` / `loopEnd` są w sekundach, więc
+działają także, gdy kontekst pracuje z częstotliwością 44,1 kHz i przeglądarka przepróbkowała bufor.
+
+| Pętle efektów | L | Zakładki | `loopStart` / `loopEnd` (s) |
+|---|---|---|---|
+| `sfx_monety_fontanna` | 2,000 s | 0,1 s | 0,1 / 2,1 |
+| `sfx_licznik_tik` | 0,500 s | 0,1 s | 0,1 / 0,6 |
+| `sfx_beben_petla_s1` | 1,000 s | 0,1 s | 0,1 / 1,1 |
+| `sfx_beben_petla_s2` | 1,200 s | 0,1 s | 0,1 / 1,3 |
+| `sfx_bicie_serca` | 0,800 s | 0,1 s | 0,1 / 0,9 |
+
+Pętle muzyczne: tabela w § 4.2. Wszystkie modulacje w pętlach (tremolo, PWM, falowanie „taśmy”) mają całkowitą
+liczbę cykli na długość pętli — inaczej szew byłby słyszalny jako skok fazy modulacji.
+
+### 7.4. Normalizacja i mastering w pipeline
+
+| Krok | Jednorazowe efekty | Pętle efektów | Muzyka |
+|---|---|---|---|
+| 1. usunięcie składowej stałej | filtr HP 20 Hz | jw. | HP 30 Hz |
+| 2. wejście / wyjście | wejście 2 ms, wyjście 5 ms (brak trzasków) | brak (pętla) | brak (pętla) |
+| 3. korekcja | — | — | szczytowy −3 dB przy 3 kHz (Q 1) |
+| 4. normalizacja | szczyt prawdziwy **−1 dBTP** (nadpróbkowanie ×4) | **−18 LUFS** | **−14 LUFS** |
+| 5. ograniczenie szczytów | — | miękki limiter do −1 dBTP | miękki limiter do −1 dBTP |
+| 6. zapis | WAV 24 bit | jw. + zakładki | jw. + zakładki |
+
+**Dlaczego efekty jednorazowe normalizujemy szczytem, a nie LUFS:** pomiar głośności zintegrowanej (EBU R128)
+wymaga bloków 400 ms i bramkowania — dla dźwięku 280 ms `ffmpeg` zwraca wręcz `-inf` (sprawdzone). Krótki dźwięk
+i tak „waży” tyle, ile jego szczyt, a względny poziom ustala `gainDb`.
+
+Pomiar LUFS i szczytu wykonuje `ffmpeg` (filtr `loudnorm` w trybie pomiaru), a wzmocnienie stosujemy liniowo w NumPy —
+**nie** używamy dynamicznej normalizacji `loudnorm`, bo spłaszczyłaby dynamikę.
+
+```bash
+# pomiar (wynik JSON na końcu stderr: input_i = LUFS, input_tp = szczyt prawdziwy)
+ffmpeg -hide_banner -nostats -i target/audio/wav/mus_s2.wav \
+       -af loudnorm=I=-14:TP=-1:LRA=11:print_format=json -f null -
+
+# Opus w WebM (mono 64k / stereo 96k)
+ffmpeg -y -hide_banner -i target/audio/wav/sfx_wild.wav \
+       -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio \
+       -map_metadata -1 -fflags +bitexact -flags:a +bitexact \
+       src/main/resources/static/assets/audio/sfx_wild.webm
+
+# AAC w M4A (mono 96k / stereo 128k)
+ffmpeg -y -hide_banner -i target/audio/wav/sfx_wild.wav \
+       -c:a aac -b:a 96k -movflags +faststart \
+       -map_metadata -1 -fflags +bitexact -flags:a +bitexact \
+       src/main/resources/static/assets/audio/sfx_wild.m4a
+```
+
+Flagi `-map_metadata -1 -fflags +bitexact -flags:a +bitexact` usuwają z plików metadane i numer wersji kodera:
+ten sam WAV daje te same bajty (sprawdzone na ffmpeg 6.1 — dwa przebiegi, identyczne sumy MD5), więc `git diff`
+pokazuje tylko dźwięki, które naprawdę się zmieniły.
+
+### 7.5. `manifest.json`
+
+Pola wymagane przez kontrakt 09: `webm`, `m4a`, `loop`, `duration`, `bus`. Pozostałe są rozszerzeniem z tego
+dokumentu — silnik v1 je ignoruje, wersja docelowa używa ich z wartościami domyślnymi, gdy brak.
+
+```json
+{
+  "version": "2026-10-11T12:00:00Z",
+  "sounds": {
+    "sfx_beben_stop_3": {
+      "webm": "sfx_beben_stop_3.webm", "m4a": "sfx_beben_stop_3.m4a",
+      "loop": false, "duration": 0.28, "bus": "sfx", "channels": 1,
+      "gainDb": -7, "priority": 4, "group": "beben_stop", "maxVoices": 3,
+      "pitchCents": 5, "gainJitterDb": 1, "keyTrack": true, "pack": "gry-krytyczne"
+    },
+    "sfx_bigwin_wejscie": {
+      "webm": "sfx_bigwin_wejscie.webm", "m4a": "sfx_bigwin_wejscie.m4a",
+      "loop": false, "duration": 2.4, "bus": "sfx", "channels": 2,
+      "gainDb": -3, "priority": 5, "syncPoint": 0.3, "pack": "gry-dalsze"
+    },
+    "mus_s2": {
+      "webm": "mus_s2.webm", "m4a": "mus_s2.m4a",
+      "loop": true, "duration": 38.9, "bus": "music", "channels": 2,
+      "loopStart": 0.25, "loopEnd": 38.65, "bpm": 100, "beatsPerBar": 4,
+      "gainDb": 0, "pack": "s2"
+    }
+  }
+}
+```
+
+| Pole | Typ | Domyślnie | Znaczenie |
+|---|---|---|---|
+| `webm`, `m4a` | ścieżka względna wobec `assets/audio/` | — | pliki (09) |
+| `loop` | bool | `false` | pętla (09) |
+| `duration` | s | — | długość całego pliku z zakładkami (09) |
+| `bus` | `ui` / `sfx` / `music` | `sfx` | szyna (09) |
+| `channels` | 1 / 2 | 1 | informacyjnie (budżet pamięci) |
+| `gainDb` | dB | 0 | poziom względem szyny (§ 3, § 5.1) |
+| `priority` | 1–5 | 3 | priorytet głosu (§ 2.5) |
+| `group` | tekst | ID | wspólny limit `maxVoices` dla wariantów |
+| `maxVoices`, `cooldownMs` | liczba | 4, 0 | limity na dźwięk (§ 2.5) |
+| `pitchCents`, `gainJitterDb` | liczba | 0, 0 | zakres losowych mikro-zmian ± (§ 2.6) |
+| `keyTrack` | bool | `false` | transpozycja do tonacji gry (§ 2.6) |
+| `syncPoint` | s | 0 | punkt synchronizacji w pliku (§ 2.6, § 2.7) |
+| `loopStart`, `loopEnd` | s | 0, `duration` | punkty pętli (§ 7.3) |
+| `bpm`, `beatsPerBar` | liczba | — | tylko muzyka, do kwantyzacji (§ 4.6) |
+| `pack` | tekst | `gry-dalsze` | pakiet ładowania (§ 2.4) |
+| `source` | `synteza` / `zrodla` | `synteza` | skąd plik (jak w manifeście obrazów) |
+
+### 7.6. Budżet wagi
+
+Szacunek z czasów w § 3 i § 4 (Opus: 8 KB/s mono, 12 KB/s stereo; AAC: 12 / 16 KB/s; + ok. 2% narzutu kontenera):
+
+| Strona | Muzyka | Efekty | **Opus razem** | AAC razem | Pamięć po dekodowaniu (48 kHz) |
+|---|---|---|---|---|---|
+| lobby | `mus_lobby` 40,5 s | ui + globalne ≈ 11,5 s | **≈ 0,62 MB** | ≈ 0,84 MB | ≈ 19 MB |
+| S1 | `mus_s1`, `mus_bigwin`, `mus_napiecie` — 56,5 s | ≈ 35 s (bez free spinów i stopów 4–6) | **≈ 1,0 MB** | ≈ 1,4 MB | ≈ 31 MB |
+| S2 | `mus_s2`, `mus_s2_fs`, `mus_bigwin`, `mus_napiecie` — 101,8 s | ≈ 42 s | **≈ 1,64 MB** | ≈ 2,2 MB | ≈ 51 MB |
+| S3 | `mus_s3`, `mus_s3_fs`, `mus_bigwin`, `mus_napiecie` — 89 s | ≈ 42 s | **≈ 1,47 MB** | ≈ 2,0 MB | ≈ 46 MB |
+
+| Budżet | Wartość | Kontrola |
+|---|---|---|
+| lobby, sieć | ≤ 0,8 MB (Opus), ≤ 1,1 MB (AAC) | `sprawdz.py` (A10) |
+| jedna gra, sieć | ≤ 1,8 MB (Opus), ≤ 2,4 MB (AAC) | A10 |
+| pamięć po dekodowaniu | ≤ 24 MB lobby, ≤ 56 MB gra | A11 (z długości i liczby kanałów) |
+| pojedynczy efekt | ≤ 40 KB (Opus); stingery stereo ≤ 60 KB | A12 |
+| pojedynczy utwór | ≤ 600 KB (Opus) | A12 |
+| całe audio w repozytorium (oba formaty) | ≈ 8 MB | informacyjnie |
+| próg ostrzeżenia | 85% każdego budżetu | A13 |
+
+Audio ma **osobny** budżet od obrazów (brief § 5: ≤ 6 MB obrazów WebP na grę) — razem jedna gra to ≤ ~8 MB
+przy pierwszej wizycie, a przy kolejnych wszystko jest w pamięci podręcznej przeglądarki.
+
+---
+
+## 8. Pipeline syntezy
+
+### 8.1. Przegląd
+
+```mermaid
+flowchart LR
+  P["tools/audio/dzwieki.py<br/>59 przepisów efektów"] --> R["render NumPy<br/>float64, 48 kHz"]
+  M["tools/audio/muzyka.py<br/>8 utworów"] --> R
+  I["tools/audio/instrumenty.py<br/>+ dsp.py"] -.-> P
+  I -.-> M
+  Z["audio/zrodla/ID.wav / .mp3<br/>(Suno, CC0 — mają pierwszeństwo)"] --> D["dekodowanie ffmpeg<br/>→ 48 kHz float"]
+  D --> L
+  R --> L["petle.py<br/>zawijanie, zakładki"]
+  L --> N["mastering<br/>normalizacja, limiter"]
+  N --> W["target/audio/wav/ID.wav<br/>24 bit"]
+  W --> E["eksport.py: ffmpeg<br/>Opus/WebM + AAC/M4A"]
+  E --> A["static/assets/audio/<br/>ID.webm, ID.m4a"]
+  E --> J["manifest.json"]
+  A --> S["sprawdz.py<br/>kontrole A01–A14, raport"]
+  J --> S
+```
+
+### 8.2. Pliki i katalogi
+
+```text
+tools/audio/
+├── buduj.py          punkt wejścia: synteza → pętle → mastering → WAV → kodowanie → manifest → raport
+├── dsp.py            prymitywy: czas, obwiednie, oscylatory, dzwon FM, Karplus–Strong, filtr SVF, szumy,
+│                     pogłos (splot FFT), nasycenie, redukcja bitów, panorama, zapis WAV 24 bit
+├── instrumenty.py    instrumenty muzyczne z prymitywów: piano FM, pad, bas, arpeggiator, perkusja, gong, chór
+├── dzwieki.py        59 przepisów efektów — jedna funkcja na ID, metadane w dekoratorze @dzwiek
+├── muzyka.py         8 utworów: sekwencer (takty, akordy, rytmy, melodie) i render pętli
+├── petle.py          zawijanie ogona, zakładki, punkty pętli, dopasowanie pętli w plikach z audio/zrodla/
+├── eksport.py        ffmpeg (Opus, AAC), budowa manifest.json
+├── sprawdz.py        kontrole jakości i budżetów (§ 8.6)
+├── wymagania.txt     numpy>=2.0
+└── testy/            pytest: determinizm, pętle, długości, normalizacja
+audio/
+└── zrodla/           pliki od właściciela (Suno) i z bibliotek CC0; nazwa = ID; mają pierwszeństwo nad syntezą
+    └── LICENCJE.md   źródło, autor, licencja i data sprawdzenia każdego pliku (§ 12)
+target/audio/wav/     pliki pośrednie (katalog target/ jest w .gitignore; odtwarzalne skryptem)
+```
+
+Wymagania: Python ≥ 3.11, NumPy ≥ 2.0 (bez SciPy — wszystkie filtry i splot są w `dsp.py`), ffmpeg ≥ 6 z `libopus`
+(sprawdzone: ffmpeg 6.1.1 ma `libopus`, `aac`, `loudnorm`, `ebur128`). Moduł `wave` z biblioteki standardowej zapisuje
+WAV. `art/` i `audio/` leżą poza `src/main/resources`, więc nie trafiają do pliku JAR — do aplikacji trafiają tylko
+pliki z `assets/audio/`.
+
+### 8.3. `dsp.py` — prymitywy (wybrane)
+
+```python
+import numpy as np
+
+SR = 48_000
+
+def czas(sekundy: float) -> np.ndarray:
+    """Oś czasu w sekundach: 0, 1/SR, 2/SR, …"""
+    return np.arange(int(round(sekundy * SR))) / SR
+
+def zanik(t: np.ndarray, tau: float) -> np.ndarray:
+    """Obwiednia wykładnicza: po tau głośność spada do 37%."""
+    return np.exp(-t / tau)
+
+def dzwon_fm(f, dlugosc, r=2.0, i0=2.5, i1=0.0, tau=0.6, tau_i=None):
+    """Dzwon FM: nośna f, modulator f*r; indeks modulacji maleje od i0 do i1 (jasny atak, łagodne wybrzmienie)."""
+    t = czas(dlugosc)
+    tau_i = tau_i or tau / 2
+    indeks = i1 + (i0 - i1) * np.exp(-t / tau_i)
+    return np.exp(-t / tau) * np.sin(2 * np.pi * f * t + indeks * np.sin(2 * np.pi * f * r * t))
+
+def glissando(f0, f1, dlugosc, t_zmiany=None):
+    """Sinus z wykładniczym glissandem f0 → f1 w czasie t_zmiany; faza = całka częstotliwości (bez trzasków)."""
+    t = czas(dlugosc)
+    t_zmiany = t_zmiany or dlugosc
+    f = f0 * (f1 / f0) ** np.minimum(t / t_zmiany, 1.0)
+    return np.sin(2 * np.pi * np.cumsum(f) / SR)
+
+def karplus_strong(f, dlugosc, jasnosc=0.5, wybrzmienie=0.996, rng=None):
+    """Szarpana struna: każdy okres to uśredniony poprzedni okres (filtr dolnoprzepustowy w pętli opóźnienia)."""
+    n = max(2, int(round(SR / f + 0.5)))          # +0,5: uśrednianie skraca okres o pół próbki
+    okresy = int(np.ceil(dlugosc * SR / n))
+    rng = rng or np.random.default_rng(0)
+    y = np.empty((okresy, n))
+    y[0] = rng.uniform(-1, 1, n)                  # pobudzenie: jeden okres szumu
+    for k in range(1, okresy):                    # pętla po okresach (wektorowo w okresie) — szybka
+        p = y[k - 1]
+        y[k] = wybrzmienie * (jasnosc * p + (1 - jasnosc) * np.roll(p, -1))
+    return y.ravel()[: int(dlugosc * SR)]
+
+def svf(x, fc, q=0.707, tryb="bp"):
+    """Filtr zmiennych stanu (topologia TPT); fc może być tablicą — przestrajanie w czasie (świsty, narastania)."""
+    fc = np.broadcast_to(np.asarray(fc, dtype=float), x.shape)
+    g = np.tan(np.pi * np.clip(fc, 10, 0.45 * SR) / SR)
+    k = 1 / q
+    ic1 = ic2 = 0.0
+    y = np.empty_like(x)
+    for n in range(len(x)):
+        gn = g[n]
+        a1 = 1 / (1 + gn * (gn + k)); a2 = gn * a1; a3 = gn * a2
+        v3 = x[n] - ic2
+        v1 = a1 * ic1 + a2 * v3
+        v2 = ic2 + a2 * ic1 + a3 * v3
+        ic1, ic2 = 2 * v1 - ic1, 2 * v2 - ic2
+        y[n] = k * v1 if tryb == "bp" else (v2 if tryb == "lp" else x[n] - k * v1 - v2)
+    return y
+
+def splot(a, b):
+    """Splot przez FFT (zamiast scipy.signal.fftconvolve)."""
+    n = len(a) + len(b) - 1
+    m = 1 << (n - 1).bit_length()
+    return np.fft.irfft(np.fft.rfft(a, m) * np.fft.rfft(b, m), m)[:n]
+
+def poglos_ir(rt60, rng, stereo=True):
+    """Syntetyczna odpowiedź impulsowa: szum z zanikiem do -60 dB po rt60, niezależny w L i P (szerokość)."""
+    t = czas(rt60)
+    ir = rng.standard_normal((2 if stereo else 1, len(t))) * 10 ** (-3 * t / rt60)
+    return ir / np.sqrt(np.sum(ir ** 2, axis=1, keepdims=True))
+
+def szczyt_prawdziwy(x, nadprobkowanie=4):
+    """Szczyt po interpolacji ×4 (true peak) — łapie przestery między próbkami."""
+    n = x.shape[-1]
+    return np.max(np.abs(np.fft.irfft(np.fft.rfft(x, axis=-1), n * nadprobkowanie, axis=-1) * nadprobkowanie))
+```
+
+Wszystkie powyższe funkcje zostały uruchomione na próbę (NumPy 2.5): filtr SVF ma wzmocnienie 1,0 w częstotliwości
+środkowej, przetwarza 1 s dźwięku w ~0,05 s, a przepis `sfx_beben_stop_3` po normalizacji daje szczyt −1,0 dBTP.
+Jeśli pełna synteza okaże się za wolna (pętle w Pythonie w `svf`), plan B: przetwarzanie blokami po 64 próbki ze
+stałą `fc` w bloku albo filtry o stałej częstotliwości w dziedzinie FFT.
+
+### 8.4. Przepisy i sekwencer
+
+**Rejestr przepisów** — każdy ID to jedna funkcja; metadane trafiają prosto do manifestu:
+
+```python
+PRZEPISY: dict[str, dict] = {}
+
+def dzwiek(id, *, bus="sfx", gain_db=0.0, priority=3, loop=False, stereo=False, **meta):
+    """Dekorator: rejestruje przepis efektu pod danym ID z metadanymi manifestu."""
+    def rejestruj(funkcja):
+        PRZEPISY[id] = dict(funkcja=funkcja, bus=bus, gainDb=gain_db, priority=priority,
+                            loop=loop, stereo=stereo, **meta)
+        return funkcja
+    return rejestruj
+
+NUTY_STOPOW = {1: "C5", 2: "D5", 3: "E5", 4: "G5", 5: "A5", 6: "C6"}
+
+for numer, nuta in NUTY_STOPOW.items():
+    @dzwiek(f"sfx_beben_stop_{numer}", gain_db=-7, priority=4, keyTrack=True, pitchCents=5,
+            group="beben_stop", maxVoices=3, pack="gry-krytyczne")
+    def stop_bebna(rng, nuta=nuta):                      # nuta=nuta: wartość z bieżącego obrotu pętli
+        t = czas(0.28)
+        tunk = np.tanh(2 * glissando(110, 55, 0.28, t_zmiany=0.06) * zanik(t, 0.070)) / np.tanh(2)
+        klak = svf(rng.standard_normal(len(t)) * (t < 0.012), 1800, q=2, tryb="bp")
+        ping = 10 ** (-10 / 20) * dzwon_fm(hz(nuta), 0.28, r=2, i0=1.5, i1=0, tau=0.12, tau_i=0.08)
+        return miks(tunk, 0.5 * klak, ping)
+```
+
+* `rng = np.random.default_rng(zlib.crc32(id.encode()))` — każdy przepis dostaje generator z ziarnem z ID, więc
+  render jest **deterministyczny**: ten sam kod → te same próbki → te same bajty plików.
+* `hz("E5")` zamienia nazwę nuty na Hz (A4 = 440), `miks(...)` sumuje warstwy różnej długości.
+
+**Sekwencer muzyki** (`muzyka.py`) opisuje utwór danymi, a nie kodem nuta po nucie:
+
+```python
+MUS_S2 = Utwor(
+    id="mus_s2", bpm=100, metrum=4, takty=16,
+    akordy="D D Eb D Gm Cm Eb D | Gm Gm D D Eb Cm Eb D",
+    sciezki=[
+        Sciezka("bordun", instrument=bordun_smyczki, nuty="D2 A2 D3 A3", dlugosc="caly", poziom_db=-12),
+        Sciezka("darbuka", instrument=darbuka, rytm="D T . T D . T .", krok="1/8", poziom_db=-3),
+        Sciezka("taiko", instrument=taiko, rytm="X", gdzie="takty 1 5 9 13, miara 1", poziom_db=-2),
+        Sciezka("ud", instrument=ud, melodia=MELODIA_UD_S2, poziom_db=-6),
+        Sciezka("ney", instrument=ney, melodia=MELODIA_NEY_S2, takty="9-16", poziom_db=-8),
+    ],
+    poglos=dict(rt60=2.8, mix=0.22, odbicia_ms=(25, 41, 67)),
+)
+```
+
+Render: każda nuta → funkcja instrumentu → wstawienie w próbce `round(miara × 60 / bpm × SR)`; dwa przebiegi pętli
++ ogon → zawinięcie do okresu L (§ 7.3) → korekcja i normalizacja (§ 7.4). Zapis „danymi” ma też wartość na obronie:
+akordy i rytmy z § 4.3 widać w kodzie jeden do jednego.
+
+**Ton Sheparda bez szwu** (`mus_napiecie`, narastania): sinus i ma częstotliwość f_i(t) = f_b · 2^(i + t/T).
+Po czasie T jego faza wynosi φ_i(0) + 2π · f_b · 2^i · T / ln 2. Ustawiamy fazy początkowe rekurencyjnie:
+φ_0(0) = 0, φ_(i+1)(0) = φ_i(T) mod 2π — wtedy sinus i na końcu pętli przechodzi w sinus i+1 na jej początku
+z ciągłą fazą. Sprawdzone numerycznie: różnica wartości na szwie ~0,0002 (niesłyszalna).
+
+### 8.5. Uruchamianie
+
+```bash
+python3 -m pip install -r tools/audio/wymagania.txt          # numpy>=2.0
+python3 tools/audio/buduj.py                                 # wszystko: 67 ID → WAV → Opus + AAC → manifest → raport
+python3 tools/audio/buduj.py --tylko sfx_wild sfx_scatter_3   # wybrane ID
+python3 tools/audio/buduj.py --tylko mus_s2 --bez-kodowania   # tylko WAV do odsłuchu (target/audio/wav/)
+python3 tools/audio/buduj.py --odsluch                       # target/audio/odsluch.html: odtwarzacz każdego ID + metadane
+python3 tools/audio/sprawdz.py                               # same kontrole i raport budżetów
+```
+
+* **Przyrostowo:** skrypt liczy skrót (hash) z kodu przepisu (`inspect.getsource`), metadanych i pliku źródłowego;
+  niezmienione ID są pomijane. Pełny przebieg (szacunek): efekty ~1 min, muzyka kilka minut.
+* **Strona odsłuchu** (`--odsluch`) to statyczny HTML w `target/` (poza aplikacją): lista ID z przyciskiem odtwarzania,
+  długością, `gainDb`, LUFS i szczytem — do wspólnego strojenia poziomów w zespole.
+
+### 8.6. `sprawdz.py` — kontrole jakości
+
+| Kod | Kontrola | Próg |
+|---|---|---|
+| A01 | komplet: w manifeście są **wszystkie 67 ID z briefu § 10** i żadne inne | błąd |
+| A02 | oba pliki (`.webm`, `.m4a`) istnieją; nazwy = ID | błąd |
+| A03 | długość pliku zgodna z przepisem ±5 ms (pętle: z zakładkami) | błąd |
+| A04 | szczyt prawdziwy ≤ −1,0 dBTP (WAV i po dekodowaniu WebM) | błąd |
+| A05 | LUFS: pętle efektów −18 ±0,5, muzyka −14 ±0,5 | błąd |
+| A06 | składowa stała < −60 dBFS | ostrzeżenie |
+| A07 | jednorazowe: cisza na początku ≤ 5 ms (poza zamierzonym narastaniem przed `syncPoint`) | ostrzeżenie |
+| A08 | szew pętli: skok próbki na `loopEnd` → `loopStart` ≤ −40 dB względem RMS, brak skoku widma (różnica widm 20 ms przed i po szwie) | błąd |
+| A09 | stereo: korelacja L/P ≥ 0,3, spadek po sumie do mono ≤ 3 dB | ostrzeżenie |
+| A10 | budżety sieci (§ 7.6) | błąd |
+| A11 | budżety pamięci po dekodowaniu | błąd |
+| A12 | limity pojedynczych plików | ostrzeżenie |
+| A13 | 85% budżetu | ostrzeżenie |
+| A14 | każdy plik z `audio/zrodla/` ma wpis w `LICENCJE.md` | błąd |
+
+Raport (`target/audio/raport.md`) zawiera tabelę wszystkich ID z LUFS, szczytem, długością, wagą obu formatów i
+wynikami kontroli. **Na obronie:** „skąd wiecie, że pętle są bezszwowe?” → pokazujemy A08 i raport.
+
+### 8.7. Jak dodać nowy dźwięk (lista kroków)
+
+1. **Uzgodnij ID.** ID dźwięków są wiążące (brief § 10). Nowy ID wymaga dopisania w briefie i w tym dokumencie
+   (§ 3 i § 6) — inaczej A01 zgłosi „ID spoza listy”.
+2. **Napisz przepis** w `tools/audio/dzwieki.py`: funkcja z dekoratorem `@dzwiek("nowe_id", ...)` zwracająca
+   tablicę NumPy (mono: 1 wymiar, stereo: `(2, n)`).
+3. **Ustaw metadane:** `bus`, `gain_db`, `priority`, ewentualnie `loop`, `keyTrack`, `syncPoint`, `group`,
+   `maxVoices`, `pack`.
+4. **Wyrenderuj i posłuchaj:** `python3 tools/audio/buduj.py --tylko nowe_id --odsluch`.
+5. **Dostrój poziom** (`gain_db`) na tle muzyki gry — w grze, nie w izolacji.
+6. **Wepnij w kod gry** przez ID (`audio.play('nowe_id')`) w miejscu zdarzenia z § 6; nigdy przez ścieżkę pliku.
+7. **Uruchom kontrole:** `python3 tools/audio/sprawdz.py` — wszystkie błędy muszą zniknąć.
+8. **Zatwierdź** zmiany w `tools/audio/`, `assets/audio/` (oba pliki + `manifest.json`) i w dokumentacji.
+
+### 8.8. Pliki zewnętrzne (Suno, biblioteki CC0)
+
+* Plik kładziemy jako `audio/zrodla/<ID>.<rozszerzenie>` (WAV, FLAC, MP3, M4A). **Ma pierwszeństwo** nad przepisem
+  o tym samym ID (tak jak `art/zrodla/` nad grafiką zastępczą w pipeline obrazów).
+* Pipeline: dekodowanie ffmpeg do 48 kHz float → przycięcie → dla muzyki: znalezienie pętli (§ 11.3) → mastering
+  (§ 7.4) → ten sam eksport i te same kontrole.
+* Wpis w `audio/zrodla/LICENCJE.md` jest obowiązkowy (A14) — bez niego plik nie przejdzie kontroli.
+* Usunięcie pliku z `audio/zrodla/` = powrót do wersji syntezowanej przy następnym przebiegu.
+
+### 8.9. Testy pipeline'u (`pytest`, `tools/audio/testy/`)
+
+| Test | Wejście | Oczekiwany wynik |
+|---|---|---|
+| determinizm | dwa rendery tego samego ID | identyczne próbki i identyczne bajty `.webm` / `.m4a` |
+| strój | `sfx_beben_stop_1` … `_6` | wysokość składowej tonalnej = nuta z § 3.3 ±5 c (analiza widma) |
+| pętla | sygnał okresowy z ogonem pogłosu | po zawinięciu: skok na szwie ≤ −60 dB |
+| zakładki | pętla przesunięta o ±10 ms | nadal bez szwu (A08) |
+| normalizacja | szum o znanym poziomie | szczyt −1,0 dBTP ±0,1; LUFS ±0,3 |
+| SVF | sinus w częstotliwości środkowej | wzmocnienie 1,0 ±0,01 (pasmowoprzepustowy) |
+| manifest | lista ID z briefu | 67 wpisów, wszystkie pola wymagane |
+
+---
+
+## 9. Ustawienia gracza
+
+### 9.1. Kontrolki
+
+Szybkie wyciszenie jest w dwóch miejscach (już w kodzie v1): przełącznik „Dźwięk” w menu lobby i ikona dźwięku w
+panelu gry (`dzwiek_wl` / `dzwiek_wyl` z arkusza `g_ui_ikony`). Pełne ustawienia są w oknie „Ustawienia” (ikona
+`ustawienia`), dostępnym z lobby i z gry:
+
+| Kontrolka | Typ | Zakres | Domyślnie | Działanie |
+|---|---|---|---|---|
+| Dźwięk | przełącznik (`role="switch"`) | wł. / wył. | wł. | `setMuted()` — master do 0 w 120 ms, muzyka zatrzymana; stan maszyny muzyki zapamiętany |
+| Głośność główna | suwak `<input type="range">` | 0–100%, krok 5% | 90% | szyna master |
+| Muzyka | suwak | 0–100% | 45% | szyna `music` |
+| Efekty | suwak | 0–100% | 85% | szyna `sfx`; szyna `ui` = 0,7 × `sfx` (UI zawsze trochę ciszej niż efekty gry) |
+| Mono | przełącznik | wł. / wył. | wył. | `setMono()` (§ 5.5) |
+| Wibracje | przełącznik — widoczny tylko, gdy przeglądarka ma `navigator.vibrate` | wł. / wył. | wł. | § 10 |
+| (podpowiedź) | tekst | — | — | „Na iPhonie dźwięk wyłącza też przełącznik wyciszenia z boku telefonu.” |
+
+**Zachowanie:**
+
+* Zmiana suwaka działa od razu (zdarzenie `input`, rampa 120 ms — bez trzasków „zipper noise”).
+* Po puszczeniu suwaka (zdarzenie `change`) gra próbka: „Efekty” → `sfx_moneta_3`, „Główna” → `ui_klik`;
+  „Muzyka” — słychać od razu utwór w tle. Próbki nie częściej niż co 150 ms.
+* Przesunięcie suwaka przy włączonym wyciszeniu **wyłącza wyciszenie** — gracz, który rusza suwakiem, chce coś słyszeć.
+* Ikona w panelu gry, przełącznik w menu lobby i przełącznik w oknie ustawień są zawsze zgodne (`audio.onChange`,
+  jest w v1). Zmiana w drugiej karcie przeglądarki dociera przez zdarzenie `storage` i jest stosowana od razu.
+* Dostępność: każdy suwak ma etykietę (`<label>`) i `aria-valuetext` („45%”), strzałki zmieniają o 5%.
+* Skrót klawiszowy „M” (wyciszenie) — propozycja; ostateczną listę skrótów ustala
+  [06-interfejs-ux.md](06-interfejs-ux.md).
+
+### 9.2. Zapis ustawień
+
+Ustawienia dźwięku są zapisywane w `localStorage` pod kluczem **`cebulion.audio`** (jest w v1) jako JSON:
+
+```json
+{ "muted": false, "master": 0.9, "ui": 0.6, "sfx": 0.85, "music": 0.45, "mono": false }
+```
+
+* Pole `mono` dochodzi w wersji docelowej; brak pola = wartość domyślna (v1 już łączy zapis z `DEFAULTS`).
+* Odczyt i zapis w `try/catch` (jest w v1): w trybie prywatnym lub przy zablokowanych danych witryny ustawienia
+  działają do końca wizyty, bez błędów.
+* Wartości są przycinane do 0–1 (`clamp01`, jest w v1) — ręcznie zepsuty wpis nie zepsuje gry.
+* Wibracje: osobny klucz **`cebulion.haptyka`** (`"1"` / `"0"`), w konwencji kluczy `cebulion.turbo` i
+  `cebulion.zaklad.<kod>` już używanych w `gra.js`.
+
+**Dlaczego `localStorage`, a nie konto na serwerze:** to preferencja urządzenia (na telefonie w autobusie gracz chce
+ciszej niż na laptopie z głośnikami), nie wymaga backendu i nie jest daną osobową.
+
+### 9.3. Krzywa suwaka (propozycja)
+
+Ucho odbiera głośność logarytmicznie, więc suwak liniowy (v1: wzmocnienie = pozycja) większość zmian „robi” w dolnej
+ćwiartce zakresu. Propozycja: wzmocnienie = pozycja² (przybliżenie krzywej logarytmicznej). Przy wdrożeniu domyślne
+pozycje zmieniamy na pierwiastki obecnych wzmocnień (master 95%, muzyka 67%, efekty 92%), żeby domyślna głośność się
+nie zmieniła, a w zapisie dodajemy `"v": 2` i przeliczamy stare ustawienia raz przy odczycie.
+
+---
+
+## 10. Haptyka (wibracje)
+
+### 10.1. Zasady
+
+* **API:** `navigator.vibrate(wzorzec)` (Vibration API), wzorzec = tablica `[wibracja, przerwa, wibracja, …]` w ms.
+* **Gdzie działa:** przeglądarki na Androidzie (Chrome, Firefox, Edge). **Safari na iPhonie nie obsługuje** tego
+  API (`navigator.vibrate` nie istnieje) — wtedy nic nie robimy i nie stosujemy obejść. Na komputerach zwykle nie ma
+  silnika wibracji — wywołanie nie ma efektu.
+* **Wykrycie:** `'vibrate' in navigator && matchMedia('(pointer: coarse)').matches` (ekran dotykowy).
+* **Gest:** Chrome ignoruje `vibrate()` przed pierwszym gestem na stronie (zwraca `false`) — tak jak z dźwiękiem;
+  po kliknięciu „Graj” / „Zaloguj” wibracje działają.
+* **Wyłączalne:** przełącznik „Wibracje” w ustawieniach (§ 9.1), domyślnie włączone tam, gdzie są obsługiwane.
+  Wibracje są niezależne od wyciszenia dźwięku (część graczy gra bez dźwięku, ale z wibracjami).
+* **Umiar:** maks. jeden wzorzec na 100 ms (nowy wzorzec przerywa poprzedni — tak działa API), łączny czas wibracji
+  w jednej sekwencji big win ≤ 1,2 s; w turbo i autoplay tylko zdarzenia od E30 wzwyż; `navigator.vibrate(0)` przy
+  pominięciu sekwencji, ukryciu karty i wyjściu ze strony.
+
+### 10.2. Wzorce
+
+| Zdarzenie | Wzorzec (ms) | Moment | Odczucie |
+|---|---|---|---|
+| E05 `login_blad` | `[30, 40, 30]` | z `ui_blad` | podwójne „nie” |
+| E07 / E10 bonus | `[20, 40, 20, 40, 80]` | 650 ms (uderzenie basu) | radosne trzepnięcie |
+| E09 `bankrut` | `[80, 60, 120]` | z `sfx_bankrut` | ciężkie, „puste kieszenie” |
+| E24 `spin_start` | `[12]` | wciśnięcie | klik fizycznego przycisku |
+| E26 `beben_stop` (S1, S2) | `[8]` | każdy stop | delikatne stuknięcie |
+| E26 `beben_stop` (S3, zrzut) | `[8, 82, 8, 82, 8, 82, 8, 82, 8, 82, 8]` | pierwsza kolumna | 6 stuknięć co 90 ms jednym wzorcem (osobne wywołania przerywałyby się) |
+| E27 `antycypacja` | `[25, 155, 18]` co 800 ms | razem z `sfx_bicie_serca` (szybciej ×1,08 z każdym bębnem) | bicie serca w dłoni |
+| E28 `wygrana_small` | — | — | celowo bez — za częste |
+| E29 `wygrana_medium` | `[20, 40, 30]` | z dźwiękiem wygranej | |
+| E30 `wygrana_big` | `[40, 60, 40, 60, 120]` | uderzenie stingera (300 ms) | |
+| E31 `eskalacja_poziomu` | `[60, 40, 90]` | uderzenie | |
+| E33 `wild_ladowanie` | `[15, 30, 25]` | lądowanie | |
+| E34 `scatter_ladowanie` | 1.: `[20]`; 2.: `[20, 40, 20]`; 3.+: `[20, 40, 20, 40, 60]` | lądowanie | rośnie z liczbą scatterów |
+| E35 `free_spins_start` | `[50, 50, 50, 50, 200]` | uderzenie stingera | |
+| E40 `blad_sieci` | `[100]` | z `ui_blad` | |
+| E51 `s1_neon_jackpot` | `[60, 40, 60, 40, 60, 40, 200]` | 0 ms | |
+| E60 `s2_wild_rozszerzenie` | `[20, 20, 30, 20, 60]` | ostatni impuls na `syncPoint` (600 ms) | |
+| E61 `s2_retrigger` | `[40, 60, 80]` | 0 ms | |
+| E70 `s3_kaskada_pekniecie` | `[10]` | raz na kaskadę | |
+| E73 `s3_mnoznik_zbior` | `[30, 50, 120]` | uderzenie (900 ms) | |
+
+### 10.3. Kod
+
+```js
+// ui/haptyka.js — wibracje (tylko Android); wszystkie wywołania przez tę funkcję
+const obslugiwana = 'vibrate' in navigator && matchMedia('(pointer: coarse)').matches;
+let wlaczona = (() => { try { return localStorage.getItem('cebulion.haptyka') !== '0'; } catch { return true; } })();
+let ostatnia = 0;
+
+export function wibruj(wzorzec) {
+  if (!obslugiwana || !wlaczona || document.hidden) return;
+  const teraz = performance.now();
+  if (teraz - ostatnia < 100) return;   // maks. 1 wzorzec na 100 ms
+  ostatnia = teraz;
+  navigator.vibrate(wzorzec);           // false = przeglądarka odmówiła (np. brak gestu) — ignorujemy
+}
+
+export function ustawHaptyke(wl) {
+  wlaczona = Boolean(wl);
+  try { localStorage.setItem('cebulion.haptyka', wlaczona ? '1' : '0'); } catch { /* tryb prywatny */ }
+  if (!wlaczona && obslugiwana) navigator.vibrate(0);
+}
+
+document.addEventListener('visibilitychange', () => { if (document.hidden && obslugiwana) navigator.vibrate(0); });
+```
+
+---
+
+## 11. Opcjonalnie: prompty do Suno / Udio
+
+### 11.1. Kiedy i jak
+
+Domyślnie **cała muzyka jest syntezowana** naszym kodem (§ 4, § 8) — to działa zawsze i nie wymaga niczyjej zgody.
+Synteza dobrze oddaje synthwave (S1) i elektronikę (lobby, big win), ale „orkiestrowe” brzmienia S2 i S3 będą
+skromniejsze niż w komercyjnych slotach. Jeśli właściciel chce bogatszej muzyki, może ją wygenerować w Suno (albo
+Udio) według promptów poniżej i przekazać pliki **tak samo jak obrazy z ChatGPT**.
+
+Procedura dla właściciela:
+
+1. Sprawdź aktualny regulamin serwisu (§ 11.4) i zapisz datę oraz plan konta.
+2. Włącz tryb **Instrumental** (bez wokalu).
+3. Wklej pole **Style** (krótki opis, poniżej) — a jeśli serwis ma jedno pole opisu (tryb prosty, Udio), wklej
+   **opis pełny**.
+4. Wygeneruj 2–4 wersje, wybierz tę, w której tempo jest stałe przez cały utwór, nie ma wyciszenia na końcu ani
+   wokalnych „aaah” w roli melodii (chór w S2 FS i S3 FS jest dozwolony).
+5. Pobierz plik w najlepszej dostępnej jakości (WAV, jeśli jest; w przeciwnym razie MP3).
+6. Nazwij plik **dokładnie jak ID**, np. `mus_s2.wav`, `mus_bigwin.mp3`.
+7. Przekaż: commit do `audio/zrodla/` (sposób A) albo załącznik w czacie (sposób B) — dokładnie jak obrazy
+   ([02-lista-obrazow.md § 4](02-lista-obrazow.md#4-jak-dostarczyć-obrazy)). Dopisz w wiadomości: serwis, plan
+   konta, datę wygenerowania.
+8. My wycinamy pętlę, normalizujemy i eksportujemy (§ 11.3) — w aplikacji nic więcej nie trzeba zmieniać.
+
+**Czego nie wpisujemy do promptów:** nazw artystów, zespołów i tytułów utworów (ryzyko naśladowania cudzej
+twórczości; serwisy i tak to blokują). Opisujemy gatunek, instrumenty, tempo, tonację i nastrój.
+
+`mus_napiecie` **nie generujemy** w Suno: warstwa musi być bez tempa i tonacji (§ 4.3.8), a generatory muzyki zawsze
+tworzą utwór z rytmem i harmonią. Zostaje synteza.
+
+### 11.2. Prompty
+
+#### `mus_lobby`
+
+```text
+STYLE:
+instrumental lounge, soft deep house, luxury casino lobby at night, 96 BPM, A minor, Rhodes electric piano,
+velvet pads, round sub bass, brushed hi-hats, small golden bell motif, elegant, calm, seamless loop
+
+FULL DESCRIPTION:
+Instrumental only, no vocals. Elegant late-night lounge / soft deep house for the lobby of a luxury casino.
+Tempo exactly 96 BPM, 4/4, key of A minor, chord feel Am9 - Fmaj7 - Cmaj7 - G6. Warm Rhodes-style electric piano
+playing syncopated chords, velvet analog pads, round sub bass, soft kick on beats 1 and 3, brushed hi-hats with
+light swing, a quiet rimshot, and a small golden bell playing a short rising four-note motif (G-C-E-G).
+Mood: sophisticated, nocturnal, expensive, relaxed but not sleepy. Constant energy from start to end: no intro,
+no build-ups, no drops, no breaks, no tempo changes, no fade-out. Leave space in the upper mids for sound effects.
+Designed to be cut into a seamless 16-bar loop. At least 90 seconds long.
+```
+
+#### `mus_s1`
+
+```text
+STYLE:
+instrumental synthwave, retrowave, 1980s Las Vegas neon at night, 120 BPM, A minor, pulsing saw bass,
+arpeggiated square synth with dotted-eighth delay, gated reverb snare, four-on-the-floor kick, wide pads, seamless loop
+
+FULL DESCRIPTION:
+Instrumental only, no vocals. Retro synthwave for a neon slot machine game, 1980s Las Vegas strip at night, chrome
+and hot pink neon. Tempo exactly 120 BPM, 4/4, key of A minor, chord progression Am - F - C - G, later F - G - Em - Am.
+Pulsing eighth-note saw bass, sixteenth-note square-wave arpeggiator with dotted-eighth echo, wide detuned supersaw
+pads, a simple lead melody in the second half, four-on-the-floor kick, big 80s gated-reverb snare on 2 and 4,
+crisp hi-hats, a light tape-wobble vintage feel. Mood: night drive, energetic but not tiring, confident, glossy.
+Steady energy, no breakdown, no tempo changes, no fade-out. Designed to be cut into a seamless 16-bar loop.
+At least 90 seconds long.
+```
+
+#### `mus_s2`
+
+```text
+STYLE:
+instrumental cinematic Middle Eastern, ancient Egyptian tomb treasury, 100 BPM, D Phrygian dominant (Hijaz),
+frame drum and darbuka maqsum rhythm, deep taiko hits, oud, ney flute, string drone, finger cymbals, mysterious, seamless loop
+
+FULL DESCRIPTION:
+Instrumental only, no vocals. Mysterious cinematic music for a slot game set in the golden treasury of an ancient
+Egyptian tomb, lit by warm torches. Tempo exactly 100 BPM, 4/4, key D Phrygian dominant (Hijaz scale:
+D Eb F# G A Bb C), constant drone on D and A. Frame drum and darbuka playing a steady maqsum groove, deep
+taiko-style hits at the start of each 4-bar phrase, oud plucking short melodic phrases, breathy ney flute with
+long notes in the second half, low string drone, soft finger cymbals, light sand shaker. Mood: mysterious, warm,
+ancient, adventurous, steady and hypnotic. Same energy throughout, no big climax, no tempo changes, no fade-out.
+Designed to be cut into a seamless 16-bar loop. At least 90 seconds long.
+```
+
+#### `mus_s2_fs`
+
+```text
+STYLE:
+instrumental epic cinematic Middle Eastern, night over the pyramids, 100 BPM, D Phrygian dominant (Hijaz),
+taiko ensemble, darbuka, sixteenth-note string ostinato, wordless choir, brass swells, bell arpeggios, triumphant, seamless loop
+
+FULL DESCRIPTION:
+Instrumental, no lyrics (wordless choir "aah" allowed). Epic, triumphant music for the free spins bonus of an
+Egyptian slot game: starry night over the pyramids, a beam of light rising from the top of the pyramid.
+Tempo exactly 100 BPM, 4/4, key D Phrygian dominant (Hijaz), same harmonic world as a mysterious tomb theme:
+D - D - Eb - D - Gm - Cm - Eb - D. Driving taiko ensemble in eighth notes, darbuka fills, fast sixteenth-note
+string ostinato, wordless choir sustaining chords, brass swells every four bars, sparkling high bell arpeggios like
+stars, a deep gong at the start of each 8-bar section. Mood: majestic, victorious, exciting, magical night.
+High constant energy, no breakdown, no tempo changes, no fade-out. Designed to be cut into a seamless 16-bar loop.
+At least 90 seconds long.
+```
+
+#### `mus_s3`
+
+```text
+STYLE:
+instrumental magical ambient, glowing crystal cave, 90 BPM, E Lydian, crystal bells, celesta, kalimba,
+warm evolving pads, soft sub bass, gentle heartbeat kick, water drops, long cave reverb, wonder, seamless loop
+
+FULL DESCRIPTION:
+Instrumental only, no vocals. Magical, sparkling music for a slot game set in a glowing crystal cave full of
+bioluminescent gems: amethyst, sapphire, emerald. Tempo exactly 90 BPM, 4/4, key E Lydian (bright, dreamy,
+with the raised fourth A#), chords Emaj9 - F#/E - G#m7 - C#m9 - B. Crystal glass bells playing gentle eighth-note
+arpeggios, celesta melody, kalimba ostinato, warm slowly evolving pads, soft sub bass, a very soft kick on beat 1
+like a heartbeat of the cave, tiny glassy ticks instead of hi-hats, occasional water drops, long spacious cave
+reverb. Mood: wonder, calm, magical, shimmering, not sleepy. Constant energy, no drops, no tempo changes,
+no fade-out. Designed to be cut into a seamless 12-bar loop. At least 90 seconds long.
+```
+
+#### `mus_s3_fs`
+
+```text
+STYLE:
+instrumental euphoric magical electronica, aurora chamber in a crystal cave, 90 BPM, E Lydian, pulsing synth bass,
+fast crystal bell arpeggios, ethereal wordless choir, soft four-on-the-floor kick, shimmering risers, uplifting, seamless loop
+
+FULL DESCRIPTION:
+Instrumental, no lyrics (wordless ethereal choir allowed). Euphoric, floating music for the free spins bonus of
+a crystal cave slot game: a deeper chamber lit by an aurora, levitating crystals. Tempo exactly 90 BPM, 4/4,
+key E Lydian, same chords as a calm crystal cave theme: Emaj9 - F#/E - G#m7 - C#m9 - B. Pulsing eighth-note synth
+bass, fast sixteenth-note crystal bell arpeggios over two octaves, ethereal choir pads slowly morphing vowels,
+soft four-on-the-floor kick, gentle shimmering risers every four bars, sparkles. Mood: euphoric, uplifting,
+weightless, magical. High steady energy, no breakdown, no tempo changes, no fade-out. Designed to be cut into
+a seamless 12-bar loop. At least 90 seconds long.
+```
+
+#### `mus_bigwin`
+
+```text
+STYLE:
+instrumental celebratory electronic orchestral fanfare, casino big win, 128 BPM, C major, punchy synth brass stabs,
+four-on-the-floor kick, claps, bright supersaw chords, glockenspiel melody, timpani rolls, euphoric, seamless loop
+
+FULL DESCRIPTION:
+Instrumental only, no vocals. Short, euphoric celebration loop for a "BIG WIN" moment in a casino slot game,
+golden coins raining down. Tempo exactly 128 BPM, 4/4, key of C major, progression C - G/B - Am - F - C/G - F -
+Dm7 - G7. Punchy synth-brass chord stabs with syncopation, four-on-the-floor kick, claps on 2 and 4, open hi-hats
+on the offbeats, bright supersaw chords, a glockenspiel playing a short rising motif (G-C-E-G), timpani and tom
+rolls leading back to the start every four bars. Mood: triumphant, joyful, sparkling, rich. Keep the mix tight and
+bright in the mids (it will play under loud sound effects). Constant high energy, no intro, no breakdown, no tempo
+changes, no fade-out. Designed to be cut into a seamless 8-bar loop. At least 60 seconds long.
+```
+
+### 11.3. Jak robimy pętlę z pliku od generatora
+
+Generatory nie gwarantują ani dokładnego tempa, ani tonacji, ani pętli — dlatego pętlę wycinamy sami
+(`tools/audio/petle.py --z-pliku audio/zrodla/mus_s2.wav --bpm 100 --takty 16`):
+
+1. **Tempo:** sprawdzamy rzeczywiste tempo (autokorelacja obwiedni uderzeń). Jeśli różni się od zamówionego, do
+   manifestu trafia tempo zmierzone. Jeśli tempo „pływa” (utwór bez stałego pulsu) — plik odrzucamy i prosimy
+   o nową wersję.
+2. **Fragment:** wybieramy N taktów (16 / 12 / 8 jak w § 4.2) od kreski taktowej po wstępie, w części o stałej
+   energii (pomiar głośności krótkoterminowej).
+3. **Szew:** w okolicy końca (±20 ms) szukamy miejsca najbardziej podobnego do początku (korelacja okien 100 ms),
+   a szew łagodzimy przenikaniem o stałej mocy 50 ms „wypalonym” w pliku.
+4. **Zakładki i normalizacja** jak przy syntezie (§ 7.3, § 7.4); kontrole A01–A14.
+
+Jeśli pary S2 / S2 FS albo S3 / S3 FS wyjdą w różnym tempie, przejście 11 z § 4.5 staje się zwykłym przenikaniem
+2 000 ms bez dopasowania siatki — nadal poprawne, tylko mniej „filmowe”.
+
+### 11.4. Licencja i prawa — przeczytaj przed generowaniem
+
+* **Stan znany nam w 2025 r.:** w darmowym planie Suno prawa do wygenerowanych utworów zostają przy Suno, a
+  użytkownik może ich używać wyłącznie **niekomercyjnie**; prawa do użytku komercyjnego daje plan płatny.
+  W drugiej połowie 2025 r. Suno i Udio zawarły ugody z dużymi wytwórniami płytowymi i zapowiedziały zmiany zasad,
+  m.in. ograniczenia w pobieraniu plików (Udio czasowo wyłączyło pobieranie; Suno zapowiedziało pobieranie tylko dla
+  kont płatnych). **Regulaminy zmieniają się szybko — nie zakładamy, że powyższe jest nadal aktualne.**
+* Nasz projekt jest niekomercyjny (zajęcia na uczelni), ale **repozytorium jest publiczne** i pliki trafiają do niego.
+  Przed generowaniem właściciel sprawdza aktualny regulamin i zapisuje w `audio/zrodla/LICENCJE.md`: serwis, plan
+  konta, datę, link do regulaminu i ID plików.
+* Jeśli regulamin nie pozwala pobrać plików albo opublikować ich w publicznym repozytorium — **zostajemy przy muzyce
+  syntezowanej**. Aplikacja działa identycznie, różni się tylko brzmienie.
+
+---
+
+## 12. Źródła alternatywne
+
+Gdy jakiś efekt syntezowany nie brzmi dobrze (najczęściej: realistyczne materiały — drewno skrzyni, kamień), można
+użyć gotowego nagrania. **Zasada: tylko CC0 (domena publiczna) bez dalszej dyskusji; każda inna licencja wymaga
+przeczytania jej treści i decyzji zespołu.** Nazwy paczek i licencje sprawdzamy na stronie w dniu pobrania — poniższa
+lista to punkt startowy, nie gwarancja.
+
+| Źródło | Licencja | Uwagi |
+|---|---|---|
+| Kenney (kenney.nl) — paczki audio, np. interfejs, uderzenia, kasyno | CC0 (sprawdzić plik licencji w paczce) | dobra jakość, styl dość ogólny — dobre na UI i materiały; i tak przepuszczamy przez nasz mastering |
+| Freesound (freesound.org) | każdy plik osobno: CC0, CC BY, CC BY-NC | filtr wyszukiwania „Creative Commons 0”; CC BY możliwe, ale wymaga podania autora (wpis w `LICENCJE.md` i w informacjach o grze); CC BY-NC odrzucamy dla prostoty |
+| OpenGameArt.org | każdy plik osobno: CC0, CC BY, CC BY-SA, GPL | tylko CC0; BY-SA i GPL narzucają licencję na całość |
+| Sonniss „GameAudioGDC” | własna licencja bez opłat (nie CC0) | zwykle pozwala używać w projektach, ale nie redystrybuować surowych plików — w publicznym repozytorium to problem; tylko po przeczytaniu licencji |
+| Pixabay (dźwięki, muzyka) | Pixabay Content License (nie CC0) | ograniczenia dotyczące rozpowszechniania samych plików — publiczne repozytorium może być sporne; unikać |
+| BBC Sound Effects (RemArc) | licencja niekomercyjna z ograniczeniami | unikać |
+
+**Lista kontrolna przed dodaniem pliku:**
+
+1. Licencja odczytana **na stronie pliku** (nie z opisu w wyszukiwarce) i zrzut ekranu / zapis w `LICENCJE.md`.
+2. Plik nie zawiera rozpoznawalnego głosu, melodii ani znaku towarowego (np. dżingla znanego kasyna).
+3. Nazwa pliku = ID z briefu, plik w `audio/zrodla/`.
+4. Wpis w `audio/zrodla/LICENCJE.md`:
+
+```markdown
+| ID | Plik źródłowy | Autor | Źródło (URL) | Licencja | Sprawdzono | Zmiany |
+|---|---|---|---|---|---|---|
+| sfx_skrzynia_otwarcie | wooden_chest_open_02.wav | (autor) | (adres strony pliku) | CC0 1.0 | 2026-10-11, KP | przycięcie, normalizacja, pogłos z pipeline'u |
+```
+
+---
+
+## Załącznik A: pytania na obronę
+
+| Pytanie | Odpowiedź w skrócie | Gdzie pokazać |
+|---|---|---|
+| Dlaczego Web Audio, a nie zwykłe `<audio>`? | planowanie startu co do próbki, wiele głosów naraz, zmiana wysokości, szyny i filtry, bezszwowe pętle; `<audio>` ma opóźnienia i problemy na iOS | § 2.2, `audio-engine.js` |
+| Skąd gra wie, kiedy zagrać stop bębna? | serwer zwraca cały wynik; z niego liczymy oś czasu, a planista co 25 ms planuje dźwięki z oknem 120 ms na zegarze `AudioContext` | § 2.7 |
+| Dlaczego nic nie gra przed kliknięciem? | polityka autoplay przeglądarek; `AudioContext` tworzymy i wznawiamy w obsłudze gestu („Zaloguj”, „Graj”) | § 2.3 |
+| Co się dzieje, gdy naraz gra za dużo dźwięków? | limit 24 głosów (Low: 16) i kradzież według priorytetów — najpierw ozdobne, nigdy krytyczne | § 2.5 |
+| Co to ducking? | automatyczne ściszanie muzyki pod ważnymi efektami (−3 dB wygrane, −6 dB big win); programowo, bo znamy zdarzenia z góry, a Web Audio nie ma kompresora z kluczowaniem | § 5.3 |
+| Po co dwa formaty plików? | Opus (WebM) jest mniejszy, ale nie każda przeglądarka go odtworzy; AAC (M4A) to zapas dla Safari; wybór przez `canPlayType` | § 7.1 |
+| Jak zrobiliście bezszwowe pętle? | sygnał okresowy (zawinięty ogon) + zakładki z obu stron + `loopStart` / `loopEnd`; odporne na rozbieg kodera | § 7.3, kontrola A08 |
+| Skąd macie dźwięki? Prawa autorskie? | wszystko syntezowane naszym kodem w Pythonie; zewnętrzne pliki tylko CC0 lub po sprawdzeniu licencji, z wpisem w `LICENCJE.md` | § 8, § 11.4, § 12 |
+| Dlaczego efekty są w pentatonice C? | dowolne nakładanie się dźwięków brzmi czysto; transpozycja do tonacji gry (S2 +200, S3 +400 centów) | § 1.2, § 2.6 |
+| Dlaczego mała wygrana poniżej zakładu brzmi cicho? | to w praktyce strata — nie udajemy sukcesu (świadoma decyzja przeciw „loss disguised as win”) | § 1.4 |
+| Jak mierzycie głośność? | pliki: `ffmpeg` (EBU R128, szczyt prawdziwy) w pipeline; sesja: nagranie z trybu `?audioDebug=1`, cel −18 LUFS ±2 | § 5.7 |
+| Co, jeśli przeglądarka nie ma Web Audio albo pliku brak? | silnik działa jako „pusty” — gra działa bez dźwięku, bez błędów | § 2.4 |
+| Czy dźwięk spowalnia grę? | dekodowanie poza wątkiem głównym i nie w trakcie spinu, pogłos „wypalony” w plikach, limit głosów — wątek audio ma zapas | § 2.4, § 2.5 |
+
+
+## Załącznik B: indeks ID dźwięków
+
+Wszystkie 67 ID z briefu (§ 10) w kolejności briefu: gdzie jest przepis i w których zdarzeniach dźwięk gra
+(z tabeli § 6.1). Kontrola A01 w `sprawdz.py` porównuje manifest z tą listą.
+
+| ID | Przepis | Zdarzenia |
+|---|---|---|
+| `ui_hover` | § 3.1 | E03, E11 |
+| `ui_klik` | § 3.1 | E11, E20 |
+| `ui_otworz` | § 3.1 | E04, E11 |
+| `ui_zamknij` | § 3.1 | E11, E38 |
+| `ui_blad` | § 3.1 | E05, E40 |
+| `ui_przelacznik` | § 3.1 | E11, E38, E39 |
+| `ui_zaklad_gora` | § 3.1 | E23 |
+| `ui_zaklad_dol` | § 3.1 | E23 |
+| `sfx_logowanie` | § 3.2 | E06 |
+| `sfx_skrzynia_otwarcie` | § 3.2 | E07, E10 |
+| `sfx_monety_fontanna` | § 3.2 | E07, E10, E30 |
+| `sfx_moneta_1` | § 3.2 | E07, E10, E29 |
+| `sfx_moneta_2` | § 3.2 | E07, E10, E29 |
+| `sfx_moneta_3` | § 3.2 | E07, E10, E29 |
+| `sfx_moneta_4` | § 3.2 | E07, E10, E29 |
+| `sfx_moneta_5` | § 3.2 | E07, E10, E29 |
+| `sfx_licznik_tik` | § 3.2 | E07, E10, E28, E29, E30, E37 |
+| `sfx_licznik_koniec` | § 3.2 | E07, E10, E29, E32, E37 |
+| `sfx_saldo_puls` | § 3.2 | E06, E08, E28, E36 |
+| `sfx_bankrut` | § 3.2 | E09 |
+| `sfx_przejscie_whoosh` | § 3.2 | E12 |
+| `sfx_spin_start` | § 3.3 | E24, E38 |
+| `sfx_beben_petla_s1` | § 3.3 | E25 |
+| `sfx_beben_petla_s2` | § 3.3 | E25 |
+| `sfx_beben_stop_1` | § 3.3 | E21, E26 |
+| `sfx_beben_stop_2` | § 3.3 | E21, E26 |
+| `sfx_beben_stop_3` | § 3.3 | E21, E26 |
+| `sfx_beben_stop_4` | § 3.3 | E21, E26 |
+| `sfx_beben_stop_5` | § 3.3 | E21, E26 |
+| `sfx_beben_stop_6` | § 3.3 | E21, E26 |
+| `sfx_antycypacja_narastanie` | § 3.3 | E27 |
+| `sfx_bicie_serca` | § 3.3 | E27 |
+| `sfx_scatter_1` | § 3.3 | E34 |
+| `sfx_scatter_2` | § 3.3 | E34 |
+| `sfx_scatter_3` | § 3.3 | E34, E61 |
+| `sfx_wild` | § 3.3 | E33 |
+| `sfx_wygrana_small_1` | § 3.3 | E28 |
+| `sfx_wygrana_small_2` | § 3.3 | E28 |
+| `sfx_wygrana_small_3` | § 3.3 | E28 |
+| `sfx_wygrana_medium` | § 3.3 | E29 |
+| `sfx_linia` | § 3.3 | E28, E29, E70 |
+| `sfx_bigwin_wejscie` | § 3.3 | E30 |
+| `sfx_poziom_w_gore` | § 3.3 | E31, E61 |
+| `sfx_bigwin_koniec` | § 3.3 | E32 |
+| `sfx_blysk` | § 3.3 | E07, E10, E30, E31, E35, E60, E72 |
+| `sfx_uderzenie_basu` | § 3.3 | E07, E10, E31 |
+| `sfx_free_spins_start` | § 3.3 | E35 |
+| `sfx_free_spins_koniec` | § 3.3 | E37 |
+| `sfx_s1_neon_bzyk` | § 3.4 | E21, E50 |
+| `sfx_s1_jackpot` | § 3.4 | E51 |
+| `sfx_s2_wild_rozszerzenie` | § 3.5 | E60 |
+| `sfx_s2_gong` | § 3.5 | E21, E35, E61 |
+| `sfx_s3_pekniecie_1` | § 3.6 | E70 |
+| `sfx_s3_pekniecie_2` | § 3.6 | E70 |
+| `sfx_s3_pekniecie_3` | § 3.6 | E70 |
+| `sfx_s3_pekniecie_4` | § 3.6 | E70 |
+| `sfx_s3_opad` | § 3.6 | E21, E25, E71 |
+| `sfx_s3_mnoznik` | § 3.6 | E72 |
+| `sfx_s3_mnoznik_zbior` | § 3.6 | E73 |
+| `mus_lobby` | § 4.3 | E02, E06, E07, E10 |
+| `mus_s1` | § 4.3 | E21 |
+| `mus_s2` | § 4.3 | E21, E37 |
+| `mus_s2_fs` | § 4.3 | E35 |
+| `mus_s3` | § 4.3 | E21, E37 |
+| `mus_s3_fs` | § 4.3 | E35 |
+| `mus_bigwin` | § 4.3 | E30, E51 |
+| `mus_napiecie` | § 4.3 | E27 |
+
+---
+
+## Powiązane dokumenty
+
+* [README.md](README.md) — spis dokumentacji projektu i wspólny język identyfikatorów.
+* [01-kierunek-artystyczny.md](01-kierunek-artystyczny.md) — styl marki i każdej gry; dźwięk ma tę samą „paletę”
+  (złoto, szkło, neon, kamień).
+* [02-lista-obrazow.md](02-lista-obrazow.md) — jak właściciel dostarcza pliki (ta sama procedura dla muzyki z Suno)
+  i pipeline obrazów, na którym wzorowany jest pipeline dźwięku.
+* [03-prompty-chatgpt.md](03-prompty-chatgpt.md) — prompty do obrazów (odpowiednik § 11 dla grafiki).
+* [04-efekty-wizualne.md](04-efekty-wizualne.md) — osie czasu zdarzeń E01–E73 (ms), z którymi synchronizujemy dźwięk.
+* [06-interfejs-ux.md](06-interfejs-ux.md) — okno ustawień, przełączniki dźwięku i wibracji, skróty klawiszowe.
+* [07-gry-i-matematyka.md](07-gry-i-matematyka.md) — format kroków spinu z API, z którego budujemy oś czasu dźwięków.
+* [08-wydajnosc-i-jakosc.md](08-wydajnosc-i-jakosc.md) — poziomy jakości (limit głosów 24 / 16), budżety i pomiary.
+* [09-kontrakt-api-i-assetow.md](09-kontrakt-api-i-assetow.md) — kontrakt `assets/audio/manifest.json` i podział katalogów.
+* [../plan-projektu.md](../plan-projektu.md) — plan całego projektu i etapy.

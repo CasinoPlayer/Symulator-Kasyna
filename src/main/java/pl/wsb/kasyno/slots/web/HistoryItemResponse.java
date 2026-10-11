@@ -1,13 +1,14 @@
 package pl.wsb.kasyno.slots.web;
 
-import pl.wsb.kasyno.slots.domain.SpinRound;
+import pl.wsb.kasyno.slots.domain.RoundSummary;
 import pl.wsb.kasyno.slots.domain.SpinStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 /**
- * Element historii rund gracza ({@code GET /api/me/history}).
+ * Element historii rund gracza ({@code GET /api/me/history}):
+ * {@code { "roundId", "gameCode", "gameName", "bet", "win", "multiplier", "tier", "status", "createdAt" }}.
  */
 public record HistoryItemResponse(
         Long roundId,
@@ -20,16 +21,17 @@ public record HistoryItemResponse(
         SpinStatus status,
         Instant createdAt) {
 
-    public static HistoryItemResponse from(SpinRound round) {
+    /** Mapowanie projekcji na kształt z kontraktu API (poziom wygranej małymi literami: {@code big}). */
+    public static HistoryItemResponse from(RoundSummary round) {
         return new HistoryItemResponse(
-                round.getId(),
-                round.getSlotMachine().getCode(),
-                round.getSlotMachine().getName(),
-                round.getBet(),
-                round.getTotalWin(),
-                round.getMultiplier(),
-                round.getTier().code(),
-                round.getStatus(),
-                round.getCreatedAt());
+                round.roundId(),
+                round.gameCode(),
+                round.gameName(),
+                round.bet(),
+                round.win(),
+                round.multiplier(),
+                round.tier().code(),
+                round.status(),
+                round.createdAt());
     }
 }

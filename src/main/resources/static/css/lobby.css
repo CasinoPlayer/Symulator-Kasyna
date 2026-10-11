@@ -241,6 +241,9 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
   .hero__cta { width: 100%; }
   .hero__cta .btn { flex: 1 1 100%; white-space: normal; text-align: center; }
 }
+@media (max-width: 360px) {
+  .hero__cta .btn--lg { padding: 0 1em; font-size: 0.875rem; letter-spacing: 0.04em; }
+}
 .hero__stats {
   list-style: none;
   display: grid;

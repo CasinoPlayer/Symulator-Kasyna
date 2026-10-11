@@ -5,6 +5,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import pl.wsb.kasyno.account.api.PlayerFunds;
 import pl.wsb.kasyno.account.api.PlayerFundsProvider;
@@ -90,6 +91,16 @@ public class WalletService implements WalletFacade, PlayerFundsProvider {
                     Wallet wallet = wallets.save(new Wallet(accounts.getReferenceById(playerId), now));
                     return book(playerId, wallet.credit(TransactionType.WELCOME_BONUS, welcomeBonus, null, null, now));
                 });
+    }
+
+    /**
+     * {@code Propagation.MANDATORY}: blokada wiersza trwa do końca transakcji, więc wywołanie bez trwającej
+     * transakcji (blokada zdjęta od razu po odczycie) to błąd w kodzie, a nie ciche „nic”.
+     */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public BigDecimal lockWallet(Long playerId) {
+        return lockedWallet(playerId).getBalance();
     }
 
     @Override

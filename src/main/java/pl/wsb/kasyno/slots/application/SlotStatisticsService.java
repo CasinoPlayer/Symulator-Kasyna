@@ -12,7 +12,7 @@ import pl.wsb.kasyno.slots.api.PlayerResult;
 import pl.wsb.kasyno.slots.api.SlotsFacade;
 import pl.wsb.kasyno.slots.domain.PlayerMachineStats;
 import pl.wsb.kasyno.slots.domain.PlayerMachineStatsRepository;
-import pl.wsb.kasyno.slots.domain.SpinRound;
+import pl.wsb.kasyno.slots.domain.RoundSummary;
 import pl.wsb.kasyno.slots.domain.SpinRoundRepository;
 import pl.wsb.kasyno.slots.domain.SpinStatus;
 
@@ -91,14 +91,14 @@ public class SlotStatisticsService implements SlotsFacade {
                 .toList();
     }
 
-    private static BigWin toBigWin(SpinRound round) {
+    private static BigWin toBigWin(RoundSummary round) {
         return new BigWin(
-                round.getPlayer().getDisplayName(),
-                round.getSlotMachine().getCode(),
-                round.getSlotMachine().getName(),
-                round.getTotalWin(),
-                round.getMultiplier(),
-                round.getTier().code(),
-                round.getSettledAt() != null ? round.getSettledAt() : round.getCreatedAt());
+                round.nick(),
+                round.gameCode(),
+                round.gameName(),
+                round.win(),
+                round.multiplier(),
+                round.tier().code(),
+                round.finishedAt());
     }
 }

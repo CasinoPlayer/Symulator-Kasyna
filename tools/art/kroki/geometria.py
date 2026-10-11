@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .obraz import Skladowe, rgb_do_lab
+from .obraz import Skladowe, rgb_do_lab, rozmyj
 
 # Wypełnienie pola symbolu (dłuższy bok obiektu / bok pola) — te same proporcje co 80 : 83 : 85% kadru
 # z 01 § 5.1, więc hierarchia wielkości niskie < wysokie < specjalne zostaje zachowana.
@@ -88,16 +88,21 @@ def _okno_zamalowane(rgba: np.ndarray, uwagi: list):
     """Generator narysował ciemne szkło zamiast przezroczystości: wypełnianie od środka z tolerancją ΔE < 10;
     jeśli wynik jest prostokątny i duży — wycinamy okno (α = 0) i ostrzegamy (02 § 5.12 pkt 4)."""
     H, W = rgba.shape[:2]
+    ys, xs = np.nonzero(rgba[..., 3] > 0.5)
+    if len(xs) == 0:
+        return None
+    cy, cx = (ys.min() + ys.max()) // 2, (xs.min() + xs.max()) // 2      # środek RAMKI, nie płótna
     lab = rgb_do_lab(rgba[..., :3])
-    srodek = lab[H // 2 - 4:H // 2 + 4, W // 2 - 4:W // 2 + 4].reshape(-1, 3).mean(0)
+    srodek = lab[cy - 4:cy + 4, cx - 4:cx + 4].reshape(-1, 3).mean(0)
     podobne = (np.linalg.norm(lab - srodek, axis=-1) < 10) & (rgba[..., 3] > 0.5)
     sk = Skladowe(podobne)
-    k = sk.etykiety[H // 2, W // 2]
+    k = sk.etykiety[cy, cx]
     if k == 0 or sk.brzeg[k]:
         return None
     x0, y0, x1, y1 = sk.x0[k], sk.y0[k], sk.x1[k], sk.y1[k]
     prost = sk.pole[k] / float((x1 - x0) * (y1 - y0))
-    if prost < 0.95 or (x1 - x0) * (y1 - y0) < 0.2 * H * W:
+    pole_ramki = (xs.max() - xs.min()) * (ys.max() - ys.min())
+    if prost < 0.95 or (x1 - x0) * (y1 - y0) < 0.25 * pole_ramki:
         return None
     rgba[y0:y1, x0:x1, 3] = 0.0
     uwagi.append(("ostrzezenie", "Q15", "okno było zamalowane — wycięte automatycznie"))
@@ -121,14 +126,20 @@ def sprawdz_proporcje_okna(okno, siatka, uwagi):
 # ------------------------------------------------------------------------------------------------
 # 9-slice
 # ------------------------------------------------------------------------------------------------
-def _jednolity_odcinek(sygnatury: np.ndarray, tol_sasiad=1.5 / 255, tol_srodek=4 / 255):
-    """Najdłuższy ciągły odcinek wokół środka, w którym sąsiednie kolumny (wiersze) prawie się nie różnią."""
-    n = len(sygnatury)
+def _jednolity_odcinek(p: np.ndarray, os: int, tol_sasiad=1.5 / 255, tol_srodek=3 / 255):
+    """Najdłuższy ciągły odcinek wokół środka, w którym CAŁE kolumny (os=1) albo wiersze (os=0) są prawie
+    identyczne — tylko takie można rozciągać bez zniekształceń. Porównujemy pełne kolumny, a nie tylko pasmo
+    środkowe, bo ozdobny róg sięgający w głąb krawędzi też musi trafić do wycinka narożnika."""
+    if os == 0:
+        p = p.transpose(1, 0, 2)
+    # lekkie wygładzenie wzdłuż kierunku rozciągania tłumi szum generatora (inaczej każda kolumna „różna”)
+    p = rozmyj(p, 1.0) if min(p.shape[:2]) > 8 else p
+    n = p.shape[1]
     c = n // 2
-    wzor = sygnatury[c]
-    ok = np.ones(n, dtype=bool)
-    ok[1:] &= np.abs(np.diff(sygnatury, axis=0)).max(-1) <= tol_sasiad
-    ok &= np.abs(sygnatury - wzor).max(-1) <= tol_srodek
+    sasiad = np.zeros(n, dtype=np.float32)
+    sasiad[1:] = np.abs(np.diff(p, axis=1)).max(-1).mean(0)
+    od_srodka = np.abs(p - p[:, c:c + 1]).max(-1).mean(0)
+    ok = (sasiad <= tol_sasiad) & (od_srodka <= tol_srodek)
     lo = c
     while lo - 1 >= 0 and ok[lo - 1] and ok[lo]:
         lo -= 1
@@ -144,10 +155,8 @@ def marginesy_9slice(rgba: np.ndarray, pigulka: bool, uwagi: list) -> dict:
     # premultiplikacja: kolumny różniące się tylko kolorem pod przezroczystością nie są „różne”
     p = rgba.copy()
     p[..., :3] *= p[..., 3:4]
-    kol = p[int(0.35 * H):int(0.65 * H)].mean(axis=0)          # (W, 4)
-    wie = p[:, int(0.35 * W):int(0.65 * W)].mean(axis=1)       # (H, 4)
-    xl, xr = _jednolity_odcinek(kol)
-    yt, yb = _jednolity_odcinek(wie)
+    xl, xr = _jednolity_odcinek(p, 1)
+    yt, yb = _jednolity_odcinek(p, 0)
     left, right = xl + 2, W - xr + 2
     if pigulka:
         # pigułka: w pionie jest gradient fazy, więc rozciąga się tylko 2-pikselowy pasek w środku wysokości

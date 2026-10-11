@@ -30,11 +30,15 @@ import java.util.Optional;
  * <p>Przebieg (wszystko w <b>jednej transakcji</b>, więc albo wykona się całość, albo nic):
  * <ol>
  *   <li>gra musi istnieć i być aktywna ({@code 404 GAME_NOT_FOUND});</li>
- *   <li>idempotencja: jeśli gracz już wysłał żądanie z tym samym {@code Idempotency-Key}, zwracamy tamtą rundę
- *       zamiast losować nową (podwójne kliknięcie, ponowienie po zerwanym połączeniu). Ten sam klucz z inną grą
- *       lub innym zakładem to {@code 409 IDEMPOTENCY_CONFLICT};</li>
  *   <li>zakład musi być na liście {@code betLevels} gry ({@code 400 BET_INVALID});</li>
  *   <li>gra musi mieć silnik ({@code 503 GAME_NOT_READY});</li>
+ *   <li>blokada portfela gracza ({@code SELECT ... FOR UPDATE}): od tej chwili spiny tego gracza wykonują się
+ *       po kolei, a pozostałe czekają na koniec tej transakcji;</li>
+ *   <li>idempotencja: jeśli gracz już wysłał żądanie z tym samym {@code Idempotency-Key}, zwracamy tamtą rundę
+ *       zamiast losować nową (podwójne kliknięcie, ponowienie po zerwanym połączeniu). Ten sam klucz z inną grą
+ *       lub innym zakładem to {@code 409 IDEMPOTENCY_CONFLICT}. Sprawdzamy to <b>dopiero pod blokadą</b>: gdy dwa
+ *       identyczne żądania przyjdą jednocześnie, drugie poczeka na zatwierdzenie pierwszego i znajdzie jego rundę.
+ *       Unikalny indeks (gracz, klucz) w bazie zostaje jako ostatni bezpiecznik;</li>
  *   <li>zapis rundy {@code STARTED} i pobranie zakładu z portfela ({@code 409 INSUFFICIENT_FUNDS}, a wtedy
  *       transakcja się wycofuje, więc nie zostaje ani runda, ani wpis w portfelu);</li>
  *   <li>silnik liczy wynik z wylosowanego ziarna → runda {@code RESOLVED};</li>
@@ -74,17 +78,19 @@ public class SpinService {
     public SpinResult spin(SpinCommand command) {
         SlotMachine machine = machines.findByCodeAndActiveTrue(command.gameCode())
                 .orElseThrow(() -> new GameNotFoundException(command.gameCode()));
-
-        Optional<SpinResult> replay = replayIfRepeated(command);
-        if (replay.isPresent()) {
-            return replay.get();
-        }
-
         if (!machine.allowsBet(command.bet())) {
             throw new InvalidBetException(command.bet(), machine.getBetLevels());
         }
         SlotEngine engine = engines.find(machine.getCode())
                 .orElseThrow(() -> new GameNotReadyException(machine.getCode()));
+
+        // od tego miejsca spiny tego gracza są szeregowane (opis kroku 4 w Javadoc klasy)
+        BigDecimal balanceBefore = wallet.lockWallet(command.playerId());
+        Optional<SpinResult> replay = replayIfRepeated(command, balanceBefore);
+        if (replay.isPresent()) {
+            return replay.get();
+        }
+
         UserAccount player = accounts.findById(command.playerId()).orElseThrow(NotLoggedInException::new);
 
         long seed = seeds.nextSeed();
@@ -107,8 +113,11 @@ public class SpinService {
         return SpinResult.of(round, balance, false);
     }
 
-    /** Powtórzone żądanie (ten sam gracz i klucz): ta sama runda albo konflikt, gdy ciało żądania jest inne. */
-    private Optional<SpinResult> replayIfRepeated(SpinCommand command) {
+    /**
+     * Powtórzone żądanie (ten sam gracz i klucz): ta sama runda albo konflikt, gdy ciało żądania jest inne.
+     * W odpowiedzi podajemy aktualne saldo (odczytane pod blokadą), bo to ono ma się wyświetlić po animacji.
+     */
+    private Optional<SpinResult> replayIfRepeated(SpinCommand command, BigDecimal currentBalance) {
         if (command.idempotencyKey() == null) {
             return Optional.empty();
         }
@@ -117,7 +126,7 @@ public class SpinService {
                     if (!existing.matchesRequest(command.gameCode(), command.bet())) {
                         throw new IdempotencyConflictException();
                     }
-                    return SpinResult.of(existing, wallet.balance(command.playerId()), true);
+                    return SpinResult.of(existing, currentBalance, true);
                 });
     }
 }

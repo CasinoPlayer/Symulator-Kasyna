@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -60,22 +59,9 @@ public class SlotController {
             @RequestHeader(name = "Idempotency-Key", required = false)
             @Size(max = 64, message = "Idempotency-Key może mieć najwyżej 64 znaki") String idempotencyKey) {
         String key = idempotencyKey == null || idempotencyKey.isBlank() ? null : idempotencyKey.strip();
-        return SpinResponse.from(spinWithRetry(new SpinCommand(playerId, code, request.bet(), key)));
-    }
-
-    /**
-     * Dwa identyczne żądania (ten sam klucz) mogą przyjść równocześnie i oba nie znaleźć jeszcze rundy.
-     * Unikalny indeks (gracz, klucz) w bazie odrzuci drugie; ponawiamy je raz i wtedy dostaje ono rundę
-     * zapisaną przez pierwsze (powtórka zamiast drugiego zakładu).
-     */
-    private SpinResult spinWithRetry(SpinCommand command) {
-        try {
-            return spinService.spin(command);
-        } catch (DataIntegrityViolationException concurrentDuplicate) {
-            if (command.idempotencyKey() == null) {
-                throw concurrentDuplicate;
-            }
-            return spinService.spin(command);
-        }
+        // równoczesne żądania z tym samym kluczem szereguje SpinService (blokada portfela), więc nie ponawiamy tu
+        // niczego: drugie żądanie po prostu dostaje powtórkę rundy zapisanej przez pierwsze
+        SpinResult result = spinService.spin(new SpinCommand(playerId, code, request.bet(), key));
+        return SpinResponse.from(result);
     }
 }

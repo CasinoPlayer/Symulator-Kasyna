@@ -194,7 +194,7 @@ def usun_szachownice(rgba: np.ndarray, s: Szachownica, rola: str) -> np.ndarray:
         if 0.2 <= j <= 0.8:
             wybor[k] = True
     tlo = sk.maska(wybor)
-    return _alfa_z_tla(rgba, tlo, B, D, prog_tla=10 / 255, prog_obiektu=60 / 255)
+    return _alfa_z_tla(rgba, tlo, B, D, prog_tla=10 / 255, prog_strefy=60 / 255)
 
 
 # ------------------------------------------------------------------------------------------------
@@ -221,7 +221,14 @@ def model_tla(rgb: np.ndarray) -> tuple[np.ndarray, float, bool]:
 
 
 def usun_jednolite_tlo(rgba: np.ndarray, rola: str) -> tuple[np.ndarray, list]:
-    """Usuwa tło jednolite (02 § 5.4): ΔE76 → alfa = smoothstep(ΔE; 4, 18), tylko obszary połączone z brzegiem."""
+    """Usuwa tło jednolite (02 § 5.4).
+
+    1. Model tła B (stały kolor albo łagodna powierzchnia) i odległość koloru ΔE76 każdego piksela od B.
+    2. Pewne tło = obszary z ΔE < 6 POŁĄCZONE z brzegiem obrazu (dzięki temu biały odblask na złocie przy białym
+       tle zostaje nietknięty) + duże „dziury” w obiekcie o kolorze tła (okno ramki, przestrzeń między wiśniami).
+    3. Strefa przejścia (krawędź, poświata) → alfa z rzutu na kierunek „tło → kolor obiektu” (patrz
+       ``_alfa_z_tla``), ograniczona z góry płynną funkcją ΔE.
+    """
     uwagi = []
     rgb = rgba[..., :3]
     H, W = rgb.shape[:2]
@@ -229,11 +236,10 @@ def usun_jednolite_tlo(rgba: np.ndarray, rola: str) -> tuple[np.ndarray, list]:
     if not ok:
         uwagi.append(("blad", "Q06", "tło nie jest ani przezroczyste, ani jednolite — obraz do ponownego wygenerowania"))
         return rgba, uwagi
-    dE = np.linalg.norm(rgb_do_lab(rgb) - rgb_do_lab(B), axis=-1)
-    kolor_tla = B[H // 2, 0] if B.ndim == 3 else B
+    dE = np.linalg.norm(rgb_do_lab(rgb) - rgb_do_lab(B), axis=-1).astype(np.float32)
+    kolor_tla = B[H // 2, 0]
     chroma = float(nasycenie(np.asarray(kolor_tla))) > 0.35       # np. #00FF00 — kolor, którego nie ma w obiekcie
-    kand = dE < 18
-    sk = Skladowe(kand)
+    sk = Skladowe(dE < 6)
     wybor = sk.brzeg.copy()
     skala = (H * W) / (1024 * 1024)
     for k in np.flatnonzero(~sk.brzeg):
@@ -241,21 +247,19 @@ def usun_jednolite_tlo(rgba: np.ndarray, rola: str) -> tuple[np.ndarray, list]:
             continue
         m = sk.etykiety[sk.y0[k]:sk.y1[k], sk.x0[k]:sk.x1[k]] == k
         sredni = float(dE[sk.y0[k]:sk.y1[k], sk.x0[k]:sk.x1[k]][m].mean())
-        if chroma and sk.pole[k] >= 100 * skala and sredni < 8:
+        if chroma and sk.pole[k] >= 100 * skala and sredni < 4:
             wybor[k] = True                                   # dziura w obiekcie na zielonym tle
-        elif rola == "ramka" and sk.pole[k] >= 0.04 * H * W and sredni < 6:
+        elif rola == "ramka" and sk.pole[k] >= 0.04 * H * W and sredni < 4:
             wybor[k] = True                                   # okno ramki na białym/czarnym tle
-        elif sk.pole[k] >= 0.01 * H * W and sredni < 3:
+        elif sk.pole[k] >= 0.01 * H * W and sredni < 2:
             wybor[k] = True                                   # duża, idealnie zgodna z tłem dziura
     tlo = sk.maska(wybor)
-    # piksele półprzezroczyste: tylko w obszarze tła (z miękkim przejściem ΔE 4–18)
-    alfa = np.where(tlo, smoothstep(dE, 4.0, 18.0), 1.0).astype(np.float32)
-    wynik = _odkaz(rgba, alfa, B)
+    wynik = _alfa_z_tla(rgba, tlo, B, dE, prog_tla=6.0, prog_strefy=30.0)
     if chroma:
         wynik = _usun_przebarwienie(wynik, kolor_tla)
     # ryzyko: obrys obiektu podobny do tła (ciemny obiekt na czerni, krem na bieli)
     obrys = dylatacja(tlo, 1) & ~tlo
-    if obrys.any() and float((dE[obrys] < 10).mean()) > 0.03:
+    if obrys.any() and float((dE[obrys] < 10).mean()) > 0.3:
         uwagi.append(("ostrzezenie", "Q06", "niski kontrast obiektu z tłem — sprawdź krawędzie, rozważ ponowne wygenerowanie"))
     return wynik, uwagi
 
@@ -279,22 +283,33 @@ def _usun_przebarwienie(rgba: np.ndarray, kolor_tla: np.ndarray) -> np.ndarray:
 # ------------------------------------------------------------------------------------------------
 # Wspólne: alfa z pewnego tła + pas krawędzi
 # ------------------------------------------------------------------------------------------------
-def _alfa_z_tla(rgba, tlo, B, D, prog_tla, prog_obiektu):
-    """Pas krawędzi (do 4 px od pewnego tła): kolor obiektu F bierzemy z najbliższych pewnych pikseli
-    obiektu, a alfę z rzutu ``α = ((I − B)·(F − B)) / |F − B|²`` (I = B·(1 − α) + F·α)."""
+def _alfa_z_tla(rgba, tlo, B, D, prog_tla, prog_strefy):
+    """Alfa w strefie przejścia między pewnym tłem a obiektem.
+
+    Strefa = piksele „podobne do tła” (D < prog_strefy) połączone z pewnym tłem + pas 4 px wokół tła — to
+    krawędź z antyaliasingiem i ewentualna poświata. Model mieszania: ``I = B·(1 − α) + F·α``, gdzie F to kolor
+    obiektu. F bierzemy z najbliższych pikseli obiektu (``rozlej_kolor``), a alfę z rzutu
+    ``α = ((I − B)·(F − B)) / |F − B|²``. Gdy F jest prawie równe B (np. biel na bieli), rzut jest niepewny —
+    wtedy alfa = smoothstep(D). Dzięki strefie (a nie tylko wąskiemu pasowi) półprzezroczysta poświata nie
+    zamienia się w kryjącą obwódkę.
+    """
     rgb = rgba[..., :3]
-    pas = dylatacja(tlo, 4) & ~tlo
-    obiekt = ~tlo & ~pas
-    F, znane = rozlej_kolor(rgb, obiekt, kroki=6)
+    sk = Skladowe(D < prog_strefy)
+    zawiera_tlo = np.zeros(sk.n + 1, dtype=bool)
+    zawiera_tlo[np.unique(sk.etykiety[tlo])] = True
+    strefa = (sk.maska(zawiera_tlo) | dylatacja(tlo, 4)) & ~tlo
+    obiekt = ~tlo & ~strefa
+    F, znane = rozlej_kolor(rgb, obiekt, kroki=10)
     FB = F - B
     IB = rgb - B
     mianownik = (FB * FB).sum(-1)
     alfa_rzut = np.clip((IB * FB).sum(-1) / np.maximum(mianownik, 1e-6), 0, 1)
-    alfa_D = smoothstep(D, prog_tla, prog_obiektu)
-    alfa_pas = np.where((mianownik > 0.01) & znane, alfa_rzut, alfa_D)
+    alfa_D = smoothstep(D, prog_tla, prog_strefy)
+    pewny_rzut = (mianownik > 0.02) & znane
+    alfa_s = np.where(pewny_rzut, alfa_rzut, alfa_D)
     alfa = np.ones(tlo.shape, dtype=np.float32)
     alfa[tlo] = 0.0
-    alfa[pas] = alfa_pas[pas]
+    alfa[strefa] = alfa_s[strefa]
     return _odkaz(rgba, alfa, B)
 
 
