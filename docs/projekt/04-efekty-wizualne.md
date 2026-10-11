@@ -1313,7 +1313,7 @@ równo.
 | ciągle | `L0`, `L1` | efekty otoczenia gry: S1 — puls słońca i światło biegnące po siatce; S2 — pochodnie i pył w snopach światła; S3 — kaustyki i świetliki (§ 6) | `mus_s1` / `mus_s2` / `mus_s3` | — |
 | ciągle | panel HTML | SPIN: puls poświaty `g_ui_spin.glowzl` co 2,4 s (01 § 7.3): alfa 0,2 → 0,7 → 0,2, `easeInOutSine` | — | — |
 | po 4 s, potem co 3–5 s | `L3`, `L10` | losowy symbol (nigdy ten sam dwa razy z rzędu): przelot połysku 550 ms + 4 `iskry_migot` | — | — |
-| co 8 s | `L8` | logo: przelot połysku; S1 — dodatkowo „brzęczenie” neonu (§ 6.1, przez strażnika błysków) | S1: `sfx_s1_neon_bzyk` (cicho) | — |
+| co 8 s | `L8` | logo: przelot połysku; S1 — dodatkowo „brzęczenie” neonu (§ 6.1, przez strażnika błysków; w RM wyłączone) | S1: `sfx_s1_neon_bzyk` (cicho; w RM nie gra, bo nie ma przygaszenia) | — |
 | ciągle (S1) | `L7` | biegnące światła żarówek na grzebieniu ramki, 0,6 okrążenia/s (§ 6.1) | — | — |
 | ciągle (po wygranej) | `L5`, `L6` | pętla prezentacji linii / klastrów (§ 2.16) zamiast losowych połysków | — | — |
 | po 60 s bez akcji | — | tryb oszczędny: efekty tła co drugi cykl, cząsteczki otoczenia × 0,5 (propozycja; decyzja w 08) | — | — |
@@ -1803,7 +1803,8 @@ niż 2 zdarzeń; dlatego uderzenie banera w 1820 ms nie ma błysku.
 | Fala uderzeniowa | tak | nie | nie |
 | Konfetti / pioruny | 220 / 2 | 110 / 2 | 40 / 1 |
 
-**RM:** bez błysku, drżenia, piorunów i przygaszeń; napis przenika; promienie statyczne.
+**RM:** bez błysku, drżenia, piorunów i przygaszeń (także bez ciemnego taktu rurek w 200–300 ms); napis przenika i świeci
+równo; żarówki grzebienia świecą równo, bez przełączania „co druga” i bez biegnącej plamy; promienie statyczne.
 
 ### E60 `s2_wild_rozszerzenie`
 
@@ -1831,8 +1832,8 @@ i drżenie zostają). Daje to 2 błyski w sekundzie i zostawia miejsce na błysk
 **Jak rozwijamy kolumnę:** zamiast maski przycinamy prostokąt ramki tekstury `s2_wild_rozszerzony` (rośnie od
 środka pola WILD) — zero kosztu bufora szablonu. W Pixi 8 robimy to na **osobnej** instancji
 `new Texture({ source: atlas.source, frame, dynamic: true })` (współdzieli stronę atlasu, nie psuje tekstury z cache
-`Assets`): co klatkę ustawiamy `frame` **i** `orig` na ten sam prostokąt (pozycja sprite'a rośnie razem z nim)
-i wołamy `texture.update()`. Flaga `dynamic` sprawia, że sprite słucha zdarzenia `update` i przelicza wierzchołki
+`Assets`): co klatkę ustawiamy `frame` **i** `orig` na ten sam prostokąt (rozmiar sprite'a rośnie razem z ramką, kotwica
+w środku pola WILD) i wołamy `texture.update()` — dokładne zachowanie potwierdzamy w prototypie na wendorowanej wersji. Flaga `dynamic` sprawia, że sprite słucha zdarzenia `update` i przelicza wierzchołki
 — bez niej zmiana ramki nie byłaby widoczna, a samo `updateUvs()` nie poprawia rozmiaru sprite'a. Plan B (gdyby
 wendorowana wersja zachowywała się inaczej): prostokątna maska `Graphics` — bufor szablonu, ale przy 1–2 kolumnach
 naraz koszt jest pomijalny. Rozwinięcie może wychodzić do 15% na sąsiednie bębny (02).
@@ -2208,7 +2209,8 @@ cyjan (§ 2.16).
 | Rurki neonu na ramce | nad rurkami narysowanymi na `s1_ramka` leżą świecące wstęgi z kodu (`MeshRope` po obrysie okna z przesunięciem z konfiguracji, miękka tekstura, `add`): zewnętrzna `--magenta`, wewnętrzna `--cyan` | alfa 0,55 w spoczynku, 0,8 przy wygranej medium, 1,0 przy NEON JACKPOT |
 | Brzęczenie (losowe przygaszenia) | każdy element neonowy (logo, rurka zewnętrzna, rurka wewnętrzna) ma losowe przygaszenia procesem Poissona `λ = 0,12/s`; przygaszenie do 60% jasności na 40–80 ms (01 § 9.4) | w spoczynku łącznie najwyżej **1 przygaszenie na sekundę**, przez strażnika błysków (logo jest duże — jego przygaszenie liczymy jako błysk) |
 | Sekwencja zapalania (E21) | rurka: zapalenie 30 ms → zgaszenie 80 ms → zapalenie 40 ms → zgaszenie 120 ms → stałe świecenie | 2 błyski w ~300 ms, przez strażnika; w RM — od razu stałe świecenie |
-| Dźwięk | każde przygaszenie wyzwala krótki `sfx_s1_neon_bzyk` (cicho, losowa wysokość ± 5% — 05) | |
+| Dźwięk | każde przygaszenie wyzwala krótki `sfx_s1_neon_bzyk` (cicho, losowa wysokość ± 5% — 05) | w RM losowych przygaszeń nie ma, więc i losowego bzyku; bzyk zapalenia neonu w E21 / E50 zostaje (dźwięk to nie ruch) |
+| **RM** (`prefers-reduced-motion`, 01 § 9.4) | **całe migotanie neonu wyłączone**: brak losowych przygaszeń, sekwencja zapalania zastąpiona stałym świeceniem (neon przenika razem z ramką, E21), napisy „×2” i „NEON JACKPOT” zapalają się płynnie i świecą równo, żarówki grzebienia świecą stałą jasnością 0,8 (bez biegnącej plamy i przełączania) | sprawdza to test „Ograniczony ruch” z § 9 (log strażnika: 0 próśb rodzaju `neon`) |
 
 **Biegnące światła żarówek (grzebień ramki).** 16–24 żarówek (punkty z konfiguracji), każda to sprite
 `g_fx_iskry__2` (28 px, `add`, tint `#FFF3D1`). Jasność żarówki `i` z `N`:
@@ -2440,7 +2442,7 @@ pomoże — standardowe obniżenie poziomu.
 | Limit błysków | ULTRA; S2 FS z 3 WILD i retriggerem; S2: WILD na bębnach 3 i 5 + scatter na 4 + BIG WIN; S3 kaskada × 8 z 4 scatterami; 20 spinów TURBO + autoplay | w logu strażnika w **każdym** oknie 1000 ms ≤ 3 zarejestrowane błyski; **żaden** zarezerwowany błysk-bohater (E30, E31, E32, E35, E51, E73) nie został pominięty; dodatkowo analiza nagrania (średnia jasność względna klatek) — ≤ 3 pary zmian ΔL ≥ 0,10 na sekundę |
 | Filtry tylko High | każdy scenariusz po przełączeniu na Medium i Low | przejście po drzewie sceny: żaden obiekt nie ma niepustego `filters` (brief § 5) |
 | Kroki → zdarzenia | wszystkie scenariusze mocka (09 § 2.4) | log `RezyserEfektow` zawiera oczekiwaną sekwencję zdarzeń z § 2.19 (np. S2 FS: E36, E24, E25, E26 × 5, E60, E30 …); w rundach bez FS poziom jednostki = pole `tier`; `anticipation` zgodne z regułą widocznej planszy |
-| Ograniczony ruch | jak wyżej z `reducedMotion: 'reduce'` | 0 błysków pełnoekranowych, trauma zawsze 0, przesunięcie kamery zawsze 0 |
+| Ograniczony ruch | jak wyżej z `reducedMotion: 'reduce'` | 0 błysków pełnoekranowych, 0 próśb strażnika rodzaju `neon` (migotanie S1 wyłączone), trauma zawsze 0, przesunięcie kamery zawsze 0 |
 | Wydajność | ULTRA i S3 kaskada × 8 przy spowolnieniu CPU × 4 (CDP `Emulation.setCPUThrottlingRate`) | brak *long tasks* > 50 ms w trakcie spinu (brief § 5); po ewentualnym obniżeniu poziomu p90 klatki ≤ 20 ms |
 | Zrzuty referencyjne | stałe ziarno + zegar ręczny: E30 +300 ms, E31 +80 ms, E35 +900 ms, E70 +280 ms | różnica z wzorcem w tolerancji (np. ≤ 2% pikseli) |
 | Synchronizacja | log czasów zaplanowanych dźwięków i klatek szczytu efektów | różnica ≤ 17 ms (R6) |
@@ -2471,6 +2473,7 @@ dokument ma pozostać jedynym źródłem prawdy, z którego się bronimy.
 | 14 | E07: `sfx_blysk` gra w R + 0 (05 § 6.7, kod), a szczyt rozbłysku wypada w R + 256 ms (start 120 ms + 22% z 620 ms) | Narusza R6 (obraz i dźwięk co do klatki). Propozycja: `sfx_blysk` w R + 256 ms albo rozbłysk bez opóźnienia 120 ms. Do uzgodnienia z 05 i w kodzie `reward.js`. |
 | 15 | 05 § 6.5 zakłada, że eskalacje dzieli zawsze ≥ 1200 ms | W TURBO odstęp spada do 620 ms (§ 4.3). Dla błysków to nadal ≤ 2 na sekundę, ale `cooldownMs` 333 dla `sfx_blysk` w 05 zostaje wystarczający — do odnotowania w 05. |
 | 16 | Ustalenie progów `tier` po stronie serwera i frontu (§ 2.19) | Te same progi z briefu § 3 w dwóch miejscach (Java i `fx/konfig.js`); rozjazd wykrywa test kontraktowy z § 9. |
+| 17 | Pasma kul mnożnika S3: tu i w 01 ciągłe ×2–×9 / ×10–×49 / ×50–×100 (E72); 05 (§ 3.6 i E72 w § 6.1) wciąż podaje dziurawe ×2–×5 / ×10–×25 / ×50–×100 dla wysokości `sfx_s3_mnoznik` | Do ujednolicenia w 05 — wartość ×7 albo ×30 nie ma tam pasma. |
 
 ---
 
