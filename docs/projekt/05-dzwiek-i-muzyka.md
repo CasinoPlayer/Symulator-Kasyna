@@ -12,7 +12,7 @@
 | Zespół | Konrad Paulus (112960, s428425@student.wroclaw.merito.pl) · Dominik Pacanowski (112961, s433776@student.wroclaw.merito.pl) · Dawid Majewski (113154, s156704@student.wroclaw.merito.pl) |
 | Wersja dokumentu | 1.0 (2026-10-11) |
 | Zakres | **67 plików audio**: 8 UI + 13 globalnych + 27 wspólnych dla gier + 2 (S1) + 2 (S2) + 7 (S3) = 59 efektów oraz 8 pętli muzycznych; każdy plik w dwóch formatach (WebM/Opus i M4A/AAC) |
-| Kod | silnik: `src/main/resources/static/js/audio/audio-engine.js` (wersja 1 już jest w repozytorium); synteza: `tools/audio/*.py` (do napisania według § 8) |
+| Kod | silnik: `src/main/resources/static/js/audio/audio-engine.js` (wersja 1 już jest w repozytorium); synteza: `tools/audio/*.py` (w budowie — stan i lista plików w § 8.2) |
 | Hierarchia źródeł | brief projektu → ten dokument → kod. ID dźwięków i zdarzeń są wiążące; poziomy dB i czasy to wartości startowe, które stroimy na słuch (zmiana w jednym miejscu: metadane przepisu w `tools/audio/dzwieki.py`) |
 
 **W skrócie (liczby do zapamiętania na obronę)**
@@ -116,9 +116,10 @@ hidżaz ma E♭ i B♭ — dwa z pięciu dźwięków stopów i monet fałszował
 transpozycja pentatoniki nie mieści się w hidżazie (każda pięciodźwiękowa podskala hidżazu zawiera półton), więc
 w S2 silnik przesuwa **każdy plik osobno** (`keyTrack` z wyjątkiem dla `s2`, § 7.5): pliki na nutach C, E, G o +200 c,
 pliki na nutach D i A o +100 c. Stopy bębnów S2 grają wtedy D – E♭ – F♯ – A – B♭ (z charakterystycznymi krokami
-hidżazu: półton D–E♭ i półtora tonu E♭–F♯ — brzmi „egipsko”), monety D7 E♭7 F♯7 A7 B♭7. Półtony D–E♭ i A–B♭ są tymi samymi, które słychać w melodii udu, więc nie
-brzmią jak błąd. Warunek: plik z `keyTrack` ma albo **jedną** nutę, albo tylko nuty C, E, G (akord C-dur → D-dur);
-plik mieszający D/A z C/E/G nie da się przesunąć jedną wartością — dlatego przepisy w § 3 go unikają.
+hidżazu: półton D–E♭ i półtora tonu E♭–F♯ — brzmi „egipsko”), monety D7 E♭7 F♯7 A7 B♭7. Półtony D–E♭ i A–B♭
+są tymi samymi, które słychać w melodii udu, więc nie brzmią jak błąd. Warunek: plik z `keyTrack` ma albo **jedną**
+nutę, albo tylko nuty C, E, G (akord C-dur → D-dur); pliku mieszającego D/A z C/E/G nie da się przesunąć jedną
+wartością — dlatego przepisy w § 3 takich plików unikają.
 
 ### 1.3. Styl każdej części
 
@@ -176,15 +177,20 @@ zanim przeczyta napis.
 ### 1.4. Zasady, których pilnujemy we wszystkich dźwiękach
 
 1. **Głośność proporcjonalna do znaczenia.** UI najciszej, informacja (stopy, linie) średnio, nagroda głośno i
-   proporcjonalnie do progu wygranej (brief § 3):
+   proporcjonalnie do poziomu wygranej. **Progi poziomów (`small` … `ultra`) nie są ustalane w tym dokumencie** —
+   obowiązują wyłącznie progi z briefu § 3 i pola `tier` z kontraktu 09 § 2.4 (front wylicza poziom jednostki
+   prezentacji według 04 § 2.19 z tych samych progów). Tu przypisujemy tylko oprawę dźwiękową do nazwy poziomu:
 
-   | Próg | Dźwiękowa „waga” |
+   | Poziom (progi: brief § 3) | Dźwiękowa „waga” |
    |---|---|
-   | wygrana < 1× zakładu (część progu `small`) | jeden krótki dźwięk o 6 dB ciszej, bez liczenia i bez dźwięków linii |
-   | `small` (≥ 1× i < 5×) | 1 warstwa, 0,6–0,9 s, ducking muzyki −3 dB |
-   | `medium` (≥ 5×) | 3 warstwy (fanfara, akord, monety), 1,6 s, liczenie z tykaniem |
-   | `big` (≥ 15×) | wejście 2,4 s + `mus_bigwin` + liczenie + fontanna monet, ducking −6 dB |
-   | `mega` / `epic` / `ultra` (≥ 30× / 60× / 100×) | + `sfx_poziom_w_gore` transponowany o 0 / +200 / +400 centów, szybsze tykanie, głośniejsza fontanna |
+   | `small`, gdy wygrana jest mniejsza niż zakład (m < 1) | jeden krótki dźwięk o 6 dB ciszej, bez liczenia i bez dźwięków linii (§ 1.4 pkt 2) |
+   | `small` (pozostałe) | 1 warstwa, 0,6–0,9 s, ducking muzyki −3 dB |
+   | `medium` | 3 warstwy (fanfara, akord, monety), 1,6 s, liczenie z tykaniem |
+   | `big` | wejście 2,4 s + `mus_bigwin` + liczenie + fontanna monet, ducking −6 dB |
+   | `mega` / `epic` / `ultra` | + `sfx_poziom_w_gore` transponowany o 0 / +200 / +400 centów, szybsze tykanie, głośniejsza fontanna |
+
+   Granice m = 1 i m = 2,5 wewnątrz `small` (wybór pliku `sfx_wygrana_small_1` / `_2` / `_3`, § 3.3) **nie są nowymi
+   progami `tier`** — to tylko wybór wariantu dźwięku w obrębie jednego poziomu.
 
 2. **Nie świętujemy przegranej.** Wygrana mniejsza niż zakład to w praktyce strata. W prawdziwych automatach celowo
    gra się wtedy pełną fanfarę (zjawisko opisywane w badaniach jako *loss disguised as win*). My tego nie robimy:
@@ -363,8 +369,8 @@ odrzuci `.webm` — przełącza się na `.m4a` do końca wizyty (§ 7.1). **Uwag
 plik do częstotliwości kontekstu (często 44,1 kHz zamiast naszych 48 kHz) — dlatego punkty pętli i `syncPoint`
 podajemy w sekundach, nie w próbkach.
 
-**Pakiety ładowania.** Każdy wpis manifestu ma pole `pack` (§ 7.5) — **listę** pakietów (w przepisach: argument
-`packs` dekoratora `@dzwiek`), bo część dźwięków gra na obu stronach (np. monety, licznik, `sfx_przejscie_whoosh`
+**Pakiety ładowania.** Każdy wpis manifestu ma pole `packs` (§ 7.5) — **listę** pakietów (w przepisach: argument
+`packs` dekoratora `@dzwiek`; dla zgodności manifest ma też `pack` = pierwszy element listy), bo część dźwięków gra na obu stronach (np. monety, licznik, `sfx_przejscie_whoosh`
 mają `["lobby", "gry-krytyczne"]` albo `["lobby", "gry-dalsze"]`). Reguły dla strony gry N:
 
 1. ładujemy wpisy, których lista zawiera `ui`, `gry-krytyczne`, `gry-dalsze` albo `sN` — i **nie** zawiera
@@ -379,7 +385,7 @@ mają `["lobby", "gry-krytyczne"]` albo `["lobby", "gry-dalsze"]`). Reguły dla 
 | `s1` / `s2` / `s3` | strona danej gry | pętla bębnów gry, efekty gry (`sfx_s1_*`, `sfx_s2_*`, `sfx_s3_*`), muzyka bazowa gry; muzyka FS z listą `["s2", "gry-dalsze"]` / `["s3", "gry-dalsze"]` | w pierwszej fazie razem z `gry-krytyczne`; wpisy z `gry-dalsze` — w drugiej |
 | `gry-dalsze` | gra | big win (`sfx_bigwin_*`, `sfx_poziom_w_gore`, `mus_bigwin`, fontanna), antycypacja (`sfx_antycypacja_narastanie`, `sfx_bicie_serca`, `mus_napiecie`), free spins (`sfx_free_spins_*`), `sfx_blysk`, `sfx_uderzenie_basu`, `sfx_przejscie_whoosh`, `sfx_bankrut`, skrzynia | po intro, w tle, kolejno po jednym pliku, **nigdy w trakcie spinu** |
 
-Wpis bez pola `pack` trafia do `gry-dalsze` (wartość domyślna z § 7.5).
+Wpis bez `packs` (i bez `pack`) trafia do `gry-dalsze` (wartość domyślna z § 7.5).
 
 **Ładowanie sterowane wynikiem.** Serwer zwraca cały wynik rundy od razu (brief § 0: jedna runda = jeden zakład,
 kaskady i darmowe spiny w tej samej odpowiedzi). Gdy odpowiedź zawiera np. darmowe spiny albo próg `big`, a potrzebne
@@ -473,6 +479,8 @@ start w czasie `cooldownMs` jest pomijany.
 | `sfx_wild`, `sfx_scatter_*` | 2 | 40 | |
 | pętle (`sfx_*petla*`, fontanna, licznik, serce) | 1 | 0 | druga kopia pętli to zawsze błąd logiki |
 | `sfx_saldo_puls` | 1 | 150 | |
+| `sfx_poziom_w_gore` | 1 | 0 | w TURBO eskalacje dzieli tylko 620 ms (04 § 4.3) — nowa ucina poprzednią (wyciszenie 80 ms), § 6.5 |
+| `sfx_uderzenie_basu` | 2 | 0 | ogony subbasu przy szybkich eskalacjach; trzeci głos ucina najstarszy |
 
 ### 2.6. Warianty, mikro-zmiany wysokości, tonacja gry
 
@@ -541,7 +549,7 @@ dałoby się „zepsuć”:
 | Dźwięk | Maks. przesunięcie | Dlaczego wolno |
 |---|---|---|
 | `sfx_linia` (kolejne linie, kaskady S3) | +700 c (prędkość ×1,5, plik 340 → 227 ms) | przemiatanie sinusa i szumu bez stałej nuty; krótszy plik pasuje do szybszego rytmu kolejnych linii |
-| `sfx_licznik_tik` (przyspieszanie liczenia) | prędkość do 1,6 (≈ +814 c) | to zamierzone „narastanie”: 15-milisekundowe szklane impulsy słychać jako przyspieszające i jaśniejące tykanie (klasyczny zabieg slotów), nie jako fałszywą nutę; startuje zawsze w tonacji (T) |
+| `sfx_licznik_tik` (przyspieszanie liczenia) | prędkość do 1,6 (≈ +814 c; w S3 razem z T ok. ×2,0, ale tik najszybciej gra w BIG_WIN, gdzie T = 0) | to zamierzone „narastanie”: 15-milisekundowe szklane impulsy słychać jako przyspieszające i jaśniejące tykanie (klasyczny zabieg slotów), nie jako fałszywą nutę; startuje zawsze w tonacji (T) |
 
 ### 2.7. Planowanie w czasie i synchronizacja z animacją
 
@@ -621,7 +629,7 @@ przesunięcia, dźwięki linii scalone w jeden `sfx_linia` na całą wygraną.
 | **poziom dB** | `gainDb` w manifeście: wzmocnienie głosu względem szyny. Pliki są wcześniej znormalizowane (§ 7.4): jednorazowe do szczytu −1 dBTP, pętle efektów do −18 LUFS, muzyka do −14 LUFS. Najgłośniejsze efekty mają −3 dB, najcichsze −16 dB |
 | **prio** | priorytet głosu 1–5 (§ 2.5) |
 | **warianty** | liczba plików (grupa wariantów losowanych bez powtórzeń) i mikro-zmiany; **T** = `keyTrack` (transpozycja do tonacji gry, § 2.6); `syncPoint` = punkt synchronizacji w pliku (§ 2.6, § 2.7) |
-| **jak powstaje** | przepis syntezy w skrócie; pełny kod — funkcja o nazwie ID w `tools/audio/dzwieki.py` (§ 8) |
+| **jak powstaje** | przepis syntezy w skrócie; pełny kod — funkcja zarejestrowana pod tym ID dekoratorem `@dzwiek` w `tools/audio/dzwieki.py` (§ 8.4) |
 
 **Słowniczek technik syntezy** (wszystkie są zaimplementowane w `tools/audio/dsp.py` i `tools/audio/instrumenty.py`, § 8.3):
 
@@ -708,9 +716,9 @@ wychodzi **melodyjny deszcz**, który nigdy nie fałszuje, a z muzyką lobby (a-
 | `sfx_scatter_2` | scatter o jeden przed bonusem (S2: drugi, S3: trzeci — próg antycypacji): wyżej, pełniej, z basem — „coś się zbliża” | 1 100 ms | nie | sfx | −5 | 4 | jw. | jak `sfx_scatter_1`, nuta **E6** + G5 pod spodem (nuty C/E/G — § 1.2), + sub sinus 65 Hz, τ 300 ms; pogłos 2,0 s |
 | `sfx_scatter_3` | scatter, który daje bonus (S2: trzeci, S3: czwarty) i każdy kolejny: akord-fanfara z chórem i uderzeniem — bonus! | 1 700 ms | nie | sfx | −3 | 5 | 1 plik; T; `syncPoint` 80 ms; każdy scatter ponad próg: S2 +100 c (maks. +200 c — razem z T +200 to limit ±400 c), S3 +1 dB (maks. +3 dB — T już wynosi +400 c) | narastanie 80 ms; akord dzwonów FM C6–E6–G6–C7 rozłożony co 30 ms; chór: 6 odstrojonych pił przez dwa filtry formantowe (BP 700 Hz i 1 100 Hz — samogłoska „a”), atak 200 ms; sub 55 → 35 Hz; pogłos 2,4 s |
 | `sfx_wild` | złote „łuuup” narastania, uderzenie i błyszczący akord | 1 000 ms | nie | sfx | −5 | 4 | 1 plik; ±5 c; T; `syncPoint` 150 ms | 0–150 ms: narastanie (odwrócony pogłos szumu i akordu) — start 150 ms przed lądowaniem; 150 ms: uderzenie (sinus 80 → 40 Hz + trzask szumu 5 ms); akord dzwonów FM 1:2 (I 2,5) C5–G5–C6–E6, τ 700 ms; 10 iskier 4–8 kHz; pogłos 1,8 s, mix 25% |
-| `sfx_wygrana_small_1` | skromne arpeggio dzwonka z szarpnięciem: C5–E5–G5 (najniżej) | 700 ms | nie | sfx | −9 | 4 | wariant według mnożnika m (jak w 04): `_1` dla m < 1 — gra o 6 dB ciszej, bez linii i bez tiku (§ 1.4); ±5 c, ±1 dB; T | 3 nuty co 60 ms: dzwonek FM 1:1 (I 1,2 → 0 — ciepły, harmoniczny) + Karplus–Strong oktawę niżej −8 dB; τ 350 ms; pogłos 1,2 s, mix 18% |
+| `sfx_wygrana_small_1` | skromne arpeggio dzwonka z szarpnięciem: C5–E5–G5 (najniżej) | 700 ms | nie | sfx | −9 | 4 | wariant według mnożnika m jednostki prezentacji (04 § 2.19): `_1` dla m < 1 — gra o 6 dB ciszej, bez linii i bez tiku (§ 1.4); ±5 c, ±1 dB; T | 3 nuty co 60 ms: dzwonek FM 1:1 (I 1,2 → 0 — ciepły, harmoniczny) + Karplus–Strong oktawę niżej −8 dB; τ 350 ms; pogłos 1,2 s, mix 18% |
 | `sfx_wygrana_small_2` | jw., wyżej: E5–G5–C6 | 750 ms | nie | sfx | −9 | 4 | `_2` dla 1 ≤ m < 2,5; ±5 c, ±1 dB; T | jw. |
-| `sfx_wygrana_small_3` | jw., najwyżej i najjaśniej: G5–C6–E6 | 800 ms | nie | sfx | −9 | 4 | `_3` dla 2,5 ≤ m < 5; ±5 c, ±1 dB; T | jw., dzwonek z indeksem I 1,6 (jaśniejszy) |
+| `sfx_wygrana_small_3` | jw., najwyżej i najjaśniej: G5–C6–E6 | 800 ms | nie | sfx | −9 | 4 | `_3` dla m ≥ 2,5 (do górnej granicy poziomu `small` z briefu § 3); ±5 c, ±1 dB; T | jw., dzwonek z indeksem I 1,6 (jaśniejszy) |
 | `sfx_wygrana_medium` | jaśniejsza fanfara: szybki bieg, akord supersaw, garść monet, uderzenie | 1 600 ms | nie | sfx | −6 | 4 | 1 plik; ±5 c; T | bieg C5–E5–G5–C6–E6 co 40 ms (dzwonki FM 1:2; same nuty akordu, bez D i A — jedna transpozycja pasuje też do S2, § 1.2); 200 ms: akord C-dur (supersaw 7 ±12 c → LP 3 kHz, 300 ms) + sub 60 Hz; 250–700 ms: 6 monet (ziarna modelu monety z warstwą tonalną na C7 / E7 / G7); ogon dzwonów i pogłos 1,8 s |
 | `sfx_linia` | „laserowe” przeciągnięcie linii — czyste, krótkie „ziiing” | 340 ms | nie | sfx | −12 | 3 | 1 plik; +100 c × numer pokazywanej linii (maks. +700 c) | sinus 800 → 1 600 Hz (wykładniczo, 120 ms), τ 150 ms + szum BP 4 kHz (Q 6) o tej samej obwiedni, −8 dB; echo 90 ms, sprzężenie 25%, echo w panoramie ±0,4. Celowo prawie bez wysokości dźwięku — kolejne linie wznoszą się chromatycznie i nie gryzą się z muzyką |
 | `sfx_bigwin_wejscie` | wejście BIG WIN: zasysające narastanie, potężne uderzenie, akord „dętych” i motyw Cebuliona jako fanfara | 2 400 ms | nie | sfx | −3 | 5 | 1 plik, stereo; `syncPoint` 300 ms | 0–300 ms: odwrócony talerz (szum HP 3 kHz, obwiednia rosnąca wykładniczo); 300 ms: uderzenie — sinus 55 → 30 Hz (600 ms) + trzask + akord C3–G3–C4–E4–G4–C5 („dęte”: piła + kwadrat oktawę wyżej, LP 400 → 8 000 Hz w 80 ms); 500–1 300 ms: motyw G4–C5–E5–G5 po 120 ms (ostatnia nuta trzymana); do 2 400 ms: trzymany akord, migotanie (iskry 5–9 kHz), pogłos sali 2,5 s |
@@ -833,7 +841,7 @@ a pozycja w stereo i tak zależy od miejsca zdarzenia na ekranie (bęben, kolumn
 ### 4.3. Utwory
 
 Zapis akordów: jeden takt = jedna komórka; „E7sus4 E7” = dwa akordy po pół taktu. Instrumenty są syntezowane przez
-`tools/audio/instrumenty.py` (§ 8.3), utwory składa sekwencer `tools/audio/muzyka.py` (§ 8.4).
+`tools/audio/instrumenty.py` (§ 8.3), utwory składa `tools/audio/muzyka.py` na sekwencerze `tools/audio/sekwencer.py` (§ 8.4).
 
 #### 4.3.1. `mus_lobby` — „Złoty salon”
 
@@ -896,7 +904,7 @@ Szew: D → D na bordunie, z ozdobnikiem E♭ → D w „udzie” na ostatniej m
 
 | Instrument | Technika | Rola | Poziom względny |
 |---|---|---|---|
-| bordun smyczków | 4 piły D2 A2 D3 A3, ±10 c → LP 1 500 Hz, tremolo 5 Hz = ósemkowe triole przy 100 BPM (głębokość 10%; 192 cykle na pętlę — przy 4 Hz byłoby 153,6, czyli skok fazy na szwie) | tło przez cały utwór | −12 dB |
+| bordun smyczków | 4 piły D2 A2 D3 A3, ±10 c → LP 1 500 Hz, tremolo 4,17 Hz = 2,5 cyklu na miarę (głębokość 10%; 160 cykli na pętlę — przy okrągłych 4 Hz byłoby 153,6, czyli skok fazy na szwie); piły jako tony okresowe (całkowita liczba okresów na pętlę, § 7.3) | tło przez cały utwór | −12 dB |
 | bęben ramowy / darbuka | „dum”: sinus 95 → 60 Hz, τ 150 ms + szum LP 300 Hz; „tek”: szum BP 3 kHz (Q 3), τ 30 ms + sinus 900 Hz, τ 10 ms; „ka”: tek −6 dB, ciemniejszy | rytm **maqsum** na ósemkach: D T _ T D _ T _ | −3 dB |
 | taiko | sinus 70 → 38 Hz, τ 300 ms + szum LP 500 Hz | „raz” taktów 1, 5, 9, 13 | −2 dB |
 | „ud” | Karplus–Strong z jasnym atakiem; na początku nuty wysokość −30 c → 0 w 40 ms (szarpnięcie) | frazy 2-taktowe w taktach 1–8, odpowiedzi w 9–16 | −6 dB |
@@ -955,7 +963,7 @@ Pogłos: jaskinia 3,5 s, opóźnienie wstępne 40 ms, mix 30%.
 |---|---|---|---|
 | bas pulsujący | piła → LP 600 Hz z obwiednią filtra | ósemki na prymie | −4 dB |
 | dzwonki | jak w `mus_s3` | szesnastkowe arpeggio przez 2 oktawy | −9 dB |
-| chór zorzy | piły przez formanty przechodzące z „a” (700 / 1 100 Hz) w „o” (450 / 800 Hz) w ciągu 6 taktów i z powrotem (cykl 12 taktów = dokładnie 1 na pętlę; przy 4 + 4 taktach pętla kończyłaby się na „o”, a zaczynała na „a”) | całe takty | −8 dB |
+| chór zorzy | piły przez formanty przechodzące z „a” (700 / 1 100 Hz) w „o” (450 / 800 Hz) w ciągu 3 taktów i z powrotem (cykl 6 taktów = dokładnie 2 na pętlę; przy 4 + 4 taktach pętla kończyłaby się na „o”, a zaczynała na „a”) | całe takty | −8 dB |
 | stopa | jak w `mus_s3`, miękka | każda ćwierćnuta | −5 dB |
 | narastania | szum + ton Sheparda, 1 miara | ostatnia miara taktów 4, 8 i 12 | −12 dB |
 | migotanie | iskry 6–10 kHz | losowo ~4 na sekundę | −22 dB |
@@ -1013,7 +1021,8 @@ Muzyką steruje jedna maszyna stanów w silniku (`audio.setMusicState(...)`). Gr
 a maszyna decyduje, co zrobić z muzyką. **Dlaczego maszyna stanów:** kombinacje są liczne (big win w free spinach,
 antycypacja zakończona big winem bez bonusu, wyciszenie w trakcie przenikania…); rozproszone `playMusic()` w kodzie
 gry szybko prowadzą do dwóch utworów naraz albo ciszy. Jedno miejsce z jawnymi przejściami łatwo przetestować i
-obronić.
+obronić. Przy każdej zmianie stanu maszyna ustawia też kontekst tonacji efektów (§ 2.6): LOBBY → `lobby`,
+GRA / NAPIECIE / FS / NAPIECIE_FS / PODSUMOWANIE → `s1` / `s2` / `s3`, BIG_WIN → `bigwin`.
 
 ```mermaid
 stateDiagram-v2
@@ -1060,7 +1069,7 @@ stateDiagram-v2
 | 6 | NAPIECIE → GRA | ostatni antycypowany bęben stanął bez bonusu | warstwa wyciszona; filtr 1 200 → 20 000 Hz; ducking zdjęty | 250 ms (warstwa), 600 ms (filtr) | brak | — |
 | 6a | FS ⇄ NAPIECIE_FS | E27 w darmowych spinach (S2: 2 scattery — szansa na retrigger) | jak przejścia 5 i 6, tylko na utworze FS; retrigger (E61) wraca do FS bez zmiany utworu (gong i `sfx_scatter_3` niosą moment) | jak 5 / 6 | brak | jak 5; przy E61 — § 6.1 |
 | 7 | GRA / NAPIECIE → FS | E35 start free spins | muzyka gry wyciszana od chwili 0 przez 800 ms; `mus_napiecie` ucięta w 100 ms w chwili uderzenia; utwór FS startuje od `loopStart` **dokładnie w chwili uderzenia stingera** (`syncPoint` 1 000 ms, po transpozycji 891 ms w S2 i 794 ms w S3 — § 2.6) | 800 ms | uderzenie stingera = „raz” nowego utworu | `sfx_free_spins_start` (+ na uderzeniu: `sfx_blysk`, S2: `sfx_s2_gong`, S3: `sfx_uderzenie_basu`) |
-| 8 | GRA / NAPIECIE / FS → BIG_WIN | E30 wygrana ≥ 15× | zapamiętanie pozycji bieżącego utworu; utwór wyciszany 400 ms; `mus_bigwin` od `loopStart` w chwili uderzenia (`syncPoint` 300 ms); ducking „big win” −6 dB | 400 ms | **brak** — nagroda ma być natychmiast | `sfx_bigwin_wejscie`; S1 jackpot (E51): `sfx_s1_jackpot`, `mus_bigwin` startuje w 1 820 ms (uderzenie banera BIG) |
+| 8 | GRA / NAPIECIE / FS → BIG_WIN | E30 (poziom `big` lub wyższy — progi: brief § 3) | zapamiętanie pozycji bieżącego utworu; utwór wyciszany 400 ms; `mus_bigwin` od `loopStart` w chwili uderzenia (`syncPoint` 300 ms); ducking „big win” −6 dB | 400 ms | **brak** — nagroda ma być natychmiast | `sfx_bigwin_wejscie`; S1 jackpot (E51): `sfx_s1_jackpot`, `mus_bigwin` startuje w 1 820 ms (uderzenie banera BIG) |
 | 9 | BIG_WIN → GRA lub FS | E32 koniec lub pominięcie sekwencji | `mus_bigwin` wyciszana od najbliższej miary; utwór gry / FS wznawiany **od początku taktu, w którym go przerwano**, wejście startuje 800 ms po E32 | 600 ms (wyjście), 1 200 ms (wejście) | miara `mus_bigwin` (≤ 469 ms) | `sfx_bigwin_koniec` |
 | 10 | FS → PODSUMOWANIE | E37 | ducking „podsumowanie” −6 dB na muzyce FS | 300 ms | brak | `sfx_free_spins_koniec` |
 | 11 | PODSUMOWANIE → GRA | zamknięcie panelu podsumowania | przenikanie o stałej mocy FS → gra; utwór gry startuje **w tej samej pozycji siatki** co FS (to samo tempo i siatka akordów) | 2 000 ms | najbliższa kreska taktowa FS (≤ 2,4 s w S2, ≤ 2,67 s w S3) | — |
@@ -1262,7 +1271,7 @@ Dlatego głośność trzymamy przede wszystkim poziomami (§ 5.1) — limiter ty
 | plik efektu jednorazowego | szczyt ≤ −1,0 dBTP (WAV; tolerancja pomiaru 0,1 dB) | `analiza.py` (`dbtp`, nadpróbkowanie ×4 przez FFT) i niezależnie `ffmpeg … ebur128=peak=true` w `sprawdz.py` |
 | pętla efektu | −18 LUFS ±0,5 | `analiza.lufs(..., okresowy=True)` — pętlę mierzymy po powieleniu do ≥ 4 s (pętla 0,5 s to za mało na bloki 400 ms z bramkowaniem) |
 | utwór muzyczny | −14 LUFS ±0,5, szczyt ≤ −1,0 dBTP | jw. |
-| plik po zakodowaniu (Opus / AAC, zdekodowany) | szczyt ≤ −0,5 dBTP | ostrzeżenie: koder stratny przy 64–128 kb/s potrafi podnieść szczyty o 0,2–1 dB |
+| plik po zakodowaniu (Opus / AAC, zdekodowany) | szczyt ≤ −1,0 dBTP (WebM — błąd, M4A — ostrzeżenie, A04) | koder stratny przy 64–128 kb/s potrafi podnieść szczyty o 0,2–1 dB, więc `generuj_wszystko.py` obniża sufit limitera i koduje ponownie, aż szczyt po dekodowaniu się zmieści |
 | **sesja gry** (5 min typowego grania, ustawienia domyślne) | **−18 LUFS ±2** (zintegrowana), szczyt ≤ −1 dBTP | nagranie z trybu `?audioDebug=1` |
 | najgłośniejszy moment (ULTRA WIN) | ≤ −10 LUFS krótkoterminowo (okno 3 s) | jw. |
 | lobby (sama muzyka) | ≈ −22 LUFS | jw. |
@@ -1271,10 +1280,10 @@ Dlatego głośność trzymamy przede wszystkim poziomami (§ 5.1) — limiter ty
 strona, która „krzyczy” po kliknięciu, jest odbierana jako tania. −18 LUFS z dynamiką ±6 dB pozwala wygranym
 naprawdę „wybuchać” ponad tło. Gracz zawsze może pogłośnić suwakiem.
 
-**Dlaczego szczyt po zakodowaniu ma luźniejszy próg:** `decodeAudioData` zwraca próbki float32, a Web Audio liczy
-cały graf we float — przekroczenie 0 dBFS w zdekodowanym pliku nie oznacza obcięcia. Obciąć może dopiero wyjście
-(`destination`), a przed nim są `gainDb` ≤ −3 dB, szyny, kompresor i limiter. Dlatego twardy próg −1 dBTP dotyczy
-WAV (to kontrolujemy w pipeline), a dla plików po kodowaniu wystarcza ostrzeżenie.
+**Dlaczego M4A tylko z ostrzeżeniem:** `decodeAudioData` zwraca próbki float32, a Web Audio liczy cały graf we
+float — przekroczenie 0 dBFS w zdekodowanym pliku nie oznacza obcięcia. Obciąć może dopiero wyjście
+(`destination`), a przed nim są `gainDb` ≤ −3 dB, szyny, kompresor i limiter. Przekroczenie o ułamek dB w AAC (gdy
+6 prób obniżania sufitu nie wystarczy) jest więc niegroźne; WAV i WebM trzymamy twardo przy −1 dBTP.
 
 **Tryb pomiarowy `?audioDebug=1`.** Silnik podpina pod master `MediaStreamAudioDestinationNode`, a `MediaRecorder`
 zapisuje strumień do pliku WebM (przycisk „Nagraj 5 min” w małym panelu debugowania). Plik mierzymy:
@@ -1321,16 +1330,16 @@ tutaj podajemy tylko, **który dźwięk** i **względem czego**.
 | **E25** `bebny_obrot` | S1: `sfx_beben_petla_s1`; S2: `sfx_beben_petla_s2`; S3: `sfx_s3_opad` | S1, S2: +40 ms, wejście 60 ms; S3: 120 ms (start opadu nowej planszy, 04 § 2.15) | pętla gra do ostatniego stopu; głośność pętli maleje z każdym stopem (S1: 100 → 66 → 33%; S2: −20 punktów procentowych na bęben) |
 | **E26** `beben_stop` | `sfx_beben_stop_1` … `sfx_beben_stop_6` (numer = bęben / kolumna) | dokładnie w chwili lądowania bębna (planista, § 2.7) | panorama według pozycji (§ 5.5); po ostatnim stopie pętla gaśnie w 120 ms (turbo 60 ms); szybkie zatrzymanie: stopy co 40 ms, każdy −3 dB |
 | **E27** `antycypacja` | `sfx_antycypacja_narastanie`, `sfx_bicie_serca`, `mus_napiecie` | narastanie kończy się na stopie antycypowanego bębna (`syncPoint` = koniec pliku); plik ma T, więc trwa 1 200 ms / prędkość (S2: 1 069 ms — gra w całości, startuje 131 ms po poprzednim stopie); gdy antycypacja trwa krócej, start od przesunięcia `offset = 1,2 s − czas_antycypacji × prędkość`: S1 900 ms (od 300 ms pliku), S3 700 ms na kolumnę (od 318 ms pliku, prędkość ×1,26), turbo ×0,45 (np. S2 540 ms → od 594 ms); serce i warstwa: 0 ms od początku antycypacji | stan GRA → NAPIECIE; każdy kolejny antycypowany bęben: nowe narastanie, serce +2 dB; S1 (2 WILD na linii) — 3. bęben; S2 (2 scattery) — kolejne bębny; S3 (3 scattery) — pozostałe kolumny zrzutu; sukces: narastanie i serce gasną na rozładowaniu (E34 / E50), porażka: wyciszenie 250–600 ms |
-| **E28** `wygrana_small` | `sfx_wygrana_small_1` … `sfx_wygrana_small_3`, `sfx_linia`, `sfx_licznik_tik`, `sfx_saldo_puls` | 0 ms (początek prezentacji); linie kolejno co 350 ms; tik, gdy liczenie trwa > 400 ms; puls przy zaksięgowaniu | wariant według mnożnika m: `_1` m < 1 (−6 dB, bez linii i tiku), `_2` 1 ≤ m < 2,5, `_3` 2,5 ≤ m < 5; ducking `wygrana` −3 dB; w późniejszym cyklu po liniach (co 900 ms) `sfx_linia` −8 dB |
+| **E28** `wygrana_small` | `sfx_wygrana_small_1` … `sfx_wygrana_small_3`, `sfx_linia`, `sfx_licznik_tik`, `sfx_saldo_puls` | 0 ms (początek prezentacji); linie kolejno co 350 ms; tik, gdy liczenie trwa > 400 ms; puls przy zaksięgowaniu | wariant według mnożnika m: `_1` m < 1 (−6 dB, bez linii i tiku), `_2` 1 ≤ m < 2,5, `_3` m ≥ 2,5 (w obrębie `small` — progi poziomów: brief § 3); ducking `wygrana` −3 dB; w późniejszym cyklu po liniach (co 900 ms) `sfx_linia` −8 dB |
 | **E29** `wygrana_medium` | `sfx_wygrana_medium`, `sfx_linia`, `sfx_moneta_1` … `sfx_moneta_5`, `sfx_licznik_tik`, `sfx_licznik_koniec` | 0 ms; linie co 350 ms; 6 monet w 50–400 ms (razem z cząsteczkami); tik przez czas liczenia; koniec na kwocie końcowej | ducking `wygrana` −3 dB |
 | **E30** `wygrana_big` | `sfx_bigwin_wejscie`, `mus_bigwin`, `sfx_blysk`, `sfx_licznik_tik`, `sfx_monety_fontanna` | oś czasu § 6.5 | stan → BIG_WIN; ducking `bigwin` −6 dB |
 | **E31** `eskalacja_poziomu` | `sfx_poziom_w_gore` (MEGA 0 c, EPIC +200 c, ULTRA +400 c), `sfx_uderzenie_basu`, `sfx_blysk` | `sfx_poziom_w_gore` 250 ms **przed** przekroczeniem progu (jego uderzenie = zmiana banera); bas i błysk na uderzeniu | tik +0,15 prędkości na poziom; fontanna +2 dB na poziom |
-| **E32** `wygrana_koniec` | `sfx_licznik_koniec`; `sfx_bigwin_koniec` (tylko big i wyżej); `sfx_przejscie_whoosh` | 0 ms (kwota końcowa albo pominięcie); whoosh przy odlocie banera po przytrzymaniu (BIG 1 500, MEGA 1 800, EPIC 2 100, ULTRA 2 600 ms — 04) | tik wyciszany 60 ms, fontanna 800 ms; przy pominięciu pozostałe efekty sekwencji gasną w 80 ms i gra ten sam koniec; stan → GRA / FS |
+| **E32** `wygrana_koniec` | `sfx_licznik_koniec`; `sfx_bigwin_koniec` (tylko big i wyżej); `sfx_przejscie_whoosh` | 0 ms (kwota końcowa albo pominięcie); whoosh przy odlocie banera po przytrzymaniu (BIG 1 500, MEGA 1 800, EPIC 2 100, ULTRA 2 600 ms — 04) | tik wyciszany 60 ms, fontanna 800 ms; przy pominięciu pozostałe efekty sekwencji gasną w 80 ms i gra ten sam koniec, a nieodegrane eskalacje zastępuje jedno łączne `sfx_poziom_w_gore` (§ 6.5, 04 § 4.5); stan → GRA / FS |
 | **E33** `wild_ladowanie` | `sfx_wild` | `syncPoint` 150 ms → start 150 ms przed lądowaniem | kilka WILD w jednym spinie: maks. 2 głosy, drugi +60 ms i −3 dB, bez zmiany wysokości (+200 c zrobiłoby z akordu C-dur akord D-dur z F♯, obcym dla a-moll S1, a w S2 — E-dur z G♯, obcym dla hidżazu) |
 | **E34** `scatter_ladowanie` | `sfx_scatter_1` / `sfx_scatter_2` / `sfx_scatter_3` | `syncPoint` 80 ms → start 80 ms przed lądowaniem | wariant według liczby n scatterów na planszy do tej pory i progu bonusu gry (S2: 3, S3: 4): `sfx_scatter_3` dla n ≥ progu, `sfx_scatter_2` dla n = próg − 1, `sfx_scatter_1` dla mniejszych (S3: 1. i 2.). **Dlaczego:** fanfara „bonus!” przy trzecim scatterze S3 obiecywałaby nagrodę, której nie ma (§ 1.4). Ponad próg: S2 +100 c na scatter (maks. +200 c), S3 +1 dB (maks. +3 dB) — limit ±400 c z § 2.6; panorama według bębna / kolumny |
 | **E35** `free_spins_start` | `sfx_free_spins_start`, muzyka FS, `sfx_blysk`; S2: `sfx_s2_gong`; S3: `sfx_uderzenie_basu`; `sfx_przejscie_whoosh` | oś czasu § 6.6 | stan → FS; banner `g_win_free_spins` ma szczyt skali dokładnie w chwili uderzenia stingera (`U` w 04) |
 | **E36** `free_spins_spin` | `sfx_saldo_puls` (−4 dB), dalej jak E25–E26 | 0 ms (zmiana licznika spinów) | bez `sfx_spin_start`; bez dodatkowego przesunięcia wysokości (T już daje +200 / +400 c — dodatkowe +400 c przekroczyłoby limit z § 2.6); wygrane darmowych spinów trafiają do salda dopiero po podsumowaniu (E37), więc puls licznika spinów nie myli się z E08 |
-| **E37** `free_spins_podsumowanie` | `sfx_free_spins_koniec`, `sfx_licznik_tik`, `sfx_licznik_koniec`, `ui_klik`, `sfx_przejscie_whoosh`, po zamknięciu panelu `mus_s2` / `mus_s3`; przy sumie ≥ 15× — najpierw sekwencja big win (E30–E32) | 0 ms; liczenie 600 → 1 800 ms (tik, potem koniec); klik „Dalej”; whoosh przy wyjściu | stan → PODSUMOWANIE → GRA (przenikanie 2 000 ms w takcie) |
+| **E37** `free_spins_podsumowanie` | `sfx_free_spins_koniec`, `sfx_licznik_tik`, `sfx_licznik_koniec`, `ui_klik`, `sfx_przejscie_whoosh`, po zamknięciu panelu `mus_s2` / `mus_s3`; gdy suma darmowych spinów ma poziom `big` lub wyższy (progi: brief § 3) — najpierw sekwencja big win (E30–E32) | 0 ms; liczenie 600 → 1 800 ms (tik, potem koniec); klik „Dalej”; whoosh przy wyjściu | stan → PODSUMOWANIE → GRA (przenikanie 2 000 ms w takcie) |
 | **E38** `autoplay` | `ui_przelacznik` (wł. +200 c, wył. −200 c); zatrzymanie przez warunek: `ui_zamknij` | 0 ms | w autoplay `sfx_spin_start` −6 dB i wygrane small −3 dB (mniej męczące w długiej serii) |
 | **E39** `turbo` | `ui_przelacznik` (±200 c) | 0 ms | oś czasu dźwięków ×0,45 (§ 2.7) |
 | **E40** `blad_sieci` | pętla bębnów (`sfx_beben_petla_s1` / `sfx_beben_petla_s2`) — „zjazd taśmy”; `ui_blad`; `ui_klik` | pętla: 0 ms; `ui_blad`: 300 ms (pojawienie się okna); `ui_klik`: „Spróbuj ponownie” | pętla: prędkość 1,0 → 0,5 w 300 ms (`setRate`) i wyciszenie 300 ms; ducking `okno` −6 dB do ponowienia |
@@ -1340,7 +1349,7 @@ tutaj podajemy tylko, **który dźwięk** i **względem czego**.
 | **E61** `s2_retrigger` | `sfx_s2_gong`, `sfx_scatter_3`, `sfx_poziom_w_gore` (+200 c), `sfx_licznik_koniec` | 0 ms; 0 ms; 400 ms (baner „+10”); 900 ms (licznik FS 3 → 13) | ducking `stinger` −6 dB przez 1,5 s; +200 c daje akord kwintowy G (G+D), który należy do D hidżaz |
 | **E70** `s3_kaskada_pekniecie` | `sfx_linia`, `sfx_licznik_tik` (krótko), `sfx_s3_pekniecie_1` … `sfx_s3_pekniecie_4` | linia 0 ms (obrys klastra); tik 120–420 ms (kwota klastra); pęknięcia 280 ms, +30 i +60 ms (maks. 3 głosy, warianty bez powtórzeń) | panorama = środek klastra; linia +100 c × numer kaskady (maks. +700 c) — rosnąca „drabina” emocji; klaster ≥ 10 symboli: pierwszy głos zawsze `sfx_s3_pekniecie_4` (najjaśniejszy) |
 | **E71** `s3_kaskada_opad` | `sfx_s3_opad` | 0 ms (początek opadu) | przy antycypacji S3 przed opadem gra narastanie |
-| **E72** `s3_mnoznik_ladowanie` | `sfx_s3_mnoznik` (+ `sfx_blysk` dla ×50–×100) | chwila lądowania kuli | wysokość według wartości (§ 3.6): ×2–×5, ×10–×25, ×50–×100 — te same progi co kolory kuli w 04 |
+| **E72** `s3_mnoznik_ladowanie` | `sfx_s3_mnoznik` (+ `sfx_blysk` dla ×50–×100) | chwila lądowania kuli | wysokość według pasma wartości (§ 3.6): ×2–×9 (0 c), ×10–×49 (+200 c), ×50–×100 (+400 c) — pasma ciągłe, te same co kolory kuli w 04 (karta E72) |
 | **E73** `s3_mnoznik_zbior` | `sfx_s3_mnoznik_zbior`, `sfx_s3_mnoznik` (−8 dB), `sfx_licznik_koniec` (−6 dB), `sfx_uderzenie_basu` | zbiór: 0 ms (`syncPoint` 900 ms = licznik mnożnika uderza w kwotę); `sfx_s3_mnoznik`: wylot każdej kuli (maks. 2 głosy); 1 500 ms (slam kwoty): koniec + bas | potem dźwięk progu wygranej całej sekwencji (04: 1 900 ms) |
 
 ### 6.2. Oś czasu: spin S1 bez wygranej specjalnej
@@ -1420,9 +1429,26 @@ więc chwile przekroczenia progów znamy z wyprzedzeniem i dźwięk eskalacji st
 | ≈ 7 760 | utwór gry wraca od zapamiętanego taktu (wejście 1 200 ms); ducking zdjęty (800 ms) | przytrzymanie EPIC (2 100 ms) |
 | 9 060 | `sfx_przejscie_whoosh` | wyjście: baner odlatuje, kwota leci do panelu |
 
-Błyski (`sfx_blysk`) mają `cooldownMs` 333 — tak samo jak limit 3 błysków ekranu na sekundę (eskalacje i tak dzieli
-≥ 1 200 ms). Przy `prefers-reduced-motion` błyski ekranu są wyłączone, ale dźwięk `sfx_blysk` zostaje (to nie ruch) —
-gracz nadal słyszy eskalację.
+Błyski (`sfx_blysk`) mają `cooldownMs` 333 — tak samo jak limit 3 błysków ekranu na sekundę. Kolejne uderzenia
+sekwencji (E30, E31, E32) dzieli według 04 § 4.3 co najmniej **1 280 ms w tempie bazowym i 620 ms w TURBO**
+(ostatni segment liczenia 1 200 × 0,45 = 540 ms + 80 ms *hit-stopu*, którego TURBO nie skraca), więc `cooldownMs`
+333 nigdy nie zjada błysku eskalacji. Przy `prefers-reduced-motion` błyski ekranu są wyłączone, ale dźwięk
+`sfx_blysk` zostaje (to nie ruch) — gracz nadal słyszy eskalację.
+
+**TURBO — co musi się zmieścić w 620 ms między eskalacjami:**
+
+| Element | Zachowanie w TURBO | Dlaczego mieści się w 620 ms |
+|---|---|---|
+| `sfx_poziom_w_gore` (1 400 ms, uderzenie w 250 ms) | start nadal 250 ms przed progiem (`syncPoint` nie jest skalowany — to czas pliku); `maxVoices` 1: następna eskalacja ucina poprzednią z wyciszeniem 80 ms | 250 ms wyprzedzenia < 620 ms; ogon poprzedniego (trzymany akord) jest ucinany, zanim zabrzmi nowe uderzenie, więc akordy F5 / G5 / A5 się nie mieszają |
+| `sfx_uderzenie_basu` (1 000 ms) | na każdym uderzeniu; `maxVoices` 2 | dwa nakładające się ogony subbasu są jeszcze czytelne; trzeci (ULTRA po 2 × 620 ms) ucina najstarszy |
+| `sfx_blysk` | jak w tempie bazowym | `cooldownMs` 333 < 620 |
+| ducking `bigwin` | trzymany przez całą sekwencję (bez zwalniania między eskalacjami) | nie ma czego mieścić — jeden ducking od E30 do E32 |
+| `sfx_licznik_tik` | milknie na 80 ms *hit-stopu*, potem +0,15 prędkości | *hit-stop* jest w 620 ms wliczony |
+
+**Przewinięcie w trakcie liczenia** (zgodnie z 04 § 4.5): `sfx_licznik_tik` milknie od razu; jeśli zostały
+nieodegrane eskalacje, gra **jedno** `sfx_poziom_w_gore` z transpozycją poziomu końcowego, startowane od
+przesunięcia 0,25 s (`offset` = `syncPoint`), żeby uderzenie zabrzmiało w chwili dotknięcia; potem slam E32
+z `sfx_licznik_koniec` + `sfx_bigwin_koniec`. Pozostałe efekty sekwencji gasną w 80 ms.
 
 ### 6.6. Oś czasu: free spins (S2)
 
@@ -1471,13 +1497,13 @@ Front niczego nie losuje i nie liczy wyniku — z kroków odczytuje tylko, **co*
 | `spin.orbs`, `cascade.orbs` (S3) | E72 | `sfx_s3_mnoznik` na każdą kulę; wysokość według `value` (§ 3.6) |
 | `expandWild` (`reels`) | E60 | `sfx_s2_wild_rozszerzenie` na każdy bęben z `reels` (co 250 ms, maks. 2 naraz) |
 | `feature`, `name: "neonJackpot"` | E51 | `sfx_s1_jackpot` zamiast `sfx_bigwin_wejscie`, potem sekwencja big win |
-| `win` (S1, S2) | E28–E30 | linie z `wins[]` (`sfx_linia` co 350 ms); wariant i próg według m = `win` kroku / `bet` (progi briefu § 3; dla rundy bez darmowych spinów to samo co pole `tier`) |
+| `win` (S1, S2) | E28–E30 | linie z `wins[]` (`sfx_linia` co 350 ms); poziom i wariant według mnożnika **jednostki prezentacji** z 04 § 2.19 (m = przyrost `totalWin` w jednostce / `bet`; progi wyłącznie z briefu § 3 — w rundzie bez darmowych spinów wynik musi być równy polu `tier`) |
 | `wins[].wildMultiplier: 2` (S1) | E50 | `sfx_s1_neon_bzyk` + `sfx_licznik_koniec` przy podwojeniu kwoty linii |
-| `win` + `cascade` (S3) | E70, E71 | `sfx_linia` (+100 c × numer kaskady), tik, pęknięcia według `removed` (środek ciężkości → panorama; ≥ 10 pozycji → pierwszy głos `sfx_s3_pekniecie_4`), `sfx_s3_opad` przy `newSymbols`; po ostatniej kaskadzie dźwięk progu dla sumy `win` całej sekwencji / `bet` |
+| `win` + `cascade` (S3) | E70, E71 | `sfx_linia` (+100 c × numer kaskady), tik, pęknięcia według `removed` (środek ciężkości → panorama; ≥ 10 pozycji → pierwszy głos `sfx_s3_pekniecie_4`), `sfx_s3_opad` przy `newSymbols`; po ostatniej kaskadzie (w darmowych spinach — po E73) dźwięk poziomu jednostki prezentacji (04 § 2.19) |
 | `applyMultiplier` (`orbsSum`) | E73 | `sfx_s3_mnoznik_zbior`, `sfx_s3_mnoznik` (−8 dB) przy wylocie kul |
 | `freeSpinsStart` (`count`, `trigger`) | E35 | `sfx_free_spins_start` i przejście muzyki do FS (scattery z `trigger` zagrały już jako E34) |
 | `freeSpinsRetrigger` (`added`) | E61 | `sfx_s2_gong`, `sfx_scatter_3`, `sfx_poziom_w_gore` (+200 c), `sfx_licznik_koniec` |
-| `freeSpinsEnd` (`freeSpinsWin`) | E37 | przy `freeSpinsWin / bet` ≥ 15 najpierw E30–E32, potem podsumowanie |
+| `freeSpinsEnd` (`freeSpinsWin`) | E37 | m = `freeSpinsWin` / `bet`; przy poziomie `big` lub wyższym (brief § 3) najpierw E30–E32, potem podsumowanie |
 
 **Ładowanie sterowane wynikiem (§ 2.4) też czyta kroki:** `freeSpinsStart` → `preload` muzyki FS i
 `sfx_free_spins_*`; `tier` ≥ `big` albo `feature` → pakiet big win; niepuste `anticipation` → narastanie, serce i
@@ -1492,7 +1518,7 @@ Front niczego nie losuje i nie liczy wyniku — z kroków odczytuje tylko, **co*
 | Etap | Format | Parametry | Dlaczego |
 |---|---|---|---|
 | synteza (w pamięci) | NumPy `float64` | 48 000 Hz | pełna precyzja obliczeń, brak przesterowań w trakcie miksu warstw |
-| plik pośredni | WAV PCM 24 bit | 48 000 Hz, mono lub stereo, `target/audio/wav/<ID>.wav` | bezstratny, do odsłuchu i pomiarów; 24 bity = zapas dynamiki bez ditheringu |
+| plik pośredni | WAV PCM 24 bit | 48 000 Hz, mono lub stereo, `tools/audio/build/wav/<ID>.wav` (katalog w `.gitignore`) | bezstratny, do odsłuchu i pomiarów; 24 bity = zapas dynamiki bez ditheringu |
 | aplikacja (1) | **Opus w WebM** — `<ID>.webm` | mono **64 kb/s**, stereo **96 kb/s**, VBR | najmniejsze pliki przy bardzo dobrej jakości; Opus pełnopasmowy działa przy 48 kHz (sygnał o innej częstotliwości koder przepróbkowuje, a dekoder i tak oddaje 48 kHz) — stąd 48 kHz w całym pipeline (bez przepróbkowania) |
 | aplikacja (2) | **AAC-LC w MP4** — `<ID>.m4a` | mono **96 kb/s**, stereo **128 kb/s** | zapas dla przeglądarek bez Opus w WebM (Safari / iOS w części wersji) |
 
@@ -1511,7 +1537,7 @@ wielkości i doklejana przez koder cisza na początku i końcu (opóźnienie kod
 Zgodnie z kontraktem 09 pliki leżą **płasko** w jednym katalogu, nazwa = ID:
 
 ```text
-src/main/resources/static/assets/audio/          ← WYŁĄCZNIE wynik tools/audio/buduj.py (09 § 4)
+src/main/resources/static/assets/audio/          ← WYŁĄCZNIE wynik tools/audio/generuj_wszystko.py (09 § 4)
 ├── manifest.json
 ├── ui_hover.webm         ui_hover.m4a
 ├── ui_klik.webm          ui_klik.m4a
@@ -1557,7 +1583,8 @@ kilkudziesięciu ms.
 
    Wynik jest okresowy z okresem L co do próbki.
 2. **Zakładki z obu stron.** Przed pętlą doklejamy końcówkę pętli, a za nią jej początek: 0,1 s dla pętli efektów,
-   0,25 s dla muzyki.
+   0,25 s dla muzyki (`petle.dodaj_zakladki`; w `generuj_wszystko.py` dziś za flagą `--zakladki`, którą wersja do
+   repozytorium musi mieć włączoną — § 8.5).
 
    ```text
    | zakładka A |=============== pętla (L) ===============| zakładka B |
@@ -1584,7 +1611,7 @@ działają także, gdy kontekst pracuje z częstotliwością 44,1 kHz i przeglą
 Pętle muzyczne: tabela w § 4.2. Wszystkie modulacje w pętlach (tremolo, PWM, falowanie „taśmy”) mają całkowitą
 liczbę cykli na długość pętli — inaczej szew byłby słyszalny jako skok fazy modulacji. Przykłady z tego dokumentu:
 PWM w `sfx_beben_petla_s1` 1 Hz (1 cykl / 1 s), piasek w `sfx_beben_petla_s2` 0,833 Hz (1 / 1,2 s), tremolo
-borduna `mus_s2` 5 Hz (192 / 38,4 s), chorus padu `mus_s3` 0,1875 Hz (6 / 32 s), chór `mus_s3_fs` 1 cykl samogłosek
+borduna `mus_s2` 4,17 Hz (160 / 38,4 s), chorus padu `mus_s3` 0,1875 Hz (6 / 32 s), chór `mus_s3_fs` 2 cykle samogłosek
 na 12 taktów.
 
 ### 7.4. Normalizacja i mastering w pipeline
@@ -1593,10 +1620,10 @@ na 12 taktów.
 |---|---|---|---|
 | 1. usunięcie składowej stałej | filtr HP 20 Hz | jw. | HP 30 Hz |
 | 2. wejście / wyjście | wejście 2 ms, wyjście 5 ms (brak trzasków) | brak (pętla) | brak (pętla) |
-| 3. korekcja | — | — | szczytowy −3 dB przy 3 kHz (Q 1) |
-| 4. normalizacja | szczyt prawdziwy **−1 dBTP** (nadpróbkowanie ×4) | **−18 LUFS** (pomiar na pętli powielonej do ≥ 4 s) | **−14 LUFS** |
+| 3. korekcja | — | — | szczytowy −3 dB przy 3 kHz (Q 1), bas < 150 Hz w mono, łagodna kompresja szyny (próg −14 dB, 2:1, po wstępnym ustawieniu −16 LUFS); `mus_napiecie` bez wycięcia 3 kHz i bez kompresji |
+| 4. normalizacja | szczyt prawdziwy **−1 dBTP** (nadpróbkowanie ×4; sufit obniżany, gdy po kodowaniu szczyt rośnie) | **−18 LUFS** (pomiar na pętli powielonej do ≥ 4 s) | **−14 LUFS** |
 | 5. ograniczenie szczytów | — | limiter z wyprzedzeniem 4 ms na szczyt prawdziwy do −1 dBTP (`dsp.limiter`, `okresowy=True`) | jw. |
-| 6. zapis | WAV 24 bit | jw. + zakładki | jw. + zakładki |
+| 6. zapis | WAV 24 bit (`tools/audio/build/wav/`) | jw. + zakładki (`--zakladki`) | jw. + zakładki (`--zakladki`) |
 
 **Dlaczego efekty jednorazowe normalizujemy szczytem, a nie LUFS:** pomiar głośności zintegrowanej (EBU R128)
 wymaga bloków 400 ms i bramkowania — dla dźwięku 280 ms `ffmpeg` zwraca `-inf` (`loudnorm`) albo −70 LUFS
@@ -1611,17 +1638,17 @@ Polecenie `ffmpeg` poniżej to ręczny pomiar kontrolny.
 
 ```bash
 # pomiar (wynik JSON na końcu stderr: input_i = LUFS, input_tp = szczyt prawdziwy)
-ffmpeg -hide_banner -nostats -i target/audio/wav/mus_s2.wav \
+ffmpeg -hide_banner -nostats -i tools/audio/build/wav/mus_s2.wav \
        -af loudnorm=I=-14:TP=-1:LRA=11:print_format=json -f null -
 
 # Opus w WebM (mono 64k / stereo 96k)
-ffmpeg -y -hide_banner -i target/audio/wav/sfx_wild.wav \
+ffmpeg -y -hide_banner -i tools/audio/build/wav/sfx_wild.wav \
        -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio \
        -map_metadata -1 -fflags +bitexact -flags:a +bitexact \
        src/main/resources/static/assets/audio/sfx_wild.webm
 
 # AAC w M4A (mono 96k / stereo 128k)
-ffmpeg -y -hide_banner -i target/audio/wav/sfx_wild.wav \
+ffmpeg -y -hide_banner -i tools/audio/build/wav/sfx_wild.wav \
        -c:a aac -b:a 96k -movflags +faststart \
        -map_metadata -1 -fflags +bitexact -flags:a +bitexact \
        src/main/resources/static/assets/audio/sfx_wild.m4a
@@ -1641,30 +1668,32 @@ dokumentu — silnik v1 je ignoruje, wersja docelowa używa ich z wartościami d
 
 ```json
 {
-  "version": "2026-10-11T12:00:00Z",
+  "version": "3f9a1c07b2e4",
   "sounds": {
     "sfx_beben_stop_3": {
       "webm": "sfx_beben_stop_3.webm", "m4a": "sfx_beben_stop_3.m4a",
       "loop": false, "duration": 0.28, "bus": "sfx", "channels": 1,
       "gainDb": -7, "priority": 4, "group": "beben_stop", "maxVoices": 3,
-      "pitchCents": 5, "gainJitterDb": 1, "keyTrack": true, "pack": "gry-krytyczne"
+      "pitchCents": 5, "gainJitterDb": 1, "keyTrack": true,
+      "pack": "gry-krytyczne", "packs": ["gry-krytyczne"], "source": "synteza"
     },
     "sfx_moneta_2": {
       "webm": "sfx_moneta_2.webm", "m4a": "sfx_moneta_2.m4a",
       "loop": false, "duration": 0.21, "bus": "sfx", "channels": 1,
       "gainDb": -14, "priority": 1, "group": "moneta", "maxVoices": 6, "cooldownMs": 25,
-      "pitchCents": 5, "gainJitterDb": 1, "keyTrack": { "s2": 100 }, "pack": ["lobby", "gry-krytyczne"]
+      "pitchCents": 5, "gainJitterDb": 1, "keyTrack": { "s2": 100 },
+      "pack": "lobby", "packs": ["lobby", "gry-krytyczne"], "source": "synteza"
     },
     "sfx_bigwin_wejscie": {
       "webm": "sfx_bigwin_wejscie.webm", "m4a": "sfx_bigwin_wejscie.m4a",
       "loop": false, "duration": 2.4, "bus": "sfx", "channels": 2,
-      "gainDb": -3, "priority": 5, "syncPoint": 0.3, "pack": "gry-dalsze"
+      "gainDb": -3, "priority": 5, "syncPoint": 0.3, "pack": "gry-dalsze", "packs": ["gry-dalsze"], "source": "synteza"
     },
     "mus_s2": {
       "webm": "mus_s2.webm", "m4a": "mus_s2.m4a",
       "loop": true, "duration": 38.9, "bus": "music", "channels": 2,
       "loopStart": 0.25, "loopEnd": 38.65, "bpm": 100, "beatsPerBar": 4,
-      "gainDb": 0, "pack": ["s2"]
+      "gainDb": 0, "pack": "s2", "packs": ["s2"], "source": "synteza"
     }
   }
 }
@@ -1686,8 +1715,10 @@ dokumentu — silnik v1 je ignoruje, wersja docelowa używa ich z wartościami d
 | `syncPoint` | s | 0 | punkt synchronizacji w pliku (§ 2.6, § 2.7) |
 | `loopStart`, `loopEnd` | s | 0, `duration` | punkty pętli (§ 7.3) |
 | `bpm`, `beatsPerBar` | liczba | — | tylko muzyka, do kwantyzacji (§ 4.6) |
-| `pack` | lista tekstów (pojedynczy tekst = lista jednoelementowa) | `["gry-dalsze"]` | pakiety ładowania (§ 2.4): `ui`, `lobby`, `gry-krytyczne`, `gry-dalsze`, `s1`, `s2`, `s3`; dźwięk z obu stron ma dwa, np. `["lobby", "gry-krytyczne"]` |
+| `packs` | lista tekstów | `["gry-dalsze"]` | pakiety ładowania (§ 2.4): `ui`, `lobby`, `gry-krytyczne`, `gry-dalsze`, `s1`, `s2`, `s3`; dźwięk z obu stron ma dwa, np. `["lobby", "gry-krytyczne"]` |
+| `pack` | tekst | pierwszy element `packs` | zgodność wstecz (jeden pakiet); silnik czyta `packs`, a `pack` tylko, gdy `packs` brak |
 | `source` | `synteza` / `zrodla` | `synteza` | skąd plik (jak w manifeście obrazów) |
+| `version` (poziom główny) | tekst | — | skrót SHA-256 (12 znaków) zawartości wszystkich plików — zmienia się tylko, gdy zmienił się któryś dźwięk; silnik dokleja go jako `?v=` (§ 7.2) |
 
 ### 7.6. Budżet wagi
 
@@ -1721,224 +1752,288 @@ przy pierwszej wizycie, a przy kolejnych wszystko jest w pamięci podręcznej pr
 
 ```mermaid
 flowchart LR
-  P["tools/audio/dzwieki.py<br/>59 przepisów efektów"] --> R["render NumPy<br/>float64, 48 kHz"]
-  M["tools/audio/muzyka.py<br/>8 utworów"] --> R
-  I["tools/audio/instrumenty.py<br/>+ dsp.py"] -.-> P
+  P["tools/audio/dzwieki.py<br/>59 przepisów efektów (@dzwiek)"] --> R["render NumPy<br/>float64, 48 kHz<br/>pętle już okresowe (§ 7.3)"]
+  M["tools/audio/muzyka.py<br/>8 utworów (@utwor)<br/>+ sekwencer.py"] --> R
+  I["instrumenty.py + dsp.py"] -.-> P
   I -.-> M
-  Z["audio/zrodla/ID.wav / .mp3<br/>(Suno, CC0 — mają pierwszeństwo)"] --> D["dekodowanie ffmpeg<br/>→ 48 kHz float"]
-  D --> L
-  R --> L["petle.py<br/>zawijanie, zakładki"]
-  L --> N["mastering<br/>normalizacja, limiter"]
-  N --> W["target/audio/wav/ID.wav<br/>24 bit"]
-  W --> E["eksport.py: ffmpeg<br/>Opus/WebM + AAC/M4A"]
+  Z["audio/zrodla/ albo tools/audio/zrodla/<br/>ID.wav / .mp3 (Suno, CC0 — mają pierwszeństwo)"] --> D["przetworz_zewnetrzne.py + petle.py<br/>dekodowanie ffmpeg → 48 kHz, wycięcie pętli (§ 11.3)"]
+  D --> N
+  R --> N["mastering.py<br/>HP, wejście/wyjście, normalizacja,<br/>limiter, zakładki pętli"]
+  N --> W["tools/audio/build/wav/ID.wav<br/>24 bit"]
+  W --> E["eksport.py: ffmpeg Opus/WebM + AAC/M4A<br/>szczyt po dekodowaniu > −1 dBTP → niższy sufit, ponownie"]
   E --> A["static/assets/audio/<br/>ID.webm, ID.m4a"]
-  E --> J["manifest.json"]
-  A --> S["sprawdz.py<br/>kontrole A01–A14, raport"]
+  E --> J["manifest.json<br/>(metadane z dekoratorów)"]
+  A --> S["sprawdz.py + analiza.py<br/>kontrole A01–A14,<br/>build/raport.md"]
   J --> S
 ```
 
 ### 8.2. Pliki i katalogi
 
+Stan na 2026-10-11 (pipeline powstaje równolegle z tym dokumentem — po zmianach w `tools/audio/` ten opis trzeba
+z nimi porównać):
+
 ```text
 tools/audio/
-├── buduj.py          punkt wejścia: synteza → pętle → mastering → WAV → kodowanie → manifest → raport
-├── dsp.py            prymitywy: czas, obwiednie, oscylatory, dzwon FM, Karplus–Strong, filtr SVF, szumy,
-│                     pogłos (splot FFT), nasycenie, redukcja bitów, panorama, zapis WAV 24 bit
-├── instrumenty.py    instrumenty muzyczne z prymitywów: piano FM, pad, bas, arpeggiator, perkusja, gong, chór
-├── dzwieki.py        59 przepisów efektów — jedna funkcja na ID, metadane w dekoratorze @dzwiek
-├── muzyka.py         8 utworów: sekwencer (takty, akordy, rytmy, melodie) i render pętli
-├── petle.py          zawijanie ogona, zakładki, punkty pętli, dopasowanie pętli w plikach z audio/zrodla/
-├── eksport.py        ffmpeg (Opus, AAC), budowa manifest.json
-├── sprawdz.py        kontrole jakości i budżetów (§ 8.6)
-├── wymagania.txt     numpy>=2.0
-└── testy/            pytest: determinizm, pętle, długości, normalizacja
+├── generuj_wszystko.py    punkt wejścia: render → mastering → WAV → ffmpeg → kontrola szczytu po dekodowaniu →
+│                          manifest.json → sprawdz.py (równolegle w kilku procesach, opcja -j)
+├── katalog.py             wiążąca lista 67 ID z briefu § 10 (kolejność briefu) i ścieżki katalogów
+├── dsp.py                 prymitywy: czas i nuty, obwiednie, oscylatory z tablic falowych (bez aliasingu), FM,
+│                          parcjały, Karplus–Strong, szumy, filtry (biquad przez FFT, SVF, STFT, formanty),
+│                          nasycenie, redukcja bitów, panorama, M/S, chorus, echo, pogłos splotowy, kompresor,
+│                          limiter na szczyt prawdziwy, zapis/odczyt WAV 24 bit
+├── instrumenty.py         instrumenty z prymitywów: stopa, werbel, hi-hat, taiko, darbuka, gong, piano FM, pad, bas,
+│                          arpeggiator, „dęte”, chór (formanty), celesta, kalimba, ud, ney, ton Sheparda…
+├── sekwencer.py           siatka taktów, skale (m.in. hidżaz, lidyjska), rytmy zapisane tekstem, LFO okresowe,
+│                          „pompowanie”, zawijanie ścieżek do pętli
+├── dzwieki.py             59 przepisów efektów — jedna funkcja na ID, metadane w dekoratorze @dzwiek
+├── muzyka.py              8 utworów — dekorator @utwor, aranżacje zapisane danymi dla sekwencera
+├── mastering.py           HP 20/30 Hz, wejście/wyjście, normalizacja (dBTP / LUFS), limiter, kompresja szyny muzyki
+├── petle.py               kontrola okresowości i szwu, zakładki (opcja --zakladki), wycinanie pętli z pliku
+├── przetworz_zewnetrzne.py  podmiana na plik zewnętrzny (Suno, CC0): dekodowanie, pętla, wpis w LICENCJE.md
+├── eksport.py             ffmpeg (Opus/WebM, AAC/M4A), dekodowanie do kontroli, ebur128, manifest.json
+├── analiza.py             pomiary bez słuchania: LUFS (BS.1770-4), dBTP, RMS, składowa stała, szew pętli,
+│                          korelacja stereo, spektrogram i przebieg PNG (Pillow)
+├── sprawdz.py             kontrole A01–A14 (§ 8.6), raport tools/audio/build/raport.md i raport.json
+├── zrodla/                pliki zewnętrzne (nazwa = ID) + LICENCJE.md — drugi dopuszczalny katalog źródeł
+└── build/                 pliki pośrednie: wav/<ID>.wav (24 bit), raport — w .gitignore, odtwarzalne skryptem
 audio/
-└── zrodla/           pliki od właściciela (Suno) i z bibliotek CC0; nazwa = ID; mają pierwszeństwo nad syntezą
-    └── LICENCJE.md   źródło, autor, licencja i data sprawdzenia każdego pliku (§ 12)
-target/audio/wav/     pliki pośrednie (katalog target/ jest w .gitignore; odtwarzalne skryptem)
+└── zrodla/                pliki od właściciela (Suno) i z bibliotek CC0; nazwa = ID; mają pierwszeństwo nad syntezą
+    └── LICENCJE.md        źródło, autor, licencja i data sprawdzenia każdego pliku (§ 12)
 ```
 
-Wymagania: Python ≥ 3.11, NumPy ≥ 2.0 (bez SciPy — wszystkie filtry i splot są w `dsp.py`), ffmpeg ≥ 6 z `libopus`
-(sprawdzone: ffmpeg 6.1.1 ma `libopus`, `aac`, `loudnorm`, `ebur128`). Moduł `wave` z biblioteki standardowej zapisuje
-WAV. `art/` i `audio/` leżą poza `src/main/resources`, więc nie trafiają do pliku JAR — do aplikacji trafiają tylko
-pliki z `assets/audio/`.
+Brakuje jeszcze (zapowiedziane w nagłówkach modułów albo w tym dokumencie): `README.md` z opisem „do obrony”,
+`wymagania.txt` i testów `pytest` z § 8.9.
 
-### 8.3. `dsp.py` — prymitywy (wybrane)
+Wymagania: Python ≥ 3.11 (sprawdzone na 3.13), NumPy ≥ 2.0 (sprawdzone na 2.5; **bez SciPy** — wszystkie filtry,
+splot i pomiary są w `dsp.py` / `analiza.py`), Pillow tylko do obrazków PNG w `analiza.py` (opcjonalnie),
+ffmpeg ≥ 6 z `libopus` (sprawdzone: ffmpeg 6.1.1 ma `libopus`, `aac`, `loudnorm`, `ebur128`). Moduł `wave`
+z biblioteki standardowej zapisuje WAV. `art/` i `audio/` leżą poza `src/main/resources`, więc nie trafiają do
+pliku JAR — do aplikacji trafiają tylko pliki z `assets/audio/`.
+
+### 8.3. `dsp.py` — prymitywy
+
+**Jak bez SciPy:** wszystko, co w SciPy byłoby `lfilter` albo `fftconvolve`, liczymy w dziedzinie częstotliwości
+(`np.fft`) — to wektorowe, więc szybkie. Pętle po próbkach w czystym Pythonie zostały tylko tam, gdzie rekurencji
+nie da się zwektoryzować (SVF przestrajany w czasie, detektor obwiedni kompresora i limitera — liczone na
+zdecymowanym sygnale albo na listach Pythona, nie na skalarach NumPy).
+
+| Grupa | Funkcje | Uwagi „do obrony” |
+|---|---|---|
+| czas, nuty | `n_probek`, `czas`, `db`, `midi`, `hz`, `centy` | `hz("E♭5")`, `hz("F#4")` — nazwy nut prosto z tabel § 3 |
+| bufor | `wstaw(..., zawijaj=True)`, `miks`, `dopasuj`, `przesun`, `odwroc` | zawijanie = pętle bez szwu (§ 7.3) |
+| obwiednie | `zanik`, `atak_zanik`, `adsr`, `obwiednia`, `przemiatanie`, `wycisz` | wycisz: rampy sin² 2 ms / 5 ms na końcach pliku |
+| oscylatory | `faza`, `sinus`, `pila`, `trojkat`, `kwadrat` (PWM), `supersaw`, `fm`, `dzwon_fm`, `parcjaly`, `karplus_strong` | piła i kwadrat z tablic falowych co pół oktawy — tylko harmoniczne < 20 kHz, więc **bez aliasingu**; faza = całka częstotliwości (glissanda bez trzasków) |
+| szumy | `szum(kolor="bialy" / "rozowy" / "brazowy")` | kształtowane w FFT, RMS = 1 |
+| filtry stałe | `biquad` (RBJ „Audio EQ Cookbook”), `filtruj`, `lp`, `hp`, `bp`, `eq` | IIR przez FFT: ten sam filtr przyczynowy co rekurencja, setki razy szybciej; `okresowy=True` = splot kołowy dla pętli |
+| filtry zmienne w czasie | `svf` (krótkie dźwięki), `filtr_stft` + `modul_biquad` / `przemiataj`, `formanty` | świsty, narastania, samogłoski chóru „a” → „o” |
+| efekty | `nasycenie(k, asymetria)`, `redukcja_bitow`, `panorama`, `szerokosc`, `bas_mono`, `opoznienie_ulamkowe`, `lfo_okresowe`, `chorus`, `echo`, `ir_poglosu`, `splot`, `poglos` | pogłos: IR z 8 pasm o różnym RT60, wczesne odbicia, predelay, HP 150 Hz na ścieżce mokrej |
+| dynamika | `kompresor`, `szczyt_prawdziwy`, `limiter` | limiter z wyprzedzeniem 4 ms na szczyt prawdziwy (×4); `okresowy=True` dla pętli |
+| WAV | `zapisz_wav`, `wczytaj_wav` | 24 bit PCM, moduł `wave` |
+
+Trzy fragmenty, które najczęściej padają w pytaniach (skopiowane z `tools/audio/dsp.py`, docstringi skrócone):
 
 ```python
-import numpy as np
-
-SR = 48_000
-
-def czas(sekundy: float) -> np.ndarray:
-    """Oś czasu w sekundach: 0, 1/SR, 2/SR, …"""
-    return np.arange(int(round(sekundy * SR))) / SR
-
-def zanik(t: np.ndarray, tau: float) -> np.ndarray:
-    """Obwiednia wykładnicza: po tau głośność spada do 37%."""
-    return np.exp(-t / tau)
-
-def dzwon_fm(f, dlugosc, r=2.0, i0=2.5, i1=0.0, tau=0.6, tau_i=None):
-    """Dzwon FM: nośna f, modulator f*r; indeks modulacji maleje od i0 do i1 (jasny atak, łagodne wybrzmienie)."""
-    t = czas(dlugosc)
-    tau_i = tau_i or tau / 2
-    indeks = i1 + (i0 - i1) * np.exp(-t / tau_i)
-    return np.exp(-t / tau) * np.sin(2 * np.pi * f * t + indeks * np.sin(2 * np.pi * f * r * t))
-
-def glissando(f0, f1, dlugosc, t_zmiany=None):
-    """Sinus z wykładniczym glissandem f0 → f1 w czasie t_zmiany; faza = całka częstotliwości (bez trzasków)."""
-    t = czas(dlugosc)
-    t_zmiany = t_zmiany or dlugosc
-    f = f0 * (f1 / f0) ** np.minimum(t / t_zmiany, 1.0)
-    return np.sin(2 * np.pi * np.cumsum(f) / SR)
-
-def karplus_strong(f, dlugosc, jasnosc=0.5, wybrzmienie=0.996, rng=None):
-    """Szarpana struna: każdy okres to uśredniony poprzedni okres (filtr dolnoprzepustowy w pętli opóźnienia)."""
-    n = max(2, int(round(SR / f + 0.5)))          # +0,5: uśrednianie skraca okres o pół próbki
-    okresy = int(np.ceil(dlugosc * SR / n))
-    rng = rng or np.random.default_rng(0)
-    y = np.empty((okresy, n))
-    y[0] = rng.uniform(-1, 1, n)                  # pobudzenie: jeden okres szumu
-    for k in range(1, okresy):                    # pętla po okresach (wektorowo w okresie) — szybka
-        p = y[k - 1]
-        y[k] = wybrzmienie * (jasnosc * p + (1 - jasnosc) * np.roll(p, -1))
-    return y.ravel()[: int(dlugosc * SR)]
-
-def svf(x, fc, q=0.707, tryb="bp"):
-    """Filtr zmiennych stanu (topologia TPT); fc może być tablicą — przestrajanie w czasie (świsty, narastania)."""
-    fc = np.broadcast_to(np.asarray(fc, dtype=float), x.shape)
-    g = np.tan(np.pi * np.clip(fc, 10, 0.45 * SR) / SR)
-    k = 1 / q
-    ic1 = ic2 = 0.0
-    y = np.empty_like(x)
-    for n in range(len(x)):
-        gn = g[n]
-        a1 = 1 / (1 + gn * (gn + k)); a2 = gn * a1; a3 = gn * a2
-        v3 = x[n] - ic2
-        v1 = a1 * ic1 + a2 * v3
-        v2 = ic2 + a2 * ic1 + a3 * v3
-        ic1, ic2 = 2 * v1 - ic1, 2 * v2 - ic2
-        y[n] = k * v1 if tryb == "bp" else (v2 if tryb == "lp" else x[n] - k * v1 - v2)
-    return y
-
-def splot(a, b):
-    """Splot przez FFT (zamiast scipy.signal.fftconvolve)."""
-    n = len(a) + len(b) - 1
-    m = 1 << (n - 1).bit_length()
-    return np.fft.irfft(np.fft.rfft(a, m) * np.fft.rfft(b, m), m)[:n]
-
-def poglos_ir(rt60, rng, stereo=True):
-    """Syntetyczna odpowiedź impulsowa: szum z zanikiem do -60 dB po rt60, niezależny w L i P (szerokość)."""
-    t = czas(rt60)
-    ir = rng.standard_normal((2 if stereo else 1, len(t))) * 10 ** (-3 * t / rt60)
-    return ir / np.sqrt(np.sum(ir ** 2, axis=1, keepdims=True))
-
-def szczyt_prawdziwy(x, nadprobkowanie=4):
-    """Szczyt po interpolacji ×4 (true peak) — łapie przestery między próbkami."""
+def filtruj(x: np.ndarray, sekcje, okresowy: bool = False, ogon: float = 0.6) -> np.ndarray:
+    """Filtr IIR o stałych współczynnikach zastosowany przez FFT: widmo sygnału × odpowiedź filtru."""
+    x = np.asarray(x, dtype=float)
+    if isinstance(sekcje, tuple) and len(sekcje) == 2 and np.ndim(sekcje[0]) == 1:
+        sekcje = [sekcje]
     n = x.shape[-1]
-    return np.max(np.abs(np.fft.irfft(np.fft.rfft(x, axis=-1), n * nadprobkowanie, axis=-1) * nadprobkowanie))
+    N = n if okresowy else _rozmiar_fft(n + n_probek(ogon))
+    X = np.fft.rfft(x, N, axis=-1)
+    H = odpowiedz(sekcje, np.fft.rfftfreq(N, 1.0 / SR))
+    return np.fft.irfft(X * H, N, axis=-1)[..., :n]
+
+
+def karplus_strong(f, dlugosc, jasnosc=0.5, wybrzmienie=0.996, rng=None, pobudzenie=None) -> np.ndarray:
+    """Szarpana struna Karplusa–Stronga. Okres ma całkowitą liczbę próbek,
+    więc dokładny strój uzyskujemy przepróbkowaniem wyniku."""
+    rng = rng or np.random.default_rng(0)
+    okres = max(4, int(SR / f))
+    a = float(np.clip(jasnosc, 0.0, 1.0))
+    f_rzecz = SR / (okres + (1.0 - a))            # uśrednianie dokłada (1 − a) próbki opóźnienia
+    stosunek = f / f_rzecz
+    n_cel = n_probek(dlugosc)
+    n_gen = int(n_cel * stosunek) + okres + 2
+    obiegi = int(np.ceil(n_gen / okres))
+    y = np.empty((obiegi, okres))
+    y[0] = rng.uniform(-1, 1, okres) if pobudzenie is None else dopasuj(pobudzenie, okres)
+    y[0] -= y[0].mean()
+    for k in range(1, obiegi):
+        p = y[k - 1]
+        y[k] = wybrzmienie * (a * p + (1.0 - a) * np.roll(p, 1))   # y[n] = a·y[n−N] + (1−a)·y[n−N−1]
+    surowy = y.ravel()
+    # przepróbkowanie: odczyt z prędkością `stosunek` → dokładna częstotliwość f
+    pozycje = np.arange(n_cel) * stosunek
+    return np.interp(pozycje, np.arange(len(surowy)), surowy)
+
+
+def lfo_okresowe(hz_cel: float, okres_s: float | None) -> float:
+    """Częstotliwość modulacji zaokrąglona do całkowitej liczby cykli na długość pętli (szew bez skoku fazy)."""
+    if not okres_s:
+        return hz_cel
+    cykle = max(1, round(hz_cel * okres_s))
+    return cykle / okres_s
 ```
 
-Wszystkie powyższe funkcje zostały uruchomione na próbę (NumPy 2.5): filtr SVF ma wzmocnienie 1,0 w częstotliwości
-środkowej, przetwarza 1 s dźwięku w ~0,05 s, a przepis `sfx_beben_stop_3` po normalizacji daje szczyt −1,0 dBTP.
-Jeśli pełna synteza okaże się za wolna (pętle w Pythonie w `svf`), plan B: przetwarzanie blokami po 64 próbki ze
-stałą `fc` w bloku albo filtry o stałej częstotliwości w dziedzinie FFT.
+**Sprawdzone na próbę (NumPy 2.5, Python 3.13, jeden rdzeń):**
+
+| Operacja | Czas | Wynik |
+|---|---|---|
+| `svf` przestrajany 300 → 3 000 Hz, 1 s mono | 0,02 s | wzmocnienie BP w częstotliwości środkowej 1,000 |
+| `lp` (biquad przez FFT, 24 dB/okt.), 40 s stereo | 0,5 s | — |
+| `przemiataj` (filtr STFT), 40 s stereo | 1,8 s | — |
+| `poglos` RT60 3,5 s, 40 s stereo, `okresowy=True` | 0,6 s | — |
+| `limiter` do −1 dBTP, 40 s stereo, `okresowy=True` | 2,7 s | szczyt po limiterze −0,94 dBTP (tolerancja interpolacji ×4 → próg kontroli A04 z zapasem 0,1 dB) |
+| `analiza.lufs`, 40 s stereo | 0,3 s | sinus 1 kHz −20 dBFS: −19,99 LUFS (ffmpeg `ebur128`: −20,0) |
+| `karplus_strong` C6 (1 046,5 Hz) | — | 1 046,37 Hz, błąd −0,2 c (bez przepróbkowania: +13,7 c) |
+| `instrumenty.ton_sheparda(8, petla=True)` | — | szew: współczynnik predykcji 0,48 (≤ 1,5 = bez trzasku, § 8.6), różnica widm 0,6 dB |
+
+Pełny render (szacunek z powyższych czasów): efekty ok. 1 min, muzyka kilka minut — do przyjęcia, bo
+`generuj_wszystko.py` liczy ID równolegle w kilku procesach, a `--tylko` przebudowuje tylko wybrane (§ 8.5). Gdyby było za wolno: dłuższe dźwięki filtrujemy w STFT zamiast `svf`, a wspólne
+warstwy (np. IR pogłosu) są już zapamiętywane (`functools.lru_cache`).
 
 ### 8.4. Przepisy i sekwencer
 
-**Rejestr przepisów** — każdy ID to jedna funkcja; metadane trafiają prosto do manifestu:
+**Rejestr przepisów** (`tools/audio/dzwieki.py`) — każdy ID to jedna funkcja; metadane z dekoratora trafiają prosto
+do manifestu (§ 7.5). Fragment skopiowany z kodu:
 
 ```python
 PRZEPISY: dict[str, dict] = {}
 
-def dzwiek(id, *, bus="sfx", gain_db=0.0, priority=3, loop=False, stereo=False, **meta):
+
+def dzwiek(id_: str, *, bus: str = "sfx", gain_db: float = 0.0, priority: int = 3, loop: bool = False,
+           stereo: bool = False, dlugosc: float, packs=("gry-dalsze",), **meta):
     """Dekorator: rejestruje przepis efektu pod danym ID z metadanymi manifestu."""
     def rejestruj(funkcja):
-        PRZEPISY[id] = dict(funkcja=funkcja, bus=bus, gainDb=gain_db, priority=priority,
-                            loop=loop, stereo=stereo, **meta)
+        PRZEPISY[id_] = dict(funkcja=funkcja, rodzaj="sfx", bus=bus, gainDb=gain_db, priority=priority, loop=loop,
+                             stereo=stereo, dlugosc=dlugosc, packs=list(packs), meta=meta)
         return funkcja
     return rejestruj
 
-NUTY_STOPOW = {1: "C5", 2: "D5", 3: "E5", 4: "G5", 5: "A5", 6: "C6"}
 
-for numer, nuta in NUTY_STOPOW.items():
-    @dzwiek(f"sfx_beben_stop_{numer}", gain_db=-7, priority=4, keyTrack=True, pitchCents=5,
-            group="beben_stop", maxVoices=3, pack="gry-krytyczne")
-    def stop_bebna(rng, nuta=nuta):                      # nuta=nuta: wartość z bieżącego obrotu pętli
-        t = czas(0.28)
-        tunk = np.tanh(2 * glissando(110, 55, 0.28, t_zmiany=0.06) * zanik(t, 0.070)) / np.tanh(2)
-        klak = svf(rng.standard_normal(len(t)) * (t < 0.012), 1800, q=2, tryb="bp")
-        ping = 10 ** (-10 / 20) * dzwon_fm(hz(nuta), 0.28, r=2, i0=1.5, i1=0, tau=0.12, tau_i=0.08)
-        return miks(tunk, 0.5 * klak, ping)
+_NUTY_STOPOW = {1: "C5", 2: "D5", 3: "E5", 4: "G5", 5: "A5", 6: "C6"}
+
+
+def _stop_przepis(nuta):
+    def przepis(rng):
+        d = 0.28
+        t = czas(d)
+        n = len(t)
+        tunk = dsp.sinus(dsp.przemiatanie(110, 55, d, 0.06), n) * dsp.atak_zanik(d, 0.0008, 0.07)
+        tunk = dsp.nasycenie(tunk, 2.0)
+        klak = dsp.bp(dsp.szum(n, rng) * (t < 0.012) * np.exp(-t / 0.004), 1800, 2.0) * 1.6
+        zatrzask = dsp.hp(dsp.szum(n, rng) * (t < 0.002), 3000) * 0.5
+        ping = db(-10) * dsp.dzwon_fm(hz(nuta), d, r=2.0, i0=1.5, i1=0.0, tau=0.12, tau_i=0.08 / 2.3) * 1.6
+        korpus = 0.25 * dsp.sinus(250, n) * dsp.atak_zanik(d, 0.001, 0.025)
+        return tunk + 0.5 * klak + zatrzask + ping + korpus
+    return przepis
+
+
+for _k, _nuta in _NUTY_STOPOW.items():
+    dzwiek(f"sfx_beben_stop_{_k}", gain_db=-7, priority=4, dlugosc=0.28, packs=["gry-krytyczne"], keyTrack=True,
+           pitchCents=5, gainJitterDb=1, group="beben_stop", maxVoices=3)(_stop_przepis(_nuta))
 ```
 
-* `rng = np.random.default_rng(zlib.crc32(id.encode()))` — każdy przepis dostaje generator z ziarnem z ID, więc
-  render jest **deterministyczny**: ten sam kod → te same próbki → te same bajty plików.
-* `hz("E5")` zamienia nazwę nuty na Hz (A4 = 440), `miks(...)` sumuje warstwy różnej długości.
+* Pętle (`loop=True`) dostają argument `okres` i zwracają sygnał **dokładnie okresowy** — zawijanie robią same
+  przepisy (`wstaw(..., zawijaj=True)`, filtry `okresowy=True`), § 7.3.
+* Generator `rng` ma ziarno wyliczone z ID (`generuj_wszystko.py`: `np.random.default_rng(zlib.crc32(id.encode()))`), więc render jest **deterministyczny**: ten sam
+  kod → te same próbki WAV (bajty plików skompresowanych — patrz zastrzeżenie w § 7.4).
+* **Do zmiany w kodzie po tej recenzji** (kod powstał według wcześniejszej wersji § 3): wyjątek S2 w `keyTrack`
+  (`{"s2": 100}`) dla `sfx_beben_stop_2`, `sfx_beben_stop_5`, `sfx_moneta_2`, `sfx_moneta_5` (§ 1.2); nuty
+  `sfx_licznik_tik` (G6 / C7), `sfx_saldo_puls` (E5 → G5), `sfx_scatter_2` (G5 pod E6), bieg `sfx_wygrana_medium`
+  (C–E–G–C–E, monety na C7 / E7 / G7); `sfx_antycypacja_narastanie` z T, `syncPoint` 1,2 s i klastrem C3–G3–C4;
+  `sfx_free_spins_koniec` bez kadencji F → C; nasycenie asymetryczne w `sfx_uderzenie_basu` i `sfx_bicie_serca`
+  (LP przed nasyceniem); `maxVoices` 1 dla `sfx_poziom_w_gore` i 2 dla `sfx_uderzenie_basu`; `gainDb` +4 dla
+  `mus_bigwin`; pakiety muzyki FS `["s2", "gry-dalsze"]` / `["s3", "gry-dalsze"]` (i w `sprawdz.strony` reguła
+  z § 2.4: wpis z pakietem innej gry nie liczy się do budżetu strony); zakładki pętli domyślnie włączone (§ 8.5).
 
-**Sekwencer muzyki** (`muzyka.py`) opisuje utwór danymi, a nie kodem nuta po nucie:
+**Sekwencer muzyki** (`sekwencer.py` + `muzyka.py`) — utwór to obiekt `Utwor` z siatką taktów; nuty wstawiamy
+metodą `u.dodaj(ścieżka, sygnał, takt, miara)`, rytmy zapisujemy tekstem (`rytm("DT.TD.T.", 0.5)` = maqsum na
+ósemkach), a akordy i melodie są tablicami danych na górze pliku (np. `AKORDY_S2`, `VOICING_S2`, `UD_S2`), więc
+siatki z § 4.3 widać w kodzie jeden do jednego. Fragment `mus_s2` (skrócony):
 
 ```python
-MUS_S2 = Utwor(
-    id="mus_s2", bpm=100, metrum=4, takty=16,
-    akordy="D D Eb D Gm Cm Eb D | Gm Gm D D Eb Cm Eb D",
-    sciezki=[
-        Sciezka("bordun", instrument=bordun_smyczki, nuty="D2 A2 D3 A3", dlugosc="caly", poziom_db=-12),
-        Sciezka("darbuka", instrument=darbuka, rytm="D T . T D . T .", krok="1/8", poziom_db=-3),
-        Sciezka("taiko", instrument=taiko, rytm="X", gdzie="takty 1 5 9 13, miara 1", poziom_db=-2),
-        Sciezka("ud", instrument=ud, melodia=MELODIA_UD_S2, poziom_db=-6),
-        Sciezka("ney", instrument=ney, melodia=MELODIA_NEY_S2, takty="9-16", poziom_db=-8),
-    ],
-    poglos=dict(rt60=2.8, mix=0.22, odbicia_ms=(25, 41, 67)),
-)
+@utwor("mus_s2", bpm=100, takty=16, packs=["s2"])
+def mus_s2(rng):
+    u = Utwor("mus_s2", 100, 16, ziarno=103)
+    m = u.miara
+    for takt, ak in enumerate(AKORDY_S2, start=1):
+        ...
+        _maqsum(u, "darbuka", takt)
+        if takt in (1, 5, 9, 13):
+            u.dodaj("taiko", ins.taiko(1.2, 70, 38, 0.3, u.rng), takt, 0)
+    ...
+    s = {n: u.zawin(n) for n in u.sciezki}                 # każda ścieżka zawinięta do pętli L
+    s["bordun"] = _s2_wspolne(u, rng)                      # ciągły bordun: tony okresowe + LFO okresowe
+    ...
+    s = wyrownaj({k: (v, poziomy[k]) for k, v in s.items()})   # poziomy względne z § 4.3 — pomiarem LUFS
+    mokry = poglos_szyna(s, {...}, 2.8, 0.5, jasnosc=0.4, odbicia_ms=(25, 41, 67))
+    return u.miks(s) + mokry
 ```
 
-Render: każda nuta → funkcja instrumentu → wstawienie w próbce `round(miara × 60 / bpm × SR)`; dwa przebiegi pętli
-+ ogon → zawinięcie do okresu L (§ 7.3) → korekcja i normalizacja (§ 7.4). Zapis „danymi” ma też wartość na obronie:
-akordy i rytmy z § 4.3 widać w kodzie jeden do jednego.
+Render: nuty → funkcje instrumentów → wstawienie w siatce (`(takt − 1) · metrum + miara` miar od początku) do bufora
+dłuższego o ogon → zawinięcie do okresu L → obróbka ścieżek kołowo (`okresowy=True`) → pogłos szyny kołowo →
+mastering (§ 7.4). „Poziom względny” ścieżek z tabel § 4.3 kod realizuje **pomiarem**: każdą ścieżkę normalizuje do
+zadanej głośności LUFS względem ścieżki odniesienia (`wyrownaj`), więc miks jest powtarzalny i liczbowo uzasadniony.
+Wartości poziomów w kodzie mogą się różnić o 1–3 dB od tabel § 4.3 po strojeniu na słuch — to dopuszczalne
+(wartości startowe, nagłówek dokumentu).
 
-**Ton Sheparda bez szwu** (`mus_napiecie`, narastania): sinus i ma częstotliwość f_i(t) = f_b · 2^(i + t/T).
-Po czasie T jego faza wynosi φ_i(0) + 2π · f_b · 2^i · T / ln 2. Ustawiamy fazy początkowe rekurencyjnie:
-φ_0(0) = 0, φ_(i+1)(0) = φ_i(T) mod 2π — wtedy sinus i na końcu pętli przechodzi w sinus i+1 na jej początku
-z ciągłą fazą. Sprawdzone numerycznie: różnica wartości na szwie ~0,0002 (niesłyszalna).
+**Ton Sheparda bez szwu** (`mus_napiecie`, narastania; `instrumenty.ton_sheparda(..., petla=True)`): sinus i ma
+częstotliwość f_i(t) = f_b · 2^(i + t/T). Po czasie T jego faza wynosi φ_i(0) + 2π · f_b · 2^i · T / ln 2. Ustawiamy
+fazy początkowe rekurencyjnie: φ_0(0) = 0, φ_(i+1)(0) = φ_i(T) mod 2π — wtedy sinus i na końcu pętli przechodzi
+w sinus i+1 na jej początku z ciągłą fazą. **Fazę liczymy wzorem analitycznym, nie sumą skumulowaną** (`cumsum`):
+przy 14 kHz i 8 s błąd sumowania sięga ułamków radiana i psułby szew. Sprawdzone numerycznie: współczynnik
+predykcji na szwie 0,48 (próg A08: ≤ 1,5), różnica widm 0,6 dB.
 
 ### 8.5. Uruchamianie
 
 ```bash
-python3 -m pip install -r tools/audio/wymagania.txt          # numpy>=2.0
-python3 tools/audio/buduj.py                                 # wszystko: 67 ID → WAV → Opus + AAC → manifest → raport
-python3 tools/audio/buduj.py --tylko sfx_wild sfx_scatter_3   # wybrane ID
-python3 tools/audio/buduj.py --tylko mus_s2 --bez-kodowania   # tylko WAV do odsłuchu (target/audio/wav/)
-python3 tools/audio/buduj.py --odsluch                       # target/audio/odsluch.html: odtwarzacz każdego ID + metadane
-python3 tools/audio/sprawdz.py                               # same kontrole i raport budżetów
+python3 -m pip install numpy pillow                                  # NumPy ≥ 2.0; Pillow tylko do PNG
+python3 tools/audio/generuj_wszystko.py --zakladki                   # wszystko: 67 ID → WAV → Opus + AAC → manifest → raport
+python3 tools/audio/generuj_wszystko.py --zakladki --tylko sfx_wild mus_s2   # wybrane ID (reszta manifestu zostaje)
+python3 tools/audio/generuj_wszystko.py --tylko sfx_moneta           # prefiks: wszystkie warianty monet
+python3 tools/audio/generuj_wszystko.py --tylko mus_s2 --bez-kodowania   # tylko WAV do odsłuchu (tools/audio/build/wav/)
+python3 tools/audio/sprawdz.py                                       # same kontrole i raport budżetów
+python3 tools/audio/sprawdz.py --spektrogramy /tmp/spektro --ids sfx_wild,mus_s1   # spektrogramy PNG do obejrzenia
+python3 tools/audio/przetworz_zewnetrzne.py mus_s2 ~/Pobrane/skarbiec.mp3 --serwis "Suno (Pro)" --licencja "…" --autor "…"
+python3 tools/audio/przetworz_zewnetrzne.py --usun mus_s2            # powrót do syntezy
 ```
 
-* **Przyrostowo:** skrypt liczy skrót (hash) z kodu przepisu (`inspect.getsource`), metadanych i pliku źródłowego;
-  niezmienione ID są pomijane. Pełny przebieg (szacunek): efekty ~1 min, muzyka kilka minut.
-* **Strona odsłuchu** (`--odsluch`) to statyczny HTML w `target/` (poza aplikacją): lista ID z przyciskiem odtwarzania,
-  długością, `gainDb`, LUFS i szczytem — do wspólnego strojenia poziomów w zespole.
+* **`--zakladki`:** dokleja do pętli zakładki z § 7.3 (`loopStart` / `loopEnd` ≠ 0 / `duration`). Dziś jest to
+  opcja, a bez niej pętla to cały plik (`loopStart` = 0, `loopEnd` = `duration`). **Wersję do repozytorium
+  budujemy z `--zakladki`:** sprawdziliśmy, że AAC po dekodowaniu ma na końcu 10,7 ms ciszy (§ 7.3), a bez zakładek
+  pętla w Safari (który dostaje `.m4a`) zależy od tego, czy dekoder ją odetnie. Zalecenie dla pipeline'u: uczynić
+  zakładki domyślnymi.
+* **Równolegle:** `-j` (domyślnie min(4, liczba rdzeni)) procesów; najdłuższe utwory startują pierwsze. Pełny
+  przebieg (szacunek): efekty ok. 1 min, muzyka kilka minut. Przyrostowego pomijania niezmienionych ID nie ma —
+  do szybkich poprawek służy `--tylko`.
+* **Kod wyjścia:** 0 — w porządku, 1 — ostrzeżenia kontroli, 2 — błędy (np. brak przepisu dla ID z briefu).
+* **Odsłuch:** pliki WAV z `tools/audio/build/wav/` i spektrogramy z `sprawdz.py --spektrogramy`; poziomy stroimy
+  w grze, na tle muzyki (§ 8.7).
 
 ### 8.6. `sprawdz.py` — kontrole jakości
 
 | Kod | Kontrola | Próg |
 |---|---|---|
-| A01 | komplet: w manifeście są **wszystkie 67 ID z briefu § 10** i żadne inne | błąd |
+| A01 | komplet: w manifeście są **wszystkie 67 ID z briefu § 10** (`katalog.WYMAGANE_ID`) i żadne inne | błąd |
 | A02 | oba pliki (`.webm`, `.m4a`) istnieją; nazwy = ID | błąd |
-| A03 | długość pliku zgodna z przepisem ±5 ms (pętle: z zakładkami) | błąd |
-| A04 | szczyt prawdziwy ≤ −1,0 dBTP (WAV i po dekodowaniu WebM) | błąd |
-| A05 | LUFS: pętle efektów −18 ±0,5, muzyka −14 ±0,5 | błąd |
+| A03 | długość: manifest ↔ WAV ↔ pliki zdekodowane, oraz WAV ↔ przepis ±5 ms (pętle: z zakładkami) | błąd |
+| A04 | szczyt prawdziwy ≤ −1,0 dBTP: WAV i zdekodowany WebM — błąd; zdekodowany M4A — ostrzeżenie. `generuj_wszystko.py` sam obniża sufit limitera i koduje ponownie (do 6 prób), gdy po dekodowaniu szczyt jest za wysoki | błąd / ostrzeżenie |
+| A05 | LUFS (`analiza.lufs`, pętle po powieleniu do ≥ 4 s): pętle efektów −18 ±0,5, muzyka −14 ±0,5 — błąd; drugi pomiar `ffmpeg ebur128` różny o > 0,6 LU (pliki > 3 s) — ostrzeżenie | błąd / ostrzeżenie |
 | A06 | składowa stała < −60 dBFS | ostrzeżenie |
-| A07 | jednorazowe: cisza na początku ≤ 5 ms (poza zamierzonym narastaniem przed `syncPoint`) | ostrzeżenie |
-| A08 | szew pętli: skok próbki na `loopEnd` → `loopStart` ≤ −40 dB względem RMS, brak skoku widma (różnica widm 20 ms przed i po szwie) | błąd |
+| A07 | jednorazowe: cisza na początku (próg −40 dB względem szczytu) ≤ 5 ms, chyba że plik ma `syncPoint` (zamierzone narastanie) | ostrzeżenie |
+| A08 | szew pętli (`analiza.szew_petli`) na WAV **i na plikach zdekodowanych** (fragment `loopStart` … `loopEnd` — tak gra przeglądarka): współczynnik predykcji liniowej na szwie ≤ 2 (szew nie odstaje od zwykłego przebiegu fali; trzask daje kilka–kilkadziesiąt); WAV i WebM — błąd, M4A — ostrzeżenie. Raport podaje też różnicę widm 20 ms przed / po szwie. Sam skok próbki **nie** jest kryterium: sygnał z wysokimi częstotliwościami ma naturalne skoki między próbkami (idealnie zszyty ton Sheparda: −21 dB względem RMS, współczynnik 0,48) | błąd / ostrzeżenie |
 | A09 | stereo: korelacja L/P ≥ 0,3, spadek po sumie do mono ≤ 3 dB | ostrzeżenie |
-| A10 | budżety sieci (§ 7.6) | błąd |
+| A10 | budżety sieci (§ 7.6) — liczone na stronę według pakietów (`packs`, § 2.4) | błąd |
 | A11 | budżety pamięci po dekodowaniu | błąd |
-| A12 | limity pojedynczych plików | ostrzeżenie |
+| A12 | limity pojedynczych plików (efekt 40 KB, stinger 60 KB, utwór 600 KB Opus) | ostrzeżenie |
 | A13 | 85% budżetu | ostrzeżenie |
-| A14 | każdy plik z `audio/zrodla/` ma wpis w `LICENCJE.md` | błąd |
+| A14 | każdy plik zewnętrzny (`audio/zrodla/` albo `tools/audio/zrodla/`) ma wpis w `LICENCJE.md` swojego katalogu | błąd |
 
-Raport (`target/audio/raport.md`) zawiera tabelę wszystkich ID z LUFS, szczytem, długością, wagą obu formatów i
-wynikami kontroli. **Na obronie:** „skąd wiecie, że pętle są bezszwowe?” → pokazujemy A08 i raport.
+Raport (`tools/audio/build/raport.md` i `raport.json`) zawiera tabelę wszystkich ID z LUFS, szczytem, długością, wagą
+obu formatów i wynikami kontroli. **Na obronie:** „skąd wiecie, że pętle są bezszwowe?” → pokazujemy A08 (liczone
+na plikach zdekodowanych, czyli na tym, co naprawdę gra przeglądarka) i raport.
 
 ### 8.7. Jak dodać nowy dźwięk (lista kroków)
 
@@ -1947,8 +2042,9 @@ wynikami kontroli. **Na obronie:** „skąd wiecie, że pętle są bezszwowe?”
 2. **Napisz przepis** w `tools/audio/dzwieki.py`: funkcja z dekoratorem `@dzwiek("nowe_id", ...)` zwracająca
    tablicę NumPy (mono: 1 wymiar, stereo: `(2, n)`).
 3. **Ustaw metadane:** `bus`, `gain_db`, `priority`, ewentualnie `loop`, `keyTrack`, `syncPoint`, `group`,
-   `maxVoices`, `pack`.
-4. **Wyrenderuj i posłuchaj:** `python3 tools/audio/buduj.py --tylko nowe_id --odsluch`.
+   `maxVoices`, `packs` (lista pakietów, § 2.4); dla pętli `loop=True` i `okres`.
+4. **Wyrenderuj i posłuchaj:** `python3 tools/audio/generuj_wszystko.py --zakladki --tylko nowe_id`, odsłuch WAV z
+   `tools/audio/build/wav/` (nowe ID dopisz też do `katalog.WYMAGANE_ID`, jeśli brief je przyjął).
 5. **Dostrój poziom** (`gain_db`) na tle muzyki gry — w grze, nie w izolacji.
 6. **Wepnij w kod gry** przez ID (`audio.play('nowe_id')`) w miejscu zdarzenia z § 6; nigdy przez ścieżkę pliku.
 7. **Uruchom kontrole:** `python3 tools/audio/sprawdz.py` — wszystkie błędy muszą zniknąć.
@@ -1956,23 +2052,29 @@ wynikami kontroli. **Na obronie:** „skąd wiecie, że pętle są bezszwowe?”
 
 ### 8.8. Pliki zewnętrzne (Suno, biblioteki CC0)
 
-* Plik kładziemy jako `audio/zrodla/<ID>.<rozszerzenie>` (WAV, FLAC, MP3, M4A). **Ma pierwszeństwo** nad przepisem
+* Plik kładziemy jako `audio/zrodla/<ID>.<rozszerzenie>` albo `tools/audio/zrodla/<ID>.<rozszerzenie>` (WAV, FLAC,
+  MP3, M4A, OGG, Opus, WebM, AIFF) — najwygodniej skryptem `przetworz_zewnetrzne.py` (§ 8.5). **Ma pierwszeństwo** nad przepisem
   o tym samym ID (tak jak `art/zrodla/` nad grafiką zastępczą w pipeline obrazów).
 * Pipeline: dekodowanie ffmpeg do 48 kHz float → przycięcie → dla muzyki: znalezienie pętli (§ 11.3) → mastering
   (§ 7.4) → ten sam eksport i te same kontrole.
-* Wpis w `audio/zrodla/LICENCJE.md` jest obowiązkowy (A14) — bez niego plik nie przejdzie kontroli.
+* Wpis w `LICENCJE.md` katalogu źródeł jest obowiązkowy (A14) — `przetworz_zewnetrzne.py` dopisuje go z opcji
+  `--serwis`, `--licencja`, `--autor`; bez niego plik nie przejdzie kontroli.
 * Usunięcie pliku z `audio/zrodla/` = powrót do wersji syntezowanej przy następnym przebiegu.
 
-### 8.9. Testy pipeline'u (`pytest`, `tools/audio/testy/`)
+### 8.9. Testy pipeline'u (`pytest`, `tools/audio/testy/` — planowane)
+
+Dziś te same własności sprawdza `sprawdz.py` na wyniku całego pipeline'u; testy jednostkowe poniżej to plan.
 
 | Test | Wejście | Oczekiwany wynik |
 |---|---|---|
-| determinizm | dwa rendery tego samego ID | identyczne próbki i identyczne bajty `.webm` / `.m4a` |
+| determinizm | dwa rendery tego samego ID | identyczne próbki WAV; na tej samej maszynie także identyczne bajty `.webm` / `.m4a` (§ 7.4) |
 | strój | `sfx_beben_stop_1` … `_6` | wysokość składowej tonalnej = nuta z § 3.3 ±5 c (analiza widma) |
-| pętla | sygnał okresowy z ogonem pogłosu | po zawinięciu: skok na szwie ≤ −60 dB |
+| pętla | sygnał okresowy z ogonem pogłosu | po zawinięciu: współczynnik predykcji na szwie ≤ 1,5 (A08) |
 | zakładki | pętla przesunięta o ±10 ms | nadal bez szwu (A08) |
 | normalizacja | szum o znanym poziomie | szczyt −1,0 dBTP ±0,1; LUFS ±0,3 |
 | SVF | sinus w częstotliwości środkowej | wzmocnienie 1,0 ±0,01 (pasmowoprzepustowy) |
+| Karplus–Strong | `karplus_strong` dla A3 … C6 | wysokość ±2 c (przepróbkowanie, § 8.3) |
+| tonacja S2 | wszystkie pliki z `keyTrack` po przesunięciu dla `s2` | składowe tonalne wyłącznie z dźwięków skali hidżaz (§ 1.2) |
 | manifest | lista ID z briefu | 67 wpisów, wszystkie pola wymagane |
 
 ---
@@ -2044,9 +2146,15 @@ jest zaprogramowane.
 ### 10.1. Zasady
 
 * **API:** `navigator.vibrate(wzorzec)` (Vibration API), wzorzec = tablica `[wibracja, przerwa, wibracja, …]` w ms.
-* **Gdzie działa:** przeglądarki na Androidzie (Chrome, Firefox, Edge). **Safari na iPhonie nie obsługuje** tego
-  API (`navigator.vibrate` nie istnieje) — wtedy nic nie robimy i nie stosujemy obejść (nieudokumentowane sztuczki
-  mogą przestać działać z dnia na dzień). Na komputerach zwykle nie ma silnika wibracji — wywołanie nie ma efektu.
+* **Gdzie działa:** przeglądarki na Androidzie oparte na Chromium (Chrome, Edge, Samsung Internet, Opera);
+  w Firefoksie na Androidzie obsługa bywała różna między wersjami — dlatego wykrywamy funkcję, a nie przeglądarkę.
+  **Safari na iPhonie nie obsługuje** tego API (`navigator.vibrate` nie istnieje) — wtedy nic nie robimy i nie
+  stosujemy obejść (nieudokumentowane sztuczki mogą przestać działać z dnia na dzień). Na komputerach zwykle nie ma
+  silnika wibracji — wywołanie nie ma efektu.
+* **Krótkie impulsy to „best effort”:** tańsze telefony mają silnik z mimośrodem (ERM), który potrzebuje
+  ok. 15–30 ms na rozpędzenie — `H_tik` (8 ms) i `H_lekki` (14 ms) mogą być na nich ledwie wyczuwalne albo
+  niewyczuwalne. Nie wydłużamy ich: na telefonach z silnikiem liniowym (LRA) dłuższe impulsy byłyby za mocne, a brak
+  tiku nic nie psuje — informację niesie też dźwięk i obraz.
 * **Wykrycie:** `'vibrate' in navigator && matchMedia('(pointer: coarse)').matches` (ekran dotykowy).
 * **Gest:** przeglądarki ignorują `vibrate()` przed pierwszą interakcją na stronie (zwraca `false`) — tak jak
   z dźwiękiem; po kliknięciu „Graj” / „Zaloguj” wibracje działają.
@@ -2073,6 +2181,8 @@ jest zaprogramowane.
 | `H_blad` | `[25, 50, 25]` | dwa krótkie |
 
 ### 10.3. Zdarzenia → wibracja → dźwięk, z którym trafia
+
+`R` = start sceny nagrody (`playReward`, § 6.7) — ta sama notacja co w osi czasu E07 w 04.
 
 | Zdarzenie | Wzorzec | Moment | Dźwięk w tej samej chwili |
 |---|---|---|---|
@@ -2147,10 +2257,17 @@ Procedura dla właściciela:
 
 1. Sprawdź aktualny regulamin serwisu (§ 11.4) i zapisz datę oraz plan konta.
 2. Włącz tryb **Instrumental** (bez wokalu).
-3. Wklej pole **Style** (krótki opis, poniżej) — a jeśli serwis ma jedno pole opisu (tryb prosty, Udio), wklej
-   **opis pełny**.
+3. Suno, tryb własny (Custom): wklej **STYLE** w pole stylu. Najważniejsze informacje (instrumental, seamless
+   loop, tempo, tonacja, gatunek) stoją na początku, bo limit znaków tego pola zależy od modelu i planu i bywał
+   krótki (ok. 120–200 znaków w starszych modelach) — gdy pole przytnie tekst, odpada tylko ozdobna końcówka.
+   Jeśli pole przyjmuje dłuższy tekst, dopisz po przecinku zdania z **FULL DESCRIPTION**. Jeśli jest pole
+   wykluczeń stylu, wpisz w nie: `vocals, singing, lyrics, spoken word, fade out`. Serwis z jednym polem opisu
+   (tryb prosty, Udio): wklej **FULL DESCRIPTION**; jeśli ma limit, skracaj od końca (ostatnie zdania są
+   najmniej ważne). Limitów nie podajemy liczbowo, bo zmieniają się z wersjami serwisu.
 4. Wygeneruj 2–4 wersje, wybierz tę, w której tempo jest stałe przez cały utwór, nie ma wyciszenia na końcu ani
-   wokalnych „aaah” w roli melodii (chór w S2 FS i S3 FS jest dozwolony).
+   wokalnych „aaah” w roli melodii (chór w S2 FS i S3 FS jest dozwolony). Długości utworu nie da się ustawić
+   (zdanie „at least 90 seconds” to tylko sugestia) — każda wersja z co najmniej 16 taktami stałej energii po
+   wstępie się nada (lobby: ≥ 40 s, big win: ≥ 15 s).
 5. Pobierz plik w najlepszej dostępnej jakości (WAV, jeśli jest; w przeciwnym razie MP3).
 6. Nazwij plik **dokładnie jak ID**, np. `mus_s2.wav`, `mus_bigwin.mp3`.
 7. Przekaż: commit do `audio/zrodla/` (sposób A) albo załącznik w czacie (sposób B) — dokładnie jak obrazy
@@ -2170,8 +2287,8 @@ tworzą utwór z rytmem i harmonią. Zostaje synteza.
 
 ```text
 STYLE:
-instrumental lounge, soft deep house, luxury casino lobby at night, 96 BPM, A minor, Rhodes electric piano,
-velvet pads, round sub bass, brushed hi-hats, small golden bell motif, elegant, calm, seamless loop
+instrumental, seamless loop, 96 BPM, A minor, lounge, soft deep house, luxury casino lobby at night,
+Rhodes-style electric piano, velvet pads, round sub bass, brushed hi-hats, small golden bell motif, elegant, calm
 
 FULL DESCRIPTION:
 Instrumental only, no vocals. Elegant late-night lounge / soft deep house for the lobby of a luxury casino.
@@ -2187,8 +2304,8 @@ Designed to be cut into a seamless 16-bar loop. At least 90 seconds long.
 
 ```text
 STYLE:
-instrumental synthwave, retrowave, 1980s Las Vegas neon at night, 120 BPM, A minor, pulsing saw bass,
-arpeggiated square synth with dotted-eighth delay, gated reverb snare, four-on-the-floor kick, wide pads, seamless loop
+instrumental, seamless loop, 120 BPM, A minor, synthwave, retrowave, 1980s Las Vegas neon at night,
+pulsing saw bass, arpeggiated square synth with dotted-eighth delay, gated reverb snare, four-on-the-floor kick, wide pads
 
 FULL DESCRIPTION:
 Instrumental only, no vocals. Retro synthwave for a neon slot machine game, 1980s Las Vegas strip at night, chrome
@@ -2204,8 +2321,8 @@ At least 90 seconds long.
 
 ```text
 STYLE:
-instrumental cinematic Middle Eastern, ancient Egyptian tomb treasury, 100 BPM, D Phrygian dominant (Hijaz),
-frame drum and darbuka maqsum rhythm, deep taiko hits, oud, ney flute, string drone, finger cymbals, mysterious, seamless loop
+instrumental, seamless loop, 100 BPM, D Phrygian dominant (Hijaz), cinematic Middle Eastern, ancient Egyptian
+tomb treasury, frame drum and darbuka maqsum rhythm, deep taiko hits, oud, ney flute, string drone, finger cymbals, mysterious
 
 FULL DESCRIPTION:
 Instrumental only, no vocals. Mysterious cinematic music for a slot game set in the golden treasury of an ancient
@@ -2221,8 +2338,8 @@ Designed to be cut into a seamless 16-bar loop. At least 90 seconds long.
 
 ```text
 STYLE:
-instrumental epic cinematic Middle Eastern, night over the pyramids, 100 BPM, D Phrygian dominant (Hijaz),
-taiko ensemble, darbuka, sixteenth-note string ostinato, wordless choir, brass swells, bell arpeggios, triumphant, seamless loop
+instrumental, seamless loop, 100 BPM, D Phrygian dominant (Hijaz), epic cinematic Middle Eastern, night over
+the pyramids, taiko ensemble, darbuka, sixteenth-note string ostinato, wordless choir, brass swells, bell arpeggios, triumphant
 
 FULL DESCRIPTION:
 Instrumental, no lyrics (wordless choir "aah" allowed). Epic, triumphant music for the free spins bonus of an
@@ -2239,8 +2356,8 @@ At least 90 seconds long.
 
 ```text
 STYLE:
-instrumental magical ambient, glowing crystal cave, 90 BPM, E Lydian, crystal bells, celesta, kalimba,
-warm evolving pads, soft sub bass, gentle heartbeat kick, water drops, long cave reverb, wonder, seamless loop
+instrumental, seamless loop, 90 BPM, E Lydian, magical ambient, glowing crystal cave, crystal bells, celesta,
+kalimba, warm evolving pads, soft sub bass, gentle heartbeat kick, water drops, long cave reverb, wonder
 
 FULL DESCRIPTION:
 Instrumental only, no vocals. Magical, sparkling music for a slot game set in a glowing crystal cave full of
@@ -2256,8 +2373,8 @@ no fade-out. Designed to be cut into a seamless 12-bar loop. At least 90 seconds
 
 ```text
 STYLE:
-instrumental euphoric magical electronica, aurora chamber in a crystal cave, 90 BPM, E Lydian, pulsing synth bass,
-fast crystal bell arpeggios, ethereal wordless choir, soft four-on-the-floor kick, shimmering risers, uplifting, seamless loop
+instrumental, seamless loop, 90 BPM, E Lydian, euphoric magical electronica, aurora chamber in a crystal cave,
+pulsing synth bass, fast crystal bell arpeggios, ethereal wordless choir, soft four-on-the-floor kick, shimmering risers, uplifting
 
 FULL DESCRIPTION:
 Instrumental, no lyrics (wordless ethereal choir allowed). Euphoric, floating music for the free spins bonus of
@@ -2273,8 +2390,8 @@ a seamless 12-bar loop. At least 90 seconds long.
 
 ```text
 STYLE:
-instrumental celebratory electronic orchestral fanfare, casino big win, 128 BPM, C major, punchy synth brass stabs,
-four-on-the-floor kick, claps, bright supersaw chords, glockenspiel melody, timpani rolls, euphoric, seamless loop
+instrumental, seamless loop, 128 BPM, C major, celebratory electronic orchestral fanfare, casino big win,
+punchy synth brass stabs, four-on-the-floor kick, claps, bright supersaw chords, glockenspiel melody, timpani rolls, euphoric
 
 FULL DESCRIPTION:
 Instrumental only, no vocals. Short, euphoric celebration loop for a "BIG WIN" moment in a casino slot game,
@@ -2288,17 +2405,24 @@ changes, no fade-out. Designed to be cut into a seamless 8-bar loop. At least 60
 
 ### 11.3. Jak robimy pętlę z pliku od generatora
 
-Generatory nie gwarantują ani dokładnego tempa, ani tonacji, ani pętli — dlatego pętlę wycinamy sami
-(`tools/audio/petle.py --z-pliku audio/zrodla/mus_s2.wav --bpm 100 --takty 16`):
+Generatory nie gwarantują ani dokładnego tempa, ani tonacji, ani pętli — dlatego pętlę wycinamy sami (`tools/audio/przetworz_zewnetrzne.py mus_s2 plik.mp3`, opcjonalnie `--start <s>` — ręczny początek pętli na kresce
+taktowej; wycinanie robi `petle.py`, tempo i liczbę taktów bierze z przepisu utworu):
 
 1. **Tempo:** sprawdzamy rzeczywiste tempo (autokorelacja obwiedni uderzeń). Jeśli różni się od zamówionego, do
-   manifestu trafia tempo zmierzone. Jeśli tempo „pływa” (utwór bez stałego pulsu) — plik odrzucamy i prosimy
-   o nową wersję.
-2. **Fragment:** wybieramy N taktów (16 / 12 / 8 jak w § 4.2) od kreski taktowej po wstępie, w części o stałej
+   manifestu trafia tempo zmierzone (`bpm`), a długość pętli liczymy z niego (N taktów). Jeśli tempo „pływa”
+   (utwór bez stałego pulsu) — plik odrzucamy i prosimy o nową wersję.
+2. **Tonacja:** sprawdzamy odsłuchem (automatyczny chromagram — średnia energia 12 klas dźwięków z FFT — warto
+   dopisać do `petle.py`; dziś skrypt tego nie robi). Tonacja musi się
+   zgadzać z § 4.2, bo transpozycja efektów (§ 1.2) zakłada a-moll / D hidżaz / E lidyjską — inaczej stopy bębnów
+   i monety będą fałszować z muzyką. Gdy jest inna: prosimy o nową wersję albo transponujemy plik w pipeline o
+   najwyżej ±2 półtony (ffmpeg: filtr `rubberband=pitch=…` — w ffmpeg 6.1.1 z Ubuntu jest, sprawdzone; plan B
+   bez niego: `asetrate` + `aresample` + `atempo`, czyli zmiana wysokości z kompensacją tempa).
+3. **Fragment:** wybieramy N taktów (16 / 12 / 8 jak w § 4.2) od kreski taktowej po wstępie, w części o stałej
    energii (pomiar głośności krótkoterminowej).
-3. **Szew:** w okolicy końca (±20 ms) szukamy miejsca najbardziej podobnego do początku (korelacja okien 100 ms),
-   a szew łagodzimy przenikaniem o stałej mocy 50 ms „wypalonym” w pliku.
-4. **Zakładki i normalizacja** jak przy syntezie (§ 7.3, § 7.4); kontrole A01–A14.
+4. **Szew:** w okolicy końca (±20 ms) szukamy miejsca najbardziej podobnego do początku (korelacja okien 100 ms),
+   a szew łagodzimy przenikaniem o stałej mocy 50 ms „wypalonym” w pliku (50 ms materiału za końcem pętli
+   przenikamy z pierwszymi 50 ms pętli — wynik jest okresowy jak przy syntezie).
+5. **Zakładki i normalizacja** jak przy syntezie (§ 7.3, § 7.4); kontrole A01–A14 (A08 sprawdzi szew).
 
 Jeśli pary S2 / S2 FS albo S3 / S3 FS wyjdą w różnym tempie, przejście 11 z § 4.5 staje się zwykłym przenikaniem
 2 000 ms bez dopasowania siatki — nadal poprawne, tylko mniej „filmowe”.
@@ -2315,6 +2439,11 @@ Jeśli pary S2 / S2 FS albo S3 / S3 FS wyjdą w różnym tempie, przejście 11 z
   konta, datę, link do regulaminu i ID plików.
 * Jeśli regulamin nie pozwala pobrać plików albo opublikować ich w publicznym repozytorium — **zostajemy przy muzyce
   syntezowanej**. Aplikacja działa identycznie, różni się tylko brzmienie.
+* **Kto ma prawa do utworu z AI?** W prawie polskim utworem jest przejaw działalności twórczej *człowieka*, a urząd
+  praw autorskich USA odmawia ochrony materiałom wygenerowanym w całości przez AI — muzyka z samego promptu może więc
+  w ogóle nie być chroniona prawem autorskim. Dla nas nie zmienia to procedury: wiąże nas przede wszystkim
+  **regulamin serwisu** (umowa), dlatego to on decyduje, czy plik trafi do repozytorium. Nie jesteśmy prawnikami —
+  przy wątpliwościach wybieramy syntezę.
 
 ---
 
@@ -2361,7 +2490,8 @@ lista to punkt startowy, nie gwarancja.
 | Po co dwa formaty plików? | Opus (WebM) jest mniejszy, ale nie każda przeglądarka go odtworzy; AAC (M4A) to zapas dla Safari; wybór przez `canPlayType` | § 7.1 |
 | Jak zrobiliście bezszwowe pętle? | sygnał okresowy (zawinięty ogon) + zakładki z obu stron + `loopStart` / `loopEnd`; odporne na rozbieg kodera | § 7.3, kontrola A08 |
 | Skąd macie dźwięki? Prawa autorskie? | wszystko syntezowane naszym kodem w Pythonie; zewnętrzne pliki tylko CC0 lub po sprawdzeniu licencji, z wpisem w `LICENCJE.md` | § 8, § 11.4, § 12 |
-| Dlaczego efekty są w pentatonice C? | dowolne nakładanie się dźwięków brzmi czysto; transpozycja do tonacji gry (S2 +200, S3 +400 centów) | § 1.2, § 2.6 |
+| Dlaczego efekty są w pentatonice C? | dowolne nakładanie się dźwięków brzmi czysto; transpozycja do tonacji gry (S3 +400 centów; S2 +200, ale nuty D i A tylko +100, bo E i B nie należą do hidżazu — mapa per plik w manifeście) | § 1.2, § 2.6 |
+| Skąd wiecie, że muzyka i efekty mają właściwą głośność? | dwa niezależne pomiary LUFS (własny BS.1770-4 w NumPy i ffmpeg `ebur128`) w każdym przebiegu pipeline'u, szczyt sprawdzany także po zakodowaniu | § 7.4, § 8.6 |
 | Dlaczego mała wygrana poniżej zakładu brzmi cicho? | to w praktyce strata — nie udajemy sukcesu (świadoma decyzja przeciw „loss disguised as win”) | § 1.4 |
 | Jak mierzycie głośność? | pliki: `ffmpeg` (EBU R128, szczyt prawdziwy) w pipeline; sesja: nagranie z trybu `?audioDebug=1`, cel −18 LUFS ±2 | § 5.7 |
 | Co, jeśli przeglądarka nie ma Web Audio albo pliku brak? | silnik działa jako „pusty” — gra działa bez dźwięku, bez błędów | § 2.4 |
@@ -2396,15 +2526,15 @@ Wszystkie 67 ID z briefu (§ 10) w kolejności briefu: gdzie jest przepis i w kt
 | `sfx_saldo_puls` | § 3.2 | E06, E08, E28, E36 |
 | `sfx_bankrut` | § 3.2 | E09 |
 | `sfx_przejscie_whoosh` | § 3.2 | E12, E32, E35, E37 |
-| `sfx_spin_start` | § 3.3 | E24, E38 |
-| `sfx_beben_petla_s1` | § 3.3 | E25 |
-| `sfx_beben_petla_s2` | § 3.3 | E25 |
-| `sfx_beben_stop_1` | § 3.3 | E21, E26 |
-| `sfx_beben_stop_2` | § 3.3 | E21, E26 |
-| `sfx_beben_stop_3` | § 3.3 | E21, E26 |
-| `sfx_beben_stop_4` | § 3.3 | E21, E26 |
-| `sfx_beben_stop_5` | § 3.3 | E21, E26 |
-| `sfx_beben_stop_6` | § 3.3 | E21, E26 |
+| `sfx_spin_start` | § 3.3 | E24 |
+| `sfx_beben_petla_s1` | § 3.3 | E25, E36, E40 |
+| `sfx_beben_petla_s2` | § 3.3 | E25, E36, E40 |
+| `sfx_beben_stop_1` | § 3.3 | E21, E26, E36 |
+| `sfx_beben_stop_2` | § 3.3 | E21, E26, E36 |
+| `sfx_beben_stop_3` | § 3.3 | E21, E26, E36 |
+| `sfx_beben_stop_4` | § 3.3 | E21, E26, E36 |
+| `sfx_beben_stop_5` | § 3.3 | E21, E26, E36 |
+| `sfx_beben_stop_6` | § 3.3 | E21, E26, E36 |
 | `sfx_antycypacja_narastanie` | § 3.3 | E27 |
 | `sfx_bicie_serca` | § 3.3 | E27 |
 | `sfx_scatter_1` | § 3.3 | E34 |
@@ -2431,7 +2561,7 @@ Wszystkie 67 ID z briefu (§ 10) w kolejności briefu: gdzie jest przepis i w kt
 | `sfx_s3_pekniecie_2` | § 3.6 | E70 |
 | `sfx_s3_pekniecie_3` | § 3.6 | E70 |
 | `sfx_s3_pekniecie_4` | § 3.6 | E70 |
-| `sfx_s3_opad` | § 3.6 | E21, E25, E71 |
+| `sfx_s3_opad` | § 3.6 | E21, E25, E36, E71 |
 | `sfx_s3_mnoznik` | § 3.6 | E72, E73 |
 | `sfx_s3_mnoznik_zbior` | § 3.6 | E73 |
 | `mus_lobby` | § 4.3 | E02, E06, E07, E10 |
