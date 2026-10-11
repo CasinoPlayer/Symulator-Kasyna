@@ -1,0 +1,21 @@
+# Do obrazu Dockera (kontekst budowania) trafia tylko to, czego potrzebuje Maven: pom.xml i src/.
+# Reszta tylko spowalniałaby wysyłanie kontekstu (art/ i tools/ to setki MB) albo mogłaby wnieść śmieci.
+.git/
+.github/
+.claude/
+.idea/
+.vscode/
+*.iml
+target/
+data/
+art/
+docs/
+tools/
+wip/
+ci/
+**/node_modules/
+**/__pycache__/
+*.log
+Dockerfile
+.dockerignore
+render.yaml

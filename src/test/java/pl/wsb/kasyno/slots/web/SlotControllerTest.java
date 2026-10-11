@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.http.MediaType;
@@ -12,6 +13,7 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import pl.wsb.kasyno.shared.config.CasinoProperties;
 import pl.wsb.kasyno.shared.domain.Money;
 import pl.wsb.kasyno.shared.web.PlayerSession;
 import pl.wsb.kasyno.slots.application.GameNotReadyException;
@@ -50,6 +52,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = {SlotController.class, PlayerSlotsController.class})
+// wycinek @WebMvcTest nie skanuje rekordów @ConfigurationProperties, a SlotController czyta kasyno.demo.allow-seed
+@EnableConfigurationProperties(CasinoProperties.class)
 @ActiveProfiles("test")
 @DisplayName("API automatów: katalog, spin i kody błędów")
 class SlotControllerTest {
