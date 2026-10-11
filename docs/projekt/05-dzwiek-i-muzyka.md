@@ -758,7 +758,7 @@ Dźwięki S3 komponujemy od razu w E lidyjskiej, bez transpozycji T.
 | `sfx_s3_pekniecie_3` | jw., ciemniejszy, „grubszy” kryształ | 500 ms | nie | sfx | −10 | 3 | jw. | jw., parcjały 2–6 kHz, 12 odłamków |
 | `sfx_s3_pekniecie_4` | jw., najjaśniejszy, „cienkie szkło” | 650 ms | nie | sfx | −10 | 3 | jw. | jw., parcjały 4–10 kHz, 20 odłamków |
 | `sfx_s3_opad` | lekki, powietrzny świst w dół i ciche „plink” układających się klejnotów | 750 ms | nie | sfx | −12 | 3 | 1 plik; ±5 c | szum BP 3 000 → 800 Hz (0–400 ms); 400–750 ms: 6 „plinków” (dzwonek FM 1:3,5, 25 ms) na nutach E6–F♯6–G♯6–B6–C♯7–E7 (1 318,5 / 1 480,0 / 1 661,2 / 1 975,5 / 2 217,5 / 2 637,0 Hz) |
-| `sfx_s3_mnoznik` | lądowanie kuli mnożnika: głęboki kryształowy dzwon z pulsującym „mmm” energii | 1 100 ms | nie | sfx | −7 | 4 | 1 plik; wysokość według wartości: ×2–×5 0 c, ×10–×25 +200 c, ×50–×100 +400 c i dodatkowo `sfx_blysk` (progi jak kolory kuli w 04) | dzwon FM 1:3,5 (I 5 → 0,8) E4 + E5, τ 800 ms; „mmm”: sinus 82,4 Hz (E2) z tremolo 6 Hz, atak 60 ms, τ 600 ms; szklany klik na początku; pogłos jaskini 3 s, mix 30% |
+| `sfx_s3_mnoznik` | lądowanie kuli mnożnika: głęboki kryształowy dzwon z pulsującym „mmm” energii | 1 100 ms | nie | sfx | −7 | 4 | 1 plik; `maxVoices` 2; wysokość według pasma wartości (ciągłe, te same co kolory kuli w 04 karta E72 i 01): ×2–×9 0 c, ×10–×49 +200 c, ×50–×100 +400 c i dodatkowo `sfx_blysk` | dzwon FM 1:3,5 (I 5 → 0,8) E4 + E5, τ 800 ms; „mmm”: sinus 82,4 Hz (E2) z tremolo 6 Hz, atak 60 ms, τ 600 ms; szklany klik na początku; pogłos jaskini 3 s, mix 30% |
 | `sfx_s3_mnoznik_zbior` | kule lecą do licznika (świsty z wielu stron), łańcuch rozbłysków, potężne „zasilenie” mnożnika | 1 800 ms | nie | sfx | −4 | 5 | 1 plik, stereo; `syncPoint` 900 ms | 0–600 ms: 3 świsty (szum BP 1 → 5 kHz), panorama ±0,7 → 0; 600–900 ms: arpeggio E–G♯–B–D♯–F♯ (dzwony FM, po 60 ms); 900 ms: uderzenie (sub 41 → 30 Hz + trzask kryształu) + akord E–G♯–B–A♯ (dzwony + pad); pogłos 3 s |
 
 ### 3.7. Podsumowanie listy
@@ -1443,7 +1443,8 @@ S3: `U` = 794 ms (transpozycja +400 c), na uderzeniu `sfx_blysk` i `sfx_uderzeni
 
 | t (od startu `playReward`) | Dźwięk | Stan w kodzie |
 |---|---|---|
-| 0 ms | `sfx_skrzynia_otwarcie`; `sfx_blysk` (volume 0,7 ≈ −3 dB); ducking `bigwin` na `mus_lobby` | jest (bez duckingu) |
+| 0 ms | `sfx_skrzynia_otwarcie`; ducking `bigwin` na `mus_lobby` | jest (bez duckingu) |
+| 256 ms (start 226 ms, `syncPoint` 30 ms) | `sfx_blysk` (volume 0,7 ≈ −3 dB) — transjent w szczycie rozbłysku `reward__flash` (start 120 ms + 22% z 620 ms, 04 karta E07) | **dochodzi** — kod gra go dziś w 0 ms, razem ze skrzynią (o 256 ms za wcześnie) |
 | 250–1 750 ms | `sfx_licznik_tik` (prędkość 1,0 → 1,3) pod liczeniem kwoty na środku ekranu | **dochodzi** |
 | 650 ms | `sfx_uderzenie_basu`; start pętli `sfx_monety_fontanna` (volume 0,8 ≈ −2 dB) | jest |
 | 650 ms + przyloty | `sfx_moneta_1` … `sfx_moneta_5` przy każdym przylocie monety do salda (36 monet, `maxVoices` 6) | jest (`playVariant`) |
