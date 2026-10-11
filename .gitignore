@@ -14,3 +14,6 @@ __pycache__/
 
 # Kopie robocze agentów (git worktree) — nie wchodzą do repozytorium
 .claude/worktrees/
+
+# Grafika zastępcza generowana skryptami tools/art/zastepcze (odtwarzalna)
+art/zastepcze/
