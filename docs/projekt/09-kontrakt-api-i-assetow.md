@@ -249,7 +249,7 @@ src/main/resources/static/assets/img/manifest.json
     "g_ui_ikony": { "cells": ["autoplay", "turbo", "minus", "plus", "dzwiek_wl", "dzwiek_wyl", "info", "menu", "lobby", "zamknij", "ustawienia", "historia"] }
   },
   "frames": {
-    "s1_ramka": { "window": { "x": 0.12, "y": 0.14, "w": 0.76, "h": 0.72 } }
+    "s1_ramka": { "window": { "x": 0.19, "y": 0.19, "w": 0.625, "h": 0.625 } }
   },
   "nineSlice": {
     "g_ui_panel": { "top": 0.18, "right": 0.18, "bottom": 0.18, "left": 0.18 }

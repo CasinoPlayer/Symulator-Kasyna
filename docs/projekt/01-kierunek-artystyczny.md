@@ -114,7 +114,7 @@ z § 4; szczegóły (dokładny wygląd symboli, teksty) mogą się różnić od 
 |---|---|---|
 | `m01_lobby_desktop` | tło jak § 6.5, ciemny pasek górny z „Zaloguj” w prawym górnym rogu, duże logo z hasłem w górnej połowie (maskotka obok), 3 kafle gier (okładki 2:3) obok siebie w dolnej połowie | strefy lobby (§ 6.5), proporcje kafli, ilość złota w UI |
 | `m02_logowanie` | modal z ramą jak `g_ui_panel` (§ 7.6) na rozmytym i przyciemnionym lobby, jedno pole „Nazwa gracza”, złoty przycisk-pigułka „Wejdź do kasyna” | szkło + złoto modala, poziom rozmycia tła |
-| `m03_bonus_powitalny` | skrzynia jak § 2.6 w centrum, deszcz monet cebulion, saldo w prawym górnym rogu, ciemne tło lobby | skala efektów bonusu, kolor poświaty skrzyni |
+| `m03_bonus_powitalny` | skrzynia jak § 2.6 na środku w dolnej części, nad nią złote cyfry „+10 000” (styl `g_font_cyfry`), deszcz monet cebulion, saldo w prawym górnym rogu, rozmyte ciemne lobby | skala efektów bonusu, kolor poświaty skrzyni |
 | `m04_lobby_mobile` | ten sam styl w pionie: pasek górny z saldem i awatarem, baner karuzeli, pod nim karty gier jedna pod drugą | układ mobilny, gęstość elementów na 2:3 |
 | `m05_s1_desktop` | tło S1 (§ 9.5), ramka 3×3 w środku, logo S1 nad ramką, panel sterowania u dołu (~18% wysokości) z okrągłym SPIN na środku | **główna kotwica kontrastu**; strefy § 6.2 |
 | `m06_s2_desktop` | tło S2 (§ 10.6), ramka 5×3, logo nad oknem (na nadprożu ramy), panel jak w `m05` | nastrój S2, ciepło pochodni, brak neonu |
@@ -241,7 +241,8 @@ litery biegnące po łuku. Kontrast „polerowany relief na satynowym polu” ro
 
 **Dlaczego bez rewersu:** w locie moneta obraca się kilka razy na sekundę i ma 24–64 px — nikt nie odróżni awersu od
 rewersu. Obrót składamy w kodzie z ujęć `przod` → `skos` → `bok` → `skos` (odbite poziomo, `scale.x = -1`) →
-`przod`, a przejścia wygładza ściskanie `scale.x`. Plan B dla płynniejszego obrotu: sprite-sheet 24–48 klatek
+`przod`, a przejścia wygładza ściskanie `scale.x`. Odbite ujęcie ma światło z prawej — świadomie to akceptujemy,
+bo trwa ułamek sekundy przy 24–64 px; w ujęciach statycznych (ikona waluty, skrzynia) moneta nigdy nie jest odbita. Plan B dla płynniejszego obrotu: sprite-sheet 24–48 klatek
 z Blendera (`bpy`, headless), z materiałem dopasowanym kolorystycznie do `g_moneta_przod`.
 
 **Ujęcia:**
@@ -624,10 +625,10 @@ Jeden plik obsługuje wszystkie poziomy wygranej i wszystkie gry, co oszczędza 
 
 | ID | Wygląd | Wymagania |
 |---|---|---|
-| `g_fx_promienie` | 18–24 promieni (god rays) o nierównej szerokości i długości, wychodzących z dokładnego środka | barwa `#FFF3D1` → czerń; promienie wygasają do czystej czerni przed 45% szerokości kadru od środka; miękki rdzeń ≤ 10% średnicy (bez wielkiego białego dysku); układ w miarę równomierny dookoła, bo kod obraca sprite (4–8°/s) |
+| `g_fx_promienie` | 18–24 promieni (god rays) o nierównej szerokości i długości, wychodzących z dokładnego środka | barwa `#FFF3D1` → czerń; promienie wygasają do czystej czerni najpóźniej 42% szerokości kadru od środka (zostaje ≥ 8% czarnego marginesu, § 4.5); miękki rdzeń ≤ 10% średnicy (bez wielkiego białego dysku); układ w miarę równomierny dookoła, bo kod obraca sprite (4–8°/s) |
 | `g_fx_flara` | gwiazda błysku: 4 długie ramiona (poziome i pionowe), 4 krótsze ukośne, gorący rdzeń 3–4% kadru, cienki pierścień halo na ~25% promienia, delikatna pozioma smuga anamorficzna | neutralna biel; bez „duchów” soczewki w rogach |
 | `g_fx_iskry` (SHEET 4×2) | 8 wariantów: gwiazdka 4-ramienna, gwiazdka 6-ramienna, miękka kula światła, cienki krzyż, romb-błysk, wydłużona smuga iskry, wiązka 5–7 mikroiskier, pierścień błysku | każdy element wyśrodkowany w komórce z ≥ 10% czarnego marginesu; biel z ciepłym rdzeniem |
-| `g_fx_blyskawice` (SHEET 3×1) | 3 pioruny ułożone pionowo, każdy na ~85% wysokości komórki, 2–4 rozgałęzienia | biały rdzeń + chłodna niebieskawa poświata; jasność i kształt różne w każdej komórce |
+| `g_fx_blyskawice` (SHEET 3×1) | 3 pioruny ułożone pionowo, każdy na ~80% wysokości komórki (≥ 10% czerni u góry i u dołu), 2–4 rozgałęzienia | biały rdzeń + chłodna niebieskawa poświata; jasność i kształt różne w każdej komórce |
 | `g_fx_dym` | miękki, wolumetryczny obłok mgły o nieregularnym brzegu | szaro-biały, maksymalna jasność ~70% (czysta biel w `add` prześwietla ekran); brzegi rozmywają się do czerni |
 | `g_fx_konfetti` (ALFA SHEET 4×3) | 12 elementów: 4 prostokąty folii pod różnymi kątami, 3 skręcone serpentyny, 2 gwiazdki, 1 krążek, 1 skręcona wstążka, 1 romb | metaliczna folia z ostrym odblaskiem; kolory: 5× złoto, 4× `--magenta`, 3× `--cyan`; tu tło przezroczyste, bo konfetti rysujemy normalnie (nie `add`) |
 
@@ -851,7 +852,8 @@ Obraz jest jeden, ale symbol w grze ma kilka stanów. Projekt obrazu musi je „
 
 Studia slotowe projektują zestaw symboli najpierw w skali szarości („value plan”), a dopiero potem w kolorze.
 Poniższe tabele to nasz plan: L\* koloru dominującego policzyliśmy z wartości hex (wzór CIELAB), a symulacje
-deuteranopii i protanopii — macierzami Machado (2009), tymi samymi, których używa Chrome DevTools.
+deuteranopii i protanopii — macierzami Machado (2009, pełne nasilenie). Emulacja w Chrome DevTools może dawać
+nieco inne odcienie, ale te same wnioski o parach ryzyka.
 **Średnia L\* symbolu** to cel dla gotowego renderu (z cieniami jest zwykle o 10–20 niżej niż L\* koloru
 dominującego); po akceptacji kotwicy gry zapisujemy zmierzone wartości w raporcie pipeline'u
 ([02-lista-obrazow.md](02-lista-obrazow.md)).
@@ -923,7 +925,8 @@ Tło to **scenografia, nie aktor**. Ma budować nastrój i nigdy nie konkurować
   Środek, gdzie stoją bębny, jest najciemniejszy i najspokojniejszy.
 * **Jasność (cel mierzalny skryptem):** średnia jasność L\* (CIELAB) całego tła 12–22, strefy bębnów 6–14,
   a **najjaśniejszy piksel strefy bębnów ≤ L\* 35** (dopuszczalne tylko miękkie plamy bokeh o średnicy ≤ 2% szerokości
-  kadru). Strefy pod tekstem HTML (pasek górny, panel sterowania) mają średnią L\* ≤ 12. Symbole mają średnią L\*
+  kadru). Pasek górny i panel sterowania (drobny tekst HTML: saldo, zakład, etykiety) mają średnią L\* ≤ 12;
+pod dużym tekstem (logo, hasło w lobby) wystarcza ≤ 25 — `--text-2` ma tam nadal kontrast > 6 : 1. Symbole mają średnią L\*
   35–85 i jasną krawędź (§ 5.8), więc zawsze odcinają się od podkładu i tła.
 * **Nasycenie** tła niższe niż symboli. Najbardziej nasycone piksele ekranu należą do symboli i efektów.
 * Na tłach nie ma tekstu, UI, ludzi, postaci ani prawdziwych logo.
@@ -1071,11 +1074,11 @@ i zapisuje w `manifest.json` → `frames.<ID>.window`, a ramka jest rysowana w P
 | Krawędź okna | cienka, ostra, prosta listwa (≥ 1,5% szerokości okna), bez kryształów, iskier i cieni wchodzących do okna | po niej pipeline wykrywa okno; symbole nie mogą być niczym przesłonięte |
 | Boki ramy | proste i powtarzalne w pionie (kolumna, listwa, rurka neonu); bez medalionów i napisów w połowie wysokości | przy odchyłce okna 3–15% pipeline rozciąga pasy 9-slice — okrągły ornament w środku boku zmieniłby się w owal |
 | Ozdoby główne | u góry (grzebień S1, nadproże S2, korona S3) i w narożnikach | na telefonie pionowo boki ramy mogą wyjść poza ekran (niżej) |
-| Logo gry | kod kładzie `s*_logo` nad oknem; logo może nachodzić na górną część ramy maks. o 30% swojej wysokości | dlatego środek góry ramy jest spokojny (bez tabliczki i napisu) |
+| Logo gry | kod kładzie `s*_logo` nad oknem; logo może nachodzić na górną część ramy maks. o 30% swojej wysokości (w S2 stoi na gładkim złotym pasie nadproża, § 10.8) | dlatego środek góry ramy jest spokojny (bez tabliczki i napisu) |
 
 **Ramka na telefonie pionowo.** Pola symboli z § 5.2 (S1 100–120 px, S2 64–76 px, S3 56–62 px) wymagają okna
-szerokiego na ~90–97% ekranu (np. S3: 6 × 58 px = 348 px na ekranie o szerokości 360–390 px). Pełna ramka byłaby wtedy szersza
-niż ekran, więc boki ramy wychodzą poza krawędź albo kod je zwęża (9-slice). Widoczne zostają: listwa okna,
+szerokiego na ~90–97% ekranu (np. S3: 6 × 58 px = 348 px na ekranie o szerokości 360–390 px). Pełna ramka
+byłaby wtedy szersza niż ekran, więc boki ramy wychodzą poza krawędź albo kod je zwęża (9-slice). Widoczne zostają: listwa okna,
 górna ozdoba i dół. Dlatego żadna ważna ozdoba nie leży na bokach. Ostateczny układ ekranu gry na telefonie
 ustala [06-interfejs-ux.md](06-interfejs-ux.md), a składanie sceny — [10-runtime-gier.md](10-runtime-gier.md).
 
@@ -1386,35 +1389,37 @@ Motyw CSS gry: `--accent-1: #FF2E88; --accent-2: #21E6FF; --game-bg: #0B0624`.
 
 | ID | Poziom | Wygląd | Kolor / sylwetka |
 |---|---|---|---|
-| `s1_sym_wisnie` | niski 1 | Para soczystych, ciemnoczerwonych wiśni z lakierowanej emalii na jednej rozwidlonej zielonej szypułce z listkiem. Na każdej wiśni okrągły biały odblask i cienki różowy rim neonu. | czerwień `#C8102E`; dwa koła + „V” szypułki |
-| `s1_sym_cytryna` | niski 2 | Pękata cytryna z zaostrzonymi końcami, jaskrawożółta emalia z delikatnie zaznaczoną fakturą skórki i małym listkiem; cyjanowy rim po prawej. | żółć `#FFD23F` (najjaśniejszy owoc); poziomy owal z czubkami |
-| `s1_sym_sliwka` | niski 3 | Duża śliwka z wyraźną pionową bruzdą, krótką szypułką i listkiem, z mlecznym „nalotem” u góry i różowo-fioletowymi refleksami. | fiolet `#7B2CBF` (najciemniejszy owoc); jeden owal z bruzdą |
-| `s1_sym_arbuz` | niski 4 | Gruby plaster arbuza w kształcie półkola: ciemnozielona skórka w paski, jasny pas, soczysty czerwony miąższ z błyszczącymi czarnymi pestkami ułożonymi w łuk. | czerwień + zieleń; półkole, najszersza sylwetka wśród owoców |
-| `s1_sym_dzwonek` | wysoki 1 | Dzwonek z polerowanego złota z grawerowaną opaską i widocznym serduszkiem; na szczycie czerwona satynowa kokarda. | złoto; klasyczna sylwetka dzwonu |
-| `s1_sym_bar` | wysoki 2 | Gruba prostokątna tabliczka z czarnego lakieru w fazowanej chromowanej ramce, z wypukłym napisem `BAR` z chromu z różowym neonowym obrysem. | czerń + chrom + róż; poziomy prostokąt |
-| `s1_sym_siodemka` | wysoki 3 (najwyższy) | Masywna kursywna cyfra `7` z lśniącej wiśniowej emalii w grubym fazowanym złotym obramowaniu, z cienką białą linią neonu wewnątrz i dwiema małymi gwiazdkami-błyskami. | czerwień + złoto; ukośna „7” |
-| `s1_sym_wild` | specjalny | **Złota Cebula**: pękata cebula z polerowanej złotej łuski z zakręconym czubkiem, za nią cienki pierścień neonu (magenta przechodząca w cyjan). Przez dolną trzecią część biegnie czarna lakierowana wstęga z chromowaną krawędzią i napisem `WILD` w różowym neonie. | złoto + neon; cebula + pozioma wstęga |
+| `s1_sym_wisnie` | niski 1 | Para soczystych, ciemnoczerwonych wiśni z lakierowanej emalii na jednej rozwidlonej zielonej szypułce z listkiem. Wiśnie wiszą obok siebie (lewa ~8% niżej), szypułki łączą się u góry w odwrócone „V” z jednym listkiem po prawej. Na każdej wiśni okrągły biały odblask w lewej-górnej ćwiartce i cienki różowy rim neonu. Szypułka gruba (≥ 1/24 płótna, § 4.9). | czerwień `#C8102E`; dwa koła + „V” szypułki |
+| `s1_sym_cytryna` | niski 2 | Pękata cytryna z zaostrzonymi końcami, leżąca poziomo (szer. : wys. ≈ 1,4 : 1), jaskrawożółta emalia z delikatnie zaznaczoną fakturą skórki i małym listkiem przy prawym czubku; cyjanowy rim po prawej. Żółć cytrynowa, chłodniejsza od złota dzwonka. | żółć `#FFD23F` (najjaśniejszy owoc); poziomy owal z czubkami |
+| `s1_sym_sliwka` | niski 3 | Duża śliwka, pionowa (szer. : wys. ≈ 0,85 : 1), z wyraźną pionową bruzdą, krótką szypułką i listkiem, z mlecznym „nalotem” u góry i różowo-fioletowymi refleksami; mocny odblask i różowy rim, żeby średnia L\* nie spadła poniżej 35 (§ 5.8). | fiolet `#7B2CBF` (najciemniejszy owoc); jeden owal z bruzdą |
+| `s1_sym_arbuz` | niski 4 | Gruby plaster arbuza w kształcie półkola, **łukiem skórki w dół**, płaską krawędzią miąższu u góry: ciemnozielona skórka w paski, jasny pas, soczysty czerwony miąższ z 5–7 błyszczącymi czarnymi pestkami ułożonymi w łuk. | czerwień + zieleń; półkole, najszersza sylwetka wśród owoców |
+| `s1_sym_dzwonek` | wysoki 1 | Dzwonek z polerowanego złota z wyraźnie rozszerzonym dolnym brzegiem, grawerowaną opaską i widocznym serduszkiem; na szczycie czerwona satynowa kokarda (`#E3122B`). Sylwetka węższa u góry, najszersza przy dolnym brzegu — odwrotnie niż cebula WILD. | złoto; klasyczna sylwetka dzwonu |
+| `s1_sym_bar` | wysoki 2 | Gruba prostokątna tabliczka (szer. : wys. ≈ 2 : 1) z czarnego lakieru z jednym szerokim ukośnym refleksem, w fazowanej chromowanej ramce o grubości ≥ 8% wysokości tabliczki, z cienką złotą listwą wewnętrzną i czterema złotymi nitami w narożnikach; wypukły napis `BAR` z chromu z różowym neonowym obrysem, litery ≥ 18% wysokości symbolu. Jasna chromowana rama daje symbolowi krawędź na ciemnym podkładzie (§ 5.8). | czerń + chrom + róż + akcent złota; poziomy prostokąt |
+| `s1_sym_siodemka` | wysoki 3 (najwyższy) | Masywna kursywna cyfra `7` (pochylenie ~12° w prawo) z lśniącej wiśniowej emalii w grubym fazowanym złotym obramowaniu (≥ 6% szerokości cyfry), z cienką białą linią neonu wewnątrz i dwiema małymi gwiazdkami-błyskami. Najwięcej złota i najmocniejszy kontrast wśród symboli zwykłych. | czerwień + złoto; ukośna „7” |
+| `s1_sym_wild` | specjalny | **Złota Cebula**: pękata cebula z polerowanej złotej łuski z zakręconym czubkiem (najszersza w połowie wysokości, zwężona ku dołowi w krótkie korzonki), za nią cienki pełny pierścień neonu (magenta przechodząca w cyjan) o średnicy ~90% wysokości cebuli. Przez dolną trzecią część biegnie czarna lakierowana wstęga z chromowaną krawędzią i napisem `WILD` w różowym neonie z białym rdzeniem. | złoto + neon; koło pierścienia + cebula + pozioma wstęga |
 
-**Kontrola rozróżnialności S1 (skala szarości):** najjaśniejsze są cytryna i dzwonek (różne sylwetki), średnie —
-arbuz, wiśnie i siódemka (siódemka ma złotą obwódkę i inną sylwetkę), najciemniejsze — śliwka i BAR (owal kontra
-prostokąt). WILD jest najjaśniejszy dzięki złotu i neonowi.
+**Kontrola rozróżnialności S1 (skala szarości):** jasne są cytryna i dzwonek (poziomy owal kontra dzwon), średnie —
+arbuz i siódemka (półkole kontra „7” w złotej obwódce), ciemne — wiśnie, śliwka i BAR (dwa koła, pionowy owal,
+poziomy prostokąt w jasnej ramie). WILD ma najjaśniejsze punkty i największy lokalny kontrast (złoto + czarna
+wstęga + biały rdzeń neonu), a jego sylwetkę zamyka koło pierścienia. Liczby i pary ryzyka: § 5.8, § 5.2.
 
 **Napisy rysowane przez kod w S1** (brak osobnych obrazów):
 
 * „×2” przy neonowym mnożniku (E50) i „NEON JACKPOT” (E51): Bungee, biały rdzeń `#FFFFFF`, kontur `--magenta`
   4 px, poświata magenta (promień 24 px) + cyjan (promień 48 px). Na poziomie Low tylko kontur bez poświaty.
   Efekt „brzęczenia” neonu: krótkie przygaszenia jasności do 60% na 40–80 ms, najwyżej 3 na sekundę (limit błysków
-  z WCAG 2.3.1). Dźwięk: `sfx_s1_neon_bzyk`, `sfx_s1_jackpot` ([05-dzwiek-i-muzyka.md](05-dzwiek-i-muzyka.md)).
+  z WCAG 2.3.1); przy `prefers-reduced-motion` bez przygaszeń — napis tylko płynnie się zapala. Dźwięk: `sfx_s1_neon_bzyk`, `sfx_s1_jackpot` ([05-dzwiek-i-muzyka.md](05-dzwiek-i-muzyka.md)).
 
 ### 9.5. Tło `s1_tlo_desktop` i `s1_tlo_mobile`
 
 **Desktop (3:2):** retro-Vegas nocą w estetyce synthwave.
 
 * Niebo: gradient od `#0B0624` (góra) przez `#3A0CA3` do różowo-pomarańczowej łuny przy horyzoncie; rzadkie gwiazdy.
-* Horyzont na ~50% wysokości (punkt zbiegu z § 4.3, dopuszczalnie 45–55%). Pasiaste retro słońce wschodzi
-  z horyzontu na środku **za automatem** — kod przykryje je ramką, a widoczne zostaną tylko świecące łuki nad ramką
-  i po jej bokach (podświetlenie od tyłu, tzw. halo). Bezpośrednio za oknem bębnów słońce jest przygaszone,
-  a niebo ciemne.
+* Horyzont na ~45% wysokości (punkt zbiegu z § 4.3, dopuszczalnie 42–50%). Pasiaste retro słońce (półkole nad
+  horyzontem, średnica ~55% szerokości kadru, 6–8 poziomych pasów zwężających się ku dołowi) wschodzi z horyzontu
+  na środku **za automatem** — kod przykryje je ramką, a widoczne zostaną tylko świecące łuki nad ramką
+  i po jej bokach (podświetlenie od tyłu, tzw. halo). Bezpośrednio za oknem bębnów słońce jest przygaszone
+  (L\* ≤ 35, § 6.1), a niebo ciemne. Górny łuk słońca może zostać lekko przycięty na ekranach 16:9 (§ 6.4).
 * Podłoga: perspektywiczna siatka neonowa (`#2B6BFF` z różowymi liniami poziomymi), zbiegająca się do środka;
   w strefie panelu (y 80–100%) ściemniona do `--bg-0`.
 * Boki (x 0–18% i 82–100%): sylwetki palm i szyldów w kształcie strzałek i gwiazd z żarówkami, chromowane słupy,
@@ -1426,8 +1431,11 @@ prostokąt). WILD jest najjaśniejszy dzięki złotu i neonowi.
 
 ### 9.6. Ramka `s1_ramka` (1:1, ALFA)
 
-* **Okno:** w pełni przezroczysty kwadrat (3×3 pola kwadratowe), ~62% szerokości kadru (~640×640 px),
-  wyśrodkowany w poziomie; w pionie dozwolone przesunięcie w dół do 4% pod szerszy grzebień u góry.
+* **Okno:** w pełni przezroczysty kwadrat (proporcja dokładnie 1 : 1, 3×3 pola kwadratowe), ~62% szerokości kadru
+  (~640×640 px), wyśrodkowany w poziomie; w pionie dozwolone przesunięcie w dół do 4% pod szerszy grzebień u góry.
+* **Wymiary ramy (zasady wspólne: § 6.9):** cała ramka mieści się w 88% kadru (margines ≥ 6%, także dla poświaty
+  neonu). Orientacyjnie: boki ~13% szerokości kadru każdy, grzebień u góry ~16% wysokości (okno zaczyna się na
+  ~22%), dół ~10%.
 * **Rama:** gruba obudowa automatu z polerowanego chromu z zaokrąglonymi narożnikami; tuż przy oknie cienka złota
   listwa; wzdłuż zewnętrznej krawędzi różowa rurka neonowa, wzdłuż wewnętrznej — cyjanowa.
 * **Grzebień u góry:** łuk z rzędem żarówek (świecą równo, ciepłą bielą) i gwiazdką „atomic age” w środku.
@@ -1443,8 +1451,11 @@ Tekst dokładnie: `CEBULOWY 777` (bez polskich znaków).
 * Wiersz 1: `CEBULOWY` — grube, zaokrąglone retro litery szyldowe (charakter kroju Bungee) zrobione z różowych
   rurek neonowych z białym gorącym rdzeniem, oprawione w cienką cyjanową rurkę konturu; za literami ciemna,
   chromowana tablica o kształcie szyldu z żarówkami na obwodzie.
-* Wiersz 2: `777` — większe, wiśniowo-chromowe cyfry 3D w złotej obwódce, lekko pochylone, z 2–3 gwiazdkami-błyskami.
+* Wiersz 2: `777` — ~1,3× wyższe od liter `CEBULOWY`, wiśniowo-chromowe cyfry 3D w złotej obwódce, lekko
+  pochylone (~12°, jak `s1_sym_siodemka`), z 2–3 gwiazdkami-błyskami.
 * Poświata neonu zwarta (≤ 6% wysokości liter), mieści się w marginesie.
+* Ciemna tablica szyldu za `CEBULOWY` jest obowiązkowa: logo stoi na tle świecących łuków słońca (§ 9.5)
+  i na wideo w lobby, a różowy neon bez ciemnego podkładu traci tam kontrast.
 
 ### 9.8. Okładka i baner
 
@@ -1472,7 +1483,8 @@ Zmiana z ciepłego złota na chłodny błękit nocy daje graczowi wyraźny sygna
 | Nazwa | HEX | Rola |
 |---|---|---|
 | Złoto | `--gold-1` … `--gold-3` | dominanta: relikwia, maska, obramowania |
-| Lapis lazuli | `#1B3FA0`, ciemny `#0E2466` | inkrustacje, pasy nemes, tabliczki napisów |
+| Lapis lazuli | `#1B3FA0`, ciemny `#0E2466`, jasny `#2649C9` | inkrustacje, pasy nemes, tabliczki napisów; jasny — lico litery „K” (żeby niski symbol miał L\* ≥ 35, § 5.8) |
+| Bursztyn | `#FFB03B` | rim akcentowy z lewej-dołu (zamiast magenty), oczy Anubisa |
 | Turkus (fajans) | `#2EC4B6` | inkrustacje, rim, akcent UI gry |
 | Piaskowiec | `#C89B5A`, cień `#6B4A26` | ramka, litery niskich symboli, ściany |
 | Karneol | `#C8321E` | „Q”, dysk słońca skarabeusza |
@@ -1497,8 +1509,11 @@ Motyw CSS gry: `--accent-1: #2EC4B6; --accent-2: #1B3FA0; --game-bg: #0E1530`.
 ### 10.4. Symbole S2
 
 Niskie symbole to litery i cyfra z piaskowca, których przednia ściana jest inkrustowana kamieniem szlachetnym
-w złotym obrysie. Każdy ma inny kolor kamienia. Wszystkie litery mają tę samą wysokość i klasyczny szeryfowy krój
-z klinowymi szeryfami.
+w złotym obrysie. Każdy ma inny kolor kamienia. Wszystkie znaki mają tę samą wysokość — ~80% wysokości kadru, bo litera jest całym symbolem
+(§ 5.1) — i klasyczny szeryfowy krój z klinowymi szeryfami. Boczne
+ścianki z piaskowca (grubość ekstruzji ~10% wysokości litery) mają płytko rzeźbiony pas drobnych hieroglifów —
+to „ornament hieroglificzny” z briefu; jest detalem dekoracyjnym (§ 4.9) i nie musi być czytelny w 64 px.
+Grawery na licach (lotos, pióro, kobra, zygzaki) są dekoracją; o rozpoznaniu decyduje kształt znaku i kolor kamienia.
 
 | ID | Poziom | Wygląd | Kolor / sylwetka |
 |---|---|---|---|
@@ -1510,13 +1525,18 @@ z klinowymi szeryfami.
 | `s2_sym_ankh` | wysoki 1 | Krzyż anch z polerowanego złota z inkrustacją turkusu i lapisu w pętli oraz pasem drobnych hieroglifów na ramionach. | złoto + turkus; pętla nad „T” |
 | `s2_sym_oko` | wysoki 2 | Oko Horusa jako masywny złoty amulet w reliefie: lapisowa źrenica z turkusowym odblaskiem, charakterystyczna „łza” i spiralny ogon pod okiem, wypełnienia z ciemnego lapisu. | złoto + lapis; poziome oko ze spiralą |
 | `s2_sym_skarabeusz` | wysoki 3 | Skarabeusz z polerowanego zielono-czarnego kamienia z rozpostartymi skrzydłami z piór ze złota, turkusu i lapisu (styl pektorału); nad głową trzyma czerwony dysk słońca z karneolu. | wielobarwny; najszersza pozioma sylwetka |
-| `s2_sym_anubis` | wysoki 4 | Popiersie Anubisa w ujęciu 3/4: głowa szakala z czarnego polerowanego obsydianu, uszy i oczy obrysowane złotem, bursztynowe świecące oczy, złoty kołnierz usech w pasy lapisu i turkusu. | najciemniejszy symbol; wysokie spiczaste uszy |
-| `s2_sym_faraon` | wysoki 5 (najwyższy) | Złota maska faraona en face: chusta nemes w pasy złota i lapisu, kobra ureusz na czole, pleciona broda, oczy podkreślone lapisem. Najbogatszy detal i najjaśniejsze złoto w grze. Inspiracja ogólna, nie wierna kopia konkretnego zabytku. | najjaśniejszy; trapez nemes z opadającymi pasami |
-| `s2_sym_wild` | specjalny | **Złota Relikwia Cebuli**: relikwiarz z polerowanego złota w kształcie cebuli (cebulasta kopuła z czubkiem), z pionowymi pasami lapisu wzdłuż żeber, grawerowanymi hieroglifami i małym kartuszem, na niskiej złotej podstawie, w ciepłej złotej aurze. Przez dolną część biegnie tabliczka z lapisu w złotej ramce z napisem `WILD` złotymi literami. | złoto + lapis; cebula + tabliczka |
-| `s2_sym_scatter` | specjalny | Piramida z piaskowca w chłodnym nocnym świetle, ze złotym piramidionem, z którego w górę bije pionowa wiązka cyjanowo-białego światła; na ścianie świeci turkusowe oko. U podstawy tabliczka lapis-złoto z napisem `SCATTER`. Wiązka wygasa przed górnym marginesem. | trójkąt + pionowa wiązka; jedyny chłodny symbol |
+| `s2_sym_anubis` | wysoki 4 | Popiersie Anubisa w ujęciu 3/4 (głowa obrócona ~35–40°, pysk w lewo, ku światłu — wyjątek z § 5.4): głowa szakala z czarnego polerowanego obsydianu z wyraźnymi chłodnymi pasmami odbić (L\* 50–70), uszy i oczy obrysowane złotem, złota opaska na czole, bursztynowe świecące oczy (`#FFB03B`), złoty kołnierz usech w pasy lapisu i turkusu zajmujący dolne ~40% symbolu. Turkusowy rim (≥ 3% szerokości) na całym prawym i górnym obrysie głowy i uszu. Średnia L\* ≥ 35 (§ 5.8). | najciemniejszy symbol; wysokie spiczaste uszy |
+| `s2_sym_faraon` | wysoki 5 (najwyższy) | Złota maska faraona en face: chusta nemes w pasy złota i lapisu, kobra ureusz na czole, pleciona broda, oczy podkreślone lapisem. Najbogatszy detal i najjaśniejsze złoto wśród symboli zwykłych. Inspiracja ogólna, nie wierna kopia konkretnego zabytku. | najjaśniejszy wśród zwykłych; trapez nemes z opadającymi pasami |
+| `s2_sym_wild` | specjalny | **Złota Relikwia Cebuli**: relikwiarz z polerowanego złota w kształcie cebuli (cebulasta kopuła z czubkiem), z pionowymi pasami lapisu wzdłuż żeber, grawerowanymi hieroglifami i małym kartuszem, na niskiej złotej podstawie, w ciepłej złotej aurze. Przez dolną część biegnie tabliczka z lapisu w złotej ramce z napisem `WILD` złotymi literami (≥ 18% wysokości symbolu). | złoto + lapis; cebula + tabliczka |
+| `s2_sym_scatter` | specjalny | Piramida z piaskowca w chłodnym nocnym świetle, ze złotym piramidionem, z którego w górę bije pionowa wiązka cyjanowo-białego światła (`#9FE8FF`), wygasająca całkowicie przed górnym marginesem. Na ścianach piramidy świecą turkusową magiczną poświatą **spoiny między dużymi kamiennymi blokami** — kilka grubych, wyraźnych linii (≥ 1/24 płótna, czytelnych w 64 px). **Bez oka i bez żadnego innego znaku na ścianie piramidy** (oko w trójkącie jest zakazane — § 12; Oko Horusa to osobny symbol `s2_sym_oko`). U podstawy tabliczka lapis-złoto z napisem `SCATTER` (≥ 12% wysokości symbolu, § 5.6). | trójkąt + pionowa wiązka; jedyny symbol oświetlony chłodnym światłem |
 
-**Dlaczego scatter jest chłodny:** wszystko w grze głównej jest ciepłe, więc chłodna piramida z wiązką wyróżnia się
-na planszy od razu. Zapowiada też chłodny nastrój darmowych spinów.
+**Dlaczego scatter jest chłodny:** wszystko w grze głównej jest oświetlone ciepło (pochodnie), więc piramida
+w chłodnym świetle księżyca z cyjanowo-białą wiązką wyróżnia się na planszy od razu, choć turkusowe i lapisowe
+akcenty mają też inne symbole. Zapowiada też chłodny nastrój darmowych spinów.
+
+**Dlaczego bez oka na piramidzie:** brief dopuszcza „piramidę ze świecącym okiem/wiązką”, a wiązka w zupełności
+spełnia ten wymóg. Oko na ścianie piramidy to „oko opatrzności” z banknotu dolarowego (motyw pieniądza i niechcianych
+konotacji, § 12), a do tego dublowałoby symbol `s2_sym_oko` i myliło graczy.
 
 ### 10.5. Rozszerzony WILD `s2_wild_rozszerzony` (2:3, ALFA)
 
@@ -1524,9 +1544,14 @@ Grafika przykrywa cały bęben (3 pola jeden nad drugim) w darmowych spinach (E6
 
 * **Proporcja treści:** pionowa kolumna o proporcji 1:3, około 45% szerokości płótna (~460 px), na całą wysokość
   minus marginesy 6% (~1350 px). Po bokach kolumny tło przezroczyste, z wygasającą poświatą (do 6%).
-* **Treść:** relikwia z `s2_sym_wild` (ten sam projekt, większa) w środku kolumny, w pionowym słupie złotego
-  światła; po bokach pionowe pasy świecących turkusowo-złotych hieroglifów; u góry i u dołu złote zwieńczenia jak
-  w pionowym kartuszu; w dolnej części tabliczka lapis-złoto z napisem `WILD`.
+* **Treść:** kolumna to **nieprzezroczysty** pionowy kartusz z głębokiego lapisu (`#0E2466`) w polerowanej złotej
+  ramie, ze złotymi zwieńczeniami u góry i u dołu. Wewnątrz przez całą wysokość wznosi się słup ciepłego złotego
+  światła, w środku stoi relikwia z `s2_sym_wild` (ten sam projekt, większa, najjaśniejszy punkt), wzdłuż obu
+  wewnętrznych boków biegną pionowe pasy świecących turkusowo-złotych hieroglifów (dekoracja), a w dolnej części
+  tabliczka lapis-złoto z napisem `WILD`.
+* **Dlaczego kartusz nieprzezroczysty, a nie sam słup światła:** półprzezroczyste światło w PNG z alfą daje po
+  wycięciu brudne krawędzie (§ 4.5) i nie zasłoniłoby symboli bębna pod spodem. Poświatę wokół kolumny dokłada kod
+  (sprite `add`, E60).
 * **Dlaczego proporcja 1:3 w płótnie 2:3:** ChatGPT nie generuje formatu 1:3, więc rysujemy kolumnę w środku
   formatu 2:3 i przycinamy przezroczyste boki przy obróbce.
 * Kod: kolumna „rozwija się” od pola, na którym wylądował WILD, w górę i w dół (maska, ~500 ms), po bokach wybuchają
@@ -1539,31 +1564,38 @@ Grafika przykrywa cały bęben (3 pola jeden nad drugim) w darmowych spinach (E6
 * Środek tylnej ściany: duża, ciemna nisza-portal za bębnami (najciemniejsza strefa). Nad nią, w pasie górnym,
   przygaszony relief skrzydlatego dysku słońca (tło dla logo gry).
 * Boki: masywne kolumny z kapitelami lotosu, ściany z malowanymi fryzami hieroglificznymi w złocie, turkusie
-  i ochrze; na wysokości ~40% dwa kosze ognia (lewy jaśniejszy — key light), kopce złota w dolnych rogach
-  (monety cebulion, wazy, skrzynia, posążki).
-* Z góry wpadają ukośne snopy światła z kurzem (od lewej).
+  i ochrze; na wysokości ~40% dwa kosze ognia (lewy jaśniejszy — key light), kopce złota u dołu boków
+  (x 0–18% i 82–100%, y 55–80%: monety cebulion, wazy, skrzynia, posążki). Poniżej y 80% (strefa panelu) widać
+  z nich tylko ciemne zarysy (L\* ≤ 25, § 6.2).
+* Z góry wpadają ukośne snopy światła z kurzem (od lewej); w strefie bębnów snopy są przygaszone (L\* ≤ 35).
 * Podłoga z kamiennych płyt ciemnieje do `--bg-0` w strefie panelu.
 
 **Mobile (2:3):** nisza-portal przez całą strefę bębnów, kosze ognia w górnych bokach (y 10–20%), skarby
-w dolnych rogach pod panelem (przyciemnione), relief słońca nad bębnami.
+przy dolnych bokach tuż nad panelem (y 55–66%, mogą zostać przycięte), w strefie panelu tylko ich ciemne
+zarysy; relief słońca nad bębnami.
 
 ### 10.7. Tło darmowych spinów `s2_tlo_fs_desktop` i `s2_tlo_fs_mobile`
 
 * Ta sama linia horyzontu i strefy co tło bazowe (§ 6.7).
 * Noc nad pustynią: głęboki granat `#0A1030`, Droga Mleczna ukośnie od lewego-górnego rogu, tysiące gwiazd.
 * Główna piramida stoi na środku **za bębnami**: jej wierzchołek leży na ~10–14% wysokości, tak żeby wyglądał
-  zza górnej krawędzi ramki, i z niego bije w niebo pionowa wiązka `#9FE8FF` aż do górnej krawędzi kadru. Logo gry stoi na tle wiązki — dostaje naturalne halo.
-  Ściany piramidy w strefie bębnów są ciemne (chłodne światło księżyca).
+  zza górnej krawędzi ramki, i z niego bije w niebo pionowa wiązka `#9FE8FF` (szerokość ≤ 4% kadru) aż do górnej
+  krawędzi kadru. Logo gry stoi na tle wiązki — dostaje naturalne halo, a czytelność zapewnia mu ciemny lapisowy
+  kontur liter (§ 10.9). Ściany piramidy w strefie bębnów są ciemne (chłodne światło księżyca, L\* ≤ 35).
 * Po bokach dwie mniejsze piramidy i wydmy w niebieskiej poświacie, w dolnych rogach przygaszone obeliski.
 * Wersja mobile: wierzchołek i wiązka w pasie y 10–20%, mniejsze piramidy przy bokach (mogą zostać przycięte).
 
 ### 10.8. Ramka `s2_ramka` (3:2, ALFA)
 
-* **Okno:** w pełni przezroczysty prostokąt 5:3 (15 pól kwadratowych), ~80% szerokości i ~72% wysokości kadru
-  (~1230×738 px), wyśrodkowany. Boczne części ramy ~10% szerokości, górna i dolna ~14% wysokości.
+* **Okno:** w pełni przezroczysty prostokąt o proporcji dokładnie 5 : 3 (1,667; 15 pól kwadratowych), ~70% szerokości
+  i ~63% wysokości kadru (~1075×645 px w obrazie 1536×1024), wyśrodkowany.
+* **Wymiary ramy (§ 6.9):** cała ramka ~88% szerokości i wysokości kadru, margines ≥ 6%; boczne części ramy ~9%
+  szerokości kadru każda, górna i dolna ~12% wysokości każda. **Dlaczego nie 80% okna:** okno 80% + boki po 10%
+  dawały 100% szerokości kadru — ramka dotykałaby krawędzi i łamała margines z briefu. Bezwzględny rozmiar okna
+  nie jest krytyczny, bo wykrywa je pipeline; liczy się proporcja.
 * **Boki:** kolumny z piaskowca z kapitelami lotosu, z inkrustowanymi pasami lapisu i turkusu.
-* **Góra:** nadproże ze złotą listwą; w środku płaski złoty pas (kod kładzie tu logo gry), po bokach nadproża
-  skrzydła skrzydlatego dysku.
+* **Góra:** nadproże ze złotą listwą; w środku płaski, gładki złoty pas bez ornamentu (kod kładzie tu logo gry,
+  które nachodzi na pas od góry), po bokach nadproża skrzydła skrzydlatego dysku.
 * **Dół:** kamienny cokół z pasem hieroglificznym i złotą listwą.
 * **Krawędź okna:** cienka polerowana złota listwa perełkowa z inkrustacją lapisu — ostra, prosta.
 * **Narożniki:** małe złote kartusze.
@@ -1573,7 +1605,8 @@ w dolnych rogach pod panelem (przyciemnione), relief słońca nad bębnami.
 Tekst dokładnie: `ZŁOTY FARAON`. W promptach literujemy: **Ł = L with stroke** (Z, L-with-stroke, O, T, Y).
 
 * `ZŁOTY` mniejszy (~60% wysokości) nad większym `FARAON`.
-* Ozdobne rzymskie kapitały w duchu Cinzel Decorative, z polerowanego złota z inkrustowanym konturem z lapisu
+* Ozdobne rzymskie kapitały w duchu Cinzel Decorative, z polerowanego złota z inkrustowanym konturem z ciemnego
+  lapisu (`#0E2466`, ~3% wysokości litery — utrzymuje czytelność na wiązce światła z § 10.7 i na wideo w lobby)
   i głębokim rzeźbieniem; klinowe szeryfy z lekkim egipskim akcentem.
 * Nad napisem mały skrzydlaty dysk słońca z kobrą ureusz; turkusowy rim na prawych krawędziach liter.
 
@@ -1613,7 +1646,8 @@ mocniej i bardziej nasyconymi kolorami.
 | Bioluminescencja | `#19F5D2` | mech, rim, akcent UI gry |
 | Szafir | `#2F6BFF` | symbol, kryształy w tle |
 | Szmaragd | `#19D17A` | symbol |
-| Ametyst | `#A64DFF` | symbol, rim akcentowy, kryształy w tle |
+| Ametyst (otoczenie) | `#A64DFF` | rim akcentowy, kryształy w tle, akcent UI gry, poświaty efektów |
+| Ametyst (symbol) | `#C77DFF` | `s3_sym_ametyst` i tint jego odłamków — jaśniejszy, orchideowy fiolet (L\* 65 zamiast 53), żeby nie zlewał się z szafirem w skali szarości i w daltonizmie (§ 5.2, § 5.8), a przy okazji odcinał się od ametystowych kryształów tła |
 | Topaz | `#FFB23D` | symbol |
 | Rubin | `#FF2D55` | symbol |
 | Diament | `#E8FBFF` | symbol (lodowa biel) |
@@ -1640,25 +1674,32 @@ Wysokie mają złote oprawy. To czytelny sygnał wartości.
 
 | ID | Poziom | Wygląd | Kolor / sylwetka |
 |---|---|---|---|
-| `s3_sym_szafir` | niski 1 | Szafir w szlifie gruszki (kropla czubkiem do góry), głęboki chabrowy błękit z jasnym rdzeniem i chłodnymi iskrami na fasetach. | `#2F6BFF`; kropla |
-| `s3_sym_szmaragd` | niski 2 | Szmaragd w szlifie szmaragdowym (prostokąt ze ściętymi rogami i stopniowanymi fasetami), ustawiony pionowo, soczysta zieleń z głębią jak woda. | `#19D17A`; pionowy ośmiokąt |
-| `s3_sym_ametyst` | niski 3 | Ametyst w płaskim szlifie sześciokątnym, nasycony fiolet z różowymi refleksami na krawędziach faset. | `#A64DFF`; sześciokąt |
-| `s3_sym_topaz` | niski 4 | Topaz w szlifie markiza (wydłużona „łódka”) ułożony ukośnie pod 45°, złocisto-pomarańczowy z ciepłym rdzeniem. | `#FFB23D`; ukośne wrzeciono |
-| `s3_sym_rubin` | wysoki 1 | Rubin w szlifie serca, intensywnie czerwono-różowy, w delikatnej złotej filigranowej oprawie z czterema łapkami; jasny pulsujący rdzeń. | `#FF2D55` + złoto; serce |
-| `s3_sym_diament` | wysoki 2 | Diament w szlifie brylantowym w ujęciu 3/4 (szeroka korona, ostry spód), lodowobiały z silną tęczową dyspersją, w oprawie z białego złota z cienką złotą obwódką. | `#E8FBFF`; klasyczna sylwetka brylantu |
+| `s3_sym_szafir` | niski 1 | Szafir w szlifie gruszki (kropla czubkiem do góry, szer. : wys. ≈ 0,75 : 1), głęboki chabrowy błękit z jasnym rdzeniem i chłodnymi iskrami na fasetach; 6–8 dużych faset widocznych na licu. | `#2F6BFF`; kropla |
+| `s3_sym_szmaragd` | niski 2 | Szmaragd w szlifie szmaragdowym (prostokąt ze ściętymi rogami i stopniowanymi fasetami), ustawiony pionowo (szer. : wys. ≈ 0,72 : 1), soczysta zieleń z głębią jak woda; 3 wyraźne stopnie faset. | `#19D17A`; pionowy ośmiokąt |
+| `s3_sym_ametyst` | niski 3 | Ametyst w płaskim szlifie sześciokątnym, **sześciokąt poziomy** (wierzchołki z lewej i prawej, płaskie krawędzie u góry i u dołu, szer. : wys. ≈ 1,25 : 1), jasny, orchideowy fiolet z różowymi refleksami na krawędziach faset i jasnym rdzeniem. | `#C77DFF`; poziomy sześciokąt |
+| `s3_sym_topaz` | niski 4 | Topaz w szlifie markiza (wydłużona „łódka”, długość : szerokość ≈ 2 : 1) ułożony ukośnie pod 45° (czubki w lewym-dolnym i prawym-górnym rogu), złocisto-pomarańczowy z ciepłym rdzeniem. | `#FFB23D`; ukośne wrzeciono |
+| `s3_sym_rubin` | wysoki 1 | Rubin w szlifie serca, intensywnie czerwono-różowy, w delikatnej złotej filigranowej oprawie z czterema łapkami; jasny rdzeń (pulsowanie dodaje kod). | `#FF2D55` + złoto; serce |
+| `s3_sym_diament` | wysoki 2 | Diament w szlifie brylantowym, pochylony koroną ku kamerze (wyjątek z § 5.4: widać szeroką koronę i ostry spód), lodowobiały, z kilkoma dużymi fasetami: **jasne fasety i krawędzie przeplatają się z ciemnymi, stalowo-granatowymi odbiciami** (średnia L\* 70–78, a nie ~97). Tęczowa dyspersja tylko na krawędziach faset (≤ 15% powierzchni). Oprawa z białego złota/platyny (wyjątek z § 3.4) z cienką żółtozłotą obwódką. | `#E8FBFF` (światła); klasyczna sylwetka brylantu |
 | `s3_sym_cebula` | wysoki 3 (najwyższy) | **Kryształowa złota cebula**: bryła cebuli z przezroczystego kryształu, w której środku widać złote warstwy jak słoje cebuli; złoty zakręcony czubek i złoty filigranowy pierścień u jego podstawy, tęczowe refleksy na krawędziach. Najbogatszy detal wśród symboli zwykłych. | złoto + kryształ; cebula |
-| `s3_sym_scatter` | specjalny | **„Serce Jaskini”**: tęczowy trójgraniasty pryzmat z kryształu unoszący się w pierścieniu drobnych kryształków, rozszczepiający światło w wachlarz barw tęczy (w obrębie marginesu). U dołu tabliczka z ciemnego ametystu w srebrno-złotej ramce z napisem `SCATTER` kryształowymi literami. | tęcza; trójkąt + wachlarz |
+| `s3_sym_scatter` | specjalny | **„Serce Jaskini”**: tęczowy trójgraniasty pryzmat z kryształu (wierzchołkiem do góry) unoszący się w pierścieniu drobnych kryształków, rozszczepiający światło w wachlarz barw tęczy (w obrębie marginesu). U dołu tabliczka z ciemnego ametystu (L\* ≤ 25) w ramce z białego złota z żółtozłotą krawędzią, z napisem `SCATTER` z jasnego, prawie białego kryształu z białym rdzeniem (L\* ≥ 85, ≥ 12% wysokości symbolu, § 5.6). | tęcza; trójkąt + wachlarz |
 | `s3_sym_mnoznik` | specjalny | Kryształowa kula w delikatnej złotej klatce z dwóch pierścieni. Środek kuli to gładki, mlecznobiały, równomiernie świecący obszar (~55% średnicy kuli) bez żadnego detalu. Sama kula w neutralnych, chłodnobiałych tonach. | neutralna biel + złoto; koło w pierścieniach |
 
 **Kula mnożnika a kod (E72, E73):** liczbę („×2” … „×100”) wpisuje kod fontem Marcellus w kolorze `--bg-0`
-z konturem `--gold-1`. Kolor poziomu mnożnika daje kolorowa poświata `add` nałożona na środek kuli: ×2–×5 cyjan,
-×10–×25 fiolet `#A64DFF`, ×50–×100 złoto z magentą. **Dlaczego kula jest neutralna:** kolorowa kula z obrazu
+z konturem `--gold-1`. Kolor poziomu mnożnika daje kolorowa poświata `add` nałożona na środek kuli: ×2–×9 cyjan,
+×10–×49 fiolet `#A64DFF`, ×50–×100 złoto z magentą (przedziały są ciągłe, więc obejmą każdą wartość, jaką zdefiniuje
+[07-gry-i-matematyka.md](07-gry-i-matematyka.md); wcześniejsze pasma ×2–×5 / ×10–×25 / ×50–×100 z
+[04-efekty-wizualne.md](04-efekty-wizualne.md) są ich podzbiorem).
+Poświata nie może rozjaśnić środka kuli tak, żeby ciemna liczba straciła kontrast — środek zostaje jasny
+(L\* ≥ 80), a kolor poziomu widać głównie na brzegu kuli. **Dlaczego kula jest neutralna:** kolorowa kula z obrazu
 pasowałaby tylko do jednego poziomu. Neutralna przyjmuje każdy kolor od kodu, a jasny środek gwarantuje kontrast
 ciemnej liczby.
 
-**Rozróżnialność S3:** diament (najjaśniejszy) i topaz (jasny) mają zupełnie różne sylwetki; szafir i ametyst
-(oba ciemniejsze) różnią się kroplą i sześciokątem; szmaragd i rubin mają podobną jasność, ale prostokąt
-kontra serce w złotej oprawie. Cebula jako jedyna łączy kryształ ze złotem.
+**Rozróżnialność S3:** diament i topaz (oba jasne) mają zupełnie różne sylwetki (brylant kontra ukośne wrzeciono);
+szafir (ciemny, L\* 50) i ametyst (średni, L\* 65) różnią się jasnością **i** sylwetką (pionowa kropla kontra poziomy
+sześciokąt) — to najważniejsza para, bo w protanopii i deuteranopii fiolet staje się niebieski; szmaragd (L\* 74)
+i rubin (L\* 56) różnią się jasnością i kształtem (pionowy prostokąt kontra serce w złotej oprawie); szmaragd
+i topaz, w deuteranopii oba żółtooliwkowe, różnią się sylwetką. Diament z ciemnymi fasetami nie myli się z gładką,
+jasną kulą mnożnika. Cebula jako jedyna łączy kryształ ze złotem. Liczby: § 5.8.
 
 ### 11.5. Odłamki `s3_fx_odlamki` (ALFA SHEET 4×3)
 
@@ -1673,8 +1714,9 @@ pozwala obsłużyć wszystkie symbole jednym arkuszem.
 
 * Boki: ogromne skupiska kryształów ametystu i szafiru wyrastające ze ścian (x 0–18% i 82–100%), u ich podstawy
   świecący mech i małe bioluminescencyjne grzyby.
-* Pas górny: wąski świetlisty wodospad spływa ze szczeliny w sklepieniu na środku i znika **za ramką**. Z lewej-góry
-  wpada ciepły złoty snop światła (key) z pyłem.
+* Pas górny: wąski (≤ 6% szerokości kadru) świetlisty wodospad spływa ze szczeliny w sklepieniu na środku i znika
+  **za ramką**; jego jasność w pasie logo ≤ L\* 60 (najjaśniejsze są drobiny i krawędzie strumienia, nie cała
+  wstęga), a w strefie bębnów ≤ L\* 35 (§ 6.1). Z lewej-góry wpada ciepły złoty snop światła (key) z pyłem.
 * Strefa bębnów: głęboka, ciemna perspektywa jaskini z rzadkim, miękkim bokeh drobin światła.
 * Dół: nieruchoma tafla wody z odbiciami kryształów, ściemniona do `--bg-0` pod panelem.
 
@@ -1691,8 +1733,12 @@ tafla wody pod panelem.
 
 ### 11.8. Ramka `s3_ramka` (1:1, ALFA)
 
-* **Okno:** w pełni przezroczysty prostokąt 6:5 (30 pól kwadratowych), ~80% szerokości i ~67% wysokości kadru
-  (~820×683 px), wyśrodkowany. Boki ramy ~10% szerokości, góra i dół ~17% wysokości.
+* **Okno:** w pełni przezroczysty prostokąt o proporcji dokładnie 6 : 5 (szer. : wys. = 1,2; 30 pól kwadratowych),
+  ~70% szerokości i ~58% wysokości kadru (~717×598 px w obrazie 1024×1024), wyśrodkowany.
+* **Wymiary ramy (§ 6.9):** cała ramka ~88% kadru, margines ≥ 6% (także dla zewnętrznych kryształów korony);
+  boki ramy ~9% szerokości kadru każdy, góra i dół ~14% wysokości każda. **Dlaczego nie 80% okna:** okno 80%
+  + boki po 10% to 100% szerokości, a w pionie okno 67% + góra i dół po 17% to 101% — ramka nie zmieściłaby się
+  w kadrze. Okno ~717 px pipeline powiększa do 864 px @1x (×1,2), w granicy z [02](02-lista-obrazow.md).
 * **Rama:** ciemna, srebrzysto-kamienna obudowa porośnięta kryształami; największe skupiska w narożnikach i na
   środku góry („korona” z kryształów ametystu, szafiru i jednego złotego kryształu-cebuli); dół: rząd mniejszych
   kryształów i świecący mech.
@@ -1708,6 +1754,9 @@ Tekst dokładnie: `KRYSZTAŁOWA KASKADA`. W promptach literujemy: **Ł = L with 
 * `KRYSZTAŁOWA` mniejsza (~60% wysokości) nad większą `KASKADA`.
 * Kapitały w duchu kroju Marcellus (szeryf z rozszerzonymi końcami kresek), wykonane z fasetowanego,
   przezroczystego kryształu z fioletowo-cyjanową refrakcją i cienkimi złotymi krawędziami.
+* **Czytelność:** wnętrze liter jest ciemnofioletowe (`#1A0B33`, widoczne przez kryształ), krawędzie jasne,
+  a całość otacza ciemny kontur ~3% wysokości litery. Sam przezroczysty kryształ zniknąłby na jasnym wodospadzie
+  (§ 11.6), na zorzy darmowych spinów i na wideo w lobby.
 * Wokół liter kilka drobnych odłamków i błysków; z dolnej krawędzi `KASKADA` „skapują” trzy świetliste krople.
 
 ### 11.10. Okładka i baner
@@ -1746,9 +1795,12 @@ Tekst dokładnie: `KRYSZTAŁOWA KASKADA`. W promptach literujemy: **Ł = L with 
 | Tekst | błędów pisowni (`WIID`, `SCATER`, `ZLOTY` bez Ł) | jedna literówka przekreśla profesjonalny wygląd |
 | Treść | prawdziwych marek kasyn i producentów gier, logotypów, znanych maskotek, prawdziwych osób | prawa autorskie i znaki towarowe; projekt musi być w 100% własny |
 | Treść | pieniędzy: banknotów, `$`, `€`, kart płatniczych, żetonów z nominałami | to symulator z wirtualną walutą — jedyna „waluta” na grafikach to cebulion |
-| Treść | oka w trójkącie („oko opatrzności”) w S2 | niepotrzebne konotacje; w S2 używamy egipskiego oka Horusa |
+| Treść | oka w trójkącie („oko opatrzności”), w tym **jakiegokolwiek oka na piramidzie** (`s2_sym_scatter`, tła S2) | motyw z banknotu dolarowego i niepotrzebne konotacje; w S2 oko występuje tylko jako egipskie Oko Horusa w symbolu `s2_sym_oko` i w znaku wadżet z `s2_fx_hieroglify` |
 | Treść | alkoholu, papierosów, przemocy i seksualizacji postaci | ton marki: elegancko i dla każdego dorosłego gracza |
-| Technika | detalu drobniejszego niż 1/100 rozmiaru obrazu | znika w 64 px (§ 4.9) |
+| Technika | detalu drobniejszego niż 1/100 rozmiaru obrazu; detalu potrzebnego do rozpoznania symbolu drobniejszego niż 1/24 | pierwszy znika nawet na desktopie, drugi w polu 56–96 px (§ 4.9) |
+| Czytelność | ciemnego symbolu bez jasnej krawędzi (czarny obsydian, czarny lakier, ciemny fiolet bez rimu) | zlewa się z podkładem bębna o L\* 3–8 (§ 5.8) |
+| Czytelność | dwóch symboli jednej gry o podobnej sylwetce i podobnej jasności | mylą się w skali szarości i w daltonizmie (§ 5.2) |
+| Czytelność | przezroczystych liter (kryształ, szkło) bez ciemnego podkładu lub konturu | znikają na jasnym tle i wideo (§ 5.6, § 11.9) |
 | Technika | gęstych pasków, drobnej szachownicy i wzorów moiré w tłach | migoczą przy skalowaniu i męczą wzrok osób wrażliwych na wzory |
 | Technika | pasm w gradientach (banding) | widoczne na ciemnych tłach, zwłaszcza po kompresji |
 
@@ -1760,14 +1812,19 @@ Tekst dokładnie: `KRYSZTAŁOWA KASKADA`. W promptach literujemy: **Ł = L with 
 
 1. Otwórz plik w przeglądarce kolejno na tle `#07060F`, na jaskrawej magencie `#FF00FF` i na bieli. Magenta
    bezlitośnie ujawnia obwódki i półprzezroczyste śmieci w kanale alfa.
-2. Zmniejsz do 64 px (symbole S3: 56 px) i do 25% rozmiaru.
+2. Zmniejsz do 64 px i 96 px (symbole S3: 56 px) oraz do 25% rozmiaru.
 3. Włącz skalę szarości (`filter: grayscale(1)` w DevTools) i symulację daltonizmu (Rendering →
-   *Emulate vision deficiencies*).
+   *Emulate vision deficiencies*). Symbole oglądaj **razem z resztą zestawu gry** ułożoną w siatkę, na podkładzie
+   bębna (§ 6.6) — pojedynczy symbol zawsze wygląda dobrze, problemy widać dopiero obok sąsiadów.
 4. Porównaj z kotwicą stylu (§ 1.4) i z zaakceptowanymi obrazami tej samej grupy, ułożonymi obok siebie.
-5. Przejdź listę z § 13.2 i podejmij decyzję z § 13.3.
+5. Dla teł i symboli odczytaj pomiary L\* z raportu pipeline'u (§ 5.8, § 6.1–6.2).
+6. Przejdź listę z § 13.2 i podejmij decyzję z § 13.3.
 
 Pipeline obróbki ([02-lista-obrazow.md](02-lista-obrazow.md)) dodatkowo automatycznie sprawdza kanał alfa,
-margines i okno ramki, ale nie zastępuje oceny wzrokiem.
+margines, okno ramki i jasność stref, ale nie zastępuje oceny wzrokiem.
+
+**Makiety (`m01`–`m08`)** sprawdzamy uproszczoną listą: A, C (strefy ekranu z § 6 i § 1.4), D oraz punkt
+„brak zakazanych treści” z F. Literówki w tekstach UI na makietach są dopuszczalne.
 
 ### 13.2. Lista kontrolna
 
@@ -1775,50 +1832,72 @@ margines i okno ramki, ale nie zastępuje oceny wzrokiem.
 
 - [ ] Nazwa pliku = ID + `.png`, właściwy folder: `global/`, `s1/`, `s2/`, `s3/`, `makiety/`.
 - [ ] Format zgodny z listą: 1:1 = 1024×1024, 3:2 = 1536×1024, 2:3 = 1024×1536.
-- [ ] Typ tła zgodny z listą: `ALFA` / `CZARNE` / `PELNE` (`SHEET` — właściwa siatka).
+- [ ] Typ tła zgodny z listą: `ALFA` / `CZARNE` / `PELNE` (`SHEET` — właściwa siatka K×W, § 1.5).
+- [ ] Oryginał pobrany w pełnej rozdzielczości PNG (bez zrzutu ekranu i bez kompresji JPEG — brak bloków 8×8 na
+      gradientach).
 
 **B. Alfa i krawędzie (obrazy ALFA)**
 
 - [ ] Tło naprawdę przezroczyste: brak narysowanej szachownicy i białego tła.
-- [ ] Na magencie brak obwódek i półprzezroczystej mgły.
+- [ ] Na magencie brak obwódek i półprzezroczystej mgły; poza obrysem obiektu ≤ 1% pikseli z alfą > 0
+      (pomiar pipeline'u).
 - [ ] Brak cienia na podłożu, podłogi i odbicia pod obiektem.
+- [ ] Obiekt ostry w całości — bez głębi ostrości i rozmytych fragmentów (§ 4.6).
 
 **C. Kompozycja**
 
 - [ ] Obiekt w całości, margines ≥ 6%, poświata mieści się w marginesie.
 - [ ] Wypełnienie kadru zgodne z poziomem symbolu (§ 5.1).
-- [ ] `CZARNE`: czysta czerń przy krawędziach (≥ 8%), efekt wygasa przed krawędzią, kolory neutralne (do tintu).
-- [ ] Tła: strefy z § 6.2 / § 6.3, ciemny środek, ważne elementy w strefie bezpiecznej (§ 6.4).
+- [ ] `CZARNE`: czysta czerń przy krawędziach (≥ 8%; pipeta w rogach: R, G, B ≤ 3), efekt wygasa przed krawędzią,
+      kolory neutralne (do tintu), brak szarej mgły na całym kadrze.
+- [ ] Tła: strefy z § 6.2 / § 6.3 (lobby: § 6.5), ważne elementy w strefie bezpiecznej (§ 6.4).
+- [ ] Tła — pomiar L\*: całe tło średnio 12–22; strefa bębnów średnio 6–14 i maks. 35; pasek górny i panel
+      średnio ≤ 12; brak tekstu, ludzi, automatu i ramki.
 - [ ] Tła darmowych spinów: ten sam horyzont, punkt zbiegu i strefy co tło bazowe.
-- [ ] `SHEET`: właściwa liczba komórek i kolejność elementów, nic na siebie nie nachodzi.
+- [ ] `SHEET`: właściwa liczba komórek i kolejność elementów (§ 4.8, § 7.5, § 7.9, § 7.10), nic na siebie nie
+      nachodzi.
 
 **D. Styl**
 
-- [ ] Key light z lewej-góry, rim cyjan z prawej (albo wariant danej gry z § 4.2).
-- [ ] Złoto mieści się w rampie z § 3.4.
+- [ ] Key light z lewej-góry, rim cyjan z prawej (albo wariant danej gry z § 4.2: S2 turkus + bursztyn, S3 teal
+      + ametyst).
+- [ ] Złoto mieści się w rampie z § 3.4 (białe złoto tylko w miejscach z wyjątku S3).
+- [ ] Kolory dominujące zgodne z paletą gry (§ 9.2, § 10.2, § 11.2 i tabele symboli); w S2 brak neonowego różu
+      i błękitu.
 - [ ] High-end stylized 3D: nie fotografia, nie flat, nie styl dziecięcy.
 - [ ] Spójność z kotwicą stylu i z wcześniej zaakceptowanymi obrazami tej grupy.
 
 **E. Czytelność (symbole, ikony, awatary)**
 
-- [ ] Testy T1–T5 z § 5.2 zaliczone.
-- [ ] Wartość symbolu „czuć” zgodnie z hierarchią (§ 5.1).
+- [ ] Testy T1–T5 z § 5.2 zaliczone, łącznie z parami ryzyka danej gry.
+- [ ] Średnia L\* symbolu ≥ 35 i w przedziale z planu jasności (§ 5.8); jasna krawędź na ≥ 60% obrysu.
+- [ ] Detal identyfikujący ≥ 1/24 płótna, kreski liter ≥ 1/40 (§ 4.9) — widoczne w 64 px.
+- [ ] Wartość symbolu „czuć” zgodnie z hierarchią (§ 5.1): poziom sąsiedni wskazany bez tabeli wypłat.
+- [ ] Ikony: glif L\* ≥ 75 na dysku L\* ≤ 20, kreski ≥ 10% wysokości glifu (§ 7.5).
 
-**F. Tekst**
+**F. Tekst i treść**
 
 - [ ] Na obrazie jest tylko zamówiony tekst, sprawdzony litera po literze.
 - [ ] `Ł` poprawne w `ZŁOTY FARAON` i `KRYSZTAŁOWA KASKADA`.
+- [ ] Wysokość i kontrast napisów na symbolach zgodne z § 5.6 (`WILD`/`BAR` ≥ 18%, `SCATTER` ≥ 12%, kontrast
+      z tabliczką ≥ 4,5 : 1).
 - [ ] Brak znaków wodnych, podpisów i przypadkowych liter.
+- [ ] Brak treści zakazanych w § 12: pieniądze i znaki walut, prawdziwe marki i postacie, oko w trójkącie / na
+      piramidzie, alkohol, przemoc.
 
 **G. Wymagania szczególne**
 
 - [ ] Ramka: okno w 100% przezroczyste, prostokątne, o proporcji S1 1:1, S2 5:3, S3 6:5 (tolerancja ±3%);
-      bez szyby, przegródek i perspektywy.
+      bez szyby, przegródek i perspektywy; cała ramka w 88% kadru (margines ≥ 6%); boki bez ornamentów
+      w połowie wysokości (§ 6.9).
 - [ ] 9-slice: środek jednolity w poziomie, ornamenty rogów mieszczą się w wycinku rogu.
 - [ ] Serie: `g_ui_spin` i `g_ui_spin_stop` identyczne poza ikoną; trzy ujęcia monety to ta sama moneta; trzy
-      pozy maskotki to ta sama postać; dyski ikon identyczne.
-- [ ] `s3_sym_mnoznik`: środek kuli pusty, jasny i jednolity.
-- [ ] `s2_wild_rozszerzony`: kolumna o proporcji ~1:3, boki przezroczyste.
+      pozy maskotki to ta sama postać (kąt cylindra, strona monokla, muszka, wąsy, liczba żeber); dyski ikon
+      identyczne.
+- [ ] `s3_sym_mnoznik`: środek kuli pusty, jasny (L\* ≥ 80) i jednolity.
+- [ ] `s2_wild_rozszerzony`: kolumna o proporcji ~1:3, nieprzezroczysty kartusz, boki przezroczyste.
+- [ ] Logotypy (`g_logo`, `s*_logo`): ciemny kontur lub podkład liter (§ 2.3, § 9.7, § 10.9, § 11.9); okładki
+      mają logo zgodne z `s*_logo` (§ 6.8).
 
 ### 13.3. Decyzja
 
@@ -1826,7 +1905,7 @@ margines i okno ramki, ale nie zastępuje oceny wzrokiem.
 |---|---|---|
 | **Akceptuj** | wszystkie punkty spełnione | plik do folderu, wpis w manifeście ([02](02-lista-obrazow.md)) |
 | **Akceptuj z obróbką** | drobiazgi: lekkie przycięcie, czyszczenie alfy, korekta jasności lub barwy ≤ 10%, dodanie marginesu, nieproporcjonalne dopasowanie ramki ≤ 3% | obróbka w pipeline |
-| **Popraw** | błąd tekstu, przycięty obiekt, cień lub podłoga, zły kierunek światła, proporcja okna odbiega o > 3%, szachownica | prompt poprawkowy z [03](03-prompty-chatgpt.md) w tym samym czacie |
+| **Popraw** | błąd tekstu, przycięty obiekt, cień lub podłoga, zły kierunek światła, proporcja okna odbiega o > 3%, szachownica, symbol oblany w T2/T4 albo z średnią L\* < 35, tło za jasne w strefie bębnów | prompt poprawkowy z [03](03-prompty-chatgpt.md) w tym samym czacie |
 | **Odrzuć kierunek** | zły styl (fotografia, flat, styl dziecięcy) albo wyraźna niespójność z kotwicą | nowa generacja od zera, w razie potrzeby nowy czat z kotwicą stylu |
 
 Jeśli po trzech poprawkach obraz nadal nie spełnia listy, upraszczamy opis (mniej elementów, jeden motyw
@@ -1840,8 +1919,8 @@ Każdy z 93 obrazów i sekcja, która opisuje jego wygląd.
 
 | Czat | ID | Sekcja |
 |---|---|---|
-| 0 | `m01_lobby_desktop`, `m02_logowanie`, `m03_bonus_powitalny`, `m04_lobby_mobile` | § 1.4 (rola makiet), § 2.3, § 2.6, § 6.5, § 6.8, § 7.4, § 7.6 |
-| 0 | `m05_s1_desktop`, `m06_s2_desktop`, `m07_s3_mobile`, `m08_big_win` | § 1.4, § 9, § 10, § 11, § 7.8 |
+| 0 | `m01_lobby_desktop`, `m02_logowanie`, `m03_bonus_powitalny`, `m04_lobby_mobile` | § 1.4 (rola makiet i tabela „co każda musi pokazać”), § 2.3, § 2.6, § 6.5, § 6.8, § 7.4, § 7.6 |
+| 0 | `m05_s1_desktop`, `m06_s2_desktop`, `m07_s3_mobile`, `m08_big_win` | § 1.4 (tabela makiet), § 6.2–6.3, § 9, § 10, § 11, § 7.8 |
 | 1 | `g_logo` | § 2.3 |
 | 1 | `g_emblemat` | § 2.4 |
 | 1 | `g_moneta_przod`, `g_moneta_skos`, `g_moneta_bok` | § 2.5 |
@@ -1859,14 +1938,14 @@ Każdy z 93 obrazów i sekcja, która opisuje jego wygląd.
 | 2 | `g_fx_promienie`, `g_fx_flara`, `g_fx_iskry`, `g_fx_blyskawice`, `g_fx_dym`, `g_fx_konfetti` | § 4.8 |
 | 3 | `s1_sym_wisnie`, `s1_sym_cytryna`, `s1_sym_sliwka`, `s1_sym_arbuz`, `s1_sym_dzwonek`, `s1_sym_bar`, `s1_sym_siodemka`, `s1_sym_wild` | § 9.4 |
 | 3 | `s1_tlo_desktop`, `s1_tlo_mobile` | § 9.5 |
-| 3 | `s1_ramka` | § 9.6 |
+| 3 | `s1_ramka` | § 9.6, § 6.9 |
 | 3 | `s1_logo` | § 9.7 |
 | 3 | `s1_okladka`, `s1_baner` | § 9.8, § 6.8 |
 | 4 | `s2_sym_10`, `s2_sym_j`, `s2_sym_q`, `s2_sym_k`, `s2_sym_a`, `s2_sym_ankh`, `s2_sym_oko`, `s2_sym_skarabeusz`, `s2_sym_anubis`, `s2_sym_faraon`, `s2_sym_wild`, `s2_sym_scatter` | § 10.4 |
 | 4 | `s2_wild_rozszerzony` | § 10.5 |
 | 4 | `s2_tlo_desktop`, `s2_tlo_mobile` | § 10.6 |
 | 4 | `s2_tlo_fs_desktop`, `s2_tlo_fs_mobile` | § 10.7 |
-| 4 | `s2_ramka` | § 10.8 |
+| 4 | `s2_ramka` | § 10.8, § 6.9 |
 | 4 | `s2_logo` | § 10.9 |
 | 4 | `s2_okladka`, `s2_baner` | § 10.10, § 6.8 |
 | 4 | `s2_fx_hieroglify` | § 10.11 |
@@ -1874,7 +1953,7 @@ Każdy z 93 obrazów i sekcja, która opisuje jego wygląd.
 | 5 | `s3_fx_odlamki` | § 11.5 |
 | 5 | `s3_tlo_desktop`, `s3_tlo_mobile` | § 11.6 |
 | 5 | `s3_tlo_fs_desktop`, `s3_tlo_fs_mobile` | § 11.7 |
-| 5 | `s3_ramka` | § 11.8 |
+| 5 | `s3_ramka` | § 11.8, § 6.9 |
 | 5 | `s3_logo` | § 11.9 |
 | 5 | `s3_okladka`, `s3_baner` | § 11.10, § 6.8 |
 
@@ -1893,5 +1972,10 @@ Razem: 8 makiet + 13 (czat 1) + 18 (czat 2) + 14 (S1) + 22 (S2) + 18 (S3) = **93
 * [06-interfejs-ux.md](06-interfejs-ux.md) — ekrany, komponenty, stany, breakpointy, dostępność.
 * [07-gry-i-matematyka.md](07-gry-i-matematyka.md) — siatki, linie, tabele wypłat i funkcje trzech automatów.
 * [08-wydajnosc-i-jakosc.md](08-wydajnosc-i-jakosc.md) — architektura renderu, poziomy jakości, budżety.
+* [09-kontrakt-api-i-assetow.md](09-kontrakt-api-i-assetow.md) — kontrakt assetów: `manifest.json` (okna ramek
+  `frames`, marginesy `nineSlice`, kolejność komórek arkuszy `sheets`, tryb `blend: "add"`), `avatarIndex` dla
+  `g_awatary`.
+* [10-runtime-gier.md](10-runtime-gier.md) — runtime gier w przeglądarce: jak scena gry składa tło, ramkę,
+  podkład bębna, symbole i efekty z obrazów opisanych tutaj.
 * [../plan-projektu.md](../plan-projektu.md) — wcześniejszy plan całego projektu. Tam, gdzie się różni (np. grafika
   z Blendera zamiast z ChatGPT), obowiązuje obecna dokumentacja w `docs/projekt/`.

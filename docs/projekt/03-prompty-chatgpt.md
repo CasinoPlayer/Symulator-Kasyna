@@ -978,7 +978,8 @@ ORDER (row 1, left to right):
   4) Lady Pepper: glossy red bell pepper, cat-eye glasses, gold earrings; enamel emerald #12A86B.
 ORDER (row 2, left to right):
   5) Captain Leek: green-and-white leek, white captain's cap with a gold anchor; enamel dark magenta #B3135C.
-  6) Duke Eggplant: violet eggplant, velvet beret with a feather; enamel gold #F5C542.
+  6) Duke Eggplant: violet eggplant, velvet beret with a feather; enamel amber #C7741A (not gold, so it
+     does not blend into the gold rim).
   7) Madame Radish: magenta-and-white radish, feather boa; enamel dark teal #0E6E73.
   8) Mister Mushroom: plain cream mushroom cap (no spots), sunglasses, polka-dot bow tie; enamel ruby
      #A3122E.
@@ -1999,7 +2000,8 @@ TECHNICAL RULES BY BACKGROUND TYPE (each item says which one applies)
 
 TEXT ON IMAGES
 - Render text ONLY where an item gives EXACT TEXT. Copy it letter by letter, in exactly the letter
-  case given, with nothing added. Letters on symbols at least 18% of the symbol height.
+  case given, with nothing added. Letters on symbols at least 18% of the symbol height (the longer word
+  SCATTER: at least 12%).
 - Card symbols: classical serif capitals with wedge-shaped serifs. WILD, SCATTER and the logo: ornate,
   decorative Roman capitals (the character of the Cinzel Decorative typeface).
 - Polish letter in this chat: Ł = L with stroke - a capital L with a short diagonal bar crossing its
@@ -2081,8 +2083,8 @@ vertical beam of cyan-white light (#9FE8FF) rises upward and fades out completel
 thin lines of turquoise magic light glow in the joints between the large stone blocks (a few bold lines,
 readable at 64 px). NO eye and no other symbol on the pyramid face
 (an eye inside a triangle is forbidden; the Eye of Horus is a separate symbol). At the base a
-lapis-and-gold plaque with the word SCATTER in gold ornate Roman capitals (at least 18% of the symbol
-height).
+lapis-and-gold plaque with the word SCATTER in gold ornate Roman capitals (at least 12% of the symbol
+height; the letters must fill the plaque width and contrast strongly with it).
 COMPOSITION: about 85% of the canvas including the beam, centred; silhouette = triangle + vertical beam.
 LIGHT: cool moonlight on the stone, warm gold only on the capstone and plaque frame.
 
@@ -2404,7 +2406,7 @@ object, nothing cut by the image edge. Backgrounds (PELNE) follow their own zone
 
 GAME PALETTE (hex)
 - Cave #070A1F and #0D1638; bioluminescence #19F5D2; sapphire #2F6BFF; emerald #19D17A; amethyst
-  #A64DFF; topaz #FFB23D; ruby #FF2D55; diamond icy white #E8FBFF; opal reflections #FF8AD8; aurora
+  symbol #C77DFF (deep violet #A64DFF only for rims, background crystals and UI); topaz #FFB23D; ruby #FF2D55; diamond icy white #E8FBFF; opal reflections #FF8AD8; aurora
   (free spins) #5CFFB0 to #B66BFF.
 - Gold ramp (only on high symbols, the logo edges and the frame): #FFF6D6, #FFE08A, #F5C542, #B8860B,
   #5C3A00, #2B1A00 - warm yellow, matching the attached coin.
@@ -2544,8 +2546,8 @@ ASPECT: 1:1 square (1024x1024) | BACKGROUND: ALFA | EXACT TEXT: "SCATTER" (lette
 SUBJECT: the SCATTER symbol - "Heart of the Cave".
 DESIGN: a triangular rainbow crystal prism floating inside a ring of small crystals, splitting light into
 a fan of rainbow colours (the fan stays compact, inside the margin). Below it a plaque of dark amethyst
-in a silver-gold frame with the word SCATTER in crystal capitals (flared serif, at least 18% of the
-symbol height).
+in a silver-gold frame with the word SCATTER in bright crystal capitals (flared serif, at least 12% of
+the symbol height; letters clearly lighter than the plaque).
 COMPOSITION: about 85% of the canvas, centred; silhouette = triangle + light fan + plaque.
 LIGHT: same as image 01; the brightest, most colourful symbol.
 
@@ -2602,9 +2604,11 @@ LIGHT: same as image 01.
 08/18  ID: s3_sym_ametyst
 ASPECT: 1:1 square (1024x1024) | BACKGROUND: ALFA | EXACT TEXT: none
 SUBJECT: low symbol - a hexagonal amethyst (loose, no setting).
-DESIGN: a flat hexagonal-cut amethyst, saturated violet (#A64DFF) with pink reflections on the facet
-edges.
-COMPOSITION: about 80% of the canvas, centred; silhouette = hexagon.
+DESIGN: a flat hexagonal-cut amethyst laid HORIZONTALLY (wider than tall, width : height about 1.25 : 1),
+light lilac-violet body (#C77DFF, clearly lighter than the blue sapphire) with pink reflections on the
+facet edges and a thin deep violet (#A64DFF) rim. It must not look like the sapphire: different shape
+(wide hexagon vs. the sapphire's shape) and clearly lighter tone.
+COMPOSITION: about 80% of the canvas width, centred; silhouette = wide horizontal hexagon.
 LIGHT: same as image 01.
 
 --------------------------------------------------------------------
