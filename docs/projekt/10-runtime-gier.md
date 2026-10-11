@@ -1,7 +1,7 @@
 # 10 — Runtime gier w przeglądarce (stan zrealizowany)
 
 > Ten dokument opisuje, **jak naprawdę zbudowany jest silnik gier** po stronie przeglądarki (`static/js/game/**`)
-> i pierwsza gra na nim — S1 „Cebulowy 777”. Czytaj go razem z [04-efekty-wizualne.md](04-efekty-wizualne.md)
+> i trzy gry: S1 „Cebulowy 777”, S2 „Złoty Faraon” oraz S3 „Kryształowa Kaskada”. Czytaj go razem z [04-efekty-wizualne.md](04-efekty-wizualne.md)
 > (co i kiedy ma się dziać na ekranie), [05-dzwiek-i-muzyka.md](05-dzwiek-i-muzyka.md) (dźwięk) i kontraktem
 > [09-kontrakt-api-i-assetow.md](09-kontrakt-api-i-assetow.md) (format odpowiedzi spinu i manifestu). Tu jest „gdzie
 > to jest w kodzie i dlaczego tak”, a na końcu instrukcja, jak dodać kolejną grę.
@@ -25,13 +25,15 @@ flowchart LR
     SP["StepPlayer<br/>kroki 09 § 2.4"]
     GA["GameAudio<br/>zdarzenia → dźwięki"]
   end
-  subgraph Gra["js/game/base-game.js + games/s1.js"]
+  subgraph Gra["js/game/base-game.js + games/s1.js, s2.js, s3.js"]
     BG["BaseGame<br/>domyślne handlery kroków,<br/>prezentacja wygranych"]
-    S1["S1Game<br/>scena, symbole, E21–E51"]
+    S1["S1Game<br/>neonowy mnożnik, jackpot"]
+    S2["S2Game<br/>rozszerzony WILD, darmowe spiny"]
+    S3["S3Game + S3Board<br/>grawitacja, klastry, kule mnożników"]
   end
   API["POST /api/slots/{code}/spins"] --> C
-  C --> S1
-  S1 --> BG --> SP
+  C --> S1 & S2 & S3
+  S1 & S2 & S3 --> BG --> SP
   BG --> RS & FX & BW & GA
   A --> T & Q
   R --> BG
@@ -54,10 +56,13 @@ flowchart LR
 | `js/game/audio/game-audio.js` | mapowanie zdarzeń E20–E51 na ID dźwięków (05 § 6.1), ducking, warstwa napięcia |
 | `js/game/base-game.js` | wspólna podstawa automatu: ładowanie, systemy, domyślne handlery wszystkich kroków, prezentacja wygranych |
 | `js/game/games/s1.js`, `s1-art.js` | S1 „Cebulowy 777” i jego grafika zastępcza z kodu |
-| `js/game/games/zastepcza.js` | gra zastępcza dla S2 i S3 (ten sam runtime, prosta scena) |
+| `js/game/games/s2.js` | S2: egipska scena, antycypacja scatterów, pełnokolumnowy WILD, FS, retrigger i zmiana muzyki |
+| `js/game/games/s3.js`, `s3-board.js` | S3: plansza 6×5 z grawitacją, obrysy klastrów, odłamki, opad istniejących kul i zbieranie mnożników |
+| `js/game/games/zastepcza.js` | starsza scena pomocnicza; żaden z trzech automatów nie jest już do niej kierowany |
 | `css/game.css` | elementy strony gry dodane z runtime (SPIN/STOP, menu AUTO, ustawienia, okna) |
 | `tools/dev/mock-spins.mjs` | generator odpowiedzi spinu w atrapie API (z wymuszaniem wyniku) |
-| `tools/e2e/gra-s1.mjs` | test e2e S1 z pomiarami wydajności |
+| `tools/e2e/gra-s1.mjs`, `gra-s2.mjs`, `gra-s3.mjs` | testy każdego automatu, umowy kroków, responsywności i ograniczonego ruchu |
+| `tools/e2e/backend-flow.mjs`, `runtime-contract.mjs`, `audio-lifecycle.mjs` | przepływy rzeczywistego API, księgowanie na końcu rundy oraz cykl życia dźwięku |
 
 ## 2. Pętla gry i warstwy
 
@@ -123,7 +128,10 @@ przypada `wiersze + 2` sprite'ów.
 | spóźniona odpowiedź | pierwszy stop = max(plan, teraz + 450 ms), kolejne przesunięte o tyle samo |
 | błąd sieci (E40) | łagodne hamowanie (1,5 D) na planszy SPRZED spinu — nie wymyślamy wyniku |
 
-Stopy S1: 1240 / 1420 / 1600 ms (TURBO × 0,45). Rozmycie ruchu to podmiana tekstur (`ruch2` > 60% v_max,
+Parametry powyżej dotyczą S1. Stopy S1: 1240 / 1420 / 1600 ms (TURBO × 0,45).
+S2 używa tego samego `ReelSet`, ale ma pięć stopów 1400 / 1600 / 1800 / 2000 / 2200 ms,
+prędkość 26 pól/s i wydłużenie antycypacji o 1200 ms. S3 zastępuje `ReelSet` klasą `S3Board`: symbole
+spadają pod wpływem grawitacji, a po kaskadzie ocalały symbol przesuwa się dokładnie o liczbę luk pod nim. Rozmycie ruchu to podmiana tekstur (`ruch2` > 60% v_max,
 `ruch1` 20–60%, ostry < 20%). Bęben ~170 ms przed stopem wysyła zdarzenie `approach` z dokładnym czasem — dźwięk
 stopu jest planowany na zegarze audio co do milisekundy (R6), a `sfx_wild` startuje tak, by jego `syncPoint`
 z manifestu (150 ms) trafił w lądowanie.
@@ -158,8 +166,10 @@ Kontekst `ctx`: `response`, `steps`, `index`, `bet`, `tempo`, `autoplay`, `skip`
 wynik musi równać się polu `tier` — rozjazd jest liczony w `stats.tierMismatch` (test e2e wymaga 0).
 
 **Saldo:** przy starcie spinu panel od razu odejmuje zakład; `balanceAfter` z odpowiedzi księgujemy w chwili
-końca liczenia wygranej (E28/E29) albo przylotu licznika Big Win do panelu (E32), a dla rundy bez wygranej — po
-zatrzymaniu bębnów. Księgowanie odbywa się dokładnie raz na rundę.
+końca liczenia ostatniej jednostki albo przylotu jej licznika Big Win do panelu (E32), a dla rundy bez wygranej — po
+zatrzymaniu bębnów. Gdy po bieżącym kroku są jeszcze kroki rundy, `BaseGame.book()` odkłada zapis salda: bonus
+nie pokazuje przyszłych wygranych przed ich prezentacją. Kontroler ostatecznie uzgadnia `balanceAfter` po całej
+rundzie. Księgowanie odbywa się dokładnie raz na rundę; regresję sprawdza `runtime-contract.mjs`.
 
 ## 6. Systemy efektów
 
@@ -235,32 +245,90 @@ pliku = cisza bez błędów (jedno `console.warn` na ID przy błędzie dekodowan
   ograniczonego ruchu. Wyniki: `tools/e2e/zrzuty/gra-s1/wyniki.json`.
 * `?fx=debug` w adresie gry — panel: FPS, p90, poziom jakości, cząsteczki, trauma, błyski / s.
 
-## 10. Jak dodać nową grę (S2, S3)
+## 10. Dedykowane gry S2 i S3
 
-1. Utwórz `js/game/games/s2.js` z klasą dziedziczącą po `BaseGame`; w konstruktorze podaj `config`: `reels`,
-   `rows`, `timing` (np. S2: v_max 26 pól/s, stopy 1400 … 2200 ms, antycypacja +1200 ms), `engine`
-   (`LINES` / `CLUSTER`), `wildCode`, `music`, `reelLoop`, `bgLuma` (jasność tła dla strażnika błysków),
-   `fillerWeights` (wizualna taśma).
-2. `imageRequests()` — lista ID z manifestu (symbole z wariantami, tło, ramka, logo).
-3. `buildViews()` — mapa `kod symbolu → { main, blur1, blur2, syl, glow, shadow, scale, glowScale }` (z manifestu
-   albo z kodu).
-4. `buildScene()` i `layoutScene(layout)` — scena i geometria okna bębnów (`{ x, y, cell, gap }`).
-5. Nadpisz handlery kroków, które mają mieć własne efekty: `onExpandWild` (E60), `onFreeSpinsStart` (E35),
-   `onCascade` (E70–E71), `onApplyMultiplier` (E73)… Domyślne wersje z `BaseGame` już działają — gra jest grywalna
-   od pierwszego dnia.
-6. W `js/gra.js` wybierz klasę gry dla kodu automatu (dziś: S1 → `S1Game`, pozostałe → `PlaceholderGame`).
-7. Skopiuj `tools/e2e/gra-s1.mjs` jako `gra-s2.mjs` i dopasuj wymuszenia atrapy.
+`js/gra.js` wybiera `S1Game`, `S2Game` albo `S3Game` według kodu automatu. Wszystkie używają odpowiedzi
+serwera jako źródła wyników. Poniższe animacje odtwarzają kroki; nie losują wygranych i nie odtwarzają matematyki serwera.
+
+### S2 — Złoty Faraon
+
+* `s2.js` ładuje 12 symboli z wariantami, logo, cztery tła i ramkę. Okno bębnów pasuje dokładnie do
+  `manifest.frames.s2_ramka.window`; scena ma osobne tła pionowe i poziome.
+* `onExpandWild()` pokazuje obraz `s2_wild_rozszerzony` na pełne trzy rzędy, ujawniany maską od pola WILD.
+  Kolejne kolumny startują od lewej; zakryte symbole są ukrywane, a końcowa siatka pochodzi z `step.grid`.
+  Złote poświaty, hieroglify, piasek i dźwięk rozszerzenia towarzyszą prezentacji. Następny spin przywraca zwykłe symbole.
+* `freeSpinsStart` używa `count` z odpowiedzi, włącza nocną scenę i `mus_s2_fs`, a oznaczenie informuje o ×2
+  dla wygranych liniowych. `freeSpinsRetrigger` używa `added` i `freeSpinsLeft`; `freeSpinsEnd` pokazuje sumę
+  z serwera, przywraca skarbiec i `mus_s2`.
+* Antycypację wybiera pole `anticipation`; istniejące scattery pulsują, aktywna kolumna dostaje wiązkę światła,
+  a muzyka przechodzi w napięcie. Tryb ograniczonego ruchu zachowuje wynik i czytelność bez drżenia i błysków.
+
+### S3 — Kryształowa Kaskada
+
+* `s3.js` odpowiada za scenę, symbole, obrysy i kwoty klastrów, odłamki, darmowe spiny oraz kule mnożników.
+  `s3-board.js` obsługuje planszę 6×5, wyjście poprzedniej planszy, opad, kaskady i szybkie zatrzymanie.
+* Przy kaskadzie klient przesuwa istniejące kule o liczbę usuniętych pól pod nimi, zachowując ich wartość.
+  `cascade.orbs` dodaje tylko nowe kule; `spin.orbs` zastępuje cały zestaw na początku następnego spinu.
+* `applyMultiplier` zbiera etykiety kul do licznika. Kwota końcowa korzysta z `baseWin + win`, co respektuje
+  również limit maksymalnej wygranej zastosowany przez serwer. Kule bez wygranej nie są zbierane.
+* `S3Board` stosuje końcowe `grid` po zakończeniu albo przewinięciu każdego opadu. Utrzymuje osobne animacje
+  istniejących i nowych symboli, a w ograniczonym ruchu wyłącza odbicia.
+* Bonus przełącza tło i muzykę na `mus_s3_fs`; koniec przywraca `mus_s3` i usuwa pozostałe etykiety kul.
+
+### Rozszerzanie runtime o kolejny automat
+
+Nowa klasa dziedziczy po `BaseGame`, definiuje `config`, `imageRequests`, `buildViews`, `buildScene` oraz
+`layoutScene`. Własne zdarzenia implementuje przez nadpisanie handlerów kroków. Następnie trzeba dodać wybór
+klasy w `gra.js` i test umowy odtwarzania oparty na jawnej odpowiedzi API, włącznie z przewinięciem oraz
+zmianą wielkości ekranu. Istniejące `gra-s2.mjs` i `gra-s3.mjs` są przykładami testów z kontrolowanymi danymi.
 
 ## 11. Wyniki weryfikacji
 
-`tools/e2e/gra-s1.mjs` na atrapie API (z prawdziwymi plikami z `static/assets/img` i `static/assets/audio`):
-**35/35 sprawdzeń OK** — 20 rund (w tym wymuszone BIG, MEGA z przewinięciem, NEON JACKPOT, EPIC, ULTRA, szybki stop,
-TURBO, autoplay), saldo na ekranie = `balanceAfter` po każdej rundzie i = `GET /api/me` na końcu, poziom prezentacji =
-`tier` (0 rozjazdów), strażnik błysków ≤ 3 / s i 0 pominiętych błysków-bohaterów, E50 odegrany, dźwięk odblokowany
-gestem, pakiet krytyczny zdekodowany, po big winach muzyka gry wraca od taktu, brak poziomego przewijania i SPIN
-w całości przy 390×844, 844×390, 1920×1080 i 1366×768, tryb ograniczonego ruchu bez błysków, migotania i drżenia,
-zero błędów w konsoli. Ten sam kod **bez manifestów** (grafika z kodu, dźwięk — cisza) przechodzi tę samą serię:
-30/30 (5 testów dźwięku pominiętych; brak manifestów to tylko ostrzeżenia). Istniejący `tools/e2e/smoke.mjs`: 52/52.
+Stan lokalnej integracji z 11 października 2026. Wyniki opisują wykonane sprawdzenia, nie oznaczają
+publicznego wdrożenia ani pomiaru wszystkich urządzeń.
+
+| Zakres | Wynik | Co sprawdzono |
+|---|---|---|
+| Java / Maven | 258/258 | backend, reguły automatów, konfiguracja i kontrakty |
+| Lobby na rzeczywistym backendzie | 68/68 | logowanie, portfel, ekrany, nawigacja i działanie API |
+| `backend-flow.mjs` | 46/46 | 126 rund, saldo, historia i błędy rzeczywistego backendu |
+| `gra-s1.mjs` | 35/35 | S1: wygrane, jackpot, turbo, autoplay, szybki stop, dźwięk i układy |
+| `gra-s2.mjs` | 29/29 | dedykowana scena, FS i retrigger, pojedynczy/potrójny WILD, saldo, muzyka, ograniczony ruch, licznik bonusu i komunikat po przewinięciu |
+| `gra-s3.mjs` | 39/39 | kontrolowane odpowiedzi: opad, kaskady, zachowanie i zbieranie kul, FS, retrigger, przewinięcie oraz układy |
+| `audio-lifecycle.mjs` | 13/13 | muzyka, wyciszenie, zmiana strony i zwalnianie zasobów |
+| `runtime-contract.mjs` | 2/2 | odroczenie księgowania przyszłych wygranych i pojedynczy zapis salda |
+| Pipeline obrazów | 0 błędów, 0 ostrzeżeń | manifest i przetworzone zasoby, w tym poprawiony baner EPIC WIN |
+| Podglądy wideo | 3/3 | odtwarzanie kompletu S1/S2/S3; 480×720, 12 s, H.264 + VP9, każdy plik poniżej 2 MiB |
+
+S2 sprawdzono przy 320×640, 390×844, 844×390 i 1366×768: cała ramka i okno symboli mieszczą się w scenie,
+SPIN mieści się w oknie, pozostaje widoczny (łącznie z alfą rodziców) i odbiera kliknięcia. Test zawiera jawny
+bonus z jedną i trzema rozszerzonymi kolumnami, retriggerem oraz podsumowaniem; końcowe saldo jest zgodne
+z odpowiedzią. Zrzuty przejrzano wizualnie. Odpowiedzi testowe używają różnych liczb spinów, żeby wykryć wartości
+wpisane na sztywno w prezentacji. Licznik FS mieści się przy 320 px i pokazuje tylko wygrane bonusowe
+(180 z FS przy osobnych 40 z gry bazowej w odpowiedzi testowej). Komunikat z już przewiniętym tokenem
+zwalnia animacje przed zniszczeniem; późniejsza zmiana rozmiaru okna nie wywołuje błędu.
+
+Polecenia (z katalogu repozytorium; działająca atrapa domyślnie na porcie 8090):
+
+```sh
+node tools/e2e/gra-s1.mjs http://localhost:8090 <katalog-wynikow>
+node tools/e2e/gra-s2.mjs http://localhost:8090 <katalog-wynikow>
+node tools/e2e/gra-s3.mjs http://localhost:8090 <katalog-wynikow>
+node tools/e2e/runtime-contract.mjs
+```
+
+`PW_CHROMIUM` wskazuje zainstalowaną przeglądarkę Chromium/Chrome. W bieżącej instalacji pliki projektu,
+narzędzia dodatkowe, dane, katalogi tymczasowe i raporty znajdują się pod `E:\CebulionCasino`.
+Testy z kontrolowanymi odpowiedziami sprawdzają prezentację; osobne testy Javy i prawdziwego API sprawdzają matematykę i portfel.
+
+S3: 39 sprawdzeń dotyczy prezentacji z kontrolowanymi odpowiedziami na serwerze atrapy.
+Osobna kontrola sceny S3 na prawdziwym backendzie (profil demo, seed 9) przeszła **8/8**: kaskady,
+każda siatka, saldo i brak błędów JavaScript. Końcowy JAR został zbudowany i uruchomiony lokalnie na porcie 8080. Podglądy wideo pochodzą z lokalnego profilu demo i służą kaflom lobby.
+
+### Wcześniejsze pomiary wydajności S1
+
+Poniższe liczby pochodzą z wcześniejszego środowiska kontenerowego i nie są nowym pomiarem instalacji Windows.
+Wcześniej sprawdzono również S1 bez manifestów: 30/30 (pięć prób dźwięku pominiętych przy braku audio).
 
 Wydajność zmierzona w kontenerze **bez GPU** (WebGL programowy SwiftShader, 4 rdzenie współdzielone z innymi
 zadaniami — obciążenie 4–12), widok 1366×768:
@@ -286,3 +354,26 @@ Liczby 60 fps trzeba potwierdzić na prawdziwym telefonie i komputerze (`?fx=deb
 [04-efekty-wizualne.md](04-efekty-wizualne.md) · [05-dzwiek-i-muzyka.md](05-dzwiek-i-muzyka.md) ·
 [09-kontrakt-api-i-assetow.md](09-kontrakt-api-i-assetow.md) · [01-kierunek-artystyczny.md](01-kierunek-artystyczny.md) ·
 [README.md](README.md)
+
+## Korekta po testach użytkownika — synchronizacja wygranych i okno środków
+
+Serwer rozlicza całą rundę transakcyjnie przed odpowiedzią HTTP. Ujawnione opóźnienie dotyczyło
+prezentacji: drugi licznik salda animował się jeszcze 500–1800 ms po powrocie SPIN do gotowości.
+Kontroler ustawia teraz końcowe saldo bez dodatkowego odliczania, gdy prezentacja wygranej się kończy.
+Pole WYGRANA rośnie w obrębie jednej rundy i nie przekracza `response.totalWin`; zaczyna od zera
+przy kolejnym spinie. Powtórna animacja sumy kaskad lub bonusu nie cofa tego pola.
+
+Każde opóźnione wygaszenie kwoty na planszy jest przypisane do konkretnej prezentacji.
+Rozpoczęcie kolejnej usuwa poprzednie animacje jej wspólnego kontenera.
+
+Okno `modal-srodki` ma osobne miejsce na zamknięcie oraz przyciski z zawijaniem tekstu.
+Test `funds-modal.mjs`: 26/26, wymiary 320×640, 390×844, 844×390 i 1366×768;
+sprawdzone dostępność bonusu, oczekiwanie na bonus, obniżenie zakładu i klawiatura.
+Test `audit-win-timing.mjs`: 6/6 kryteriów, 16 rund (kaskady, bonus, pomijanie, zera i autoplay).
+Raporty sprzed i po poprawce zapisano w `E:\CebulionCasino\testy\audit-win-timing-before` oraz `audit-win-timing-after`.
+
+Dodatkowa regresja wykryła ponowne użycie obiektu Tween przed usunięciem starej referencji z aktywnej listy.
+Recykling następuje teraz wyłącznie przy kompaktowaniu tej listy. `audit-tweener.mjs` potwierdza poprawne
+czasy po skip, kill i utworzeniu tweena z onComplete (6/6). `audit-amount-presentation.mjs` potwierdza,
+że dwie prezentacje rozdzielone o 200 ms zachowują własne czasy wygaszenia (1/1).
+Końcowy pomiar po poprawce zegara: 12 rund / 6 kryteriów, bez błędów JavaScript.

@@ -22,6 +22,7 @@ import { BalanceCounter } from '../ui/balance.js';
 import { openModal, closeModal, isModalOpen } from '../ui/modal.js';
 import { toast } from '../ui/toast.js';
 import { formatAmount } from '../format.js';
+import { DebugRounds } from './debug-rounds.js';
 
 const $ = (s) => document.querySelector(s);
 const storage = {
@@ -66,6 +67,7 @@ export class GameController {
     this.hapticsOn = storage.get('cebulion.haptyka') !== '0';
     this.balance = store.player?.balance ?? 0;
     this.counters.forEach((c) => c.set(this.balance, { animate: false }));
+    this.debugRounds = new DebugRounds({ code, onRun: (seed) => this.#debugSpin(seed) });
     this.#bind();
     this.#renderBet();
     this.#renderTurbo();
@@ -82,8 +84,16 @@ export class GameController {
 
   /** Callbacki dla gry (BaseGame.ui). */
   uiCallbacks() {
+    let freeSpinInfo = null;
     return {
-      winField: (v) => { this.el.win.textContent = formatAmount(v); },
+      winField: (v) => {
+        const round = this.round;
+        if (!round?.response || round.booked || !Number.isFinite(v)) return;
+        // Podsumowania kaskad i FS ponownie animują już pokazaną kwotę.
+        // Pole rundy pozostaje narastające i nigdy nie przekracza wypłaty serwera.
+        round.shownWin = Math.max(round.shownWin, Math.min(round.response.totalWin, Math.round(v)));
+        this.el.win.textContent = formatAmount(round.shownWin);
+      },
       book: () => this.#book(),
       dim: (on) => {
         this.el.panel.classList.toggle('is-dimmed', on);
@@ -99,7 +109,11 @@ export class GameController {
       haptic: (id) => this.#haptic(id),
       freeSpins: (info) => {
         this.el.fs.hidden = !info;
-        if (info) this.el.fs.textContent = info.left === 0 ? 'OSTATNI DARMOWY SPIN' : `DARMOWE SPINY: ${info.left ?? info.total}`;
+        if (!info) { freeSpinInfo = null; return; }
+        freeSpinInfo = { ...freeSpinInfo, ...info };
+        const count = freeSpinInfo.left ?? freeSpinInfo.total;
+        const label = count === 0 ? 'OSTATNI DARMOWY SPIN' : `DARMOWE SPINY: ${count}`;
+        this.el.fs.textContent = `${label} · WYGRANA: ${formatAmount(freeSpinInfo.win ?? 0)}`;
       },
     };
   }
@@ -116,7 +130,7 @@ export class GameController {
 
   // ------------------------------------------------------------------------------------------- spin
 
-  async spin() {
+  async spin({ demoSeed } = {}) {
     if (this.state !== 'ready') return;
     if (this.balance < this.bet) {
       this.#stopAutoplay('brak środków');
@@ -126,7 +140,7 @@ export class GameController {
     this.state = 'spinning';
     const bet = this.bet;
     const key = newIdempotencyKey();       // crypto.randomUUID() — nowy na każde kliknięcie
-    this.round = { bet, key, booked: false, before: this.balance };
+    this.round = { bet, key, booked: false, shownWin: 0, before: this.balance };
     this.el.win.textContent = '0';
     this.counters.forEach((c) => c.set(this.balance - bet, { duration: 300 }));
     this.el.spin.classList.remove('is-pressed');
@@ -137,7 +151,7 @@ export class GameController {
     this.#renderSpin();
     let response;
     try {
-      response = await api.spin(this.code, bet, key);
+      response = await api.spin(this.code, bet, key, demoSeed);
     } catch (err) {
       await this.#spinFailed(err);
       return;
@@ -158,6 +172,14 @@ export class GameController {
     this.#afterRound(response);
   }
 
+  /** Jedna runda testowa korzysta z pełnego przebiegu spinu i tego samego rozliczenia. */
+  #debugSpin(seed) {
+    if (this.state !== 'ready' || this.#autoplay || isModalOpen() || !/^[0-9a-f]{16}$/i.test(seed)) return;
+    this.#markInteraction();
+    this.#toggleAutoMenu(false);
+    return this.spin({ demoSeed: seed });
+  }
+
   /** Księgowanie salda z odpowiedzi serwera (dokładnie raz na rundę). */
   #book() {
     const r = this.round;
@@ -166,8 +188,12 @@ export class GameController {
     const after = r.response.balanceAfter;
     const delta = after - (r.before - r.bet);
     this.balance = after;
+    r.shownWin = r.response.totalWin;
+    this.el.win.textContent = formatAmount(r.shownWin);
     this.counters.forEach((c) => {
-      c.set(after);
+      // Wygraną już odliczyła prezentacja. Gotowy SPIN musi mieć gotowe saldo,
+      // także gdy autoplay rozpocznie kolejną rundę po 260 ms.
+      c.set(after, { animate: false });
       if (delta > 0) c.pulse();
     });
     store.updateBalance(after, 'spin');
@@ -307,6 +333,7 @@ export class GameController {
 
   #renderSpin() {
     const s = this.state;
+    this.debugRounds?.setState(s, Boolean(this.#autoplay));
     const spin = this.el.spin;
     const stopping = s === 'spinning' || (s === 'presenting' && this.game.bigWinActive);
     spin.classList.toggle('is-stop', s === 'spinning');
@@ -450,7 +477,7 @@ export class GameController {
     });
     // skróty: Spacja = SPIN / stop / przewinięcie, + / − = zakład, Esc = zamknięcie menu AUTO / stop autoplay
     document.addEventListener('keydown', (ev) => {
-      if (isModalOpen() || ev.repeat) return;
+      if (isModalOpen() || ev.repeat || ev.target.closest?.('#debug-panel')) return;
       if (ev.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
       if (ev.code === 'Space' || ev.code === 'Enter') {
         // spacja na innym przycisku = jego kliknięcie, ale tylko gdy fokus przyszedł z KLAWIATURY (Tab);
@@ -474,7 +501,7 @@ export class GameController {
     // przycisk aktywuje się spacją przy PUSZCZENIU klawisza — blokujemy to dla przycisków z fokusem „z myszy”,
     // żeby spacja = SPIN nie przełączyła przy okazji np. TURBO
     document.addEventListener('keyup', (ev) => {
-      if (ev.code !== 'Space' || isModalOpen()) return;
+      if (ev.code !== 'Space' || isModalOpen() || ev.target.closest?.('#debug-panel')) return;
       const btn = ev.target.closest?.('button, a');
       if (btn && (btn === e.spin || btn === pointerFocus)) ev.preventDefault();   // SPIN obsłużył już keydown
     });

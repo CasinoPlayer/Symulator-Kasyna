@@ -12,7 +12,15 @@
     "dev": "node dev/mock-api.mjs",
     "dev:pusty": "node dev/mock-api.mjs --pusty",
     "e2e": "node e2e/smoke.mjs",
-    "e2e:gra": "node e2e/gra-s1.mjs"
+    "e2e:gra": "node e2e/gra-s1.mjs",
+    "e2e:s2": "node e2e/gra-s2.mjs",
+    "e2e:s3": "node e2e/gra-s3.mjs",
+    "e2e:runtime": "node e2e/runtime-contract.mjs",
+    "e2e:audio": "node e2e/audio-lifecycle.mjs",
+    "e2e:backend": "node e2e/backend-flow.mjs",
+    "e2e:wygrane": "node e2e/audit-win-timing.mjs",
+    "e2e:srodki": "node e2e/funds-modal.mjs",
+    "e2e:debug": "node e2e/debug-scenarios.mjs"
   },
   "devDependencies": {
     "@fontsource/bungee": "5.3.0",

@@ -8,7 +8,7 @@
  *      rozgrzewka shaderów,
  *   3. przycisk „Graj” — gest gracza odblokowuje dźwięk (przeglądarki blokują audio bez gestu, 05 § 2.3),
  *   4. intro automatu (E21); SPIN aktywny od 1000 ms intro.
- * Logika rundy i panelu: js/game/controller.js; scena i efekty: js/game/** (runtime + games/s1.js).
+ * Logika rundy i panelu: js/game/controller.js; scena i efekty: js/game/** (runtime + games/s1.js, s2.js, s3.js).
  */
 
 import { api, messageFor } from './api.js';
@@ -153,7 +153,9 @@ async function startRuntime(theme) {
   setProgress(0.2, 'Wczytywanie grafiki…');
   const GameClass = theme === 's1'
     ? (await import('./game/games/s1.js')).S1Game
-    : (await import('./game/games/zastepcza.js')).PlaceholderGame;
+    : theme === 's2'
+      ? (await import('./game/games/s2.js')).S2Game
+      : (await import('./game/games/s3.js')).S3Game;
   const holder = {};
   const game = new GameClass({ gameApp, slot, ui: new Proxy({}, { get: (_t, k) => holder.ui?.[k] }) });
   await game.load((p) => setProgress(0.2 + p * 0.8, p < 0.6 ? 'Wczytywanie grafiki…' : p < 0.9 ? 'Przygotowanie efektów…' : 'Rozgrzewanie efektów…'));

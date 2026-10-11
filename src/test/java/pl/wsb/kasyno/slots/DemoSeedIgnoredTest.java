@@ -15,8 +15,10 @@ import pl.wsb.kasyno.shared.config.CasinoProperties;
 import pl.wsb.kasyno.slots.web.SlotController;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 /**
  * Bezpieczeństwo: poza profilem {@code demo} ({@code kasyno.demo.allow-seed=false}, wartość domyślna i ustawienie
@@ -76,4 +78,19 @@ class DemoSeedIgnoredTest {
 
         assertThat(seed).hasSize(16);
     }
-}
+
+    @Test
+    @DisplayName("GET debug: flaga domyślnie wyłączona, żadna gra nie ujawnia scenariuszy")
+    void debugDisabledByDefault() throws Exception {
+        assertThat(properties.demo().allowSeed()).isFalse();
+        for (String code : java.util.List.of("cebulowy-777", "zloty-faraon", "krysztalowa-kaskada")) {
+            mvc.perform(get("/api/slots/" + code + "/debug"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.enabled").value(false))
+                    .andExpect(jsonPath("$.scenarios").isArray())
+                    .andExpect(jsonPath("$.scenarios").isEmpty());
+        }
+        mvc.perform(get("/api/slots/nie-ma/debug"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("GAME_NOT_FOUND"));
+    }}

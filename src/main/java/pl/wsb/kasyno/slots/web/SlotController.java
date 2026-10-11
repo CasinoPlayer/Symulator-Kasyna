@@ -22,6 +22,7 @@ import pl.wsb.kasyno.shared.error.CasinoException;
 import pl.wsb.kasyno.shared.error.ErrorCode;
 import pl.wsb.kasyno.shared.web.CurrentPlayer;
 import pl.wsb.kasyno.slots.application.SlotCatalogService;
+import pl.wsb.kasyno.slots.application.SlotDebugScenarios;
 import pl.wsb.kasyno.slots.application.SpinCommand;
 import pl.wsb.kasyno.slots.application.SpinResult;
 import pl.wsb.kasyno.slots.application.SpinService;
@@ -33,8 +34,8 @@ import java.util.regex.Pattern;
 /**
  * Katalog automatów i spin ({@code /api/slots}, kontrakt § 2.2).
  *
- * <p>Nagłówek {@code X-Demo-Seed} (profil {@code demo}, nagrywanie filmików): gdy {@code kasyno.demo.allow-seed=true},
- * ziarno rundy jest takie, jak w nagłówku, zamiast losowego. W każdym innym profilu nagłówek jest <b>ignorowany</b>
+ * <p>Nagłówek {@code X-Demo-Seed} (testowanie scenariuszy i nagrywanie filmików): gdy {@code kasyno.demo.allow-seed=true},
+ * ziarno rundy jest takie, jak w nagłówku, zamiast losowego. Przy wyłączonej fladze nagłówek jest <b>ignorowany</b>
  * (nawet nie sprawdzamy jego formatu), bo inaczej gracz mógłby podać ziarno znanej sobie wygrywającej rundy.
  * Decyzja zapada tutaj, na granicy aplikacji: to jedyne miejsce, przez które ziarno może przyjść z zewnątrz.
  */
@@ -46,7 +47,7 @@ public class SlotController {
     /** Nagłówek odpowiedzi na powtórzone żądanie (ten sam {@code Idempotency-Key}): runda nie była losowana od nowa. */
     public static final String REPLAYED_HEADER = "Idempotent-Replayed";
 
-    /** Nagłówek z ziarnem rundy, honorowany tylko w profilu {@code demo} ({@code kasyno.demo.allow-seed=true}). */
+    /** Nagłówek z ziarnem rundy, honorowany tylko po włączeniu {@code kasyno.demo.allow-seed=true}. */
     public static final String DEMO_SEED_HEADER = "X-Demo-Seed";
 
     /** Ziarno jak w polu {@code seed} odpowiedzi: 1–16 cyfr szesnastkowych, opcjonalnie z przedrostkiem {@code 0x}. */
@@ -74,6 +75,16 @@ public class SlotController {
         return SlotDetailsResponse.from(catalog.machineWithSymbols(code));
     }
 
+    @Operation(summary = "Scenariusze debugowania gry",
+            description = "Domyślnie wyłączone: enabled=false i pusta lista. Przy jawnej fladze "
+                    + "kasyno.demo.allow-seed=true zwraca seedy do X-Demo-Seed w zwykłym POST /spins. "
+                    + "Odczyt niczego nie rozlicza; spin ze scenariuszem pobiera normalny zakład.")
+    @GetMapping("/{code}/debug")
+    public SlotDebugResponse debug(@PathVariable("code") String code) {
+        catalog.machineWithSymbols(code);
+        boolean enabled = properties.demo().allowSeed();
+        return new SlotDebugResponse(enabled, enabled ? SlotDebugScenarios.forGame(code) : List.of());
+    }
     @Operation(summary = "Spin (jedna runda = jeden zakład)",
             description = "Wynik liczy serwer i zwraca całą rundę jako listę kroków animacji (kontrakt § 2.4). "
                     + "Ten sam Idempotency-Key zwraca tę samą rundę (tę samą odpowiedź) zamiast losować nową; "
@@ -89,8 +100,8 @@ public class SlotController {
             @Parameter(description = "Losowy identyfikator żądania (np. UUID); chroni przed podwójnym kliknięciem")
             @RequestHeader(name = "Idempotency-Key", required = false)
             @Size(max = 64, message = "Idempotency-Key może mieć najwyżej 64 znaki") String idempotencyKey,
-            @Parameter(description = "Tylko profil demo (kasyno.demo.allow-seed=true): ziarno rundy szesnastkowo, "
-                    + "np. 5f3a9c0e7b21d4a8. W pozostałych profilach nagłówek jest ignorowany.")
+            @Parameter(description = "Tylko przy kasyno.demo.allow-seed=true: ziarno rundy szesnastkowo, "
+                    + "np. 5f3a9c0e7b21d4a8. Przy wyłączonej fladze nagłówek jest ignorowany.")
             @RequestHeader(name = DEMO_SEED_HEADER, required = false) String demoSeedHeader) {
         String key = idempotencyKey == null || idempotencyKey.isBlank() ? null : idempotencyKey.strip();
         Long demoSeed = properties.demo().allowSeed() ? parseDemoSeed(demoSeedHeader) : null;
@@ -107,7 +118,7 @@ public class SlotController {
 
     /**
      * Ziarno z nagłówka {@code X-Demo-Seed} w tym samym zapisie, w jakim API je zwraca (pole {@code seed}), więc
-     * rundę z nagrania można odtworzyć, wklejając jej {@code seed}. Brak nagłówka = ziarno losowe.
+     * rundę z nagrania można odtworzyć, wklejając jej {@code seed}. Brak nagłówka = ziarno losowe (także przy włączonej fladze).
      *
      * @throws CasinoException {@code 400 VALIDATION_FAILED}, gdy nagłówek nie jest liczbą szesnastkową
      */

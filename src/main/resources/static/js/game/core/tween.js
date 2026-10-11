@@ -190,7 +190,13 @@ export class Tweener {
     }
     // kompaktowanie tablicy (usunięcie martwych) bez tworzenia nowej
     let w = 0;
-    for (let i = 0; i < list.length; i++) if (list[i].alive) list[w++] = list[i];
+    for (let i = 0; i < list.length; i++) {
+      const tw = list[i];
+      if (tw.alive) list[w++] = tw;
+      // Dopiero usunięcie starej referencji pozwala bezpiecznie użyć obiektu ponownie.
+      // Natychmiastowy skip/kill przed tickiem nie może dać dwóch wpisów tego samego tweena.
+      else this.#pool.push(tw);
+    }
     list.length = w;
   }
 
@@ -215,7 +221,7 @@ export class Tweener {
     tw.onUpdate = null;
     tw.target = null;
     resolve?.();
-    this.#pool.push(tw);
+    // Recykling następuje w update(), po usunięciu wpisu z #active.
   }
 
   /** Liczba aktywnych tweenów (do panelu ?fx=debug). */

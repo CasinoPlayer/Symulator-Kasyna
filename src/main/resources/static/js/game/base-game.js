@@ -3,9 +3,8 @@
  * wygranych i DOMYŚLNE handlery wszystkich typów kroków (09 § 2.4).
  *
  * Gra konkretna (S1: games/s1.js) dziedziczy po BaseGame i dopisuje tylko to, co ma własne: scenę (tło, ramkę,
- * logo), symbole, efekty specjalne (E50, E51) i idiomy symboli. S2 i S3 dopiszą handlery `expandWild`, `cascade`,
- * `applyMultiplier`, `freeSpins*` — domyślne wersje poniżej już odgrywają takie odpowiedzi czytelnie (podmiana planszy,
- * komunikaty, licznik), więc runtime nie wymaga przeróbek.
+ * logo), symbole, efekty specjalne (E50, E51) i idiomy symboli. S2 rozwija WILD i darmowe spiny,
+ * a S3 odgrywa klastry, kaskady i kule mnożnika. Wspólne handlery poniżej pozostają wersjami domyślnymi.
  *
  * Prezentacja wygranej w „jednostkach” (04 § 2.19): (1) spin bazowy z jego krokami, (2) każdy darmowy spin,
  * (3) podsumowanie darmowych spinów. Mnożnik jednostki m = (totalWin po − totalWin przed) / bet wybiera oprawę
@@ -86,7 +85,7 @@ export class BaseGame extends EventTarget {
 
   /** Obrazy do pobrania: wspólne efekty + obrazy gry (podklasa: `imageRequests()`). */
   #globalRequests() {
-    const r = [{ id: 'g_fx_promienie' }, { id: 'g_fx_flara' }, { id: 'g_fx_dym' }];
+    const r = [{ id: 'g_fx_promienie' }, { id: 'g_fx_flara' }, { id: 'g_fx_dym' }, { id: 'g_win_free_spins' }];
     for (let i = 0; i < 8; i++) r.push({ id: `g_fx_iskry__${i}` });
     for (let i = 0; i < 12; i++) r.push({ id: `g_fx_konfetti__${i}` });
     for (let i = 0; i < 3; i++) r.push({ id: `g_fx_blyskawice__${i}` });
@@ -370,6 +369,7 @@ export class BaseGame extends EventTarget {
   async onSpin(step, ctx) {
     ctx.state.unitStart = ctx.shownWin;
     ctx.state.unitPresented = false;
+    ctx.state.cascadeNo = 0;
     if (step.phase === 'free') {
       ctx.state.free = true;
       this.ui.freeSpins?.({ index: step.freeSpinIndex, left: step.freeSpinsLeft });
@@ -513,6 +513,15 @@ export class BaseGame extends EventTarget {
 
   /** Po każdym kroku: czy jednostka prezentacji (S3) właśnie się skończyła → prezentacja sumy. */
   async afterStep(step, ctx) {
+    if (step.type === 'freeSpinsStart') {
+      ctx.state.bonusBase = ctx.shownWin;
+      ctx.state.bonusActive = true;
+    } else if (step.type === 'freeSpinsEnd') {
+      ctx.state.bonusActive = false;
+    }
+    if (ctx.state.bonusActive) {
+      this.ui.freeSpins?.({ win: Math.max(0, ctx.shownWin - ctx.state.bonusBase) });
+    }
     if (this.config.engine !== 'CLUSTER' || ctx.state.unitPresented) return;
     const next = ctx.steps[ctx.index + 1];
     const ends = !next || next.type === 'spin' || next.type.startsWith('freeSpins');
@@ -567,6 +576,7 @@ export class BaseGame extends EventTarget {
     }
     const amountByLine = !big && lineWins.length === 1 && (step.wins ?? []).length === 1 && this.lineOwnsAmount(lineWins[0]);
     this.presentation = { lifted, lineWins, amountByLine, big, amountPoint: this.#amountPoint() };
+    const presentation = this.presentation;
 
     // dźwięk i efekty według poziomu
     if (!big) {
@@ -608,7 +618,7 @@ export class BaseGame extends EventTarget {
       await this.#countPanel(base, base + amount, T, token, ticking);
       if (medium) {
         this.audio.counterEnd();
-        if (!reduced) tw.tween(380, (e) => this.amountRoot.scale.set(punch(0.3)(e)));
+        if (!reduced) tw.tween(380, (e) => this.amountRoot.scale.set(punch(0.3)(e)), { target: this.amountRoot });
         this.particles.sparks('fxAdd', center.x, center.y, this.particles.count([24, 14, 6]), { tint: 0xffe08a });
         this.amountRays.hide(400);
       } else {
@@ -620,9 +630,12 @@ export class BaseGame extends EventTarget {
       this.ui.announce?.(`Wygrana: ${formatAmount(amount)} cebulionów`);
       // kwota odpływa po 400 ms
       tw.wait(400).then(() => {
-        if (!this.amountRoot.visible) return;
+        if (this.presentation !== presentation || !this.amountRoot.visible) return;
         const y0 = this.amountRoot.y;
-        tw.tween(300, (e) => { this.amountRoot.y = y0 - 20 * ga.layout.k * e; this.amountRoot.alpha = 1 - e; }, { onComplete: () => { this.amountRoot.visible = false; } });
+        tw.tween(300, (e) => { this.amountRoot.y = y0 - 20 * ga.layout.k * e; this.amountRoot.alpha = 1 - e; }, {
+          target: this.amountRoot,
+          onComplete: () => { if (this.presentation === presentation) this.amountRoot.visible = false; },
+        });
       });
       await linesDone;
     }
@@ -650,6 +663,9 @@ export class BaseGame extends EventTarget {
   /** Zaksięgowanie wygranej (saldo → balanceAfter) — dokładnie raz na rundę; kontroler wie, kiedy (E08). */
   book() {
     if (this.booked) return;
+    // balanceAfter zawiera wynik CAŁEJ rundy, także wszystkich darmowych spinów.
+    // Pokazujemy go dopiero po ostatniej jednostce, żeby nie ujawnić przyszłych wygranych.
+    if (this.player.playing && this.player.ctx?.next().length) return;
     this.booked = true;
     this.ui.book?.();
   }
@@ -748,8 +764,8 @@ export class BaseGame extends EventTarget {
       root.scale.set(1);
       return;
     }
-    if (medium) tw.tween(300, (e) => root.scale.set(punch(0.2)(e)));
-    else tw.tween(250, (e) => root.scale.set(0.6 + 0.4 * e), { ease: easeOutBack(1.7) });
+    if (medium) tw.tween(300, (e) => root.scale.set(punch(0.2)(e)), { target: root });
+    else tw.tween(250, (e) => root.scale.set(0.6 + 0.4 * e), { ease: easeOutBack(1.7), target: root });
   }
 
   /** Pole „WYGRANA” liczy synchronicznie (04 § 2.17): wartość(t) = round(W · easeOutQuart(t / T)). */
@@ -820,6 +836,7 @@ export class BaseGame extends EventTarget {
     }
     this.presentation = null;
     this.reels.dropAll();
+    this.gameApp.tweener.killTweensOf(this.amountRoot);
     this.amountRoot.visible = false;
     this.amountRays.hide(120);
     this.lineAmount.root.visible = false;
@@ -863,10 +880,13 @@ export class BaseGame extends EventTarget {
     ga.layers.bigwin.addChild(root);
     const s0 = label.scale.x;
     tw.to(shade, { alpha: 0.55 }, { duration: 200 });
-    tw.tween(320, (e) => label.scale.set(s0 * (0.3 + 0.7 * e)), { ease: easeOutBack(1.5) });
+    tw.tween(320, (e) => label.scale.set(s0 * (0.3 + 0.7 * e)), { ease: easeOutBack(1.5), target: label, token });
     this.particles.sparks('fxAdd', w / 2, h * 0.45, this.particles.count([40, 24, 10]), { tint: 0xffe08a });
     await tw.wait(ms, { token });
     await tw.to(root, { alpha: 0 }, { duration: 250 }).promise;
+    // Przewinięty komunikat może zniknąć przed końcem animacji wejścia.
+    tw.killTweensOf(label);
+    tw.killTweensOf(shade);
     root.destroy({ children: true });
   }
 

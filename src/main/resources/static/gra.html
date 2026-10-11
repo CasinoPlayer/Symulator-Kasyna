@@ -55,6 +55,17 @@
     </div>
   </header>
 
+  <!-- Widoczny wyłącznie po włączeniu scenariuszy testowych na serwerze. -->
+  <section class="debug-rounds" id="debug-panel" aria-label="Testowanie rund" hidden>
+    <button type="button" class="debug-rounds__toggle" id="debug-toggle" aria-expanded="false" aria-controls="debug-content">
+      <span>DEBUG · Testuj rundę</span><span class="debug-rounds__chevron" aria-hidden="true">⌄</span>
+    </button>
+    <div class="debug-rounds__content" id="debug-content" hidden>
+      <p class="debug-rounds__note" id="debug-note">Runda testowa używa aktualnego zakładu i zmienia saldo.</p>
+      <div class="debug-rounds__scenarios" id="debug-scenarios" role="group" aria-label="Scenariusze testowe" aria-describedby="debug-note"></div>
+    </div>
+  </section>
+
   <main class="stage" id="scena" aria-label="Automat">
     <!-- E20 gra_ladowanie -->
     <div class="loader" id="ladowanie" role="status" aria-live="polite">
@@ -204,7 +215,7 @@
 </div>
 
 <!-- Okno: za mało cebulionów (409 INSUFFICIENT_FUNDS) — z bonusem ratunkowym, gdy dostępny -->
-<div class="modal" id="modal-srodki" role="dialog" aria-modal="true" aria-labelledby="srodki-tytul" hidden>
+<div class="modal modal--funds" id="modal-srodki" role="dialog" aria-modal="true" aria-labelledby="srodki-tytul" aria-describedby="srodki-opis srodki-uwaga" hidden>
   <div class="modal__backdrop" data-close></div>
   <div class="modal__panel">
     <button type="button" class="btn-icon modal__close" data-close aria-label="Zamknij">

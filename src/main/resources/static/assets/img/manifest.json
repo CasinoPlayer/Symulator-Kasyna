@@ -1,5 +1,5 @@
 {
- "version": "2026-10-11T15:39:52Z",
+ "version": "2026-10-11T18:57:58Z",
  "pipeline": "1.0.0",
  "images": {
   "g_logo": {
@@ -589,23 +589,23 @@
    }
   },
   "g_win_epic": {
-   "source": "zastepcze",
+   "source": "chatgpt",
    "blend": "normal",
    "src": "global/g_win_epic.webp",
-   "w": 878,
+   "w": 954,
    "h": 640,
-   "hash": "7c309a73",
+   "hash": "963236ed",
    "variants": {
     "glow": {
      "src": "global/g_win_epic.glow.webp",
-     "w": 1010,
-     "h": 772,
+     "w": 1098,
+     "h": 784,
      "scale": 0.5
     },
     "cien": {
      "src": "global/g_win_epic.cien.webp",
-     "w": 958,
-     "h": 720,
+     "w": 1040,
+     "h": 726,
      "scale": 0.5
     }
    }

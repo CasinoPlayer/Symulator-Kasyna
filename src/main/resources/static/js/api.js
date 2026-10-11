@@ -96,8 +96,13 @@ export const api = {
   stats: () => request('GET', 'me/stats'),
   slots: () => request('GET', 'slots'),
   slot: (code) => request('GET', `slots/${encodeURIComponent(code)}`),
-  spin: (code, bet, idempotencyKey = newIdempotencyKey()) =>
-    request('POST', `slots/${encodeURIComponent(code)}/spins`, { body: { bet }, headers: { 'Idempotency-Key': idempotencyKey } }),
+  slotDebug: (code) => request('GET', `slots/${encodeURIComponent(code)}/debug`),
+  // Seed należy wyłącznie do tego żądania. Zwykły SPIN nie wysyła X-Demo-Seed.
+  spin: (code, bet, idempotencyKey = newIdempotencyKey(), demoSeed) =>
+    request('POST', `slots/${encodeURIComponent(code)}/spins`, {
+      body: { bet },
+      headers: { 'Idempotency-Key': idempotencyKey, ...(demoSeed === undefined ? {} : { 'X-Demo-Seed': demoSeed }) },
+    }),
   leaderboard: (type = 'biggest-win', limit = 10) => request('GET', `leaderboard?type=${encodeURIComponent(type)}&limit=${limit}`),
   bigWins: (limit = 10) => request('GET', `feed/big-wins?limit=${limit}`),
 };

@@ -27,7 +27,7 @@
  *     zdarzenia ograniczone do ±400 c (powyżej „efekt wiewiórki”); `syncPoint` = moment pliku, który ma trafić
  *     w zdarzenie (silnik startuje plik odpowiednio wcześniej i uwzględnia zmianę prędkości przy transpozycji),
  *   * głośności i wyciszenie pamiętamy w localStorage (try/catch: tryb prywatny może go blokować),
- *   * przy ukrytej karcie kontekst audio jest wstrzymywany (oszczędność baterii, brak „grającego tła”).
+ *   * przy ukrytej karcie i pobycie w bfcache kontekst audio jest wstrzymywany, a po powrocie wznawiany.
  */
 
 const STORAGE_KEY = 'cebulion.audio';
@@ -81,6 +81,7 @@ class AudioEngine extends EventTarget {
   #settings = loadSettings();
   #sounds = null;            // mapa ID → wpis z manifestu (null = jeszcze nie wczytano)
   #manifestPromise = null;
+  #manifestVersion = null;
   #buffers = new Map();      // ID → AudioBuffer
   #pending = new Map();      // ID → Promise<AudioBuffer|null>
   #bytes = new Map();        // ID → Promise<ArrayBuffer|null> pobrane przed odblokowaniem (ekran ładowania)
@@ -88,6 +89,7 @@ class AudioEngine extends EventTarget {
   #wantedMusic = null;       // muzyka zamówiona przed wczytaniem pliku
   #layer = null;             // warstwa napięcia (mus_napiecie) — osobne gniazdo muzyki (05 § 2.5)
   #unlocked = false;
+  #pageHidden = false;      // pagehide może nie wywołać visibilitychange (powrót z bfcache)
   #duckNode = null;
   #filterNode = null;
   #ducks = new Map();        // nazwa duckingu → głębokość w dB
@@ -101,11 +103,23 @@ class AudioEngine extends EventTarget {
 
   constructor() {
     super();
-    document.addEventListener('visibilitychange', () => {
-      if (!this.#ctx || !this.#unlocked) return;
-      if (document.hidden) this.#ctx.suspend().catch(() => {});
-      else this.#ctx.resume().catch(() => {});
+    document.addEventListener('visibilitychange', () => this.#syncContext());
+    window.addEventListener('pagehide', () => {
+      this.#pageHidden = true;
+      this.#syncContext();
     });
+    window.addEventListener('pageshow', () => {
+      this.#pageHidden = false;
+      this.#syncContext();
+    });
+  }
+
+  /** Nie zamykamy kontekstu przy nawigacji: bfcache przywraca tę samą instancję i pozycję muzyki. */
+  #syncContext() {
+    if (!this.#ctx || !this.#unlocked || this.#ctx.state === 'closed') return;
+    // Zlecamy także operację przeciwną do jeszcze oczekującej (szybki powrót / zmiana karty).
+    const operation = this.#pageHidden || document.hidden ? this.#ctx.suspend() : this.#ctx.resume();
+    return operation.catch(() => {}); // jeśli przeglądarka wymaga gestu, unlock() ponowi resume()
   }
 
   /** Czy dźwięk został odblokowany gestem użytkownika. */
@@ -118,7 +132,7 @@ class AudioEngine extends EventTarget {
    * Tworzy AudioContext (dopiero teraz, żeby przeglądarka nie zgłaszała ostrzeżeń) i wczytuje manifest.
    */
   async unlock() {
-    if (this.#unlocked) return;
+    if (this.#unlocked) return this.#syncContext();
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return;
     try {
@@ -148,6 +162,7 @@ class AudioEngine extends EventTarget {
       return;
     }
     if (!this.#unlocked) return;
+    this.#syncContext();
     await this.#loadManifest();
     if (this.#wantedMusic) this.playMusic(this.#wantedMusic.id, this.#wantedMusic);
   }
@@ -180,6 +195,7 @@ class AudioEngine extends EventTarget {
       .catch(() => null)
       .then((data) => {
         this.#sounds = data?.sounds && typeof data.sounds === 'object' ? data.sounds : {};
+        this.#manifestVersion = data?.version == null ? null : String(data.version);
       });
     return this.#manifestPromise;
   }
@@ -201,7 +217,10 @@ class AudioEngine extends EventTarget {
   #fileFor(entry) {
     this.#opus ??= document.createElement('audio').canPlayType('audio/webm; codecs="opus"') !== '';
     const path = this.#opus && entry.webm ? entry.webm : entry.m4a ?? entry.webm;
-    return path ? new URL(path, MANIFEST_URL).href : null;
+    if (!path) return null;
+    const url = new URL(path, MANIFEST_URL);
+    if (this.#manifestVersion) url.searchParams.set('v', this.#manifestVersion);
+    return url.href;
   }
 
   #fetchBytes(id) {

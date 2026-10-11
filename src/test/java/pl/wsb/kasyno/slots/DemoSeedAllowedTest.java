@@ -15,6 +15,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import pl.wsb.kasyno.slots.web.SlotController;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -93,4 +95,47 @@ class DemoSeedAllowedTest {
         mvc.perform(get("/api/me").session(session)).andExpect(jsonPath("$.balance").value(10000));
         mvc.perform(get("/api/me/history").session(session)).andExpect(jsonPath("$.totalItems").value(0));
     }
-}
+
+    @Test
+    @DisplayName("GET debug: scenariusze działają przez zwykły spin, z prawidłowym saldem i jedną pozycją historii")
+    void advertisedScenariosUseNormalSpinAndWallet() throws Exception {
+        int player = 0;
+        for (String code : List.of("cebulowy-777", "zloty-faraon", "krysztalowa-kaskada")) {
+            JsonNode debug = body(mvc.perform(get("/api/slots/" + code + "/debug")));
+            assertThat(debug.get("enabled").asBoolean()).isTrue();
+            List<String> expectedIds = switch (code) {
+                case "cebulowy-777" -> List.of("wild-win");
+                case "zloty-faraon" -> List.of("scatter", "bonus");
+                default -> List.of("scatter", "bonus", "cascade");
+            };
+            assertThat(debug.get("scenarios").findValuesAsText("id")).containsExactlyElementsOf(expectedIds);
+            long bet = code.equals("cebulowy-777") ? 10 : 20;
+            for (JsonNode scenario : debug.get("scenarios")) {
+                MockHttpSession session = login("Debug_API_" + (++player));
+                String seed = scenario.get("seed").asText();
+                assertThat(seed).matches("[0-9a-f]{16}");
+                assertThat(scenario.get("label").asText()).isNotBlank();
+                mvc.perform(get("/api/slots/" + code + "/debug").session(session)).andExpect(status().isOk());
+                mvc.perform(get("/api/me/history").session(session)).andExpect(jsonPath("$.totalItems").value(0));
+                mvc.perform(get("/api/me").session(session)).andExpect(jsonPath("$.balance").value(10000));
+
+                JsonNode round = body(spin(session, code, bet, seed));
+                assertThat(round.get("seed").asText()).isEqualTo(seed);
+                assertThat(round.get("gameCode").asText()).isEqualTo(code);
+                assertThat(round.get("balanceBefore").asLong()).isEqualTo(10000);
+                long expectedBalance = 10000 - bet + round.get("totalWin").asLong();
+                assertThat(round.get("balanceAfter").asLong()).isEqualTo(expectedBalance);
+                assertThat(body(mvc.perform(get("/api/me").session(session))).get("balance").asLong())
+                        .isEqualTo(expectedBalance);
+                mvc.perform(get("/api/me/history").session(session)).andExpect(jsonPath("$.totalItems").value(1));
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("GET debug nieznanej gry zwraca 404 także przy włączonej fladze")
+    void unknownDebugGame() throws Exception {
+        mvc.perform(get("/api/slots/nie-ma/debug"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("GAME_NOT_FOUND"));
+    }}

@@ -1,3 +1,46 @@
+# Cebulion Casino
+
+Symulator kasyna na wirtualne cebuliony: **Cebulowy 777**, **Złoty Faraon** i **Kryształowa Kaskada**.
+Spring Boot / Java 21 oblicza wyniki, a PixiJS odtwarza rundy, wygrane i bonusy w przeglądarce.
+
+## Szybki start
+
+- Java 21 i Maven 3.9+: `mvn spring-boot:run`, następnie <http://localhost:8080>.
+- Zaloguj się nowym nickiem (3–16 znaków); otrzymasz 10 000 wirtualnych cebulionów.
+- Testy backendu: `mvn -B verify -Dlab=1`.
+- Szczegóły profili, bazy i testów: [instrukcja uruchomienia](docs/obrona/00-uruchomienie.md).
+- Budowa trzech automatów: [runtime gier](docs/projekt/10-runtime-gier.md).
+
+### Instalacja lokalna na dysku E (11 października 2026)
+
+Gotowa aplikacja oraz JDK, Maven, zależności, baza i wyniki testów są w `E:\CebulionCasino`.
+Dwuklik `Uruchom-gre.cmd` otwiera grę; `Zatrzymaj-gre.cmd` ją zatrzymuje,
+a `Przebuduj-gre.cmd` testuje, buduje i uruchamia kod z folderu `gra`.
+Serwer tej instalacji nasłuchuje wyłącznie na `127.0.0.1:8080`, z trwałą bazą w folderze `dane`.
+
+Uzupełniono dedykowane sceny S2/S3, rozszerzające się WILD, darmowe spiny,
+grawitację kaskad, kule mnożników, podglądy wideo wszystkich gier i baner EPIC WIN.
+Naprawiono przedwczesne wyświetlanie końcowego salda podczas bonusów, wznawianie dźwięku
+oraz zawieszenie animacji po pominięciu komunikatu. Zmiany są lokalne.
+
+---
+
+### Przyciski debugowania rund
+
+Po rozwinięciu **DEBUG · Testuj rundę** nad planszą można uruchomić SCATTER lub BONUS
+w Faraonie i Kaskadzie, KASKADĘ w S3 oraz WILD + WYGRANA w Cebulowym 777.
+SCATTER pokazuje jeden symbol bez bonusu; BONUS uruchamia 10 darmowych spinów.
+Kliknięcie rozgrywa jedną pełną rundę za aktualny zakład, z normalnym rozliczeniem salda.
+Zwykły SPIN ponownie losuje wynik. Przyciski są wyłączone podczas rundy i autoplay.
+
+Panel wymaga jawnego `kasyno.demo.allow-seed=true` (domyślnie `false`). Lokalny launcher
+na E włącza tę flagę przy nasłuchiwaniu wyłącznie na `127.0.0.1`; poza nim można użyć
+parametru `--kasyno.demo.allow-seed=true`. `GET /api/slots/{code}/debug` zwraca katalog,
+a żądanie spinu używa istniejącego `X-Demo-Seed`. Scenariusze są sprawdzane na danych SQL
+i wszystkich stawkach. Test przeglądarkowy: `npm run e2e:debug -- http://localhost:8080`
+z katalogu `tools`.
+## Materiały szablonu laboratoryjnego
+
 # WdTB-2026-Backend
 
 Szablon projektu laboratoryjnego z przedmiotu **Wprowadzenie do technologii backendowych** (Uniwersytet WSB Merito Wrocław).
