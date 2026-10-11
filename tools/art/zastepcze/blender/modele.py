@@ -68,6 +68,14 @@ def m_matcap(nazwa):
     fn, gra = MATCAPY[nazwa]
     nowa_scena((384, 384), 48, gra)
     kula("kula", 1.0, seg=160, mat=fn())
+    # ciepły softbox „za kamerą”: płaskie lico liter (normalna do widza) odbija jasne złoto, nie ciemne studio
+    bpy.ops.mesh.primitive_plane_add(size=1, location=(-0.4, -7.0, 0.9))
+    karta = bpy.context.object
+    karta.scale = (3.2, 1.6, 1)
+    karta.rotation_euler = (math.radians(-90 + 8), 0, 0)
+    karta.visible_camera = False
+    karta.visible_shadow = False
+    karta.data.materials.append(emisja("#FFE6B8", 1.15, "karta_przod"))
     return kamera(wzniesienie_st=0.0, skala=2.0)
 
 

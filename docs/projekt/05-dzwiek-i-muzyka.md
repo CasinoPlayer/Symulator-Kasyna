@@ -1427,7 +1427,7 @@ gracz nadal słyszy eskalację.
 | 0 (E35, koniec rundy bazowej) | `sfx_free_spins_start` z transpozycją +200 c (plik trwa 2 851 ms, uderzenie `U` w 891 ms); muzyka gry i warstwa napięcia: wyciszanie 800 ms; ducking `stinger` |
 | `U` = 891 ms | uderzenie: start `mus_s2_fs` od `loopStart`, `sfx_blysk`, `sfx_s2_gong`; `mus_napiecie` i `sfx_bicie_serca` ucięte w 100 ms; szczyt skali banera `g_win_free_spins` |
 | wyjście banera (dotknięcie albo auto po 3 800 ms) | `sfx_przejscie_whoosh` |
-| każdy spin (E36) | `sfx_saldo_puls` (+400 c, −4 dB) przy zmianie licznika, potem pętla bębnów i stopy (bez `sfx_spin_start`) |
+| każdy spin (E36) | `sfx_saldo_puls` (−4 dB) przy zmianie licznika, potem pętla bębnów i stopy (bez `sfx_spin_start`) |
 | retrigger (E61) | `sfx_s2_gong` + `sfx_scatter_3`; 400 ms: `sfx_poziom_w_gore` (+200 c); 900 ms: `sfx_licznik_koniec` |
 | E37 | `sfx_free_spins_koniec`; ducking `podsumowanie` −6 dB; liczenie 600 → 1 800 ms (tik → koniec) albo najpierw big win |
 | „Dalej” | `ui_klik`, `sfx_przejscie_whoosh`; przenikanie `mus_s2_fs` → `mus_s2` 2 000 ms od najbliższej kreski taktowej, w tej samej pozycji siatki |
@@ -1451,6 +1451,33 @@ S3: `U` = 794 ms (transpozycja +400 c), na uderzeniu `sfx_blysk` i `sfx_uderzeni
 równocześnie i motyw Cebuliona ginie pod skrzynią. Poprawka: dla nowego gracza wywołać `playReward` 450 ms po
 `sfx_logowanie` (motyw kończy się w 330 ms + wybrzmienie).
 
+### 6.8. Kroki odpowiedzi spinu (kontrakt 09 § 2.4) → zdarzenia i dźwięki
+
+Oś czasu dźwięków rundy budujemy wprost z listy `steps` z
+[09 § 2.4](09-kontrakt-api-i-assetow.md#24-odpowiedź-spinu-kroki-animacji--wspólna-dla-wszystkich-gier).
+Front niczego nie losuje i nie liczy wyniku — z kroków odczytuje tylko, **co** i **kiedy** zagrać:
+
+| Krok (`type`) / pole | Zdarzenia | Dźwięki i decyzje |
+|---|---|---|
+| (wciśnięcie SPIN, przed odpowiedzią) | E24 | `sfx_spin_start` — tylko gra bazowa |
+| `spin`, `phase: "base"`, `grid` | E25, E26, E33, E34 | pętla bębnów (S1, S2) / `sfx_s3_opad` (S3); stopy w kolejności lądowania; `wild` i `scatter` w kolumnie `grid[bęben]` → `sfx_wild` / `sfx_scatter_*` w chwili stopu tego bębna (n = scattery z dotychczas stojących bębnów) |
+| `spin.anticipation` (niepusta lista bębnów) | E27 | narastanie przed stopem każdego bębna z listy, serce, `mus_napiecie`; stan NAPIECIE (albo NAPIECIE_FS) |
+| `spin`, `phase: "free"` (`freeSpinIndex`, `freeSpinsLeft`) | E36, dalej E25–E26 | `sfx_saldo_puls` (−4 dB) przy zmianie licznika, bez `sfx_spin_start` |
+| `spin.orbs`, `cascade.orbs` (S3) | E72 | `sfx_s3_mnoznik` na każdą kulę; wysokość według `value` (§ 3.6) |
+| `expandWild` (`reels`) | E60 | `sfx_s2_wild_rozszerzenie` na każdy bęben z `reels` (co 250 ms, maks. 2 naraz) |
+| `feature`, `name: "neonJackpot"` | E51 | `sfx_s1_jackpot` zamiast `sfx_bigwin_wejscie`, potem sekwencja big win |
+| `win` (S1, S2) | E28–E30 | linie z `wins[]` (`sfx_linia` co 350 ms); wariant i próg według m = `win` kroku / `bet` (progi briefu § 3; dla rundy bez darmowych spinów to samo co pole `tier`) |
+| `wins[].wildMultiplier: 2` (S1) | E50 | `sfx_s1_neon_bzyk` + `sfx_licznik_koniec` przy podwojeniu kwoty linii |
+| `win` + `cascade` (S3) | E70, E71 | `sfx_linia` (+100 c × numer kaskady), tik, pęknięcia według `removed` (środek ciężkości → panorama; ≥ 10 pozycji → pierwszy głos `sfx_s3_pekniecie_4`), `sfx_s3_opad` przy `newSymbols`; po ostatniej kaskadzie dźwięk progu dla sumy `win` całej sekwencji / `bet` |
+| `applyMultiplier` (`orbsSum`) | E73 | `sfx_s3_mnoznik_zbior`, `sfx_s3_mnoznik` (−8 dB) przy wylocie kul |
+| `freeSpinsStart` (`count`, `trigger`) | E35 | `sfx_free_spins_start` i przejście muzyki do FS (scattery z `trigger` zagrały już jako E34) |
+| `freeSpinsRetrigger` (`added`) | E61 | `sfx_s2_gong`, `sfx_scatter_3`, `sfx_poziom_w_gore` (+200 c), `sfx_licznik_koniec` |
+| `freeSpinsEnd` (`freeSpinsWin`) | E37 | przy `freeSpinsWin / bet` ≥ 15 najpierw E30–E32, potem podsumowanie |
+
+**Ładowanie sterowane wynikiem (§ 2.4) też czyta kroki:** `freeSpinsStart` → `preload` muzyki FS i
+`sfx_free_spins_*`; `tier` ≥ `big` albo `feature` → pakiet big win; niepuste `anticipation` → narastanie, serce i
+`mus_napiecie`; `expandWild` / `applyMultiplier` → efekty funkcji gry.
+
 ---
 
 ## 7. Formaty i eksport
@@ -1461,7 +1488,7 @@ równocześnie i motyw Cebuliona ginie pod skrzynią. Poprawka: dla nowego gracz
 |---|---|---|---|
 | synteza (w pamięci) | NumPy `float64` | 48 000 Hz | pełna precyzja obliczeń, brak przesterowań w trakcie miksu warstw |
 | plik pośredni | WAV PCM 24 bit | 48 000 Hz, mono lub stereo, `target/audio/wav/<ID>.wav` | bezstratny, do odsłuchu i pomiarów; 24 bity = zapas dynamiki bez ditheringu |
-| aplikacja (1) | **Opus w WebM** — `<ID>.webm` | mono **64 kb/s**, stereo **96 kb/s**, VBR | najmniejsze pliki przy bardzo dobrej jakości; Opus pracuje wewnętrznie wyłącznie przy 48 kHz — stąd 48 kHz w całym pipeline (bez przepróbkowania) |
+| aplikacja (1) | **Opus w WebM** — `<ID>.webm` | mono **64 kb/s**, stereo **96 kb/s**, VBR | najmniejsze pliki przy bardzo dobrej jakości; Opus pełnopasmowy działa przy 48 kHz (sygnał o innej częstotliwości koder przepróbkowuje, a dekoder i tak oddaje 48 kHz) — stąd 48 kHz w całym pipeline (bez przepróbkowania) |
 | aplikacja (2) | **AAC-LC w MP4** — `<ID>.m4a` | mono **96 kb/s**, stereo **128 kb/s** | zapas dla przeglądarek bez Opus w WebM (Safari / iOS w części wersji) |
 
 **Wybór formatu w przeglądarce** (jest w v1): `canPlayType('audio/webm; codecs="opus"')` zwraca `"probably"`,
@@ -1495,21 +1522,35 @@ src/main/resources/static/assets/audio/          ← WYŁĄCZNIE wynik tools/aud
 * Nazwy: małe litery ASCII, cyfry i `_`, dokładnie jak ID w briefie (§ 10). Bez polskich znaków i spacji.
 * Nikt nie edytuje plików w `assets/audio/` ręcznie — każda zmiana to zmiana przepisu (albo pliku w
   `audio/zrodla/`) i ponowne uruchomienie skryptu.
-* **Odświeżanie pamięci podręcznej:** silnik dokleja do adresu pliku `?v=<version>` z manifestu. Nowa wersja
-  dźwięków = nowy `version` = przeglądarka pobiera pliki na nowo, mimo że nazwy się nie zmieniły.
+* **Odświeżanie pamięci podręcznej (wersja docelowa; v1 tego nie robi):** silnik dokleja do adresu pliku
+  `?v=<version>` z manifestu. Nowa wersja dźwięków = nowy `version` = przeglądarka pobiera pliki na nowo, mimo że
+  nazwy się nie zmieniły. Sam manifest v1 pobiera z `cache: 'no-cache'`, więc zawsze jest świeży.
 
 ### 7.3. Bezszwowe pętle
 
 **Problem.** Kodery Opus i AAC dodają na początku pliku próbki „rozbiegowe” (Opus: 312 próbek = 6,5 ms; AAC: zwykle
-1 024–2 112 próbek), a dekoder powinien je odciąć na podstawie metadanych. Nie każda przeglądarka robi to w
-`decodeAudioData` identycznie. Jeśli zapętlimy cały zdekodowany bufor, na szwie może powstać trzask albo przerwa
+1 024–2 112 próbek), a dekoder powinien je odciąć na podstawie metadanych; do tego ostatnia ramka jest dopełniana
+ciszą. Nie każda przeglądarka robi to w `decodeAudioData` identycznie (sprawdzone na ffmpeg 6.1.1: plik 0,8 s
+po AAC dekoduje się jako 38 912 zamiast 38 400 próbek — 10,7 ms ciszy na końcu; Opus w WebM — dokładnie 38 400). Jeśli zapętlimy cały zdekodowany bufor, na szwie może powstać trzask albo przerwa
 kilkudziesięciu ms.
 
 **Rozwiązanie w trzech krokach:**
 
-1. **Sygnał dokładnie okresowy.** Pętlę o długości L renderujemy razem z ogonem (pogłos, wybrzmienia), a ogon
-   wychodzący poza L dodajemy na początek („zawijanie”). Ziarna dźwięków (monety w fontannie, krople w `mus_s3`)
-   wystające poza koniec też zawijamy. Wynik jest okresowy z okresem L co do próbki.
+1. **Sygnał dokładnie okresowy.** Każdy etap renderu pętli o długości L zachowuje okresowość:
+   * **zdarzenia** (nuty, uderzenia, ziarna monet w fontannie, krople w `mus_s3`) wstawiamy do bufora długości L
+     z zawijaniem — to, co wystaje poza koniec, dodajemy na początek (`dsp.wstaw(..., zawijaj=True)`);
+   * **filtry i pogłos** liczymy splotem kołowym przez FFT (`dsp.filtruj(..., okresowy=True)`,
+     `dsp.poglos(..., okresowy=True)`) — ogon pogłosu ostatniego taktu „wraca” na początek pętli;
+   * **przetwarzanie ze stanem** (kompresor, limiter) dostaje dwie kopie pętli, a wynikiem jest druga — stan
+     detektora na szwie jest już „rozpędzony” (`dsp.kompresor` / `dsp.limiter` z `okresowy=True`);
+   * **modulacje** (tremolo, PWM, chorus, falowanie „taśmy”) mają całkowitą liczbę cykli na L — w przepisach
+     podajemy takie wartości, a `dsp.lfo_okresowe` dodatkowo zaokrągla częstotliwość do najbliższej poprawnej
+     (zabezpieczenie przed pomyłką w przepisie);
+   * **ciągłe oscylatory** trwające przez szew (bordun S2, buczenie pętli S1) też muszą mieć całkowitą liczbę
+     okresów na L: częstotliwość zaokrąglamy do k / L (dla L = 38,4 s zmiana ≤ 0,013 Hz, przy D2 = 73,4 Hz to
+     < 0,3 c — niesłyszalne).
+
+   Wynik jest okresowy z okresem L co do próbki.
 2. **Zakładki z obu stron.** Przed pętlą doklejamy końcówkę pętli, a za nią jej początek: 0,1 s dla pętli efektów,
    0,25 s dla muzyki.
 
@@ -1536,7 +1577,10 @@ działają także, gdy kontekst pracuje z częstotliwością 44,1 kHz i przeglą
 | `sfx_bicie_serca` | 0,600 s | 0,1 s | 0,1 / 0,7 |
 
 Pętle muzyczne: tabela w § 4.2. Wszystkie modulacje w pętlach (tremolo, PWM, falowanie „taśmy”) mają całkowitą
-liczbę cykli na długość pętli — inaczej szew byłby słyszalny jako skok fazy modulacji.
+liczbę cykli na długość pętli — inaczej szew byłby słyszalny jako skok fazy modulacji. Przykłady z tego dokumentu:
+PWM w `sfx_beben_petla_s1` 1 Hz (1 cykl / 1 s), piasek w `sfx_beben_petla_s2` 0,833 Hz (1 / 1,2 s), tremolo
+borduna `mus_s2` 5 Hz (192 / 38,4 s), chorus padu `mus_s3` 0,1875 Hz (6 / 32 s), chór `mus_s3_fs` 1 cykl samogłosek
+na 12 taktów.
 
 ### 7.4. Normalizacja i mastering w pipeline
 
@@ -1545,16 +1589,20 @@ liczbę cykli na długość pętli — inaczej szew byłby słyszalny jako skok 
 | 1. usunięcie składowej stałej | filtr HP 20 Hz | jw. | HP 30 Hz |
 | 2. wejście / wyjście | wejście 2 ms, wyjście 5 ms (brak trzasków) | brak (pętla) | brak (pętla) |
 | 3. korekcja | — | — | szczytowy −3 dB przy 3 kHz (Q 1) |
-| 4. normalizacja | szczyt prawdziwy **−1 dBTP** (nadpróbkowanie ×4) | **−18 LUFS** | **−14 LUFS** |
-| 5. ograniczenie szczytów | — | miękki limiter do −1 dBTP | miękki limiter do −1 dBTP |
+| 4. normalizacja | szczyt prawdziwy **−1 dBTP** (nadpróbkowanie ×4) | **−18 LUFS** (pomiar na pętli powielonej do ≥ 4 s) | **−14 LUFS** |
+| 5. ograniczenie szczytów | — | limiter z wyprzedzeniem 4 ms na szczyt prawdziwy do −1 dBTP (`dsp.limiter`, `okresowy=True`) | jw. |
 | 6. zapis | WAV 24 bit | jw. + zakładki | jw. + zakładki |
 
 **Dlaczego efekty jednorazowe normalizujemy szczytem, a nie LUFS:** pomiar głośności zintegrowanej (EBU R128)
-wymaga bloków 400 ms i bramkowania — dla dźwięku 280 ms `ffmpeg` zwraca wręcz `-inf` (sprawdzone). Krótki dźwięk
-i tak „waży” tyle, ile jego szczyt, a względny poziom ustala `gainDb`.
+wymaga bloków 400 ms i bramkowania — dla dźwięku 280 ms `ffmpeg` zwraca `-inf` (`loudnorm`) albo −70 LUFS
+(`ebur128`), a `analiza.lufs` też `-inf` (sprawdzone). Krótki dźwięk i tak „waży” tyle, ile jego szczyt, a względny
+poziom ustala `gainDb`.
 
-Pomiar LUFS i szczytu wykonuje `ffmpeg` (filtr `loudnorm` w trybie pomiaru), a wzmocnienie stosujemy liniowo w NumPy —
-**nie** używamy dynamicznej normalizacji `loudnorm`, bo spłaszczyłaby dynamikę.
+Pomiar LUFS (BS.1770-4: ważenie K, bloki 400 ms co 100 ms, bramki −70 LUFS i −10 LU) i szczytu prawdziwego liczy
+`tools/audio/analiza.py` w NumPy; `sprawdz.py` porównuje go niezależnie z `ffmpeg` (filtr `ebur128`) — dwa
+niezależne pomiary, które muszą się zgadzać (na sinusie 1 kHz −20 dBFS: −19,99 vs −20,0 LUFS). Wzmocnienie
+stosujemy liniowo w NumPy — **nie** używamy dynamicznej normalizacji `loudnorm`, bo spłaszczyłaby dynamikę.
+Polecenie `ffmpeg` poniżej to ręczny pomiar kontrolny.
 
 ```bash
 # pomiar (wynik JSON na końcu stderr: input_i = LUFS, input_tp = szczyt prawdziwy)
@@ -1575,8 +1623,11 @@ ffmpeg -y -hide_banner -i target/audio/wav/sfx_wild.wav \
 ```
 
 Flagi `-map_metadata -1 -fflags +bitexact -flags:a +bitexact` usuwają z plików metadane i numer wersji kodera:
-ten sam WAV daje te same bajty (sprawdzone na ffmpeg 6.1 — dwa przebiegi, identyczne sumy MD5), więc `git diff`
-pokazuje tylko dźwięki, które naprawdę się zmieniły.
+ten sam WAV daje te same bajty (sprawdzone na ffmpeg 6.1.1 — dwa przebiegi, identyczne sumy MD5 `.webm` i `.m4a`),
+więc `git diff` pokazuje tylko dźwięki, które naprawdę się zmieniły. **Zastrzeżenie:** gwarancja dotyczy tej samej
+wersji ffmpeg / libopus na tym samym typie procesora — inna wersja kodera albo inne optymalizacje SIMD mogą dać
+inne bajty przy identycznym WAV. Dlatego pliki w repozytorium buduje jedna osoba (albo jedna maszyna), a test
+determinizmu (§ 8.9) porównuje zawsze próbki WAV, bajty plików skompresowanych — tylko lokalnie.
 
 ### 7.5. `manifest.json`
 
@@ -1593,6 +1644,12 @@ dokumentu — silnik v1 je ignoruje, wersja docelowa używa ich z wartościami d
       "gainDb": -7, "priority": 4, "group": "beben_stop", "maxVoices": 3,
       "pitchCents": 5, "gainJitterDb": 1, "keyTrack": true, "pack": "gry-krytyczne"
     },
+    "sfx_moneta_2": {
+      "webm": "sfx_moneta_2.webm", "m4a": "sfx_moneta_2.m4a",
+      "loop": false, "duration": 0.21, "bus": "sfx", "channels": 1,
+      "gainDb": -14, "priority": 1, "group": "moneta", "maxVoices": 6, "cooldownMs": 25,
+      "pitchCents": 5, "gainJitterDb": 1, "keyTrack": { "s2": 100 }, "pack": ["lobby", "gry-krytyczne"]
+    },
     "sfx_bigwin_wejscie": {
       "webm": "sfx_bigwin_wejscie.webm", "m4a": "sfx_bigwin_wejscie.m4a",
       "loop": false, "duration": 2.4, "bus": "sfx", "channels": 2,
@@ -1602,7 +1659,7 @@ dokumentu — silnik v1 je ignoruje, wersja docelowa używa ich z wartościami d
       "webm": "mus_s2.webm", "m4a": "mus_s2.m4a",
       "loop": true, "duration": 38.9, "bus": "music", "channels": 2,
       "loopStart": 0.25, "loopEnd": 38.65, "bpm": 100, "beatsPerBar": 4,
-      "gainDb": 0, "pack": "s2"
+      "gainDb": 0, "pack": "gry-krytyczne", "gra": "s2"
     }
   }
 }
@@ -1620,11 +1677,12 @@ dokumentu — silnik v1 je ignoruje, wersja docelowa używa ich z wartościami d
 | `group` | tekst | ID | wspólny limit `maxVoices` dla wariantów |
 | `maxVoices`, `cooldownMs` | liczba | 4, 0 | limity na dźwięk (§ 2.5) |
 | `pitchCents`, `gainJitterDb` | liczba | 0, 0 | zakres losowych mikro-zmian ± (§ 2.6) |
-| `keyTrack` | bool | `false` | transpozycja do tonacji gry (§ 2.6) |
+| `keyTrack` | bool albo obiekt `{ kontekst: centy }` | `false` | transpozycja do tonacji gry (§ 2.6); obiekt = `true` z wyjątkami, np. `{ "s2": 100 }` dla plików na nutach D i A (§ 1.2) |
 | `syncPoint` | s | 0 | punkt synchronizacji w pliku (§ 2.6, § 2.7) |
 | `loopStart`, `loopEnd` | s | 0, `duration` | punkty pętli (§ 7.3) |
 | `bpm`, `beatsPerBar` | liczba | — | tylko muzyka, do kwantyzacji (§ 4.6) |
-| `pack` | tekst | `gry-dalsze` | pakiet ładowania (§ 2.4) |
+| `pack` | tekst albo lista tekstów | `gry-dalsze` | pakiet(y) ładowania (§ 2.4); dźwięk z obu stron ma dwa, np. `["lobby", "gry-krytyczne"]` |
+| `gra` | `s1` / `s2` / `s3` | brak (wspólny) | dźwięk tylko jednej gry — inne strony gier go nie ładują (§ 2.4) |
 | `source` | `synteza` / `zrodla` | `synteza` | skąd plik (jak w manifeście obrazów) |
 
 ### 7.6. Budżet wagi

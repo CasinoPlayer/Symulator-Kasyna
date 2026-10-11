@@ -369,7 +369,7 @@
   caret-color: var(--gold-2);
   transition: border-color var(--dur-2), box-shadow var(--dur-2);
 }
-.field__input::placeholder { color: rgba(201, 195, 230, 0.45); font-weight: 600; }
+.field__input::placeholder { color: rgba(201, 195, 230, 0.6); font-weight: 600; } /* ≥ 4,5:1 na tle pola */
 .field__input:focus-visible,
 .field__input:focus {
   outline: none;
@@ -510,8 +510,9 @@
   gap: 10px;
   pointer-events: none;
 }
-@media (min-width: 901px) {       /* komputer: prawy górny róg, pod paskiem */
-  .toast-region { bottom: auto; top: calc(env(safe-area-inset-top) + var(--topbar-h) + 12px); left: auto; right: max(var(--gutter), env(safe-area-inset-right)); transform: none; }
+/* Komputer: prawy DOLNY róg. Prawy górny zajmuje menu gracza — toast „Witaj, …!” zasłaniał jego nagłówek. */
+@media (min-width: 901px) {
+  .toast-region { bottom: calc(env(safe-area-inset-bottom) + 24px); left: auto; right: max(var(--gutter), env(safe-area-inset-right)); transform: none; }
 }
 /* Strona gry: dół ekranu zajmuje panel sterowania, więc powiadomienia są zawsze u góry, pod paskiem. */
 .game-page .toast-region { bottom: auto; top: calc(env(safe-area-inset-top) + 64px); }
@@ -574,7 +575,6 @@
 .toast--bonus .toast__title { color: var(--gold-1); }
 .toast--bonus .toast__timer { color: var(--gold-2); }
 @keyframes toast-in { from { opacity: 0; transform: translateY(var(--toast-from, 14px)) scale(0.96); } to { opacity: 1; transform: none; } }
-@media (min-width: 901px) { .toast-region { --toast-from: -14px; } }
 .game-page .toast-region { --toast-from: -14px; }
 @keyframes toast-out { to { opacity: 0; transform: translateY(-8px) scale(0.97); } }
 @keyframes toast-timer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
@@ -624,6 +624,7 @@
 .menu__item:hover,
 .menu__item:focus-visible { background: rgba(245, 197, 66, 0.1); color: var(--gold-hi); outline-offset: -2px; }
 .menu__item--switch { justify-content: space-between; cursor: pointer; }
+.menu__label { display: flex; align-items: center; gap: 12px; }
 .menu__sep { height: 1px; margin: 6px 4px; background: var(--line-soft); }
 @keyframes menu-in { from { opacity: 0; transform: translateY(-6px) scale(0.97); } to { opacity: 1; transform: none; } }
 
@@ -704,14 +705,23 @@
 .empty-state__title { font-weight: 800; color: var(--text-1); }
 .empty-state__text { font-size: var(--fs-sm); color: var(--text-2); max-width: 36ch; }
 
-/* Szkielet ładowania (shimmer) zamiast „skaczącej” treści */
+/* Szkielet ładowania (shimmer) zamiast „skaczącej” treści. Refleks to osobna warstwa przesuwana transform
+   (animacja background-position przemalowywałaby każdy wiersz w każdej klatce). */
 .skeleton {
+  position: relative;
+  overflow: hidden;
   border-radius: var(--r-sm);
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.09) 50%, rgba(255, 255, 255, 0.04) 100%);
-  background-size: 200% 100%;
+  background: rgba(255, 255, 255, 0.045);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
+  transform: translateX(-100%);
   animation: skeleton 1300ms ease-in-out infinite;
 }
-@keyframes skeleton { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@keyframes skeleton { to { transform: translateX(100%); } }
 
 /* ===================================================================================== KAFEL GRY */
 /*

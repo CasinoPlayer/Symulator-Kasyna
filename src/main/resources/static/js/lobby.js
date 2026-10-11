@@ -61,6 +61,8 @@ const el = {
   loginBtn: $('#btn-zaloguj'),
   userBox: $('#topbar-gracz'),
   pill: $('#saldo'),
+  pillState: $('#saldo-stan'),
+  hero: $('#start'),
   avatar: $('#awatar'),
   nick: $('#nick-gracza'),
   menuBtn: $('#btn-menu'),
@@ -201,6 +203,8 @@ function bindTopbar() {
   document.addEventListener('click', (e) => {
     if (!el.menu.hidden && !e.target.closest('.user-menu')) toggleMenu(false);
   });
+  // klawiatura w menu (wzorzec WAI-ARIA „menu button”): strzałki, Home/End, Esc wraca na przycisk,
+  // Tab zamyka menu i przepuszcza fokus dalej (menu nie może zostać otwarte „za plecami” użytkownika)
   el.menu.addEventListener('keydown', (e) => {
     const items = [...el.menu.querySelectorAll('[role^="menuitem"]')];
     const i = items.indexOf(document.activeElement);
@@ -211,6 +215,11 @@ function bindTopbar() {
       e.preventDefault();
       const next = (i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
       items[next].focus();
+    } else if (e.key === 'Home' || e.key === 'End') {
+      e.preventDefault();
+      items[e.key === 'Home' ? 0 : items.length - 1].focus();
+    } else if (e.key === 'Tab') {
+      toggleMenu(false);
     }
   });
   el.menuHistory.addEventListener('click', () => { toggleMenu(false); openHistory(); });
@@ -219,6 +228,8 @@ function bindTopbar() {
     const nick = store.player?.nick;
     await logout().catch(() => {});
     audio.stopMusic();
+    // przycisk „Wyloguj” właśnie zniknął razem z menu — fokus przenosimy na „Zaloguj” (nie gubimy go na <body>)
+    el.loginBtn.focus({ preventScroll: true });
     toast({ type: 'info', title: 'Do zobaczenia!', message: nick ? `Wylogowano gracza ${nick}.` : 'Wylogowano.' });
   });
 
@@ -255,6 +266,7 @@ function renderPlayer({ player, prev, reason }) {
   if (!player) {
     toggleMenu(false);
     el.rescue.hidden = true;
+    el.hero.classList.remove('is-bankrupt');
     stopRescueCountdown();
     setHeroCta(false);
     markMeInBoard();
@@ -268,7 +280,9 @@ function renderPlayer({ player, prev, reason }) {
     el.menuNick.textContent = player.nick;
   }
   el.menuBalance.textContent = `Saldo: ${formatCebuliony(player.balance)}`;
-  el.pill.classList.toggle('is-bankrupt', isBankrupt(player));
+  const bankrupt = isBankrupt(player);
+  el.pill.classList.toggle('is-bankrupt', bankrupt);
+  el.pillState.textContent = bankrupt ? ' — za mało na najmniejszy zakład' : '';
 
   // przy logowaniu z bonusem i przy ratunku saldo „dolicza” sekwencja nagrody — startujemy od stanu sprzed bonusu
   if (reason === 'login' || reason === 'rescue') counter.set(player.balance - (pendingBonus ?? 0), { animate: false });
@@ -352,6 +366,17 @@ function showLoginError(message, shake = true) {
   }
 }
 
+/**
+ * Po zamknięciu okna / sekwencji nagrody element, który miał fokus, często już nie istnieje albo jest ukryty
+ * („Zaloguj” znika po zalogowaniu, przycisk bonusu ratunkowego — po jego odebraniu). Wtedy fokus spada na <body>
+ * i użytkownik klawiatury zaczyna od początku strony. Ta funkcja przenosi go na sensowny następny element.
+ */
+function ensureFocus(target) {
+  const active = document.activeElement;
+  const lost = !active || active === document.body || active.closest('[hidden]') || !active.getClientRects().length;
+  if (lost && target && !target.closest('[hidden]')) target.focus({ preventScroll: true });
+}
+
 function setLoading(button, loading) {
   button.classList.toggle('is-loading', loading);
   button.setAttribute('aria-busy', String(loading));
@@ -413,6 +438,7 @@ async function submitLogin(event) {
       counter.pulse();
       toast({ type: 'success', title: `Witaj ponownie, ${res.player.nick}!`, message: `Twoje saldo: ${formatCebuliony(res.player.balance)}.` });
     }
+    ensureFocus(el.menuBtn); // „Zaloguj” zniknął — fokus na menu gracza w tym samym miejscu paska
     if (game) setTimeout(() => goToGame(game), bonus > 0 ? 700 : 900);
   } catch (err) {
     el.loginModal.dataset.locked = 'false';
@@ -434,6 +460,7 @@ function bindRescue() {
 function renderRescue(player) {
   const bankrupt = isBankrupt(player);
   el.rescue.hidden = !bankrupt;
+  el.hero.classList.toggle('is-bankrupt', bankrupt); // CSS chowa wtedy „Graj teraz / Historia gry”
   if (!bankrupt) {
     stopRescueCountdown();
     return;
@@ -448,7 +475,7 @@ function renderRescue(player) {
 
 function setRescueReady(ready, secondsLeft = 0) {
   el.rescueBtn.disabled = !ready;
-  el.rescueBtn.classList.toggle('is-ready', ready);
+  el.rescue.classList.toggle('is-ready', ready);   // pulsująca poświata wokół przycisku (lobby.css)
   el.rescueBtn.querySelector('span').textContent = ready ? 'Odbierz 10 000 cebulionów' : `Dostępny za ${formatCountdown(secondsLeft)}`;
   el.rescueText.textContent = ready
     ? 'Pan Cebulion stawia: 10 000 cebulionów na koszt firmy.'
@@ -494,6 +521,7 @@ async function claimRescue() {
       artId: assets.has('g_maskotka_wygrana') ? 'g_maskotka_wygrana' : 'g_skrzynia',
     });
     toast({ type: 'bonus', title: 'Proszę bardzo!', message: `${formatCebuliony(amount)} na koszt firmy.` });
+    ensureFocus(el.ctaMain); // panel bonusu zniknął, wracają przyciski „Graj teraz / Historia gry”
   } catch (err) {
     if (err.code === 'NOT_LOGGED_IN') {
       sessionLost();
@@ -522,7 +550,19 @@ function renderTiles(list) {
   el.tiles.replaceChildren(...list.map(buildTile));
   el.tiles.setAttribute('aria-busy', 'false');
   const tiles = [...el.tiles.querySelectorAll('.tile')];
-  el.dots.replaceChildren(...tiles.map(() => document.createElement('i')));
+  el.dots.replaceChildren(...tiles.map((tile) => {
+    // kropka = skrót dla myszy/dotyku: przewija karuzelę tak, żeby kafel stanął na środku
+    const dot = document.createElement('i');
+    dot.addEventListener('click', () => {
+      const box = el.tiles.getBoundingClientRect();
+      const r = tile.getBoundingClientRect();
+      el.tiles.scrollTo({
+        left: el.tiles.scrollLeft + (r.left - box.left) - (box.width - r.width) / 2,
+        behavior: reducedMotion.matches ? 'auto' : 'smooth',
+      });
+    });
+    return dot;
+  }));
   tiles.forEach((tile, i) => {
     tile.style.setProperty('--i', String(i));
     if (revealObserver) revealObserver.observe(tile);
@@ -542,15 +582,20 @@ function buildTile(slot, index) {
 
   const media = document.createElement('div');
   media.className = 'tile__media';
-  const cover = assets.createImg(meta.cover, { alt: '', className: 'tile__cover', sizes: '(max-width: 640px) 78vw, 33vw' });
-  if (cover) {
-    media.append(cover);
-  } else {
+  const fallbackArt = () => {
     const art = document.createElement('div');
     art.className = `art art--${meta.theme}`;
     art.setAttribute('aria-hidden', 'true');
     art.innerHTML = ART_HTML[meta.theme]; // stała grafika z kodu, bez danych z zewnątrz
-    media.append(art);
+    return art;
+  };
+  const cover = assets.createImg(meta.cover, { alt: '', className: 'tile__cover', sizes: '(max-width: 900px) 78vw, 33vw' });
+  if (cover) {
+    // okładka jest w manifeście, ale plik się nie wczytał (404, uszkodzony WebP) → grafika zastępcza z CSS
+    cover.addEventListener('error', () => cover.replaceWith(fallbackArt()), { once: true });
+    media.append(cover);
+  } else {
+    media.append(fallbackArt());
   }
   attachVideo(tile, media, slot.code, cover);
   media.append(Object.assign(document.createElement('div'), { className: 'tile__shade' }));
@@ -711,6 +756,20 @@ function setupTileVisibility(tiles) {
     }
   }, { threshold: [0, 0.25, 0.6, 0.9, 1] });
   tiles.forEach((tile) => io.observe(tile));
+
+  // Ukryta karta: zatrzymujemy filmy (dekodowanie wideo w tle zjada baterię). Po powrocie na telefonie
+  // wznawiamy film najbardziej widocznego kafla; na komputerze film i tak startuje dopiero po najechaniu.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      tiles.forEach(pauseVideo);
+      return;
+    }
+    if (finePointer.matches) return;
+    let best = null;
+    let bestRatio = 0;
+    for (const [tile, ratio] of ratios) if (ratio > bestRatio) [best, bestRatio] = [tile, ratio];
+    if (best && bestRatio >= 0.6) playVideo(best);
+  });
 }
 
 /** Przejście lobby → gra (E12): zasłona + dźwięk „whoosh”, potem zmiana strony. */
@@ -774,7 +833,7 @@ function wrapLi(node) {
 
 function tierBadge(tier, multiplier) {
   const badge = document.createElement('span');
-  badge.className = `tier tier--${tier ?? 'big'}`;
+  badge.className = `tier tier--${TIER_LABEL[tier] ? tier : 'big'}`;
   badge.append(Object.assign(document.createElement('span'), { textContent: `${TIER_LABEL[tier] ?? 'Wygrana'} ${formatMultiplier(multiplier)}` }));
   return badge;
 }
@@ -786,7 +845,7 @@ function renderFeed(items) {
   }
   el.feed.replaceChildren(...items.slice(0, 8).map((w, i) => {
     const li = document.createElement('li');
-    li.className = `win win--${w.tier ?? 'big'}`;
+    li.className = `win win--${TIER_LABEL[w.tier] ? w.tier : 'big'}`;
     li.style.setProperty('--i', String(i));
     const who = document.createElement('div');
     who.className = 'win__who';
@@ -808,11 +867,15 @@ function renderFeed(items) {
 function bindBoardTabs() {
   el.tabs.forEach((tab, i) => {
     tab.addEventListener('click', () => selectBoard(tab));
+    // wzorzec WAI-ARIA „tabs”: strzałki w lewo/prawo oraz Home/End przełączają zakładki
     tab.addEventListener('keydown', (e) => {
-      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-      const next = el.tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + el.tabs.length) % el.tabs.length];
+      const n = el.tabs.length;
+      const index = { ArrowRight: (i + 1) % n, ArrowLeft: (i - 1 + n) % n, Home: 0, End: n - 1 }[e.key];
+      if (index === undefined) return;
+      e.preventDefault();
+      const next = el.tabs[index];
       next.focus();
-      selectBoard(next);
+      if (next !== tab) selectBoard(next);
     });
   });
 }
@@ -923,11 +986,18 @@ function historyRow(round) {
   );
   const nums = document.createElement('div');
   nums.className = 'history__nums num';
+  const win = Number(round.win) || 0;
+  // FAILED (kontrakt: cykl życia rundy) = zakład nie został rozliczony — pokazujemy to wprost, a nie „brak wygranej”
+  const failed = round.status === 'FAILED';
   nums.append(
     Object.assign(document.createElement('span'), { className: 'history__bet', textContent: `zakład ${formatAmount(round.bet)}` }),
-    Object.assign(document.createElement('span'), { className: `history__win${round.win > 0 ? ' is-plus' : ''}`, textContent: round.win > 0 ? formatSigned(round.win) : 'brak wygranej' }),
+    Object.assign(document.createElement('span'), {
+      className: `history__win${win > 0 && !failed ? ' is-plus' : ''}`,
+      textContent: failed ? 'runda anulowana' : win > 0 ? formatSigned(win) : 'brak wygranej',
+    }),
   );
-  if (round.tier && round.tier !== 'small') nums.append(tierBadge(round.tier, round.multiplier));
+  // odznaka tylko dla wyraźnych wygranych (≥ 5×); serwer zwraca też 'none' i 'small' — tych nie wyróżniamy
+  if (!failed && TIER_LABEL[round.tier] && round.tier !== 'small') nums.append(tierBadge(round.tier, round.multiplier));
   row.append(left, nums);
   return row;
 }

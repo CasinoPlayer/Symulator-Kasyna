@@ -56,6 +56,8 @@ export function playReward({ amount, from, to, eyebrow, sub, fx, counter, target
     art.className = 'reward__art';
     const img = assets.createImg(artId, { loading: 'eager' }) ?? Object.assign(new Image(), { src: EMBLEM_FALLBACK, alt: '' });
     img.alt = '';
+    // obraz jest w manifeście, ale plik się nie wczytał → emblemat zastępczy zamiast pustego miejsca
+    img.addEventListener('error', () => { img.removeAttribute('srcset'); img.src = EMBLEM_FALLBACK; }, { once: true });
     art.append(img);
 
     const eyebrowEl = Object.assign(document.createElement('p'), { className: 'reward__eyebrow', textContent: eyebrow });

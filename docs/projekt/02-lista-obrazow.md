@@ -699,7 +699,7 @@ trafia jego wynik (`src/main/resources/static/assets/img/`). Aplikacja Spring Bo
 serwuje gotowe pliki. Dzięki temu zachowanie jest powtarzalne: te same PNG + te same parametry = te same bajty.
 
 **Dlaczego Python w projekcie Javowym:** to narzędzie budowania, nie część aplikacji (jak Maven czy kompilator CSS).
-Python ma najlepsze biblioteki do obróbki obrazu (Pillow, NumPy, SciPy) — w Javie ten sam kod byłby kilka razy
+Python ma najlepsze biblioteki do obróbki obrazu (Pillow, NumPy) — w Javie ten sam kod byłby kilka razy
 dłuższy. Przedmiot ocenia backend w Javie; skrypty pomocnicze mogą być w czym innym.
 
 | Zależność | Wersja | Do czego |
@@ -1793,49 +1793,57 @@ Raport odsyłamy właścicielowi po każdej paczce (§ 4.7) — błędy z gotow�
 ### 8.2. Kontrole
 
 Poziomy: **błąd** (obraz nie może trafić do aplikacji w tej postaci), **ostrzeżenie** (do obejrzenia przez
-człowieka), **info** (naprawiono automatycznie / do wiadomości).
+człowieka), **info** (naprawiono automatycznie / do wiadomości). Kolumna „1.0.0” mówi, czy kontrola już działa;
+progi w wierszach zrobionych są progami z kodu.
 
-| Nr | Kontrola | Próg | Poziom |
-|---|---|---|---|
-| Q01 | komplet źródeł | brak źródła dla ID P0 → błąd; P1/P2 → ostrzeżenie; grafika zastępcza → info z licznikiem | błąd / ostrz. / info |
-| Q02 | nieznane nazwy plików | każdy plik spoza listy ID → propozycja dopasowania (§ 4.6) | ostrz. |
-| Q03 | wymiary i orientacja | inne niż 1024², 1536×1024, 1024×1536 → ostrz.; zamieniona orientacja → błąd | ostrz. / błąd |
-| Q04 | typ pliku | nie PNG → ostrz.; JPEG dla `ALFA` → błąd jakości (alfa odtwarzana awaryjnie) | ostrz. / błąd |
-| Q05 | duplikaty | odległość dHash ≤ 4 bity z 64 | ostrz. |
-| Q06 | prawdziwa alfa (`ALFA`) | po obróbce ≥ 15% pikseli z α = 0; naprawiona szachownica / tło → ostrz. z pewnością; pewność < 0,80 → błąd | ostrz. / błąd |
-| Q07 | obiekt przycięty krawędzią | α > 32 w ramce 2 px od krawędzi płótna | błąd |
-| Q08 | margines i wypełnienie | margines < 6% → ostrz.; dłuższy bok obiektu poza 70–90% kadru → ostrz. | ostrz. |
-| Q09 | obwódka (halo) | różnica L\* pierścienia krawędzi > +8 albo < −12 (po § 5.5) | ostrz. |
-| Q10 | pyłki | usunięte → info; luźne fragmenty > 1% powierzchni obiektu → ostrz. | info / ostrz. |
-| Q11 | czystość czerni (`CZARNE`) | brzeg ≤ 3/255 po zerowaniu; energia zabrana winietą ≤ 3%; tło niebędące czernią → błąd | ostrz. / błąd |
-| Q12 | jasność teł (`PELNE`) | L\* całości 12–22, strefa bębnów 6–14 ([01 § 6.1](01-kierunek-artystyczny.md#61-zasady-ogólne)); wykryte pasma → dithering (info) | ostrz. / info |
-| Q13 | elementy arkusza | liczba ≠ oczekiwanej po planach awaryjnych → błąd; użyty plan awaryjny → ostrz. | błąd / ostrz. |
-| Q14 | puste pola arkusza | `g_font_cyfry`: 2 ostatnie pola z alfą ≥ 0,1% | ostrz. |
-| Q15 | okno ramki | prostokątność ≥ 0,97; proporcja ±3% OK, 3–15% ostrz., > 15% błąd; okno zamalowane → ostrz. | ostrz. / błąd |
-| Q16 | środek 9-slice | jednolity środek < 20% wymiaru | błąd |
-| Q17 | spójność zestawu symboli | pokrycie alfą w grupie poza ±12% po normalizacji; średnia L\* symbolu poza 45–75 ([01 § 6.1](01-kierunek-artystyczny.md#61-zasady-ogólne)) | ostrz. |
-| Q18 | kierunek światła | środek ciężkości jasności obiektu nie leży w lewej-górnej ćwiartce względem środka ciężkości alfy | ostrz. |
-| Q19 | kolor zgodny z ID | barwa dominująca poza zakresem dla ID (np. `cytryna` 40–70°, `szafir` 200–250°, `szmaragd` 120–170°, `ametyst` 260–300°, `topaz` 25–50°, `rubin` 340–15°) → możliwa pomyłka nazwy | ostrz. |
-| Q20 | powiększanie | potrzebne > ×1,25 (sprite'y) / > ×1,67 (tła) → @2x obniżone (`@2x↓`) albo pominięte | info |
-| Q21 | jakość kodowania | PSNR < 38 dB (UI) / 36 dB (tła) / 34 dB (reszta) | ostrz. |
-| Q22 | atlasy | strona > 2048² (`m`) / > 4096² (`d`) albo nakładanie ramek → błąd; wypełnienie < 70% → ostrz. | błąd / ostrz. |
-| Q23 | budżety wagi | lobby ≤ 3 MB, gra ≤ 6 MB (§ 7.1); ≥ 85% → ostrz.; > 100% → błąd | ostrz. / błąd |
-| Q24 | obraz LCP lobby | > 120 KB | ostrz. |
-| Q25 | pojedynczy plik | > 450 KB (`w2560`) / > 300 KB (pozostałe) | ostrz. |
-| Q26 | BitmapFont | 15 znaków; linia bazowa cyfr ±2 px @1x; równe `xadvance` cyfr | błąd |
-| Q27 | czytelność symboli (testy T1–T5 z [01 § 5.2](01-kierunek-artystyczny.md#52-czytelność-pięć-testów)) | T2 automatycznie: para symboli jednej gry z jasnością różną o < 10% i podobną sylwetką (IoU sylwetek > 0,8) → ostrz.; T1, T3, T4, T5 — podglądy do oceny człowieka | ostrz. |
-| Q28 | ikony | `favicon.ico` zawiera 16, 32 i 48 px; podglądy na jasnym i ciemnym tle | błąd / info |
-| Q29 | obraz OG | 1200×630, ≤ 250 KB, każdy znak hasła ma glif (żaden nie jest pustym prostokątem) | ostrz. |
-| Q30 | spójność wyników | @2x = 2 × @1x; każdy plik z manifestu istnieje; brak plików-sierot w `assets/img/` | błąd |
+| Nr | Kontrola | Próg | Poziom | 1.0.0 |
+|---|---|---|---|---|
+| Q00 | wyjątek w obróbce | nieoczekiwany błąd przy jednym obrazie — pipeline zapisuje go przy tym ID i przetwarza resztę | błąd | zrobione |
+| Q01 | komplet źródeł | brak źródła i grafiki zastępczej: ID P0 → błąd, P1/P2 → ostrzeżenie (poprzedni wynik zostaje); konsola podaje liczbę ID `chatgpt` / `zastepcze` / `brak` | błąd / ostrz. | zrobione |
+| Q02 | nieznane nazwy plików | każdy plik spoza listy ID → propozycja dopasowania (§ 4.6) | ostrz. | [plan] — dziś takie pliki są pomijane po cichu |
+| Q03 | wymiary i orientacja | inny rozmiar albo proporcja niż 1024², 1536×1024, 1024×1536 → ostrz.; zamieniona orientacja → błąd. Pod tym kodem 1.0.0 zgłasza też przezroczystość w obrazie `PELNE` (ostrz., spłaszczenie na `#07060F`) | ostrz. / błąd | zrobione |
+| Q04 | typ pliku | rozszerzenie inne niż `.png` → ostrz. [plan]: rozpoznanie po sygnaturze (WebP przemianowany na `.png`) i błąd dla JPEG jako `ALFA` | ostrz. | częściowo |
+| Q05 | duplikaty | odległość dHash ≤ 4 bity z 64 | ostrz. | [plan] |
+| Q06 | prawdziwa alfa (`ALFA`) | naprawiona szachownica: pewność ≥ 0,90 → info, 0,80–0,90 → ostrz.; usunięte jednolite tło → info; niski kontrast obiektu z tłem → ostrz.; częściowa przezroczystość bez przezroczystego brzegu → ostrz.; tła nie da się usunąć → błąd | info / ostrz. / błąd | zrobione |
+| Q07 | obiekt przycięty krawędzią | α > 32/255 w ramce 2 px od krawędzi płótna | błąd (ramki: ostrz.) | zrobione |
+| Q08 | margines i wypełnienie | margines < 6% → ostrz.; dłuższy bok obiektu poza 70–90% kadru → ostrz. | ostrz. | [plan] |
+| Q09 | obwódka (halo) | różnica L\* pierścienia krawędzi > +8 albo < −12 (po § 5.5) | ostrz. | [plan] (funkcja jest, niewywoływana) |
+| Q10 | pyłki | usunięte → info; luźne fragmenty > 1% powierzchni obiektu → ostrz. | info / ostrz. | info zrobione, ostrz. [plan] |
+| Q11 | efekty `CZARNE`: nieprzezroczystość i czystość czerni | **plik z przezroczystością (kanał alfa z α < 0,98 w > 0,1% pikseli) → ostrz. i spłaszczenie na czerń** (obraz ma być OPAQUE); tło (mediana pasa) > 40/255 → błąd; winieta zabrała > 3% energii → ostrz.; efekt mocno kolorowy → ostrz.; przesunięty środek → info | ostrz. / błąd / info | zrobione |
+| Q12 | tła `PELNE`: nieprzezroczystość i jasność | **plik z przezroczystością → ostrz. i spłaszczenie na `#07060F`** (obraz ma być OPAQUE; w 1.0.0 z kodem Q03); [plan]: L\* całości 12–22, strefa bębnów 6–14 ([01 § 6.1](01-kierunek-artystyczny.md#61-zasady-ogólne)), wykryte pasma → dithering (info) | ostrz. / info | nieprzezroczystość zrobiona, jasność [plan] |
+| Q13 | elementy arkusza | liczba ≠ oczekiwanej po planach awaryjnych → błąd; użyty plan awaryjny → ostrz.; połączone rozbite elementy → info | błąd / ostrz. / info | zrobione |
+| Q14 | puste pola arkusza | `g_font_cyfry`: element w którymś z 2 ostatnich pól | ostrz. | zrobione |
+| Q15 | okno ramki | prostokątność ≥ 0,97 OK, 0,95–0,97 ostrz., < 0,95 błąd; proporcja ±3% OK, 3–15% ostrz., > 15% błąd; okno zamalowane → ostrz.; brak okna → błąd | ostrz. / błąd | zrobione |
+| Q16 | środek 9-slice | jednolity środek < 20% szerokości (panel: także wysokości) | błąd | zrobione |
+| Q17 | spójność zestawu symboli | pokrycie alfą w grupie poza ±12% po normalizacji; średnia L\* symbolu poza 45–75 ([01 § 6.1](01-kierunek-artystyczny.md#61-zasady-ogólne)) | ostrz. | [plan] (wyrównanie pokrycia działa w § 5.6, bez raportu) |
+| Q18 | kierunek światła (symbole) | środek ciężkości jasności przesunięty o > 2% w prawo **i** w dół względem środka ciężkości alfy | ostrz. | zrobione |
+| Q19 | kolor zgodny z ID | barwa dominująca poza zakresem dla ID (np. `cytryna` 40–70°, `szafir` 200–250°, `szmaragd` 120–170°, `ametyst` 260–300° — `#C77DFF` ma ok. 274°, `topaz` 25–50°, `rubin` 340–15°) → możliwa pomyłka nazwy | ostrz. | [plan] |
+| Q20 | powiększanie | @1x wymaga > ×1,25 → info; brak @2x → info; pominięty wariant szerokości tła → info; brak wariantu @1x tła → błąd | info / błąd | zrobione |
+| Q21 | jakość kodowania | PSNR < 38 dB (UI) / 36 dB (tła) / 34 dB (reszta) | ostrz. | [plan] |
+| Q22 | atlasy | strona > 2048² (`m`) / > 4096² (`d`) albo nakładanie ramek → błąd; wypełnienie < 70% → ostrz. | błąd / ostrz. | [plan] |
+| Q23 | budżety wagi | lobby ≤ 3 MB, gra ≤ 6 MB (§ 7.1, liczone pesymistycznie); desktop ≥ 85% → ostrz.; > 100% → błąd | ostrz. / błąd | zrobione (komunikat w konsoli i podsumowaniu, nie przy ID) |
+| Q24 | obraz LCP lobby | > 120 KB | ostrz. | [plan] |
+| Q25 | pojedynczy plik | > 450 KB (tła 2560 px) / > 300 KB (pozostałe) | ostrz. | [plan] |
+| Q26 | BitmapFont | brak którejś cyfry → błąd; cyfra (poza 3, 5, 9) odbiega od linii bazowej o > 2 px @1x → ostrz. | błąd / ostrz. | zrobione |
+| Q27 | czytelność symboli (testy T1–T5 z [01 § 5.2](01-kierunek-artystyczny.md#52-czytelność-pięć-testów)) | T2 automatycznie: para symboli jednej gry z jasnością różną o < 10% i podobną sylwetką (IoU sylwetek > 0,8) → ostrz.; T1, T3, T4, T5 — podglądy do oceny człowieka | ostrz. | [plan] |
+| Q28 | ikony | `favicon.ico` zawiera 16, 32 i 48 px; podglądy na jasnym i ciemnym tle | błąd / info | [plan] (ikony powstają, bez kontroli) |
+| Q29 | obraz OG | 1200×630, ≤ 250 KB, każdy znak hasła ma glif | ostrz. | [plan] |
+| Q30 | spójność wyników | każdy `src` / `src2x` z manifestu istnieje (brak → „BŁĄD Q30” w konsoli); pliki-sieroty w `assets/img/` → „UWAGA Q30” (usuwa `--sprzataj`); @2x = 2 × @1x gwarantuje konstrukcja (§ 5.7) | błąd / ostrz. | częściowo: tylko komunikat w konsoli, bez wpływu na kod wyjścia |
 
 ### 8.3. Co pokazuje strona raportu
 
-* **Nagłówek:** liczba błędów / ostrzeżeń / info, ile ID z ChatGPT, a ile zastępczych, paski budżetów (lobby, S1,
-  S2, S3 — telefon i desktop) i pamięci GPU.
-* **Karta obrazu** (pogrupowane według czatów 0–5): miniatura **na trzech tłach** — szachownica, `#07060F` i biel
-  (jasna obwódka jest widoczna na ciemnym, ciemna na jasnym), „przed / po” dla naprawy alfy, nałożony prostokąt
-  przycięcia i marginesu 6%, lista kontroli z wynikami, wymiary i waga każdego pliku wynikowego, współczynnik
-  skalowania.
+**Wersja 1.0.0** (`art/raport/raport.html`, ciemna strona w kolorach marki):
+
+* **Nagłówek:** podsumowanie (wersja pipeline'u, data, liczba błędów i ostrzeżeń, ile ID z ChatGPT, a ile
+  zastępczych) i budżety wagi lobby, S1, S2, S3 — desktop i telefon względem limitu.
+* **Karta każdego ID** (w kolejności katalogu, ramka żółta przy ostrzeżeniu, czerwona przy błędzie): źródło, rozmiar
+  @1x (z dopiskiem `+@2x`), łączna waga, lista uwag z kodami Q i **miniatura każdego pliku wynikowego @1x na trzech
+  tłach** — szachownica, `#07060F` i biel (jasna obwódka jest widoczna na ciemnym, ciemna na jasnym) — z nazwą
+  pliku i wagą.
+
+**[plan]** — kolejne elementy strony:
+
+* „przed / po” dla naprawy alfy, nałożony prostokąt przycięcia i marginesu 6%, współczynnik skalowania;
 * **Nakładki specjalne:** okno ramki z siatką pól i luzem 2%; ramka rozciągnięta do docelowej siatki; 9-slice
   w trzech rozmiarach (panel 320×200, 640×420, 1200×800; przycisk 160×56, 280×56, 420×72); siatka cięcia arkusza
   z numerami komórek; pasek wariantów symbolu (`ruch1`, `ruch2`, `syl`, `glow`, `cien`, `mini`).
@@ -1847,55 +1855,73 @@ człowieka), **info** (naprawiono automatycznie / do wiadomości).
 * **Tła:** kadry dla 7 proporcji ekranu ze strefami bezpiecznymi i strefą bębnów, wynik pomiaru L\*, LQIP
   i wersja `rozmyte`.
 * **Atlasy:** podgląd każdej strony z obrysami ramek i wypełnieniem w %.
-* **Pozostałe:** próbki BitmapFont, favicony 16/32 px w powiększeniu 400%, obraz OG, plakaty, podglądy makiet.
+* **Pozostałe:** próbki BitmapFont, favicony 16/32 px w powiększeniu 400%, obraz OG, plakaty, podglądy makiet,
+  wykresy budżetów i pamięci GPU.
 
 ### 8.4. Przykład wyniku w konsoli
 
+Format z `kroki/raport.py` (liczby przykładowe). Uwagi na poziomie info nie są drukowane w tabeli — są w raporcie;
+znacznik `!!` = błąd, `! ` = ostrzeżenie. Kod wyjścia zwraca proces (`echo $?`).
+
 ```text
-Cebulion Casino — pipeline grafiki 1.0.0
-Źródła: 34 × chatgpt, 51 × zastepcze (P1/P2 w drodze), makiety 8/8
-Przetworzono: 37 (z cache: 48) · czas 41 s
-BŁĘDY (1):
-  Q07  s1_sym_dzwonek     obiekt dotyka górnej krawędzi (uchwyt dzwonka) → ponowić prompt z poprawką „więcej marginesu” (03)
-OSTRZEŻENIA (3):
-  Q06  g_skrzynia         naprawiono fałszywą szachownicę (komórka 24 px, pewność 0,96) — sprawdź krawędzie
-  Q15  s1_ramka           okno 0,962 zamiast 1,000 (−3,8%) → rozciąganie pasów 9-slice
-  Q09  g_ui_spin          jasna obwódka +9 L* po korekcie → rozważ defringe = "mocny"
-Budżety: lobby 1,9/3 MB (63%) · S1 3,3/6 MB (55%)
-Raport: art/raport/raport.html
-Kod wyjścia: 2
+Cebulion Casino — pipeline grafiki 1.0.0: 85 assetów, 4 proc.
+
+ID                       źródło     rozmiar @1x                 waga  uwagi
+--------------------------------------------------------------------------------------------------------------
+  g_logo                 chatgpt    720×412 +@2x              184 KB  
+  g_emblemat             chatgpt    192×192 +@2x + ikony       52 KB  
+! g_skrzynia             chatgpt    480×480 +@2x              131 KB  Q06 naprawiono fałszywą szachownicę (pole 24.0 px, pewność 0.86)
+!!s1_sym_dzwonek         chatgpt    256×256 +@2x               41 KB  Q07 obiekt przycięty krawędzią obrazu
+! s1_ramka               chatgpt    1078×1078 okno 782×754    148 KB  Q15 proporcja okna 1.038 zamiast 1.000 (+3.8%) → rozciąganie pasów 9-slice
+  s2_sym_10              zastepcze  192×192 +@2x               28 KB  
+  …
+--------------------------------------------------------------------------------------------------------------
+Źródła: 34 × chatgpt, 51 × zastepcze, 0 × brak źródła · czas 74 s
+Budżety wagi (brief § 5; desktop = @2x i tło 2560 px, telefon = @1x i tło mobile):
+  lobby  desktop 3,48 MB (116%) · telefon 1,62 MB (54%) · limit 3,00 MB → PRZEKROCZONY
+  s1     desktop 3,05 MB (51%) · telefon 1,91 MB (32%) · limit 6,00 MB → OK
+  s2     desktop 3,92 MB (65%) · telefon 2,40 MB (40%) · limit 6,00 MB → OK
+  s3     desktop 3,60 MB (60%) · telefon 2,21 MB (37%) · limit 6,00 MB → OK
+BŁĄD Q23: budżet lobby przekroczony
+Błędy: 2, ostrzeżenia: 2. Raport: art/raport/raport.html
 ```
+
+W przykładzie widać fałszywy alarm z § 7.4: lobby „przekroczone” przez pesymistyczne liczenie (oba tła, plakaty
+`k169`, WebP zamiast AVIF) — sprawdzamy ręcznie, ile pobiera przeglądarka desktopowa, zanim cokolwiek obetniemy.
 
 ### 8.5. Fragment `raport.json`
 
 ```json
 {
-  "pipeline": "1.0.0",
-  "uruchomienie": "2026-10-12T18:04:11Z",
-  "podsumowanie": { "bledy": 1, "ostrzezenia": 3, "info": 12, "chatgpt": 34, "zastepcze": 51 },
+  "podsumowanie": { "pipeline": "1.0.0", "uruchomienie": "2026-10-12T18:04:11Z", "bledy": 2, "ostrzezenia": 2,
+                    "chatgpt": 34, "zastepcze": 51 },
+  "budzety": { "lobby": { "desktop": 3480123, "telefon": 1620442, "limit": 3000000 }, "…": {} },
   "obrazy": {
     "g_skrzynia": {
-      "zrodlo": "art/zrodla/global/g_skrzynia.png",
-      "sha256": "9b1c…",
-      "kontrole": [
-        { "nr": "Q06", "poziom": "ostrzezenie", "wynik": "szachownica naprawiona", "komorka_px": 24, "pewnosc": 0.96 },
-        { "nr": "Q08", "poziom": "ok", "margines_proc": 7.1, "wypelnienie_proc": 83.4 }
-      ],
-      "wyniki": { "g_skrzynia.webp": 44812, "g_skrzynia@2x.webp": 128930, "g_skrzynia.glowzl.webp": 7311 }
+      "id": "g_skrzynia",
+      "zrodlo": "chatgpt",
+      "plik_zrodla": "art/zrodla/global/g_skrzynia.png",
+      "rozmiar": "480×480 +@2x",
+      "waga": 172560, "waga_desktop": 129105, "waga_telefon": 50766,
+      "pliki": { "global/g_skrzynia.webp": 43455, "global/g_skrzynia@2x.webp": 121794, "global/g_skrzynia.glowzl.webp": 7311 },
+      "uwagi": [ ["ostrzezenie", "Q06", "naprawiono fałszywą szachownicę (pole 24.0 px, pewność 0.86)"] ],
+      "metoda_alfy": "szachownica"
     }
-  },
-  "budzety": { "lobby": { "telefon": 980123, "desktop": 1990442, "limit": 3000000 } }
+  }
 }
 ```
+
+`uruchomienie` = `manifest.version` z tego przebiegu. `raport.json` z poprzedniego przebiegu jest czytany przy
+`--tylko`, żeby budżety obejmowały też assety, których tym razem nie przetwarzano.
 
 ### 8.6. Co robimy z wynikiem
 
 | Wynik | Działanie |
 |---|---|
 | Błąd w obrazie z ChatGPT | prosimy o ponowne wygenerowanie z gotową poprawką promptu (03); do tego czasu zostaje grafika zastępcza albo poprzednia wersja |
-| Ostrzeżenie | oglądamy kartę w raporcie; jeśli wygląda dobrze — akceptujemy (wpis `akceptuj = ["Q09"]` w `manifest.toml`, żeby nie wracało); jeśli nie — korekta parametru albo nowa wersja obrazu |
+| Ostrzeżenie | oglądamy kartę w raporcie; jeśli wygląda dobrze — akceptujemy i zapisujemy to w opisie commita (ostrzeżenie wróci przy kolejnym przebiegu; trwała akceptacja `akceptuj = ["Q09"]` w `manifest.toml` — [plan]); jeśli nie — zmiana parametru `cel` w `katalog.py` albo nowa wersja obrazu |
 | Info | nic — informacja, co pipeline naprawił sam |
-| Budżet ≥ 85% | przegląd największych plików (raport sortuje je malejąco) i środki z § 7.4 |
+| Budżet ≥ 85% | przegląd największych plików (`pliki` w `raport.json` z wagą każdego pliku; sortowanie w raporcie HTML — [plan]) i środki z § 7.4; najpierw sprawdzamy, czy to nie skutek pesymistycznego liczenia (§ 7.1) |
 
 ---
 
@@ -1903,16 +1929,19 @@ Kod wyjścia: 2
 
 | # | Kwestia | Skutek | Co robimy / plan B |
 |---|---|---|---|
-| 1 | ChatGPT daje maks. 1536 px | ramki, tła, napisy wygranych mają obniżone @2x (`@2x↓`); `s1_ramka` bez @2x; tła na 4K miękkie | świadomie akceptujemy (01 § 6.4); plan B: upscaler AI offline (np. Real-ESRGAN) — nie zakładamy, że zadziała, sprawdzimy przed użyciem |
-| 2 | Przezroczystość z ChatGPT bywa fałszywa (szachownica, jednolite tło) | gorsza krawędź po automatycznej naprawie, zwłaszcza przy półprzezroczystej poświacie | § 5.3–5.4; prompty (03) wymagają zwartej poświaty (01 § 4.5); przy pewności < 0,80 — ponowne generowanie |
-| 3 | Dryf stylu między czatami | niespójny zestaw | kotwice stylu (01 § 1.4), kontrole Q17–Q19, stykówki; ostatecznie decyduje człowiek |
-| 4 | Rozszerzenia kontraktu 09 (`atlases`, `variants`, `widths`, `avif`, `bundles`, `fonts`, `focus`, `lqip`, `tint`, `pole`) | front musi je znać, żeby korzystać z atlasów i wariantów | są addytywne — klient znający tylko 09 nadal działa (`src` / `src2x`); do wpisania w 09 po akceptacji front-endu |
+| 1 | ChatGPT daje maks. 1536 px | w 1.0.0 ramki i napisy wygranych nie mają @2x (§ 2.5–2.6); tła mają @2x 2560 px (×1,67); tła na 4K miękkie | świadomie akceptujemy (01 § 6.4); obniżone @2x dla ramki S2 i napisów — [plan]; plan B: upscaler AI offline (np. Real-ESRGAN) — nie zakładamy, że zadziała, sprawdzimy przed użyciem |
+| 2 | Przezroczystość z ChatGPT bywa fałszywa (szachownica, jednolite tło) | gorsza krawędź po automatycznej naprawie, zwłaszcza przy półprzezroczystej poświacie | § 5.3–5.4 (zrobione, 4 testy); prompty (03) wymagają zwartej poświaty (01 § 4.5), plan B z kolorem klucza (03 § 10); przy pewności szachownicy < 0,80 i nieudanym usunięciu tła — ponowne generowanie |
+| 3 | Dryf stylu między czatami | niespójny zestaw | kotwice stylu (01 § 1.4), karty w raporcie oglądane grami; automatyczne kontrole Q17, Q19 i stykówki — [plan]; ostatecznie decyduje człowiek |
+| 4 | Rozszerzenia kontraktu 09: w 1.0.0 `pipeline`, `hash`, `variants`, `widths`, `focus`, `lqip`, `tint`, `pole`, `frames.<ID>.nineSlice`, `fonts`, `icons`; w planie `atlas`/`atlases`, `avif`, `bundles` | front musi je znać, żeby korzystać z wariantów, teł i cyfr | są addytywne — klient znający tylko 09 nadal działa (`src` / `src2x`); do wpisania w 09 po akceptacji front-endu (tabela pól w § 5.22) |
 | 5 | Szczegóły Pixi 8 do potwierdzenia na wendorowanej wersji | `meta.related_multi_packs`, skala `@0.5x` z nazwy, `@2x` w BitmapFont, API `NineSliceSprite` | dla każdego jest plan B opisany w § 5.9 i § 5.14 (osobne wpisy w manifeście `Assets`, jawne `meta.scale`, `fontSize`) |
-| 6 | Lobby na desktopie ok. 81% budżetu (szacunek) | ostrzeżenie Q23 możliwe po prawdziwej dostawie | środki z § 7.4 |
+| 6 | Budżet lobby: szacunek ok. 81% z AVIF, ok. 92% z samym WebP (1.0.0); raport 1.0.0 liczy pesymistycznie i może pokazać > 100% | ostrzeżenie albo **fałszywy błąd Q23** (kod wyjścia 2) przy prawdziwej dostawie | § 7.4: poprawa liczenia (jedna orientacja tła, `k169` poza lobby) — [plan]; środki zaradcze z § 7.4 (AVIF najpierw) |
 | 7 | Szacunki wag ±30% | liczby w § 7 mogą się przesunąć | prawdziwe wartości z raportu po pierwszej paczce; tabele w § 7 zaktualizujemy |
-| 8 | Wideo w lobby (kodowanie, budżet, proporcje kafli) | brak ustaleń w tym dokumencie | plakaty są gotowe (§ 5.18); wideo opisze 06/08 |
-| 9 | Surowe PNG na `main` | repozytorium +200 MB na zawsze (historia git) | gałąź `grafika-zrodla` (§ 4.4); przepisywania historii nie planujemy (zepsułoby forki) |
-| 10 | Normalizacja maskotki i monet jest heurystyczna | możliwe drobne różnice wielkości między pozami / klatkami | ręczne `skala` / `przesuniecie` po obejrzeniu raportu |
+| 8 | Wideo w lobby (kodowanie, budżet, proporcje kafli) | brak ustaleń w tym dokumencie | plakaty `k169` są gotowe (§ 5.18); wideo opisze 06/08 |
+| 9 | Surowe PNG na `main` | repozytorium +200 MB na zawsze (historia git) | gałąź `grafika-zrodla` (§ 4.4); wpisy `art/zrodla/` i `art/raport/` w `.gitignore` na `main` — **jeszcze do dopisania**; przepisywania historii nie planujemy (zepsułoby forki) |
+| 10 | Normalizacja maskotki i monet jest heurystyczna | możliwe drobne różnice wielkości między pozami / klatkami | w 1.0.0 maskotka tylko dopasowana wysokością; korekta = zmiana `cel` w `katalog.py`; ręczne `skala` / `przesuniecie` per obraz — [plan] (`manifest.toml`) |
+| 11 | Pipeline 1.0.0 pomija po cichu pliki o złej nazwie albo w złym folderze (brak Q02) | obraz od właściciela „nie działa”, a w manifeście zostaje grafika zastępcza | po każdej paczce porównujemy listę ID z wiadomości z licznikiem `chatgpt` w raporcie (§ 4.6); Q02 — [plan] |
+| 12 | Część opisu § 5 i § 8 to [plan] (atlasy, AVIF, OG, cache, `manifest.toml`, ok. połowa kontroli Q) | nie wolno zakładać tych funkcji przy pracy nad frontem ani na obronie | zestawienie w § 5.0 i kolumna „1.0.0” w § 8.2; kolejność wdrażania: AVIF i poprawne liczenie Q23 (lobby) → Q02 → atlasy (S2) → reszta |
+| 13 | Komunikaty Q30 (brak pliku z manifestu) nie zmieniają kodu wyjścia | uszkodzony wynik może przejść z kodem 0 | czytamy konsolę przed commitem; doliczenie Q30 do błędów — [plan] |
 
 ---
 
@@ -1927,5 +1956,7 @@ Kod wyjścia: 2
 * [06-interfejs-ux.md](06-interfejs-ux.md) — ekrany, komponenty HTML (9-slice, ikony, cyfry), wybór wersji teł.
 * [08-wydajnosc-i-jakosc.md](08-wydajnosc-i-jakosc.md) — poziomy jakości, wybór @1x/@2x, pamięć GPU, pomiary.
 * [09-kontrakt-api-i-assetow.md](09-kontrakt-api-i-assetow.md) — kontrakt `assets/img/` i `manifest.json`.
+* [../../tools/art/przetworz.py](../../tools/art/przetworz.py) i [../../tools/art/katalog.py](../../tools/art/katalog.py)
+  — pipeline opisany w § 5 i lista 85 assetów z parametrami.
 * [../plan-projektu.md](../plan-projektu.md) — plan całego projektu (nagrania wideo do lobby: § 9).
 

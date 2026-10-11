@@ -27,7 +27,9 @@ export class ApiError extends Error {
 
   /** Buduje błąd z odpowiedzi serwera; gdy brak pola `code`, wyprowadza je ze statusu. */
   static fromResponse(status, body) {
-    const fallback = status === 401 ? 'NOT_LOGGED_IN' : status === 404 ? 'NOT_FOUND' : status >= 500 ? 'INTERNAL_ERROR' : 'HTTP_' + status;
+    // brak pola `code` (np. błąd z serwera pośredniczącego, nie z naszego backendu) → kod wyprowadzony ze statusu
+    const fallback = status === 401 ? 'NOT_LOGGED_IN' : status === 404 ? 'NOT_FOUND' : status === 503 ? 'SERVICE_UNAVAILABLE'
+      : status >= 500 ? 'INTERNAL_ERROR' : 'HTTP_' + status;
     return new ApiError({
       status,
       code: body?.code ?? fallback,
@@ -100,7 +102,11 @@ export const api = {
   bigWins: (limit = 10) => request('GET', `feed/big-wins?limit=${limit}`),
 };
 
-/** Teksty dla gracza do kodów błędów (po polsku, w tonie marki — 01 §2.8). */
+/**
+ * Teksty dla gracza do kodów błędów (po polsku, w tonie marki — 01 §2.8).
+ * Pierwsze dziesięć to tabela z kontraktu 09 § 1; kolejne backend dodał ponad kontrakt
+ * (pl.wsb.kasyno.shared.error.ErrorCode) — obsługujemy je, żeby gracz nie zobaczył pustego komunikatu.
+ */
 const MESSAGES = {
   NICK_INVALID: 'Nazwa gracza musi mieć 3–16 znaków: litery (także polskie), cyfry, „_” lub „-”.',
   NICK_FORBIDDEN: 'Ta nazwa gracza jest niedozwolona. Wybierz inną.',
@@ -114,10 +120,16 @@ const MESSAGES = {
   NETWORK_ERROR: 'Brak połączenia z serwerem gry. Sprawdź, czy aplikacja działa, i spróbuj ponownie.',
   TIMEOUT: 'Serwer nie odpowiada. Spróbuj ponownie za chwilę.',
   INTERNAL_ERROR: 'Coś poszło nie tak po stronie serwera. Spróbuj ponownie.',
+  GAME_NOT_READY: 'Ten automat jest jeszcze w przygotowaniu. Wybierz inny albo zajrzyj później.',
+  CONCURRENT_REQUEST: 'Poprzednie żądanie jeszcze trwa. Spróbuj ponownie za chwilę.',
+  SERVICE_UNAVAILABLE: 'Serwer jest chwilowo niedostępny. Spróbuj ponownie za chwilę.',
+  NOT_FOUND: 'Nie znaleziono zasobu na serwerze.',
+  METHOD_NOT_ALLOWED: 'Serwer nie obsługuje tego żądania.',
 };
 
 /** Komunikat dla gracza: znany kod → nasz tekst; nieznany → opis z serwera albo tekst ogólny. */
 export function messageFor(error) {
-  if (error instanceof ApiError) return MESSAGES[error.code] ?? error.detail ?? MESSAGES.INTERNAL_ERROR;
+  // `||`, a nie `??`: ApiError trzyma brak opisu jako pusty tekst, a pusty komunikat nic graczowi nie mówi
+  if (error instanceof ApiError) return MESSAGES[error.code] || error.detail || error.title || MESSAGES.INTERNAL_ERROR;
   return MESSAGES.INTERNAL_ERROR;
 }
