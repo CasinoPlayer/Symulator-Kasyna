@@ -12,12 +12,15 @@ w [03-prompty-chatgpt.md](03-prompty-chatgpt.md), wymagania stylu w [01-kierunek
 a kontrakt plików wynikowych (`assets/img/...`, `manifest.json`) w [09-kontrakt-api-i-assetow.md](09-kontrakt-api-i-assetow.md).
 
 **Stan pipeline'u.** § 5–8 opisują to, co **naprawdę robi** `tools/art/przetworz.py` w wersji **1.0.0**
-(lista assetów i parametry: `tools/art/katalog.py`). Elementy zaprojektowane, ale jeszcze niezaimplementowane, mają
-znacznik **[plan]** — zostawiamy ich opis, bo mówi, dokąd zmierzamy i dlaczego, ale nie wolno na nich polegać
-(zestawienie: § 5.0, tabela „Co jest w wersji 1.0.0”).
+(lista assetów i parametry: `tools/art/katalog.py`) po recenzji z przetwarzania prawdziwych obrazów z ChatGPT
+(2026-10-11): budżety wagi liczone osobno dla orientacji, kontrole Q02/Q04/Q07/Q09/Q11/Q15/Q30 w wersji z kodu,
+wycinanie dziur w kolorze tła, korekta proporcji okien ramek, neutralizacja koloru efektów. Elementy zaprojektowane,
+ale jeszcze niezaimplementowane, mają znacznik **[plan]** — zostawiamy ich opis, bo mówi, dokąd zmierzamy i dlaczego,
+ale nie wolno na nich polegać (zestawienie: § 5.0, tabela „Co jest w wersji 1.0.0”). Stan dostaw: § 0.
 
 ## Spis treści
 
+0. [Stan: 93/93 obrazów z ChatGPT dostarczone](#0-stan-9393-obrazów-z-chatgpt-dostarczone-g_win_epic-do-poprawy-artzrodla_do-poprawy)
 1. [Podsumowanie liczbowe](#1-podsumowanie-liczbowe)
 2. [Konwencje](#2-konwencje)
 3. [Pełny manifest obrazów](#3-pełny-manifest-obrazów)
@@ -30,6 +33,54 @@ znacznik **[plan]** — zostawiamy ich opis, bo mówi, dokąd zmierzamy i dlacze
 10. [Powiązane dokumenty](#powiązane-dokumenty)
 
 ---
+
+## 0. Stan: 93/93 obrazów z ChatGPT dostarczone; `g_win_epic` do poprawy (`art/zrodla/_do-poprawy/`)
+
+Stan na 2026-10-11 (ostatnie pełne przetworzenie: `manifest.json` → `version` `2026-10-11T15:39:52Z`, pipeline 1.0.0).
+
+**Dostawy.** Wszystkie 93 obrazy z ChatGPT są w repozytorium, w `art/zrodla/` (ok. 156 MB PNG):
+
+| Folder | Plików | Uwagi |
+|---|---:|---|
+| `makiety/` | 8 | referencje stylu, pipeline ich nie przetwarza |
+| `global/` | 30 | 31 ID `g_*` — `g_win_epic` czeka w `_do-poprawy/` |
+| `s1/` | 14 | komplet |
+| `s2/` | 22 | komplet |
+| `s3/` | 18 | komplet |
+| `_do-poprawy/` | 1 | `g_win_epic_EIG-zamiast-EPIC.png` (+ `README.md` z promptem poprawkowym) |
+| **Razem** | **93** | 8 makiet + 84 assety w folderach pakietów + 1 asset do poprawy |
+
+**W aplikacji** (`static/assets/img/manifest.json`): **84 assety z `source: "chatgpt"`** i 1 z `source: "zastepcze"`
+(`g_win_epic`). Foldery zaczynające się od `_` pipeline świadomie pomija (§ 5.1), więc wadliwy obraz nie trafi do gry,
+dopóki nie będzie poprawiony.
+
+**`g_win_epic` — co zrobić.** Górne słowo na obrazie to „EIG” zamiast „EPIC” (złapane w przeglądzie raportu, nie przez
+automatyczną kontrolę — czytelności napisów pipeline nie sprawdza). Prompt poprawkowy (edycja załączonego obrazu) jest
+w `art/zrodla/_do-poprawy/README.md`. Po poprawce:
+
+```bash
+# zapisz poprawiony plik jako art/zrodla/global/g_win_epic.png (stary możesz usunąć z _do-poprawy/)
+python3 tools/art/przetworz.py --tylko g_win_epic
+# w manifest.json: images.g_win_epic.source = "chatgpt"; commit static/assets/img/
+```
+
+**Wynik ostatniego przebiegu** (`art/raport/raport.json`, szczegóły kontroli w § 8.2):
+
+| Pozycja | Wynik |
+|---|---|
+| błędy | **0** |
+| ostrzeżenia do obejrzenia w raporcie | Q07 „czubek” przy krawędzi (≤ 1,5% boku): `s1_sym_cytryna`, `s2_sym_scatter`, `g_win_ultra`, `s1_ramka`, `s3_ramka` · Q15 korekta proporcji okna wszystkich trzech ramek (§ 5.12), przy S2 i S3 dodatkowo „rozciągnięty pas nie jest jednolity” · Q26 cyfra „1” odchylona od linii bazowej o 2,5 px @1x · Q23 budżet lobby 86% (próg ostrzeżenia 85%) |
+| ramki @1x po korekcie okna | `s1_ramka` 1210×1318 (okno 769×768, było 1,238 : 1 → 1 : 1), `s2_ramka` 1340×880 (okno 960×577, 1,862 → 5 : 3), `s3_ramka` 1190×1258 (okno 864×721, 1,330 → 6 : 5); żadna nie ma @2x (wymagałoby powiększenia ×1,8–2,4) |
+| budżety (desktop / telefon, § 7.1) | lobby **2,58 MB (86%)** / 1,14 MB (38%) · S1 3,55 MB (59%) / 2,32 MB (39%) · S2 4,64 MB (77%) / 2,89 MB (48%) · S3 4,67 MB (78%) / 2,93 MB (49%); limity: lobby 3 MB, gra 6 MB |
+| pliki w `static/assets/img/` | ok. 26 MB na dysku (wszystkie warianty, tylko WebP) |
+
+**Uwagi dla front-endu z recenzji** (wszystko jest w manifeście — front niczego nie zakłada „na sztywno”):
+* okna ramek mają **dokładnie** proporcję siatki bębnów, ale same ramki nie są kwadratowe ani 3 : 2 (np. `s1_ramka`
+  1210×1318) — geometrię bierzemy z `frames.<ID>.window` i `frames.<ID>.nineSlice`;
+* `g_logo` nie ma `src2x` (źródło za małe na @2x bez powiększenia ponad ×1,25) — front używa `src`;
+* efekty (`g_fx_*`, `s2_fx_hieroglify`) są ciepłobiałe (`blend: "add"`), kolor nadaje kod przez `tint`
+  ([04 § 2.3](04-efekty-wizualne.md)) — pipeline sprowadza kolorowe efekty z ChatGPT do ciepłej bieli (§ 5.11);
+* budżet lobby 86%: najprostsza rezerwa to AVIF w `<picture>` dla tła lobby i okładek ([plan], § 5.8, § 7.4).
 
 ## 1. Podsumowanie liczbowe
 
@@ -122,10 +173,10 @@ z arkuszy = **153 obrazach bazowych** (zanim powstaną warianty @2x, rozmycia ru
 
 | Wielkość | Wartość |
 |---|---|
-| Surowe PNG z ChatGPT (93 pliki) | ≈ 180–260 MB (1–3,5 MB na plik) — dlatego trzymamy je poza gałęzią `main` (§ 4.4) |
-| Pliki wynikowe w `static/assets/img/` | wersja 1.0.0 (tylko WebP, pliki pojedyncze): ≈ 15–20 MB; docelowo z AVIF i atlasami **[plan]**: ≈ 20–28 MB |
-| Gra S1 / S2 / S3 — to, co pobiera przeglądarka (najgorszy przypadek: desktop, @2x) | ≈ 3,3 / 4,0 / 3,6 MB (budżet ≤ 6 MB; szacunek § 7, prawdziwe liczby liczy raport — Q23) |
-| Lobby bez wideo (desktop, @2x, ze wszystkim doładowywanym na żądanie) | ≈ 2,4 MB z AVIF, ≈ 2,7 MB z samym WebP (wersja 1.0.0) — budżet ≤ 3 MB; uwaga: raport 1.0.0 liczy lobby pesymistycznie i może zgłosić Q23 (§ 7.4) |
+| Surowe PNG z ChatGPT (93 pliki) | zmierzone: ok. 156 MB w `art/zrodla/` (szacunek był 180–260 MB); decyzja zespołu: źródła zostają w repozytorium (§ 4.4) |
+| Pliki wynikowe w `static/assets/img/` | wersja 1.0.0 (tylko WebP, pliki pojedyncze, wszystkie warianty): zmierzone ok. 26 MB na dysku; z AVIF i atlasami **[plan]** więcej |
+| Gra S1 / S2 / S3 — to, co pobiera przeglądarka (najgorszy przypadek: desktop, @2x) | zmierzone przez raport (Q23): **3,55 / 4,64 / 4,67 MB** (budżet ≤ 6 MB); telefon 2,32 / 2,89 / 2,93 MB |
+| Lobby bez wideo (desktop, @2x, ze wszystkim doładowywanym na żądanie) | zmierzone: **2,58 MB (86% budżetu 3 MB)** z samym WebP — ostrzeżenie Q23 (próg 85%); telefon 1,14 MB; rezerwa: AVIF **[plan]** (§ 7.4) |
 | Atlasy tekstur Pixi | **[plan]** 20 atlasów (każdy = WebP + JSON), strony ≤ 2048 px na telefonach, ≤ 4096 px na desktopie (§ 5.9); w 1.0.0 scena Pixi ładuje pliki pojedyncze |
 
 ---
@@ -204,12 +255,16 @@ plus boki ramy ~10% dawałyby 100% szerokości i łamały wymóg briefu „margi
 mieści się więc w 88% kadru, czyli w marginesie 6% z każdej strony, a proporcje okien (1:1, 5:3, 6:5) zostają
 dokładne. Liczby są zgodne z [01](01-kierunek-artystyczny.md) (§ 10.8, § 11.8) i promptami w 03.
 
-Odchyłka proporcji 3–15% → pipeline zgłasza ostrzeżenie Q15, a front dopasowuje ramkę rozciągnięciem pasów 9-slice
-(`NineSliceSprite` z marginesami z `frames.<ID>.nineSlice`); > 15% → błąd Q15, obraz do ponownego wygenerowania
-(szczegóły w § 5.12). Sam pipeline ramki nie rozciąga — tylko ją mierzy, skaluje i opisuje w manifeście.
+Odchyłka proporcji > 3% → pipeline **sam koryguje ramkę**: rozciąga najbardziej jednolity pas jej boków (z ominięciem
+ornamentów i wajchy S1), aż okno ma dokładnie proporcję siatki, i zgłasza to ostrzeżeniem Q15 do obejrzenia w raporcie
+(§ 5.12 pkt 5). Gdy na korektę brakuje miejsca — błąd Q15, obraz do ponownego wygenerowania. Front dostaje okno
+o właściwej proporcji w `frames.<ID>.window` i niczego nie rozciąga. W praktyce (2026-10-11) **wszystkie trzy ramki
+z ChatGPT wymagały korekty** (okna 1,238 / 1,862 / 1,330 zamiast 1,000 / 1,667 / 1,200), więc ramki @1x mają inne
+proporcje niż kadr źródła (np. `s1_ramka` 1210×1318).
 
-Skala ramki `s` wynika z okna (okno @1x : okno w źródle): S1 ≈ 768/640 = 1,20, S2 ≈ 960/1075 = 0,89,
-S3 ≈ 864/717 = 1,20 — wszystkie w limicie powiększenia ×1,25 dla @1x. Pipeline 1.0.0 robi @2x tylko wtedy, gdy
+Skala ramki `s` wynika z okna (okno @1x : okno w źródle): przy oknach z promptu S1 ≈ 768/640 = 1,20, S2 ≈ 960/1075 =
+0,89, S3 ≈ 864/717 = 1,20 — wszystkie w limicie powiększenia ×1,25 dla @1x. Prawdziwe ramki z ChatGPT wyszły podobnie:
+@2x wymagałoby powiększenia ×2,40 / ×1,78 / ×2,33 (raport: info Q20 „bez @2x”), czyli @1x to ×1,20 / ×0,89 / ×1,17. Pipeline 1.0.0 robi @2x tylko wtedy, gdy
 wymaga ono powiększenia źródła najwyżej ×1,25 (`2·s ≤ 1,25`, § 2.6), więc **wszystkie trzy ramki mają tylko @1x**
 (S2: @2x wymagałoby ×1,79). Obniżone @2x (≤ ×1,25 względem źródła) ma sens tylko dla S2 — ok. 1690 px szerokości
 zamiast ≈ 1200 px @1x — i jest **[plan]**; dla S1 i S3 byłoby najwyżej ~4% większe od @1x (poniżej progu 1,15× z § 2.6), więc nie powstanie.
@@ -288,12 +343,13 @@ Lista wariantów pochodnych (opis w § 5):
 
 ```text
 art/                              ← poza src/, więc nie trafia do pliku JAR aplikacji
-├── zrodla/                       ← PNG od Was (gałąź grafika-zrodla, § 4.4)
+├── zrodla/                       ← PNG od Was (w repozytorium, ok. 156 MB, § 4.4)
 │   ├── makiety/   m01_lobby_desktop.png … m08_big_win.png
 │   ├── global/    g_logo.png … g_fx_konfetti.png
 │   ├── s1/        s1_sym_wisnie.png … s1_baner.png
 │   ├── s2/        s2_sym_10.png … s2_fx_hieroglify.png
 │   ├── s3/        s3_sym_szafir.png … s3_fx_odlamki.png
+│   ├── _do-poprawy/              ← obrazy odłożone do poprawy (+ README z promptem) — pipeline ich NIE czyta (§ 0)
 │   └── nieposortowane/           ← pliki o nieznanych nazwach (§ 4.6) — pipeline ich NIE czyta
 ├── zastepcze/                    ← grafika zastępcza, generowana skryptem (kontrakt 09); te same podfoldery
 │   └── _render/                  ← pośrednie rendery Blendera dla generatorów (nie trafiają do aplikacji)
@@ -304,8 +360,10 @@ src/main/resources/static/assets/img/   ← wynik dla przeglądarki, § 6
 ```
 
 Pipeline szuka źródła **tylko** w folderze swojego pakietu (prefiks ID: `g_` → `global/`, `s1_` → `s1/` itd.).
-Plik w złym folderze albo pod nazwą, która nie jest ID, jest pomijany bez komunikatu — wtedy w raporcie to ID
-dalej ma źródło `zastepcze` (kontrola nazw Q02 to [plan], § 4.6). Folder `makiety/` pipeline 1.0.0 pomija w ogóle.
+Plik w złym folderze albo pod nazwą, która nie jest ID, nie zostanie użyty (w raporcie to ID dalej ma źródło
+`zastepcze`), ale pipeline zgłasza go ostrzeżeniem Q02 z podpowiedzią poprawnej nazwy lub folderu (§ 4.6). Foldery
+`makiety/`, `nieposortowane/` i zaczynające się od `_` (np. `_do-poprawy/` na obrazy odłożone do poprawy) pipeline
+pomija w ogóle, bez ostrzeżeń.
 
 ---
 
@@ -554,7 +612,7 @@ każda zostaje w historii repozytorium na zawsze.
 | wysyłka przez Messengera / WhatsAppa / Discorda jako zdjęcie | komunikatory kompresują do JPEG i usuwają przezroczystość |
 | otwieranie i zapisywanie w Paint / Zdjęciach / edytorach online | ponowny zapis potrafi spłaszczyć alfę albo zmienić profil kolorów |
 | konwersja do JPG / WebP, „optymalizatory” typu TinyPNG | stratna kwantyzacja palety niszczy gradienty złota; kompresją zajmuje się pipeline |
-| zmiana samego rozszerzenia (`.webp` → `.png`) | plik dalej jest (często stratnym) WebP; pipeline go odczyta (Pillow rozpoznaje format po zawartości), ale wersja 1.0.0 sprawdza tylko rozszerzenie, więc **nie ostrzeże** — kontrola sygnatury pliku to [plan] (Q04) |
+| zmiana samego rozszerzenia (`.webp` → `.png`) | plik dalej jest (często stratnym) WebP; pipeline go odczyta (Pillow rozpoznaje format po zawartości) i zgłosi info Q04 „plik .png jest naprawdę w formacie WEBP” (kontrola po sygnaturze); JPEG jako obraz `ALFA` → ostrzeżenie Q04 |
 
 ### 4.4. Sposób A: commit do repozytorium (zalecany)
 
@@ -608,9 +666,14 @@ python3 tools/art/przetworz.py --zrodla ../kasyno-grafika/art/zrodla
 gałąź nie może być jednocześnie wybrana w dwóch kopiach roboczych — w głównej kopii pracuj na `main`.
 
 Na `main` w `.gitignore` muszą być wpisy `art/zrodla/` i `art/raport/`, żeby nikt przypadkiem nie dodał 200 MB do
-głównej gałęzi lokalnym `git add .`. **Stan na dziś: tych wpisów jeszcze nie ma** — dopisujemy je przed pierwszą
-dostawą (wtedy w gałęzi `grafika-zrodla` potrzebne jest `git add -f`, jak w przykładzie). `.gitignore` nie blokuje
-przesyłania przez stronę GitHub, dlatego przy sposobie przez przeglądarkę trzeba wybrać gałąź `grafika-zrodla`.
+głównej gałęzi lokalnym `git add .`. `.gitignore` nie blokuje przesyłania przez stronę GitHub, dlatego przy sposobie
+przez przeglądarkę trzeba wybrać gałąź `grafika-zrodla`.
+
+**Jak było w praktyce (2026-10-11).** Paczki 1–7 trafiły do `art/zrodla/` na gałęzi roboczej projektu (przez
+przeglądarkę i git), a zespół zdecydował, że **źródła zostają w repozytorium** — pipeline musi dać się powtórzyć na
+każdej kopii (ok. 156 MB, § 1.5). W `.gitignore` są więc `art/raport/`, `art/robocze/` i `art/zastepcze/` (pliki
+odtwarzalne skryptami), a **nie** ma `art/zrodla/`. Opisana wyżej gałąź `grafika-zrodla` i `--zrodla ../kasyno-grafika/…`
+zostają jako wariant na wypadek, gdyby rozmiar repozytorium zaczął przeszkadzać.
 
 ### 4.5. Sposób B: załącznik w czacie
 
@@ -626,8 +689,13 @@ przesyłania przez stronę GitHub, dlatego przy sposobie przez przeglądarkę tr
 
 To normalne przy 93 plikach. Nie musisz niczego poprawiać ręcznie — **rozpoznamy obrazy wizualnie**.
 
-**Jak to działa dziś (pipeline 1.0.0).** Pipeline czyta wyłącznie pliki `<ID>[.vN].png` w folderze swojego pakietu;
-każdy inny plik po cichu pomija. Dlatego nazwy porządkujemy my, **przed** uruchomieniem pipeline'u:
+**Jak to działa dziś (pipeline 1.0.0).** Pipeline czyta wyłącznie pliki `<ID>[.vN].(png|webp|jpg|jpeg)` w folderze
+swojego pakietu. Każdy inny plik w `art/zrodla/` (literówka, zły folder, dopisek „ (1)” albo „ copy” przy pobieraniu,
+podwójne `.png.png`) zgłasza w konsoli i w `raport.json → podsumowanie.nieznane_pliki` jako **ostrzeżenie Q02**
+z podpowiedzią poprawnej nazwy albo folderu (`difflib`, funkcja `nieznane_pliki` w `przetworz.py`), np.
+`global/s1_sym_wild.png: zły folder — przenieś do art/zrodla/s1/s1_sym_wild.png` albo
+`s1/s1_sym_wisnia.png: plik zostanie pominięty — czy chodzi o: s1_sym_wisnie.png?`. Foldery `makiety/`, `nieposortowane/` i zaczynające się od `_` są pomijane bez ostrzeżeń.
+Samo przypisanie ID do obrazu o nieznanej nazwie robimy jednak ręcznie, **przed** uruchomieniem pipeline'u:
 
 1. Pliki o nieznanych nazwach wrzuć do `art/zrodla/nieposortowane/` (albo przyślij w ZIP-ie bez sortowania).
 2. Otwieramy folder w widoku dużych miniatur i przypisujemy ID, korzystając z: formatu (1:1 / 3:2 / 2:3), typu tła
@@ -652,9 +720,9 @@ każdego nieznanego pliku miniatura i **3 najbardziej prawdopodobne ID**, wylicz
 "ChatGPT Image 12 paź 2026, 14_05_10.png" = "s2_sym_faraon"
 ```
 
-W tym samym planie: kontrola nazw Q02 (raport wymienia każdy plik, który nie jest ID), stykówka zestawu (wszystkie
-symbole gry obok siebie na tle gry, § 8.3), kontrola koloru dominującego Q19 (cytryna żółta, szafir niebieski)
-i wykrywanie **duplikatów** (ten sam obraz pod dwiema nazwami) odciskiem percepcyjnym dHash (Q05).
+W tym samym planie: stykówka zestawu (wszystkie symbole gry obok siebie na tle gry, § 8.3), kontrola koloru
+dominującego Q19 (cytryna żółta, szafir niebieski) i wykrywanie **duplikatów** (ten sam obraz pod dwiema nazwami)
+odciskiem percepcyjnym dHash (Q05). Kontrola nazw Q02 jest już zrobiona (wyżej).
 
 ### 4.7. Kolejność dostaw
 
@@ -704,16 +772,17 @@ dłuższy. Przedmiot ocenia backend w Javie; skrypty pomocnicze mogą być w czy
 
 | Zależność | Wersja | Do czego |
 |---|---|---|
-| Python | ≥ 3.9 (sprawdzone na 3.13) | sam skrypt; `Path.is_relative_to` wymaga 3.9 |
-| Pillow | ≥ 9.1 (sprawdzone na 12.3) | wczytywanie PNG/JPEG/WebP, skalowanie Lanczos w trybie `F`, zapis WebP, ICO i PNG ikon; `Image.Resampling` jest od 9.1 |
-| NumPy | sprawdzone na 2.5 | wszystkie operacje na pikselach: alfa, odległości kolorów ΔE, rozmycia, morfologia, etykietowanie spójnych składowych |
+| Python | ≥ 3.11 (`tools/art/requirements.txt`; sprawdzone na 3.13) | sam skrypt |
+| Pillow | ≥ 11.2 wg `requirements.txt` (sprawdzone na 12.3) | wczytywanie PNG/JPEG/WebP, skalowanie Lanczos w trybie `F`, zapis WebP, ICO i PNG ikon |
+| NumPy | ≥ 2.0 wg `requirements.txt` (sprawdzone na 2.5) | wszystkie operacje na pikselach: alfa, odległości kolorów ΔE, rozmycia, morfologia, etykietowanie spójnych składowych |
 | ffmpeg, `cwebp`, SciPy | — | **niepotrzebne** w 1.0.0. ffmpeg będzie potrzebny dopiero do klatek z nagrań (§ 5.18, [plan]) |
 
 Pipeline celowo działa na „gołym” Pillow + NumPy: klasyczne algorytmy (rozmycie Gaussa przybliżone trzema rozmyciami
 pudełkowymi, dylatacja/erozja, etykietowanie spójnych składowych metodą przebiegów + union-find, „rozlewanie” koloru
 zamiast transformaty odległości, konwersja sRGB → CIELAB) są napisane w `kroki/obraz.py`, krótko i z komentarzem —
-łatwiej je obronić niż wywołanie czarnej skrzynki, a instalacja to jedna linia. Instalacja (pliku `requirements.txt`
-jeszcze nie ma): `python3 -m venv .venv && .venv/bin/pip install pillow numpy`.
+łatwiej je obronić niż wywołanie czarnej skrzynki, a instalacja to jedna linia:
+`python3 -m venv .venv && .venv/bin/pip install -r tools/art/requirements.txt` (Pillow, NumPy; `bpy` opcjonalnie,
+tylko do renderów grafiki zastępczej).
 
 **Moduły** (polskie komentarze i docstringi „Po co to jest”, żeby dało się je omówić na obronie):
 
@@ -733,14 +802,15 @@ tools/art/
 │   ├── tla.py          5.17–5.18  tła, okładki, banery: szerokości, szum, LQIP, rozmyte, kadr 16:9
 │   ├── ikony.py        5.19     favicony, ikony aplikacji, site.webmanifest
 │   └── raport.py       § 8      konsola, raport.json, raport.html, budżety wagi
+├── requirements.txt    Pillow ≥ 11.2, NumPy ≥ 2.0 (bpy opcjonalnie)
 ├── testy/
-│   └── test_przetworz.py   13 testów na obrazach syntetycznych (§ 5.23)
+│   └── test_przetworz.py   27 testów na obrazach syntetycznych (§ 5.23)
 └── zastepcze/          generatory grafiki zastępczej (Pillow + opcjonalnie Blender) → art/zastepcze/
 ```
 
 **[plan]** — pliki opisane w tym dokumencie, których w 1.0.0 jeszcze nie ma: `manifest.toml` (ręczne korekty
-`skala`, `przesuniecie`, `wybor`, `akceptuj`), `mapowanie.toml` (§ 4.6), `requirements.txt`, `kroki/atlas.py`
-(MaxRects, § 5.9), kodowanie AVIF i obraz OG (§ 5.8, § 5.20).
+`skala`, `przesuniecie`, `wybor`, `akceptuj`), `mapowanie.toml` (§ 4.6), `kroki/atlas.py` (MaxRects, § 5.9),
+kodowanie AVIF i obraz OG (§ 5.8, § 5.20).
 
 **Przepływ** (linie przerywane = [plan]):
 
@@ -827,23 +897,24 @@ bajty się zmieniły**, a `manifest.version` zmienia się tylko wtedy, gdy zmien
 
 | § | Krok | Stan w 1.0.0 |
 |---|---|---|
-| 5.1 | wybór źródła, walidacja wymiarów | zrobione; typ pliku tylko po rozszerzeniu, profil ICC pomijany bez konwersji |
-| 5.2–5.5 | klasyfikacja tła, szachownica, jednolite tło (też kolor klucza z planu B w 03), obwódki, pyłki | zrobione (bez zaciśnięcia `defringe = "mocny"` i bez miary obwódki Q09) |
+| 5.1 | wybór źródła, walidacja wymiarów, nazwy plików (Q02), typ pliku po sygnaturze (Q04) | zrobione; profil ICC pomijany bez konwersji |
+| 5.2–5.5 | klasyfikacja tła, szachownica, jednolite tło (też kolor klucza z planu B w 03), **wycinanie dziur w kolorze tła**, obwódki, miara obwódki Q09, pyłki | zrobione (bez zaciśnięcia `defringe = "mocny"`) |
 | 5.6 | przycięcie i normalizacja | zrobione dla symboli, monet, SPIN/STOP, ikon, awatarów, napisów; maskotka — tylko dopasowanie wysokości; ręczne korekty — [plan] |
 | 5.7 | skalowanie @1x / @2x | zrobione; obniżone @2x sprite'ów — [plan] |
 | 5.8 | kodowanie | tylko WebP; AVIF, JPEG OG, kontrola PSNR (Q21), kodowanie do rozmiaru — [plan] |
 | 5.9 | atlasy Pixi | [plan] |
 | 5.10 | cięcie arkuszy | zrobione |
-| 5.11 | efekty FX | zrobione (bez opcji `neutralizuj`) |
-| 5.12–5.13 | okno ramki, 9-slice | zrobione; generowany plik CSS 9-slice — [plan] |
+| 5.11 | efekty FX, **neutralizacja koloru** (zawsze, bez opcji) | zrobione |
+| 5.12–5.13 | okno ramki z **korektą proporcji** (rozciągnięcie jednolitego pasa ramki), 9-slice | zrobione; generowany plik CSS 9-slice — [plan] |
 | 5.14 | BitmapFont | zrobione (`.fnt` + strona glifów + pliki glifów); plik CSS z klasami `.cy-*` i próbki w raporcie — [plan] |
 | 5.15–5.16 | ruch, poświaty, cienie, sylwetki, miniatury, `tint`, `pole` | zrobione; kontrola koloru Q19 — [plan] |
 | 5.17–5.18 | tła, okładki, banery, kadr 16:9 | zrobione; pomiary jasności Q12, podglądy kadrów, klatki z nagrań — [plan] |
 | 5.19 | favicony i ikony | zrobione |
 | 5.20–5.21 | obraz OG, podglądy makiet | [plan] |
 | 5.22 | `manifest.json` | zrobione (bez `atlases`, `bundles`, `avif`) |
-| 5.23 | powtarzalność, testy | zrobione (13 testów); `--sprawdz-determinizm` — [plan] |
-| § 8 | raport | konsola + JSON + HTML z miniaturami; część kontroli Q — [plan] (tabela w § 8.2) |
+| 5.23 | powtarzalność, testy | zrobione (27 testów); `--sprawdz-determinizm` — [plan] |
+| § 7.1 | budżety wagi (Q23) | zrobione, liczone osobno dla orientacji (desktop: tła `_desktop` @2x; telefon: tła `_mobile` @1x), banery poza budżetem lobby |
+| § 8 | raport | konsola + JSON + HTML z miniaturami; Q30 (brak pliku z manifestu) liczy się do kodu wyjścia; część kontroli Q — [plan] (tabela w § 8.2) |
 
 ### 5.1. Wejście i walidacja
 
@@ -851,10 +922,14 @@ bajty się zmieniły**, a `manifest.version` zmienia się tylko wtedy, gdy zmien
    znaczenia) → wygrywa najwyższy numer wersji (`<ID>.png` = wersja 0) → gdy brak, `art/zastepcze/<pakiet>/<ID>.png`
    → gdy i tego brak: Q01 (P0 — błąd, P1/P2 — ostrzeżenie) i poprzedni wynik zostaje w manifeście. Do manifestu trafia
    `source: "chatgpt"` albo `"zastepcze"` (kontrakt 09); konsola i raport pokazują, ile ID ma które źródło.
-2. **Typ pliku:** przyjmowane są też `<ID>.webp`, `<ID>.jpg`, `<ID>.jpeg` (ostrzeżenie Q04; przy tym samym numerze
-   wersji wygrywa PNG). Wersja 1.0.0 ocenia typ **po rozszerzeniu**; Pillow i tak dekoduje plik według zawartości,
-   więc WebP przemianowany na `.png` zostanie poprawnie odczytany, tylko bez ostrzeżenia. Kontrola sygnatury
-   (`89 50 4E 47`) — [plan]. JPEG dla obrazu `ALFA` nie ma alfy, więc trafia na ścieżkę „jednolite tło” (§ 5.4).
+2. **Typ pliku (Q04):** przyjmowane są też `<ID>.webp`, `<ID>.jpg`, `<ID>.jpeg` (ostrzeżenie Q04 „plik nie jest PNG”;
+   przy tym samym numerze wersji wygrywa PNG). Dodatkowo pipeline sprawdza **prawdziwy format po sygnaturze**
+   (`Image.format` z Pillow, funkcja `sprawdz_typ_pliku`): JPEG jako obraz `ALFA` → ostrzeżenie Q04 „bez
+   przezroczystości, artefakty na krawędziach — pobierz oryginalny PNG”; plik `.png`, który naprawdę jest np. WebP →
+   info Q04. JPEG dla obrazu `ALFA` nie ma alfy, więc trafia na ścieżkę „jednolite tło” (§ 5.4).
+   **Nazwy plików (Q02):** po przetworzeniu pipeline przegląda całe `art/zrodla/` i każdy plik, którego nie użyje
+   (zła nazwa, zły folder, dopisek przy pobieraniu), zgłasza jako ostrzeżenie z podpowiedzią (§ 4.6). Foldery
+   `makiety/`, `nieposortowane/` i zaczynające się od `_` (np. `_do-poprawy/`) są pomijane celowo.
 3. **Normalizacja trybu:** każdy tryb Pillow (`P`, `L`, `LA`, `RGB`, 16-bitowe `I;16`) → `RGBA`, 8 bitów na kanał,
    dalej `float32` 0–1.
 4. **Kolory:** osadzony profil ICC jest **pomijany** (bez konwersji); wyniki nie mają profilu, więc przeglądarka
@@ -872,7 +947,7 @@ boku (min. 4 px) ze wszystkich stron.
 
 | Deklaracja | Pomiar | Działanie |
 |---|---|---|
-| `ALFA` | ≥ 60% pikseli pasa brzegowego ma α < 0,05 (prawdziwa alfa) | dalej do § 5.5 (obwódki) |
+| `ALFA` | ≥ 60% pikseli pasa brzegowego ma α < 0,05 **albo** ≥ 3% wszystkich pikseli ma α < 0,02 (prawdziwa alfa; drugi warunek dla ramek narysowanych „od brzegu do brzegu” z przezroczystym oknem — bez niego złota rama zostałaby uznana za „jednolite tło” i wycięta) | dalej do § 5.5 (obwódki) |
 | `ALFA` | brak przezroczystego brzegu, test szachownicy (§ 5.3) z pewnością ≥ 0,80 | § 5.3; Q06: info przy pewności ≥ 0,90, ostrzeżenie przy 0,80–0,90 |
 | `ALFA` | brak przezroczystego brzegu, to nie szachownica | § 5.4 (jednolite tło, info Q06); jeśli tła nie da się opisać ani stałym kolorem, ani łagodnym gradientem → błąd Q06, obraz do ponownego wygenerowania |
 | `ALFA` | częściowa przezroczystość bez przezroczystego brzegu (< 97% pikseli kryjących) | dodatkowo ostrzeżenie Q06 „sprawdź obraz” |
@@ -934,6 +1009,16 @@ z planu B w [03 § 10](03-prompty-chatgpt.md#101-zasady-planu-b), np. `#00FF00`)
    białym tle zostaje nietknięty. Do tła dołączamy też „dziury” w obiekcie: przy kolorze klucza (nasycenie > 0,35)
    — składowe ≥ 100 px (przy 1024²) o średnim ΔE < 4; przy ramkach — składowe ≥ 4% obrazu o średnim ΔE < 4 (okno);
    zawsze — składowe ≥ 1% obrazu o średnim ΔE < 2.
+
+   **Wycinanie średnich dziur** (pętla anchu, przestrzeń między ogonkami wiśni, ucho dzwonka — dodane po recenzji
+   prawdziwych obrazów): składowa niedotykająca brzegu jest wycinana, gdy zajmuje ≥ 0,3% kadru (na jasnym tle;
+   na ciemnym ≥ 0,6%, żeby nie wyciąć czarnych źrenic), jej średnie ΔE jest mniejsze niż szum samego tła + 1
+   (szum = średnie ΔE pasa brzegowego) **i** ma **ostry brzeg**: w pierścieniu 3–5 px za jej krawędzią mediana ΔE ≥ 25,
+   a 10. percentyl ≥ 12 (`_ostra_krawedz` w `kroki/alfa.py`). Tak wygląda dziura (antyaliasing ma 1–2 px), a nie
+   miękko wygasający odblask. Ostry, idealnie biały odblask na białym tle jest jednak nie do odróżnienia od dziury,
+   dlatego każde wycięcie to **ostrzeżenie Q06** „wycięto dziury w kolorze tła wewnątrz obiektu: x% kadru — sprawdź
+   w raporcie, czy to nie odblask”. Mniejsze obszary w kolorze tła (≥ 0,1% kadru, średnie ΔE < 3) zostają kryjące
+   z ostrzeżeniem Q06 „dziura czy odblask?” — wtedy najlepiej wygenerować obraz z prawdziwą przezroczystością.
 4. **Alfa w strefie przejścia** jak w § 5.3 pkt 6 (rzut na kierunek „tło → kolor obiektu”, strefa = piksele z ΔE < 30
    połączone z tłem + pas 4 px); gdy rzut jest niepewny, `α = smoothstep(ΔE; 6, 30)`. Odkażenie koloru jak w § 5.3,
    z `B` z modelu tła.
@@ -963,10 +1048,12 @@ Kolejność w 1.0.0 (po każdej ścieżce z § 5.2 — prawdziwa alfa, szachowni
    obiektu są usuwane (info Q10). Nie dotyczy arkuszy i cyfr (tam drobne elementy są treścią — np. przecinek).
 4. **[plan] Zaciśnięcie** (z `defringe = "mocny"` w `manifest.toml`): `α' = clamp((α − 32) · 255/223)` — zdejmuje
    ok. 1 px miękkiej krawędzi.
-5. **[plan] Miara obwódki** (Q09): na pierścieniu pikseli z α ∈ [0,1; 0,9] złożonych na `#07060F` liczymy średnią
-   jasność L\* i porównujemy z krawędzią „idealną” (kolor wnętrza zmieszany z tłem w tej samej proporcji). Różnica
-   > +8 → „jasna obwódka”, < −12 → „ciemna obwódka”. Funkcja `miara_obwodki` jest już w `kroki/alfa.py`, ale 1.0.0
-   jej nie wywołuje — obwódki oceniamy na miniaturach w raporcie (tło `#07060F` i białe).
+5. **Miara obwódki** (Q09, `miara_obwodki` w `kroki/alfa.py`): na pierścieniu pikseli z α ∈ [0,1; 0,9] złożonych na
+   `#07060F` liczymy średnią jasność L\* i porównujemy z krawędzią „idealną” (kolor wnętrza zmieszany z tłem w tej
+   samej proporcji). Różnica > +8 → ostrzeżenie „jasna obwódka”, < −12 → „ciemna obwódka”. Liczymy ją **tylko** wtedy,
+   gdy krawędź alfy wyliczył pipeline (usunięta szachownica albo jednolite tło) — wtedy obwódka jest artefaktem
+   wycinania. Przy prawdziwej alfie krawędź jest decyzją autora (np. celowy ciemny kontur napisu), a miara nie odróżnia
+   konturu od halo — taką krawędź oceniamy na miniaturach w raporcie (tło `#07060F` i białe).
 
 ### 5.6. Przycięcie, margines i normalizacja
 
@@ -979,8 +1066,11 @@ Kolejność w 1.0.0 (po każdej ścieżce z § 5.2 — prawdziwa alfa, szachowni
 | ramki | 0, min. 2 px | krawędź obrazu = krawędź ramy, okno w ułamkach liczone od niej |
 | panel, przyciski 9-slice | 0 | krawędź obrazu = krawędź ramy, inaczej wycinki 9-slice byłyby przesunięte |
 
-Przy przycinaniu sprawdzamy **Q07**: α > 32/255 w pasie 2 px przy krawędzi płótna = obiekt ucięty przez generator
-(błąd dla symboli i obiektów, ostrzeżenie dla ramek). Przycięcie sprite'ów w atlasach z metadanymi `trimmed` /
+Przy przycinaniu sprawdzamy **Q07** ze stopniowaniem (`zglos_styk` w `przetworz.py`): liczymy, jaka część
+najdłuższego boku płótna styka się z obiektem (α > 32/255 w pasie 2 px przy krawędzi). Styk ≤ 1,5% boku to
+„czubek” (iskra, listek, promień wiązki) — **ostrzeżenie**, bo po przycięciu i tak wygląda dobrze; dłuższy styk =
+obiekt ucięty przez generator — **błąd** dla symboli i obiektów; dla ramek zawsze ostrzeżenie (ramka może celowo
+sięgać brzegu). W przebiegu z 2026-10-11 wszystkie styki były „czubkami” (0,1–1,1% boku). Przycięcie sprite'ów w atlasach z metadanymi `trimmed` /
 `spriteSourceSize` / `sourceSize` (rozmiar logiczny bez zmian) — [plan] razem z atlasami (§ 5.9).
 
 **Normalizacja** — w obrębie zestawu obrazy muszą mieć spójną wielkość i środek, inaczej podmiana albo
@@ -1023,7 +1113,8 @@ sąsiedztwo zdradzają różnice:
 |---|---|---|---|
 | `ALFA`: symbole, napisy, maskotka, skrzynia, logotypy, monety, ramki, `mini`, `male`, konfetti, odłamki | WebP stratny kolor + bezstratna alfa (rodzaj `alfa`) | `quality=82, alpha_quality=100, method=4` (`--dokladnie`: `method=6`) | najlepsza jakość do wagi dla błyszczących renderów; alfa bez strat, więc krawędzie się nie „gryzą” |
 | UI: panel, przyciski, ikony `g_ui_ikony__*`, glify cyfr, strona BitmapFont, `ikona`, `naglowek` (rodzaj `ui`) | WebP: kodujemy bezstratnie i stratnie, zostaje mniejszy plik | `lossless=True, exact=False` albo `quality=90, alpha_quality=100` | ostre krawędzie i gładkie gradienty; dla małych plików bezstratny bywa mniejszy; `exact=False` pozwala koderowi pominąć niewidoczne RGB pod α = 0 |
-| `PELNE`: tła, okładki, banery, `k169` | WebP bez alfy | `quality=85` ([01 § 4.9](01-kierunek-artystyczny.md#49-krawędzie-alfa-i-jakość-pliku)) | brak alfy = mniejszy plik |
+| `PELNE`: tła gier i lobby, `rozmyte` teł (rodzaj `pelne`) | WebP bez alfy | `quality=80` | grafika z ChatGPT jest bardzo szczegółowa, a q85 → q80 oszczędza ok. 17% wagi przy różnicy < 1 dB PSNR; tło leży pod bębnami i UI ([01 § 4.9](01-kierunek-artystyczny.md#49-krawędzie-alfa-i-jakość-pliku) zakładało q85 — zmienione po pomiarze budżetów) |
+| `PELNE`: okładki kafli, banery, `k169` (rodzaj `pelne_kafel`) | WebP bez alfy | `quality=78` | key art ogląda się w kaflu i plakacie, nie na pełnym ekranie gry — ok. 10% mniej niż q80 |
 | `CZARNE`: efekty i ich komórki | WebP bez alfy | `quality=80` | miękkie gradienty dobrze się kompresują |
 | Warianty `ruch1`, `ruch2`, `syl`, `glow`, `glowzl`, `cien`, `rozmyte` (rodzaj `miekkie`) | WebP | `quality=70` | rozmyte / jednobarwne — artefakty niewidoczne |
 | Favicony, ikony aplikacji | ICO (16/32/48), PNG | PNG `optimize=True` | wymagane formaty |
@@ -1132,11 +1223,17 @@ są duże i pojedyncze, więc atlas nic by nie dał.
 1. **Maska:** `ALFA` → α ≥ 24/255 (po naprawie alfy z § 5.2–5.5, bez usuwania pyłków); `CZARNE` → max(R, G, B)
    ≥ 12/255 (po spłaszczeniu alfy i zerowaniu czerni z § 5.11).
 2. **Domknięcie morfologiczne** (dylatacja, potem erozja) kwadratem o promieniu 1,2% krótszego boku (≈ 12 px,
-   min. 2 px) — łączy części jednego elementu (kropki wiązki iskier, ogonek przecinka, kawałki serpentyny).
+   min. 2 px) — łączy części jednego elementu (kropki wiązki iskier, ogonek przecinka, kawałki serpentyny). Gdy
+   generator ustawił elementy bliżej niż ~2 promienie, domknięcie skleiłoby **sąsiadów** (cały wiersz awatarów w jedną
+   plamę) — wtedy pipeline próbuje mniejszego promienia (⅓), a potem bez domknięcia, aż plam będzie co najmniej tyle,
+   ile komórek; dopiero potem plan awaryjny (pkt 7).
 3. **Etykietowanie** 8-spójne (własna implementacja: przebiegi + union-find w `kroki/obraz.py`), odrzucenie składowych
    < 0,05% płótna.
 4. **Wybór elementów:** jeśli plam jest więcej niż oczekiwanych, `n` największych to „ziarna”, a każdą mniejszą
-   dołączamy do najbliższego ziarna (rozbity element — info Q13). Prostokąt elementu = suma prostokątów jego plam.
+   dołączamy do najbliższego ziarna (rozbity element — info Q13). Wyjątek: plama niska i szeroka (szerokość ≥ 2,5 ×
+   wysokość), cała pod albo nad ziarnem i mniejsza niż ¼ jego pola to **podpis**, który ChatGPT dopisał pod ikoną mimo
+   „bez tekstu” w prompcie — jest pomijana (ostrzeżenie Q13 „pominięto podpis(y)”). Prostokąt elementu = suma
+   prostokątów jego plam.
 5. **Kolejność komórek:** środki elementów dzielimy na wiersze według **największych przerw w osi Y** (siatka może
    być nierówna i przesunięta), w wierszu sortujemy od lewej. Wiersz krótszy niż liczba kolumn dopełniamy pustymi
    polami na końcu — tak `g_font_cyfry` (5×3) dostaje 13 glifów i 2 puste pola.
@@ -1176,10 +1273,16 @@ Czerń **zostaje** — obraz nie dostaje kanału alfy. Kroki w kolejności z `kr
    zawsze 0, więc żaden efekt nie ma twardego brzegu. Raport podaje, ile energii (suma jasności) zabrała winieta;
    > 3% → ostrzeżenie Q11 „poświata dotyka krawędzi”. Komórki arkuszy `CZARNE` dostają winietę 8% na płótnie komórki
    (§ 5.10).
-6. **Neutralność barwy:** efekty mają być prawie białe, bo kolor nadaje `tint`
-   ([01 § 4.8](01-kierunek-artystyczny.md#48-obrazy-efektów-tło-czarne-i-konfetti)). Średnie nasycenie pikseli
-   o jasności > 0,5 większe niż 0,25 → ostrzeżenie Q11. [plan]: opcja `neutralizuj = true` zamieniająca obraz na
-   luminancję z lekko ciepłym odcieniem `#FFF3D1`.
+6. **Neutralizacja koloru** (`neutralizuj_barwe` w `kroki/fx.py`, zawsze, bez opcji): efekty mają być prawie białe,
+   bo kolor nadaje kod przez `tint` ([01 § 4.8](01-kierunek-artystyczny.md#48-obrazy-efektów-tło-czarne-i-konfetti),
+   [04 § 2.3](04-efekty-wizualne.md)) — jeden arkusz iskier służy jako złote iskry BIG WIN, cyjanowe w S1 i turkusowe
+   w S2, a złota tekstura zabarwiona na cyjan dałaby błotnistą zieleń. ChatGPT mimo promptu „warm white” potrafi oddać
+   efekt złoty albo niebieski. Jeśli średnie nasycenie pikseli o jasności > 0,25 przekracza 0,25 (i takich pikseli
+   jest > 100), obraz jest sprowadzany do **ciepłej bieli z zachowaniem jasności**: `v = ½ · (luma + max(R, G, B))`,
+   kolor = `v × (1,0; 0,965; 0,88)` (między `#FFFFFF` a `#FFF3D1` z promptów). Sama luma za bardzo przyciemniłaby
+   nasycone poświaty (pomarańcz ma niską lumę, a na ekranie świeci mocno). Raport: info Q11 „efekt był kolorowy —
+   sprowadzony do ciepłej bieli”. To samo dotyczy komórek arkuszy `CZARNE` (`g_fx_iskry`, `g_fx_blyskawice`,
+   `s2_fx_hieroglify`) — neutralizacja przed cięciem (§ 5.10). W przebiegu z 2026-10-11 info Q11 pojawiło się 7 razy.
 7. **Skala i zapis:** dłuższy bok do rozmiaru z katalogu (`g_fx_promienie` 1024, `g_fx_flara` i `g_fx_dym` 512), jedna
    rozdzielczość, WebP bez alfy `quality=80`; w manifeście `blend: "add"`. Atlasy `wspolne-fx` / `s2-fx` — [plan].
 8. **Użycie:** Pixi — `blendMode = 'add'` + `tint`; CSS (lobby) — `mix-blend-mode: plus-lighter` (dokładne
@@ -1198,10 +1301,24 @@ Czerń **zostaje** — obraz nie dostaje kanału alfy. Kroki w kolejności z `kr
    przezroczystej składowej → wypełnianie od środka **ramki** z tolerancją ΔE < 10; jeśli wynik nie dotyka brzegu,
    jest prostokątny (≥ 0,95) i zajmuje ≥ 25% ramki → ustawiamy tam α = 0 i zgłaszamy ostrzeżenie Q15 „okno było
    zamalowane — wycięte automatycznie”. Inaczej błąd Q15 „nie znaleziono przezroczystego okna ramki”.
-5. **Proporcja** względem siatki (§ 2.5): odchyłka ≤ 3% OK; 3–15% ostrzeżenie Q15 (front dopasuje rozciągnięciem
-   pasów 9-slice); > 15% błąd Q15 (do ponownego wygenerowania).
-6. **Skala:** `s = √((okno_docelowe_szer / okno_szer) · (okno_docelowe_wys / okno_wys))` — średnia geometryczna,
-   więc przy lekko złej proporcji pole okna @1x i tak odpowiada siatce. @2x według § 2.6 (w praktyce brak, § 2.5).
+5. **Korekta proporcji okna** (`dopasuj_proporcje_okna` w `kroki/geometria.py`, dodana po recenzji prawdziwych ramek):
+   okno musi mieć dokładnie proporcję siatki bębnów (§ 2.5; pola symboli są kwadratowe). Jeśli odbiega o > 3%
+   (ChatGPT narysował np. okno 1,238 : 1 dla siatki 3×3), pipeline **rozciąga najbardziej jednolity pas boków ramki**:
+   okno za szerokie → dokłada wiersze (ramka wyższa), za wąskie → kolumny. Długość pasa = max(brakujące piksele,
+   18% boku okna), najwyżej 60%; szukamy go w obrębie wysokości (szerokości) okna z pominięciem 8% przy rogach,
+   minimalizując średnią zmienność „wiersz → następny wiersz” boków ramki (alfa premultiplikowana). Dzięki temu
+   rozciąga się gładka rura neonu albo gładki kamień, a omijane są ornamenty, wajcha automatu S1 i kapitele kolumn —
+   to ten sam zabieg co rozciąganie środkowego pasa 9-slice, tylko z pasem wybranym automatycznie. Raport: ostrzeżenie
+   Q15 z opisem („rozciągnięto jednolity pas ramki (wiersze 427–550 źródła, +123 px, zmienność 3,2/255); sprawdź ramkę
+   w raporcie”); zmienność pasa > 4/255 → dodatkowe ostrzeżenie „rozciągnięty pas nie jest jednolity — możliwe
+   zniekształcenie ornamentu”; brak miejsca na pas → błąd Q15. Wyniki z 2026-10-11: `s1_ramka` 1,238 → 1,000
+   (+123 px), `s2_ramka` 1,862 → 1,667 (+68 px), `s3_ramka` 1,330 → 1,200 (+60 px); S2 i S3 z ostrzeżeniem
+   o niejednolitym pasie (zmienność 9,3 i 15,7/255) — do obejrzenia w raporcie.
+   **Kontrola po korekcie** (`sprawdz_proporcje_okna`): odchyłka ≤ 3% OK; 3–15% ostrzeżenie Q15; > 15% błąd Q15.
+   Front niczego nie rozciąga — dostaje okno o właściwej proporcji w `frames.<ID>.window`.
+6. **Skala:** `s = √((okno_docelowe_szer / okno_szer) · (okno_docelowe_wys / okno_wys))` — średnia geometryczna
+   (po korekcie z pkt 5 obie proporcje są równe). Ramka po korekcie nie ma już proporcji kadru źródła: np. `s1_ramka`
+   ma @1x 1210×1318 przy oknie 769×768. @2x według § 2.6 (w praktyce brak, § 2.5).
 7. **Marginesy 9-slice ramki** = odległości okna od krawędzi obrazu po przeskalowaniu (`left = x0`, `top = y0`,
    `right = W − x1`, `bottom = H − y1`, w px @1x). [plan]: kontrola, czy rozciągane pasy (środkowe odcinki listew) są
    jednolite wzdłuż kierunku rozciągania (odchylenie profilu ≤ 6/255); ornament w pasie (np. herb na środku górnej
@@ -1220,8 +1337,11 @@ Testy `test_okno_ramki` i `test_okno_zamalowane` (§ 5.23): okno 300×200 w (100
 1. Obraz jest przycięty **ciasno** (krawędź obrazu = krawędź ramy). Liczymy sygnatury **całych** kolumn i wierszy
    (kolor z alfą premultiplikowaną, lekko wygładzony rozmyciem σ = 1 px — tłumi szum generatora). Całe, a nie tylko
    pasmo środkowe, bo ozdobny róg sięgający w głąb krawędzi też musi trafić do wycinka narożnika.
-2. Szukamy najdłuższego ciągłego odcinka wokół środka, gdzie sąsiednie kolumny różnią się średnio o ≤ 1,5/255,
-   a od kolumny środkowej o ≤ 3/255 → `[xL, xR]`. Analogicznie wiersze → `[yT, yB]`.
+2. Szukamy najdłuższego ciągłego odcinka wokół środka, gdzie sąsiednie kolumny różnią się mało, a od wzorca środka
+   (mediana kolumn ze środkowych 20%) niewiele → `[xL, xR]`. Analogicznie wiersze → `[yT, yB]`. Progi są
+   **adaptacyjne** (obraz z ChatGPT nigdy nie ma idealnie płaskiego środka — faktura szkła, winieta, odblaski na
+   listwach): sąsiad ≤ max(1,5/255; 2,5 × mediana zmienności w środku), wzorzec ≤ max(3/255; 2,5 × mediana odchyleń
+   w środku + 1/255; 24/255). Ornament w rogu i tak odstaje wielokrotnie (ostre krawędzie), więc zatrzymuje odcinek.
 3. **Wycinki:** `left = xL + 2`, `right = W − xR + 2`, `top = yT + 2`, `bottom = H − yB + 2` (2 px zapasu).
 4. **Przyciski-pigułki:** w pionie nie ma jednolitych wierszy (gradient fazy), więc tryb „pigułka”:
    `top = bottom = ⌊H/2⌋ − 1` (rozciąga się tylko pasek 2 px, gdy przycisk jest wyższy niż projekt), `left/right`
@@ -1540,8 +1660,18 @@ może wysyłać `/assets/**` z długim czasem ważności (konfiguracja w [08](08
   te same bajty, a plik jest nadpisywany tylko przy zmianie bajtów — diff w git pokazuje tylko to, co naprawdę się
   zmieniło. Automatyczne sprawdzenie (`--sprawdz-determinizm`, dwa przebiegi + porównanie SHA-256) — [plan].
 * **Testy:** `python3 tools/art/testy/test_przetworz.py [katalog_na_obrazy]` (działają też pod `pytest`); obrazy
-  wejściowe i wyniki zostają w podanym katalogu (domyślnie katalog tymczasowy), żeby można je obejrzeć. 13 testów
-  na obrazach syntetycznych o znanym wyniku — wszystkie przechodzą w wersji 1.0.0:
+  wejściowe i wyniki zostają w podanym katalogu (domyślnie katalog tymczasowy), żeby można je obejrzeć. **27 testów**
+  na obrazach syntetycznych o znanym wyniku — wszystkie przechodzą w wersji 1.0.0. Pierwsze 13 (poniżej) powstało
+  razem z pipeline'em; 14 kolejnych dodała recenzja po przetworzeniu prawdziwych obrazów z ChatGPT:
+  `test_ramka_alfa_do_krawedzi` (prawdziwa alfa „od brzegu do brzegu”), `test_dziura_na_bialym_i_czarnym_tle`
+  (wycinanie dziur, § 5.4), `test_okno_ramki_z_szachownica` (szachownica w samym oknie), `test_arkusz_z_podpisami`
+  (podpisy dopisane przez ChatGPT pod ikonami są pomijane), `test_nieznane_nazwy_plikow` (Q02),
+  `test_typ_pliku_i_tryby_obrazu` (JPEG, tryby P / LA / 16-bit — Q04), `test_fx_szum_i_przezroczystosc` (efekt na
+  zaszumionej czerni i z kanałem alfa), `test_korekta_proporcji_okna` (§ 5.12 pkt 5, z ominięciem „wajchy”),
+  `test_9slice_z_faktura_i_odblaskami` (progi adaptacyjne, § 5.13), `test_arkusz_stykajace_sie_elementy`,
+  `test_neutralizacja_koloru_efektow` (§ 5.11), `test_stopniowanie_q07` (§ 5.6), `test_brak_zrodla_zostawia_wynik`
+  (Q01), `test_determinizm` (te same wejścia → te same bajty). Pipeline sprawdzono też na komplecie prawdziwych
+  obrazów z ChatGPT (0 błędów, § 0).
 
 | Test | Wejście | Oczekiwany wynik |
 |---|---|---|
@@ -1654,24 +1784,30 @@ budżety w [05](05-dzwiek-i-muzyka.md) i [08](08-wydajnosc-i-jakosc.md).
 
 **Jak liczy raport 1.0.0** (`raport.budzety`, kontrola Q23): każdy asset ma w `katalog.py` listę `paczki`
 (`lobby`, `wspolne`, `s1`, `s2`, `s3`). Gra = assety z paczką gry **plus** wszystkie z paczką `wspolne`; lobby = assety
-z paczką `lobby` (w tym okładki i banery). Dla każdego pliku wynikowego pipeline księguje, czy pobiera go desktop,
-telefon, czy oba:
+z paczką `lobby`. Dla każdego pliku wynikowego pipeline księguje, czy pobiera go desktop, telefon, czy żadne z nich —
+**zgodnie z definicją wyżej** (po recenzji z 2026-10-11; wcześniejsze liczenie sumowało tła obu orientacji i banery,
+co dawało fałszywy alarm dla lobby):
 
 | Plik | Desktop | Telefon |
 |---|:---:|:---:|
 | @1x sprite'a, gdy istnieje @2x | — | ✓ |
-| @1x sprite'a bez @2x (ramki, napisy) | ✓ | ✓ |
+| @1x sprite'a bez @2x (ramki, napisy, `g_logo`) | ✓ | ✓ |
 | @2x sprite'a, `mini@2x`, `male@2x`, `ikona@2x`, `naglowek@2x` | ✓ | — |
-| warianty `ruch*`, `syl`, `glow`, `glowzl`, `cien`, `rozmyte`; efekty w jednej rozdzielczości | ✓ | ✓ |
-| tło / okładka / baner: wariant @2x (`<ID>@2x.webp`), `k169@2x` | ✓ | — |
-| tło / okładka / baner: wariant @1x (`<ID>.webp`), `k169` | — | ✓ |
-| trzecia szerokość (`.w1280`, `.w720`, `.w600`) | — | — |
+| warianty `ruch*`, `syl`, `glow`, `glowzl`, `cien`; efekty w jednej rozdzielczości | ✓ | ✓ |
+| tło **poziome** (`*_desktop`): wariant @2x (`<ID>@2x.webp`, 2560 px) i `rozmyte` | ✓ | — |
+| tło **pionowe** (`*_mobile`): wariant @1x (`<ID>.webp`, 1080 px) i `rozmyte` | — | ✓ |
+| okładka: @2x (`<ID>@2x.webp`, 800 px) / @1x (`<ID>.webp`, 400 px) | ✓ / — | — / ✓ |
+| **baner** (wszystkie warianty, także `k169` i `rozmyte`) | — | — |
+| trzecia szerokość (`.w1280`, `.w720`, `.w600`), pozostałe szerokości teł | — | — |
 | favicony, strona BitmapFont (`fonty/*.webp`) | — | — |
 
-Q23: desktop > 100% budżetu → błąd, ≥ 85% → ostrzeżenie (oba liczą się do kodu wyjścia). **Uwaga — to liczenie jest
-pesymistyczne względem definicji wyżej:** sumuje tła **obu** orientacji (desktop pobrałby tylko tło 3:2), plakaty
-`k169` (potrzebne dopiero z wideo) i wszystkie trzy banery. Dla gier zapas jest duży (§ 7.3), ale dla lobby może to dać
-fałszywy alarm Q23 (§ 7.4). Liczenie zgodne z definicją (jedna orientacja tła, plakaty osobno) — [plan].
+Dlaczego tak: front wybiera tło po proporcji okna (`js/lobby.js`), więc desktop nie pobiera tła pionowego, a telefon
+poziomego; banery nie są pobierane przez stronę lobby — plakatem filmiku w kaflu jest okładka (§ 5.18), a banery to
+materiał na plakaty i galerię nagrań oraz mały wariant `rozmyte` na ekran ładowania gry. Kodowanie: tła q80, okładki
+i banery q78, sprite'y q82 + bezstratna alfa (§ 5.8).
+
+Q23: desktop > 100% budżetu → błąd, ≥ 85% → ostrzeżenie (oba liczą się do kodu wyjścia: błąd → 2, ostrzeżenie → 1,
+z `--strict` → 2). Wynik z 2026-10-11: lobby 86% (ostrzeżenie), gry 59–78% (§ 0).
 
 ### 7.2. Budżety pochodne (pilnuje ich raport, § 8)
 
@@ -1685,13 +1821,16 @@ fałszywy alarm Q23 (§ 7.4). Liczenie zgodne z definicją (jedna orientacja tł
 
 ### 7.3. Szacunek wagi gier
 
+**Zmierzone (raport z 2026-10-11, prawdziwa grafika z ChatGPT):** S1 desktop 3,55 MB / telefon 2,32 MB, S2 4,64 /
+2,89 MB, S3 4,67 / 2,93 MB — wszystkie gry poniżej 6 MB, S2 i S3 cięższe od szacunku niżej o ok. 0,6–1,1 MB (bardzo
+szczegółowe tła i symbole z ChatGPT), mimo obniżenia jakości teł do q80. Tabele niżej to **pierwotny szacunek**
+(zostawiony dla porównania i uzasadnienia budżetów).
+
 Szacunek ±30% na podstawie typowej kompresji WebP błyszczących renderów (ok. 1,5–2 bity na piksel obiektu, tła
-ok. 0,9–1,1 bita na piksel przy `quality=85`). Prawdziwe liczby poda raport po pierwszej dostawie (Q23).
+ok. 0,9–1,1 bita na piksel przy `quality=85` — ostatecznie tła kodujemy z q80, § 5.8).
 Kolumna „telefon” = @1x, tło mobile 1280 px; „desktop” = @2x, tło 2560 px. Wartości w KB. Tabele opisują wersję
 docelową (pozycje nazwane jak atlasy z § 5.9); w 1.0.0 te same tekstury są plikami pojedynczymi o podobnej łącznej
-wadze, a napisy `g_win_*` i ramki S2/S3 nie mają @2x — więc desktop wyjdzie raczej **lżej** (ok. −0,7 MB na napisach),
-za to raport 1.0.0 doliczy tła drugiej orientacji i warianty `rozmyte` teł gier (ok. +0,3 MB w S1, +0,6 MB w S2
-i S3, które mają też tła darmowych spinów; § 7.1). Wszystkie trzy gry zostają wyraźnie poniżej 6 MB.
+wadze, a napisy `g_win_*` i ramki nie mają @2x — więc desktop wyjdzie raczej **lżej** na napisach.
 
 **Część wspólna gier** (paczka `wspolne`, pobierana raz):
 
@@ -1749,15 +1888,14 @@ Desktop w najgorszym przypadku wykorzystuje ok. 81% budżetu 3 MB — tuż pod p
 AVIF dla tła, okładek i banerów ([plan]); z samym WebP (wersja 1.0.0) te pozycje są o ok. 25–35% cięższe, czyli
 łącznie ok. **2,7–2,8 MB (≈ 92%)** — powyżej progu ostrzeżenia 85%.
 
-**Co pokaże raport 1.0.0 dla lobby (szacunek):** do powyższych ok. 2,75 MB doliczy jeszcze tło mobile @2x z `rozmyte`
-(ok. +0,3 MB) i trzy plakaty `k169@2x` (ok. +0,5 MB), bo liczy pesymistycznie (§ 7.1) — razem ok. **3,5 MB, czyli
-błąd Q23 i kod wyjścia 2**, mimo że przeglądarka desktopowa pobierze mniej niż 3 MB. Dopóki liczenie nie zostanie
-poprawione ([plan]: jedna orientacja tła, `k169` poza budżetem lobby do czasu wideo), wynik Q23 dla lobby czytamy
-ręcznie z tabeli `pliki` w `raport.json`, a nie z samego kodu wyjścia.
+**Co pokazał raport (2026-10-11, prawdziwa grafika):** lobby desktop **2,58 MB = 86%** budżetu 3 MB → ostrzeżenie Q23
+(próg 85%), telefon 1,14 MB (38%). Liczenie jest już zgodne z definicją z § 7.1 (jedna orientacja tła, banery poza
+lobby), więc to prawdziwa waga, którą pobiera przeglądarka desktopowa — mniej niż szacunek z samym WebP dzięki q80/q78
+i temu, że banery nie są pobierane przez lobby.
 
-Gotowe środki zaradcze, gdyby po prawdziwej dostawie wyszło więcej: (1) AVIF dla tła, okładek i banerów, a także dla
-obrazów z alfą w HTML (maskotka, skrzynia, logo; zwykle −20–30%), (2) niższa jakość wariantu 2560 px (tło jest i tak
-częściowo zasłonięte), (3) `g_maskotka_wygrana` tylko w grze (E37), a nie w lobby.
+Środki zaradcze, gdyby trzeba było zejść poniżej progu: (1) **AVIF w `<picture>`** dla tła lobby i okładek ([plan],
+zwykle −20–35%), a także dla obrazów z alfą w HTML (maskotka, skrzynia, logo), (2) niższa jakość wariantu 2560 px
+(tło jest i tak częściowo zasłonięte), (3) `g_maskotka_wygrana` tylko w grze (E37), a nie w lobby.
 
 **Ścieżka krytyczna LCP (telefon):** HTML + CSS + JS lobby + fonty nagłówków (szacunek ok. 150 KB, 08) + obraz LCP
 ≤ 120 KB. Przy profilu „Slow 4G” z Lighthouse (1,6 Mb/s, RTT 150 ms) to ok. 1,4 s samego transferu — mieści się
@@ -1767,8 +1905,9 @@ w 2,5 s z zapasem na renderowanie.
 
 * **Na dysku**, wersja docelowa (wszystkie warianty, WebP + AVIF, pliki pojedyncze + atlasy): ≈ 25 MB (szacunek
   20–28 MB). Największe pozycje: tła (ok. 10 MB, bo każde ma 3 szerokości), atlasy (ok. 3,5 MB), banery z plakatami
-  (ok. 3 MB). Wersja 1.0.0 (sam WebP, bez atlasów): ≈ 15–20 MB. Tyle urośnie plik JAR aplikacji.
-* **Źródła PNG** na gałęzi `grafika-zrodla`: ok. 180–260 MB.
+  (ok. 3 MB). Wersja 1.0.0 (sam WebP, bez atlasów): szacunek 15–20 MB, **zmierzone ok. 26 MB** w
+  `static/assets/img/` (grafika z ChatGPT jest bardziej szczegółowa niż zakładaliśmy). Tyle urośnie plik JAR aplikacji.
+* **Źródła PNG**: zmierzone ok. 156 MB w `art/zrodla/` (w repozytorium, § 4.4); szacunek był 180–260 MB.
 * **Pamięć tekstur GPU** (najcięższa gra S2, wersja docelowa z atlasami): desktop @2x ≈ 155 MiB (m.in. 3 strony
   `wspolne-wygrane` po 16 MiB, dwa tła 2560×1707 po ok. 17 MiB, `wspolne-fx` z mipmapami ok. 21 MiB); telefon @1x
   ≈ 85 MiB. W 1.0.0 (pliki pojedyncze, napisy bez @2x) pamięć jest podobna albo mniejsza — każdy plik to osobna
@@ -1800,20 +1939,20 @@ progi w wierszach zrobionych są progami z kodu.
 |---|---|---|---|---|
 | Q00 | wyjątek w obróbce | nieoczekiwany błąd przy jednym obrazie — pipeline zapisuje go przy tym ID i przetwarza resztę | błąd | zrobione |
 | Q01 | komplet źródeł | brak źródła i grafiki zastępczej: ID P0 → błąd, P1/P2 → ostrzeżenie (poprzedni wynik zostaje); konsola podaje liczbę ID `chatgpt` / `zastepcze` / `brak` | błąd / ostrz. | zrobione |
-| Q02 | nieznane nazwy plików | każdy plik spoza listy ID → propozycja dopasowania (§ 4.6) | ostrz. | [plan] — dziś takie pliki są pomijane po cichu |
+| Q02 | nieznane nazwy plików | każdy plik w `art/zrodla/`, którego pipeline nie użyje (zła nazwa, zły folder, „ (1)”, „ copy”, `.png.png`) → podpowiedź poprawnej nazwy lub folderu (`difflib`); pomijane: `makiety/`, `nieposortowane/`, foldery z `_`; konsola + `podsumowanie.nieznane_pliki` (§ 4.6) | ostrz. | zrobione |
 | Q03 | wymiary i orientacja | inny rozmiar albo proporcja niż 1024², 1536×1024, 1024×1536 → ostrz.; zamieniona orientacja → błąd. Pod tym kodem 1.0.0 zgłasza też przezroczystość w obrazie `PELNE` (ostrz., spłaszczenie na `#07060F`) | ostrz. / błąd | zrobione |
-| Q04 | typ pliku | rozszerzenie inne niż `.png` → ostrz. [plan]: rozpoznanie po sygnaturze (WebP przemianowany na `.png`) i błąd dla JPEG jako `ALFA` | ostrz. | częściowo |
+| Q04 | typ pliku | rozszerzenie inne niż `.png` → ostrz.; **po sygnaturze** (`Image.format`): JPEG jako obraz `ALFA` → ostrz. (brak alfy, artefakty krawędzi), plik `.png` w innym formacie (np. WebP) → info | ostrz. / info | zrobione |
 | Q05 | duplikaty | odległość dHash ≤ 4 bity z 64 | ostrz. | [plan] |
 | Q06 | prawdziwa alfa (`ALFA`) | naprawiona szachownica: pewność ≥ 0,90 → info, 0,80–0,90 → ostrz.; usunięte jednolite tło → info; niski kontrast obiektu z tłem → ostrz.; częściowa przezroczystość bez przezroczystego brzegu → ostrz.; tła nie da się usunąć → błąd | info / ostrz. / błąd | zrobione |
-| Q07 | obiekt przycięty krawędzią | α > 32/255 w ramce 2 px od krawędzi płótna | błąd (ramki: ostrz.) | zrobione |
+| Q07 | obiekt przycięty krawędzią | α > 32/255 w pasie 2 px od krawędzi płótna; styk ≤ 1,5% najdłuższego boku = „czubek” (ostrz.), dłuższy = obiekt ucięty (błąd); ramki zawsze ostrz. | ostrz. / błąd | zrobione (stopniowane) |
 | Q08 | margines i wypełnienie | margines < 6% → ostrz.; dłuższy bok obiektu poza 70–90% kadru → ostrz. | ostrz. | [plan] |
-| Q09 | obwódka (halo) | różnica L\* pierścienia krawędzi > +8 albo < −12 (po § 5.5) | ostrz. | [plan] (funkcja jest, niewywoływana) |
+| Q09 | obwódka (halo) | różnica L\* pierścienia krawędzi > +8 albo < −12 (po § 5.5); liczona tylko, gdy alfę wyliczył pipeline (szachownica, jednolite tło) | ostrz. | zrobione |
 | Q10 | pyłki | usunięte → info; luźne fragmenty > 1% powierzchni obiektu → ostrz. | info / ostrz. | info zrobione, ostrz. [plan] |
-| Q11 | efekty `CZARNE`: nieprzezroczystość i czystość czerni | **plik z przezroczystością (kanał alfa z α < 0,98 w > 0,1% pikseli) → ostrz. i spłaszczenie na czerń** (obraz ma być OPAQUE); tło (mediana pasa) > 40/255 → błąd; winieta zabrała > 3% energii → ostrz.; efekt mocno kolorowy → ostrz.; przesunięty środek → info | ostrz. / błąd / info | zrobione |
+| Q11 | efekty `CZARNE`: nieprzezroczystość, czystość czerni, barwa | **plik z przezroczystością (kanał alfa z α < 0,98 w > 0,1% pikseli) → ostrz. i spłaszczenie na czerń** (obraz ma być OPAQUE); tło (mediana pasa) > 40/255 → błąd; winieta zabrała > 3% energii → ostrz.; efekt kolorowy → **neutralizacja do ciepłej bieli** (info, § 5.11); przesunięty środek → info | ostrz. / błąd / info | zrobione |
 | Q12 | tła `PELNE`: nieprzezroczystość i jasność | **plik z przezroczystością → ostrz. i spłaszczenie na `#07060F`** (obraz ma być OPAQUE; w 1.0.0 z kodem Q03); [plan]: L\* całości 12–22, strefa bębnów 6–14 ([01 § 6.1](01-kierunek-artystyczny.md#61-zasady-ogólne)), wykryte pasma → dithering (info) | ostrz. / info | nieprzezroczystość zrobiona, jasność [plan] |
 | Q13 | elementy arkusza | liczba ≠ oczekiwanej po planach awaryjnych → błąd; użyty plan awaryjny → ostrz.; połączone rozbite elementy → info | błąd / ostrz. / info | zrobione |
 | Q14 | puste pola arkusza | `g_font_cyfry`: element w którymś z 2 ostatnich pól | ostrz. | zrobione |
-| Q15 | okno ramki | prostokątność ≥ 0,97 OK, 0,95–0,97 ostrz., < 0,95 błąd; proporcja ±3% OK, 3–15% ostrz., > 15% błąd; okno zamalowane → ostrz.; brak okna → błąd | ostrz. / błąd | zrobione |
+| Q15 | okno ramki | prostokątność ≥ 0,97 OK, 0,95–0,97 ostrz., < 0,95 błąd; proporcja poza ±3% → **korekta** (rozciągnięty jednolity pas ramki, ostrz. z opisem; pas niejednolity > 4/255 → dodatkowe ostrz.; brak miejsca → błąd), po korekcie ±3% OK, 3–15% ostrz., > 15% błąd; okno zamalowane → ostrz.; brak okna → błąd | ostrz. / błąd | zrobione |
 | Q16 | środek 9-slice | jednolity środek < 20% szerokości (panel: także wysokości) | błąd | zrobione |
 | Q17 | spójność zestawu symboli | pokrycie alfą w grupie poza ±12% po normalizacji; średnia L\* symbolu poza 45–75 ([01 § 6.1](01-kierunek-artystyczny.md#61-zasady-ogólne)) | ostrz. | [plan] (wyrównanie pokrycia działa w § 5.6, bez raportu) |
 | Q18 | kierunek światła (symbole) | środek ciężkości jasności przesunięty o > 2% w prawo **i** w dół względem środka ciężkości alfy | ostrz. | zrobione |
@@ -1821,14 +1960,14 @@ progi w wierszach zrobionych są progami z kodu.
 | Q20 | powiększanie | @1x wymaga > ×1,25 → info; brak @2x → info; pominięty wariant szerokości tła → info; brak wariantu @1x tła → błąd | info / błąd | zrobione |
 | Q21 | jakość kodowania | PSNR < 38 dB (UI) / 36 dB (tła) / 34 dB (reszta) | ostrz. | [plan] |
 | Q22 | atlasy | strona > 2048² (`m`) / > 4096² (`d`) albo nakładanie ramek → błąd; wypełnienie < 70% → ostrz. | błąd / ostrz. | [plan] |
-| Q23 | budżety wagi | lobby ≤ 3 MB, gra ≤ 6 MB (§ 7.1, liczone pesymistycznie); desktop ≥ 85% → ostrz.; > 100% → błąd | ostrz. / błąd | zrobione (komunikat w konsoli i podsumowaniu, nie przy ID) |
+| Q23 | budżety wagi | lobby ≤ 3 MB, gra ≤ 6 MB (§ 7.1: tła osobno dla orientacji, banery poza lobby); desktop ≥ 85% → ostrz.; > 100% → błąd | ostrz. / błąd | zrobione (komunikat w konsoli i podsumowaniu, nie przy ID; liczy się do kodu wyjścia) |
 | Q24 | obraz LCP lobby | > 120 KB | ostrz. | [plan] |
 | Q25 | pojedynczy plik | > 450 KB (tła 2560 px) / > 300 KB (pozostałe) | ostrz. | [plan] |
 | Q26 | BitmapFont | brak którejś cyfry → błąd; cyfra (poza 3, 5, 9) odbiega od linii bazowej o > 2 px @1x → ostrz. | błąd / ostrz. | zrobione |
 | Q27 | czytelność symboli (testy T1–T5 z [01 § 5.2](01-kierunek-artystyczny.md#52-czytelność-pięć-testów)) | T2 automatycznie: para symboli jednej gry z jasnością różną o < 10% i podobną sylwetką (IoU sylwetek > 0,8) → ostrz.; T1, T3, T4, T5 — podglądy do oceny człowieka | ostrz. | [plan] |
 | Q28 | ikony | `favicon.ico` zawiera 16, 32 i 48 px; podglądy na jasnym i ciemnym tle | błąd / info | [plan] (ikony powstają, bez kontroli) |
 | Q29 | obraz OG | 1200×630, ≤ 250 KB, każdy znak hasła ma glif | ostrz. | [plan] |
-| Q30 | spójność wyników | każdy `src` / `src2x` z manifestu istnieje (brak → „BŁĄD Q30” w konsoli); pliki-sieroty w `assets/img/` → „UWAGA Q30” (usuwa `--sprzataj`); @2x = 2 × @1x gwarantuje konstrukcja (§ 5.7) | błąd / ostrz. | częściowo: tylko komunikat w konsoli, bez wpływu na kod wyjścia |
+| Q30 | spójność wyników | każdy `src` / `src2x` z manifestu (także w `variants`) istnieje — brak pliku = zepsuty obrazek na froncie, więc „BŁĄD Q30” **liczy się do błędów i kodu wyjścia 2**; pliki-sieroty w `assets/img/` → „UWAGA Q30” w konsoli (usuwa `--sprzataj`); @2x = 2 × @1x gwarantuje konstrukcja (§ 5.7) | błąd / komunikat | zrobione |
 
 ### 8.3. Co pokazuje strona raportu
 
@@ -1860,42 +1999,46 @@ progi w wierszach zrobionych są progami z kodu.
 
 ### 8.4. Przykład wyniku w konsoli
 
-Format z `kroki/raport.py` (liczby przykładowe). Uwagi na poziomie info nie są drukowane w tabeli — są w raporcie;
-znacznik `!!` = błąd, `! ` = ostrzeżenie. Kod wyjścia zwraca proces (`echo $?`).
+Format z `kroki/raport.py`; wiersze i budżety poniżej pochodzą z przebiegu z 2026-10-11 na prawdziwej grafice
+(wybrane ID, długie uwagi skrócone). Uwagi na poziomie info nie są drukowane w tabeli — są w raporcie; znacznik `!!` =
+błąd, `! ` = ostrzeżenie. Kod wyjścia zwraca proces (`echo $?`).
 
 ```text
 Cebulion Casino — pipeline grafiki 1.0.0: 85 assetów, 4 proc.
 
 ID                       źródło     rozmiar @1x                 waga  uwagi
 --------------------------------------------------------------------------------------------------------------
-  g_logo                 chatgpt    720×412 +@2x              184 KB  
-  g_emblemat             chatgpt    192×192 +@2x + ikony       52 KB  
-! g_skrzynia             chatgpt    480×480 +@2x              131 KB  Q06 naprawiono fałszywą szachownicę (pole 24.0 px, pewność 0.86)
-!!s1_sym_dzwonek         chatgpt    256×256 +@2x               41 KB  Q07 obiekt przycięty krawędzią obrazu
-! s1_ramka               chatgpt    1078×1078 okno 782×754    148 KB  Q15 proporcja okna 1.038 zamiast 1.000 (+3.8%) → rozciąganie pasów 9-slice
-  s2_sym_10              zastepcze  192×192 +@2x               28 KB  
+  g_logo                 chatgpt    720×720                   179 KB  
+  g_emblemat             chatgpt    192×192 +@2x + ikony       69 KB  
+  g_win_epic             zastepcze  878×640                   178 KB  
+! g_font_cyfry           chatgpt    wys. cyfry 96 +@2x + .fnt    419 KB  Q26 cyfra 1: odchylenie od linii bazowej 2.5 px @1x
+! s1_sym_cytryna         chatgpt    256×256 +@2x               73 KB  Q07 obiekt dotyka krawędzi obrazu na 1.1% boku (czubek) — …
+! s1_ramka               chatgpt    1210×1318 okno 769×768    187 KB  Q07 … 0.4% boku (czubek); Q15 proporcja okna 1.238 zamiast 1.000 — rozciągnięto jednolity pas ramki (wiersze 427–550 źródła, +123 px, zmienność 3.2/255); …
+! s2_ramka               chatgpt    1340×880 okno 960×577     202 KB  Q15 proporcja okna 1.862 zamiast 1.667 — rozciągnięto …; Q15 rozciągnięty pas ramki nie jest jednolity — …
   …
 --------------------------------------------------------------------------------------------------------------
-Źródła: 34 × chatgpt, 51 × zastepcze, 0 × brak źródła · czas 74 s
+Źródła: 84 × chatgpt, 1 × zastepcze, 0 × brak źródła · czas …
 Budżety wagi (brief § 5; desktop = @2x i tło 2560 px, telefon = @1x i tło mobile):
-  lobby  desktop 3,48 MB (116%) · telefon 1,62 MB (54%) · limit 3,00 MB → PRZEKROCZONY
-  s1     desktop 3,05 MB (51%) · telefon 1,91 MB (32%) · limit 6,00 MB → OK
-  s2     desktop 3,92 MB (65%) · telefon 2,40 MB (40%) · limit 6,00 MB → OK
-  s3     desktop 3,60 MB (60%) · telefon 2,21 MB (37%) · limit 6,00 MB → OK
-BŁĄD Q23: budżet lobby przekroczony
-Błędy: 2, ostrzeżenia: 2. Raport: art/raport/raport.html
+  lobby  desktop 2,58 MB (86%) · telefon 1,14 MB (38%) · limit 3,00 MB → blisko limitu
+  s1     desktop 3,55 MB (59%) · telefon 2,32 MB (39%) · limit 6,00 MB → OK
+  s2     desktop 4,64 MB (77%) · telefon 2,89 MB (48%) · limit 6,00 MB → OK
+  s3     desktop 4,67 MB (78%) · telefon 2,93 MB (49%) · limit 6,00 MB → OK
+Błędy: 0, ostrzeżenia: 12. Raport: art/raport/raport.html
 ```
 
-W przykładzie widać fałszywy alarm z § 7.4: lobby „przekroczone” przez pesymistyczne liczenie (oba tła, plakaty
-`k169`, WebP zamiast AVIF) — sprawdzamy ręcznie, ile pobiera przeglądarka desktopowa, zanim cokolwiek obetniemy.
+Kod wyjścia tego przebiegu to `1` (są ostrzeżenia, brak błędów): 11 ostrzeżeń przy ID (Q07 ×5, Q15 ×5, Q26 ×1)
+i budżet lobby ≥ 85% (Q23). Z `--strict` byłoby `2`. Ewentualne pliki o złych nazwach (Q02) i brakujące pliki
+z manifestu (Q30) są drukowane pod tabelą jako `UWAGA Q02: …` i `BŁĄD Q30: …`.
 
 ### 8.5. Fragment `raport.json`
 
+Kształt pliku (liczby w `podsumowanie` i `budzety` z przebiegu 2026-10-11, wpis `g_skrzynia` — przykład ilustracyjny):
+
 ```json
 {
-  "podsumowanie": { "pipeline": "1.0.0", "uruchomienie": "2026-10-12T18:04:11Z", "bledy": 2, "ostrzezenia": 2,
-                    "chatgpt": 34, "zastepcze": 51 },
-  "budzety": { "lobby": { "desktop": 3480123, "telefon": 1620442, "limit": 3000000 }, "…": {} },
+  "podsumowanie": { "pipeline": "1.0.0", "uruchomienie": "2026-10-11T15:39:52Z", "bledy": 0, "ostrzezenia": 12,
+                    "nieznane_pliki": [], "chatgpt": 84, "zastepcze": 1 },
+  "budzety": { "lobby": { "desktop": 2580292, "telefon": 1140832, "limit": 3000000 }, "…": {} },
   "obrazy": {
     "g_skrzynia": {
       "id": "g_skrzynia",
@@ -1912,7 +2055,8 @@ W przykładzie widać fałszywy alarm z § 7.4: lobby „przekroczone” przez p
 ```
 
 `uruchomienie` = `manifest.version` z tego przebiegu. `raport.json` z poprzedniego przebiegu jest czytany przy
-`--tylko`, żeby budżety obejmowały też assety, których tym razem nie przetwarzano.
+`--tylko`, żeby budżety obejmowały też assety, których tym razem nie przetwarzano (liczniki `bledy` / `ostrzezenia`
+dotyczą wtedy tylko przetworzonych ID).
 
 ### 8.6. Co robimy z wynikiem
 
@@ -1921,7 +2065,8 @@ W przykładzie widać fałszywy alarm z § 7.4: lobby „przekroczone” przez p
 | Błąd w obrazie z ChatGPT | prosimy o ponowne wygenerowanie z gotową poprawką promptu (03); do tego czasu zostaje grafika zastępcza albo poprzednia wersja |
 | Ostrzeżenie | oglądamy kartę w raporcie; jeśli wygląda dobrze — akceptujemy i zapisujemy to w opisie commita (ostrzeżenie wróci przy kolejnym przebiegu; trwała akceptacja `akceptuj = ["Q09"]` w `manifest.toml` — [plan]); jeśli nie — zmiana parametru `cel` w `katalog.py` albo nowa wersja obrazu |
 | Info | nic — informacja, co pipeline naprawił sam |
-| Budżet ≥ 85% | przegląd największych plików (`pliki` w `raport.json` z wagą każdego pliku; sortowanie w raporcie HTML — [plan]) i środki z § 7.4; najpierw sprawdzamy, czy to nie skutek pesymistycznego liczenia (§ 7.1) |
+| Budżet ≥ 85% | przegląd największych plików (`pliki` w `raport.json` z wagą każdego pliku; sortowanie w raporcie HTML — [plan]) i środki z § 7.4 (AVIF najpierw); liczenie jest zgodne z tym, co pobiera przeglądarka (§ 7.1), więc to prawdziwy sygnał |
+| `UWAGA Q02` | poprawiamy nazwę albo folder pliku według podpowiedzi i uruchamiamy pipeline dla tego ID |
 
 ---
 
@@ -1930,18 +2075,20 @@ W przykładzie widać fałszywy alarm z § 7.4: lobby „przekroczone” przez p
 | # | Kwestia | Skutek | Co robimy / plan B |
 |---|---|---|---|
 | 1 | ChatGPT daje maks. 1536 px | w 1.0.0 ramki i napisy wygranych nie mają @2x (§ 2.5–2.6); tła mają @2x 2560 px (×1,67); tła na 4K miękkie | świadomie akceptujemy (01 § 6.4); obniżone @2x dla ramki S2 i napisów — [plan]; plan B: upscaler AI offline (np. Real-ESRGAN) — nie zakładamy, że zadziała, sprawdzimy przed użyciem |
-| 2 | Przezroczystość z ChatGPT bywa fałszywa (szachownica, jednolite tło) | gorsza krawędź po automatycznej naprawie, zwłaszcza przy półprzezroczystej poświacie | § 5.3–5.4 (zrobione, 4 testy); prompty (03) wymagają zwartej poświaty (01 § 4.5), plan B z kolorem klucza (03 § 10); przy pewności szachownicy < 0,80 i nieudanym usunięciu tła — ponowne generowanie |
+| 2 | Przezroczystość z ChatGPT bywa fałszywa (szachownica, jednolite tło) | gorsza krawędź po automatycznej naprawie, zwłaszcza przy półprzezroczystej poświacie | § 5.3–5.4 (zrobione, 6 testów, w tym dziury na białym i czarnym tle; miara obwódki Q09); prompty (03) wymagają zwartej poświaty (01 § 4.5), plan B z kolorem klucza (03 § 10); przy pewności szachownicy < 0,80 i nieudanym usunięciu tła — ponowne generowanie |
 | 3 | Dryf stylu między czatami | niespójny zestaw | kotwice stylu (01 § 1.4), karty w raporcie oglądane grami; automatyczne kontrole Q17, Q19 i stykówki — [plan]; ostatecznie decyduje człowiek |
 | 4 | Rozszerzenia kontraktu 09: w 1.0.0 `pipeline`, `hash`, `variants`, `widths`, `focus`, `lqip`, `tint`, `pole`, `frames.<ID>.nineSlice`, `fonts`, `icons`; w planie `atlas`/`atlases`, `avif`, `bundles` | front musi je znać, żeby korzystać z wariantów, teł i cyfr | są addytywne — klient znający tylko 09 nadal działa (`src` / `src2x`); do wpisania w 09 po akceptacji front-endu (tabela pól w § 5.22) |
 | 5 | Szczegóły Pixi 8 do potwierdzenia na wendorowanej wersji | `meta.related_multi_packs`, skala `@0.5x` z nazwy, `@2x` w BitmapFont, API `NineSliceSprite` | dla każdego jest plan B opisany w § 5.9 i § 5.14 (osobne wpisy w manifeście `Assets`, jawne `meta.scale`, `fontSize`) |
-| 6 | Budżet lobby: szacunek ok. 81% z AVIF, ok. 92% z samym WebP (1.0.0); raport 1.0.0 liczy pesymistycznie i może pokazać > 100% | ostrzeżenie albo **fałszywy błąd Q23** (kod wyjścia 2) przy prawdziwej dostawie | § 7.4: poprawa liczenia (jedna orientacja tła, `k169` poza lobby) — [plan]; środki zaradcze z § 7.4 (AVIF najpierw) |
-| 7 | Szacunki wag ±30% | liczby w § 7 mogą się przesunąć | prawdziwe wartości z raportu po pierwszej paczce; tabele w § 7 zaktualizujemy |
+| 6 | Budżet lobby: zmierzone **86%** (2,58 MB z 3 MB, sam WebP); liczenie poprawione (jedna orientacja tła, banery poza lobby) | ostrzeżenie Q23 (kod wyjścia 1); mało miejsca na kolejne obrazy w lobby | środki zaradcze z § 7.4 (AVIF w `<picture>` najpierw) |
+| 7 | Szacunki wag ±30% | liczby w § 7 mogą się przesunąć | zmierzone po pełnej dostawie (§ 0, § 7.3–7.5): gry 3,55–4,67 MB, lobby 2,58 MB, pliki na dysku ok. 26 MB |
+| 7a | `g_win_epic` z literówką („EIG” zamiast „EPIC”) | do czasu poprawki gra używa grafiki zastępczej tego napisu | prompt poprawkowy w `art/zrodla/_do-poprawy/README.md`, potem `--tylko g_win_epic` (§ 0); czytelności napisów pipeline nie sprawdza automatycznie — tylko przegląd raportu |
 | 8 | Wideo w lobby (kodowanie, budżet, proporcje kafli) | brak ustaleń w tym dokumencie | plakaty `k169` są gotowe (§ 5.18); wideo opisze 06/08 |
-| 9 | Surowe PNG na `main` | repozytorium +200 MB na zawsze (historia git) | gałąź `grafika-zrodla` (§ 4.4); wpisy `art/zrodla/` i `art/raport/` w `.gitignore` na `main` — **jeszcze do dopisania**; przepisywania historii nie planujemy (zepsułoby forki) |
+| 9 | Surowe PNG w repozytorium | repozytorium +156 MB na zawsze (historia git) | decyzja zespołu: źródła zostają (odtwarzalność pipeline'u, § 4.4); `.gitignore` ma `art/raport/`, `art/robocze/`, `art/zastepcze/`; wariant z gałęzią `grafika-zrodla` opisany na wypadek problemów z rozmiarem; przepisywania historii nie planujemy (zepsułoby forki) |
 | 10 | Normalizacja maskotki i monet jest heurystyczna | możliwe drobne różnice wielkości między pozami / klatkami | w 1.0.0 maskotka tylko dopasowana wysokością; korekta = zmiana `cel` w `katalog.py`; ręczne `skala` / `przesuniecie` per obraz — [plan] (`manifest.toml`) |
-| 11 | Pipeline 1.0.0 pomija po cichu pliki o złej nazwie albo w złym folderze (brak Q02) | obraz od właściciela „nie działa”, a w manifeście zostaje grafika zastępcza | po każdej paczce porównujemy listę ID z wiadomości z licznikiem `chatgpt` w raporcie (§ 4.6); Q02 — [plan] |
-| 12 | Część opisu § 5 i § 8 to [plan] (atlasy, AVIF, OG, cache, `manifest.toml`, ok. połowa kontroli Q) | nie wolno zakładać tych funkcji przy pracy nad frontem ani na obronie | zestawienie w § 5.0 i kolumna „1.0.0” w § 8.2; kolejność wdrażania: AVIF i poprawne liczenie Q23 (lobby) → Q02 → atlasy (S2) → reszta |
-| 13 | Komunikaty Q30 (brak pliku z manifestu) nie zmieniają kodu wyjścia | uszkodzony wynik może przejść z kodem 0 | czytamy konsolę przed commitem; doliczenie Q30 do błędów — [plan] |
+| 11 | Pliki o złej nazwie albo w złym folderze | obraz od właściciela „nie działa”, a w manifeście zostaje grafika zastępcza | **rozwiązane:** ostrzeżenie Q02 z podpowiedzią (§ 4.6); dodatkowo porównujemy licznik `chatgpt` w raporcie z listą ID z paczki |
+| 12 | Część opisu § 5 i § 8 to [plan] (atlasy, AVIF, OG, cache, `manifest.toml`, część kontroli Q) | nie wolno zakładać tych funkcji przy pracy nad frontem ani na obronie | zestawienie w § 5.0 i kolumna „1.0.0” w § 8.2; kolejność wdrażania: AVIF (lobby 86%) → atlasy (S2, S3) → reszta |
+| 13 | Brak pliku wskazanego w manifeście | zepsuty obrazek na froncie | **rozwiązane:** „BŁĄD Q30” liczy się do błędów, kod wyjścia 2 |
+| 14 | Ramki po automatycznej korekcie proporcji okna (S2, S3: rozciągnięty pas nie jest idealnie jednolity) | możliwe lekkie zniekształcenie ornamentu boków ramki | obejrzeć karty `s2_ramka` i `s3_ramka` w raporcie; jeśli razi — nowa wersja obrazu z poprawnym oknem (03) |
 
 ---
 

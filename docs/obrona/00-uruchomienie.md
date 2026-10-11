@@ -202,6 +202,16 @@ node e2e/backend-flow.mjs http://localhost:8088   # gra na prawdziwym backendzie
                                                   # bankructwo i ratunek, ranking, feed, raporty (46 sprawdzeń)
 ```
 
+Test gry S1 (runtime w PixiJS) działa na atrapie API, bo wymusza konkretne wyniki (BIG, MEGA, NEON JACKPOT…)
+nagłówkiem `X-Mock-Force`, którego prawdziwy backend nie zna:
+
+```bash
+cd tools
+node dev/mock-api.mjs                             # atrapa API i pliki statyczne na http://localhost:8090
+node e2e/gra-s1.mjs                               # w drugim terminalu: 20+ rund, saldo, strażnik błysków,
+                                                  # responsywność, pomiar klatek (opis: docs/projekt/10 § 9, § 11)
+```
+
 Zrzuty ekranu i `wyniki.json` trafiają do `tools/e2e/zrzuty/` (poza repozytorium). Kod wyjścia 0 = wszystko zielone.
 Testów e2e nie ma w GitHub Actions, bo katalog `.github/workflows` jest objęty zakazem modyfikacji.
 
@@ -218,5 +228,6 @@ Testów e2e nie ma w GitHub Actions, bo katalog `.github/workflows` jest objęty
 
 ## Powiązane dokumenty
 
-[`01-architektura.md`](01-architektura.md) · [`../plan-projektu.md`](../plan-projektu.md) ·
+[`01-architektura.md`](01-architektura.md) · [`02-przewodnik-po-kodzie.md`](02-przewodnik-po-kodzie.md) ·
+[`07-podzial-pracy.md`](07-podzial-pracy.md) (komendy do pokazu) · [`../plan-projektu.md`](../plan-projektu.md) ·
 [`../projekt/09-kontrakt-api-i-assetow.md`](../projekt/09-kontrakt-api-i-assetow.md)

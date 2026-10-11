@@ -17,12 +17,23 @@ Szczegóły są w [`docs/projekt/`](projekt/README.md).
 
 ## 1. Status
 
+Stan na 2026-10-11 (gałąź `claude/dazzling-bell-be3okd`, commit `da53c1d`).
+
 | Etap | Stan |
 |---|---|
 | LAB 01: nazwa `kasyno`, wersja z indeksami, konta zespołu, wizytówka | **zrobione**, `mvn verify -Dlab=1`: 5/5 reguł zielonych |
-| Dokumentacja projektowa (`docs/projekt/01–08`) | w trakcie |
-| Grafika: 93 obrazy z ChatGPT według [`03-prompty-chatgpt.md`](projekt/03-prompty-chatgpt.md) | **czeka na Was** |
-| Backend gier, front, dźwięk, efekty | po dokumentacji, równolegle z generowaniem grafiki |
+| Backend: moduły `account`, `wallet`, `slots`, `report` + `shared` (encje i relacje, `data.sql`, repozytoria i 5 pytań inwestora, serwisy z transakcjami, REST z ProblemDetail, walidacją i Swaggerem) | **zrobione** (zakres LAB 02–05 z wyprzedzeniem; reguły tych laboratoriów jeszcze nie istnieją w szablonie); ok. 260 testów zielonych, ArchUnit bez cykli |
+| Silniki gier: 3 automaty (linie S1/S2, klastry z kaskadami S3), darmowe spiny, mnożniki, limit wygranej, testy Monte Carlo | **zrobione**: RTP S1 94,892% (dokładnie), S2 96,18% (10 mln rund), S3 96,28% (14 mln rund) — [`07-gry-i-matematyka.md`](projekt/07-gry-i-matematyka.md) |
+| LAB 06: zdarzenia (`AFTER_COMMIT`), `@ConfigurationProperties`, `@Scheduled`, profile `dev`/`demo`/`prod` | **zrobione**; bez zadania dodatkowego (integracja `RestClient` z API innego zespołu) |
+| Docker + Render.com (`Dockerfile`, `render.yaml`, PostgreSQL przez zmienne środowiskowe) | **zrobione** — [`obrona/00-uruchomienie.md`](obrona/00-uruchomienie.md) § 4–5 |
+| Grafika: 93 obrazy z ChatGPT według [`03-prompty-chatgpt.md`](projekt/03-prompty-chatgpt.md) + pipeline `tools/art/przetworz.py` | **93/93 dostarczone**; w aplikacji 84 assety z ChatGPT, `g_win_epic` do poprawy (`art/zrodla/_do-poprawy/`) — [`02-lista-obrazow.md`](projekt/02-lista-obrazow.md) § 0 |
+| Dźwięk i muzyka: 59 efektów + 8 pętli, synteza w Pythonie, Opus + AAC | **zrobione** (67 ID) — [`05-dzwiek-i-muzyka.md`](projekt/05-dzwiek-i-muzyka.md) |
+| Front: lobby (logowanie, bonus, kafle, ranking, feed, ratunek) + runtime gier w PixiJS | **zrobione** — [`10-runtime-gier.md`](projekt/10-runtime-gier.md) |
+| S1 „Cebulowy 777” w przeglądarce (efekty, dźwięk, poziomy jakości, strażnik błysków) | **zrobione**, e2e `gra-s1.mjs` 35/35 |
+| S2 „Złoty Faraon” i S3 „Kryształowa Kaskada” w przeglądarce | **w toku** (backend i silniki gotowe; do scalenia front gra w nie na wspólnym runtime z prostą sceną) |
+| Filmiki z rozgrywki w lobby | po S2/S3 (profil `demo` + `X-Demo-Seed` gotowe) |
+| Dokumentacja projektowa (`docs/projekt/`) | 00–05, 07, 09, 10 gotowe; 06 (interfejs) i 08 (wydajność) planowane |
+| Dokumentacja do obrony (`docs/obrona/`) | 00–03, 05–07 gotowe; 04 (front, efekty, dźwięk) po scaleniu S2/S3 — [`obrona/README.md`](obrona/README.md) |
 
 ## 2. Co budujemy
 
@@ -287,16 +298,16 @@ uruchamiamy je lokalnie (`npm run e2e` w `tools/e2e`), a wyniki opisujemy w doku
 
 ## 10. Dokumentacja do obrony (`docs/obrona/`, powstaje razem z kodem)
 
-| Plik | Zawartość |
-|---|---|
-| `00-uruchomienie.md` | jak uruchomić (IntelliJ, Maven, Docker), adresy, konta |
-| `01-architektura.md` | diagramy: warstwy, moduły, ERD, sekwencje, maszyna stanów |
-| `02-przewodnik-po-kodzie.md` | pakiet po pakiecie, klasa po klasie: po co jest, które metody są ważne |
-| `03-silnik-gier.md` | losowanie, tabele wypłat, wyliczenie RTP, wyniki symulacji |
-| `04-front-efekty-dzwiek.md` | jak działają animacje, efekty, dźwięk i obróbka grafiki |
-| `05-decyzje-projektowe.md` | dlaczego tak (serwer rozstrzyga, jedna runda = jeden zakład, `BigDecimal`…) |
-| `06-pytania-na-obrone.md` | ~40 pytań i odpowiedzi z odnośnikami „pokaż w kodzie” |
-| `07-podzial-pracy.md` | kto broni którego modułu + ściąga dla każdej osoby |
+| Plik | Zawartość | Stan |
+|---|---|---|
+| `00-uruchomienie.md` | jak uruchomić (IntelliJ, Maven, Docker), adresy, konta | gotowe |
+| `01-architektura.md` | diagramy: warstwy, moduły, ERD, sekwencje, maszyna stanów | gotowe |
+| `02-przewodnik-po-kodzie.md` | pakiet po pakiecie, klasa po klasie: po co jest, które metody są ważne | gotowe |
+| `03-silnik-gier.md` | losowanie, tabele wypłat, wyliczenie RTP, wyniki symulacji | gotowe |
+| `04-front-efekty-dzwiek.md` | jak działają animacje, efekty, dźwięk i obróbka grafiki | po scaleniu S2/S3 (do tego czasu `docs/projekt/10`) |
+| `05-decyzje-projektowe.md` | dlaczego tak (serwer rozstrzyga, jedna runda = jeden zakład, `BigDecimal`…) — 14 ADR | gotowe |
+| `06-pytania-na-obrone.md` | 58 pytań i odpowiedzi z odnośnikami „pokaż w kodzie” | gotowe |
+| `07-podzial-pracy.md` | kto broni którego modułu + ściąga dla każdej osoby (propozycja) | gotowe |
 
 W kodzie: polskie Javadoc na każdej klasie publicznej („po co ta klasa”) i komentarze przy nieoczywistych decyzjach.
 
@@ -326,8 +337,11 @@ W kodzie: polskie Javadoc na każdej klasie publicznej („po co ta klasa”) i 
 
 ## 13. Co jest teraz po Waszej stronie
 
-1. **Wygenerować grafikę w ChatGPT** według [`03-prompty-chatgpt.md`](projekt/03-prompty-chatgpt.md): zacznijcie od czatu 0
-   (makiety), potem czaty 1 i 3 (priorytet P0). Pliki do `art/zrodla/{makiety,global,s1,s2,s3}/` z nazwą = ID obrazu.
+1. ~~Wygenerować grafikę w ChatGPT~~ — zrobione (93/93). Zostało: **poprawić `g_win_epic`** (napis „EIG” zamiast
+   „EPIC”) promptem z `art/zrodla/_do-poprawy/README.md` i zapisać jako `art/zrodla/global/g_win_epic.png`
+   ([`02-lista-obrazow.md`](projekt/02-lista-obrazow.md) § 0).
 2. Opcjonalnie: muzyka w Suno według promptów z [`05-dzwiek-i-muzyka.md`](projekt/05-dzwiek-i-muzyka.md).
-3. Zmienić nazwę repozytorium na `WdTB-2026-Backend-kasyno` i uzupełnić arkusz zespołów.
-4. Zdecydować, czy aplikacja ma działać też online (§ 11).
+3. **Przygotować się do obrony** według [`obrona/07-podzial-pracy.md`](obrona/07-podzial-pracy.md) (podział to
+   propozycja — ustalcie go między sobą).
+4. Zmienić nazwę repozytorium na `WdTB-2026-Backend-kasyno` i uzupełnić arkusz zespołów.
+5. Zdecydować, czy aplikacja ma działać też online (§ 11; `Dockerfile` i `render.yaml` są gotowe).

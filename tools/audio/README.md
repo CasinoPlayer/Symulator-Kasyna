@@ -137,9 +137,9 @@ znamy z góry). Ton Sheparda–Risseta (`mus_napiecie`) daje wrażenie nieskońc
    przebiegu fali) na WAV i na plikach zdekodowanych, tak jak gra przeglądarka; trzask daje wartości kilka–kilkadziesiąt
    razy większe niż zwykły przebieg.
 
-**Uwaga dla silnika (`static/js/audio/audio-engine.js`, v1):** v1 zapętla cały bufor i ignoruje `loopStart` /
-`loopEnd`. Przy plikach z zakładkami trzeba ustawić `source.loopStart` / `source.loopEnd` z manifestu i startować
-od `loopStart` (`source.start(when, loopStart)`) — inaczej co obieg pętli zabrzmi 0,2 s / 0,5 s „czkawki”.
+**Jak to odtwarza silnik (`static/js/audio/audio-engine.js`):** dla pętli ustawia `source.loop = true`,
+`source.loopStart` / `source.loopEnd` z manifestu i startuje od `loopStart` (`source.start(when, loopStart)`), więc
+dopełnienie na końcu pliku nigdy nie trafia do pętli. Bez zakładek co obieg zabrzmiałoby 0,2 s / 0,5 s „czkawki”.
 
 ## 5. Głośność, formaty, manifest
 

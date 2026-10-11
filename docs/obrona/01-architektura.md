@@ -411,6 +411,7 @@ przeglądarką a serwerem: [`../projekt/09-kontrakt-api-i-assetow.md`](../projek
 
 ## Powiązane dokumenty
 
-[`00-uruchomienie.md`](00-uruchomienie.md) · [`../plan-projektu.md`](../plan-projektu.md) ·
+[`00-uruchomienie.md`](00-uruchomienie.md) · [`02-przewodnik-po-kodzie.md`](02-przewodnik-po-kodzie.md) (klasa po
+klasie) · [`05-decyzje-projektowe.md`](05-decyzje-projektowe.md) (ADR) · [`../plan-projektu.md`](../plan-projektu.md) ·
 [`../projekt/07-gry-i-matematyka.md`](../projekt/07-gry-i-matematyka.md) ·
 [`../projekt/09-kontrakt-api-i-assetow.md`](../projekt/09-kontrakt-api-i-assetow.md)

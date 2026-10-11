@@ -12,7 +12,7 @@
 | Zespół | Konrad Paulus (112960, s428425@student.wroclaw.merito.pl) · Dominik Pacanowski (112961, s433776@student.wroclaw.merito.pl) · Dawid Majewski (113154, s156704@student.wroclaw.merito.pl) |
 | Wersja dokumentu | 1.0 (2026-10-11) |
 | Zakres | **67 plików audio**: 8 UI + 13 globalnych + 27 wspólnych dla gier + 2 (S1) + 2 (S2) + 7 (S3) = 59 efektów oraz 8 pętli muzycznych; każdy plik w dwóch formatach (WebM/Opus i M4A/AAC) |
-| Kod | silnik: `src/main/resources/static/js/audio/audio-engine.js` (wersja 1 już jest w repozytorium); synteza: `tools/audio/*.py` (w budowie — stan i lista plików w § 8.2) |
+| Kod | silnik: `src/main/resources/static/js/audio/audio-engine.js` + mapowanie zdarzeń gry `js/game/audio/game-audio.js` (stan: § 2.1); synteza: `tools/audio/*.py` — gotowa, 67 ID wygenerowanych do `static/assets/audio/` (§ 8.2, opis „do obrony”: `tools/audio/README.md`); odstępstwa wykonania od tej specyfikacji: § 8.10 |
 | Hierarchia źródeł | brief projektu → ten dokument → kod. ID dźwięków i zdarzeń są wiążące; poziomy dB i czasy to wartości startowe, które stroimy na słuch (zmiana w jednym miejscu: metadane przepisu w `tools/audio/dzwieki.py`) |
 
 **W skrócie (liczby do zapamiętania na obronę)**
@@ -233,6 +233,18 @@ dochodzą z pipeline'u bez zmian w kodzie. Ten dokument opisuje wersję docelow�
 | Muzyka | jeden utwór, liniowe przenikanie | maszyna stanów, przenikanie o stałej mocy, kwantyzacja do miary / taktu, warstwa napięcia, wznowienie od zapamiętanego taktu | § 4.4 |
 | Ukrycie karty | `suspend()` / `resume()` | + `pagehide` / `pageshow` (bfcache), wyciszanie muzyki po bezczynności | § 2.8 |
 | Ustawienia | `cebulion.audio` w `localStorage` | + suwaki w oknie ustawień, mono, wibracje (`cebulion.haptyka`) | § 9, § 10 |
+
+**Stan po scaleniu runtime gier i S1 (2026-10-11).** Silnik w repozytorium jest już dalej niż „wersja 1” z tabeli —
+z kolumny „docelowa” działają: węzeł duckingu z nazwanymi głębokościami (kilka naraz = najgłębszy) i filtr muzyki
+(1200 Hz w antycypacji), pola manifestu `gainDb`, `gainJitterDb`, `pitchCents`, `keyTrack` (tonacja kontekstu
+`setKeyContext`), `syncPoint` (opcja `hitIn`), **`loopStart` / `loopEnd` ze startem pętli od `loopStart`**
+(`audio-engine.js:416–438`), limit 24 głosów (Low: 16) z priorytetami i kradzieżą, `maxVoices` / `cooldownMs` /
+`group`, warianty bez powtórzeń (`playVariant`), pakiety ładowania (`gameSounds`), wybór formatu raz na stronę
+z przejściem na `.m4a`, gdy dekodowanie `.webm` zawiedzie (§ 7.1), wznowienie muzyki od taktu
+(`bpm`, `beatsPerBar`) i warstwa napięcia `mus_napiecie`. Szczegóły i tabela pól: [10 § 8](10-runtime-gier.md).
+Jeszcze **nie ma**: kompresora efektów i limitera na sumie (`DynamicsCompressorNode`), przełącznika mono, obsługi
+`pagehide` / `pageshow` (bfcache) i wyciszania po bezczynności. Uwaga do `tools/audio/README.md` § 4: zdanie
+„silnik v1 ignoruje `loopStart` / `loopEnd`” jest nieaktualne — dzisiejszy silnik je obsługuje.
 
 ### 2.2. Graf audio
 
@@ -723,11 +735,11 @@ wychodzi **melodyjny deszcz**, który nigdy nie fałszuje, a z muzyką lobby (a-
 | `sfx_linia` | „laserowe” przeciągnięcie linii — czyste, krótkie „ziiing” | 340 ms | nie | sfx | −12 | 3 | 1 plik; +100 c × numer pokazywanej linii (maks. +700 c) | sinus 800 → 1 600 Hz (wykładniczo, 120 ms), τ 150 ms + szum BP 4 kHz (Q 6) o tej samej obwiedni, −8 dB; echo 90 ms, sprzężenie 25%, echo w panoramie ±0,4. Celowo prawie bez wysokości dźwięku — kolejne linie wznoszą się chromatycznie i nie gryzą się z muzyką |
 | `sfx_bigwin_wejscie` | wejście BIG WIN: zasysające narastanie, potężne uderzenie, akord „dętych” i motyw Cebuliona jako fanfara | 2 400 ms | nie | sfx | −3 | 5 | 1 plik, stereo; `syncPoint` 300 ms | 0–300 ms: odwrócony talerz (szum HP 3 kHz, obwiednia rosnąca wykładniczo); 300 ms: uderzenie — sinus 55 → 30 Hz (600 ms) + trzask + akord C3–G3–C4–E4–G4–C5 („dęte”: piła + kwadrat oktawę wyżej, LP 400 → 8 000 Hz w 80 ms); 500–1 300 ms: motyw G4–C5–E5–G5 po 120 ms (ostatnia nuta trzymana); do 2 400 ms: trzymany akord, migotanie (iskry 5–9 kHz), pogłos sali 2,5 s |
 | `sfx_poziom_w_gore` | eskalacja poziomu: świst w górę i uderzenie z akordem kwintowym, za każdym razem o ton wyżej | 1 400 ms | nie | sfx | −4 | 5 | 1 plik; MEGA 0 c, EPIC +200 c, ULTRA +400 c; `syncPoint` 250 ms | 0–250 ms: świst w górę (szum BP 500 → 6 000 Hz + sinus 200 → 1 600 Hz); 250 ms: uderzenie (sub 60 → 32 Hz, trzask 4 ms) + akord kwintowy F (F2–C3–F3–C4: piły z nasyceniem tanh ×4 + „dęte” oktawę wyżej), LP 600 → 7 000 Hz w 60 ms, trzymany 600 ms z zanikiem; iskry; pogłos 2 s |
-| `sfx_bigwin_koniec` | domknięcie sekwencji: kadencja G → C, kaskada monet, długi błyszczący ogon | 2 200 ms | nie | sfx | −4 | 5 | 1 plik, stereo | 0 ms: akord G-dur („dęte”, 150 ms) → 180 ms: Cadd9 („dęte” + dzwony FM + sub 55 Hz) trzymany 800 ms; 200–1 200 ms: kaskada 20 monet (panorama ±0,8); ogon: pogłos 2,5 s + migotanie |
+| `sfx_bigwin_koniec` | domknięcie sekwencji: kadencja G → C, kaskada monet, długi błyszczący ogon | 2 200 ms | nie | sfx | −4 | 5 | 1 plik, stereo | 0 ms: akord G-dur („dęte”, 150 ms) → 180 ms: Cadd9 („dęte” + dzwony FM + sub **C2 65,4 Hz** — wykonanie, zamiast 55 Hz = A1 spoza akordu, § 8.10) trzymany 800 ms; 200–1 200 ms: kaskada 20 monet (panorama ±0,8); ogon: pogłos 2,5 s + migotanie |
 | `sfx_blysk` | jasne, krótkie „szyng” błysku światła | 420 ms | nie | sfx | −12 | 3 | 1 plik; ±100 c, ±1,5 dB; `syncPoint` 30 ms (transjent po 30 ms narastania — trafia w szczyt błysku ekranu) | 30 ms odwróconego narastania; szum HP 5 kHz, atak 2 ms, τ 120 ms; sinusy 6,0 / 8,2 / 11,0 kHz, τ 200 ms, −10 dB; pogłos 1 s, mix 30% |
 | `sfx_uderzenie_basu` | głębokie, kinowe uderzenie basu z „mięsem” słyszalnym na telefonie | 1 000 ms | nie | sfx | −5 | 4 | 1 plik; ±30 c | sinus 60 → 32 Hz (wykładniczo, 250 ms), τ 400 ms; nasycenie asym. ×3 (harmoniczne 2.–8.: 120–480 Hz na starcie, potem niżej razem z glissandem — to je słychać na telefonie, § 1.4); klik 2 ms (szum LP 2 kHz) na początku; LP 4 kHz |
 | `sfx_free_spins_start` | wielkie przejście do darmowych spinów: narastanie 1 s, uderzenie, epicki akord z chórem | 3 200 ms | nie | sfx | −3 | 5 | 1 plik, stereo; T; `syncPoint` 1 000 ms | 0–1 000 ms: narastanie (szum BP 300 → 8 000 Hz, ton Sheparda w górę, werbel szesnastkami z crescendo od −30 dB); 1 000 ms: uderzenie (sub 50 → 28 Hz, 800 ms, trzask, talerz: szum HP 4 kHz, τ 900 ms) + akord C-dur („dęte” + chór „a” + dzwony C6–E6–G6) narastający 600 ms; do 3 200 ms: wybrzmienie, pogłos 3 s |
-| `sfx_free_spins_koniec` | zamknięcie bonusu: opadające rozwiązanie, „zamykający się portal” | 2 400 ms | nie | sfx | −5 | 5 | 1 plik, stereo; T | szum BP 6 000 → 400 Hz (whoosh w dół, 600 ms); dzwony opadają po dźwiękach C-dur G6–E6–C6–G5 (co 120 ms) i lądują na trzymanym akordzie C-dur (pad + dzwony, 900 ms); sub 55 Hz; pogłos 2 s. **Bez kadencji F → C:** po T akord F staje się G-dur w S2 (B nie należy do hidżazu) i A-dur w S3 (A nie należy do E lidyjskiej) — „rozwiązanie” daje ruch w dół na jednym akordzie |
+| `sfx_free_spins_koniec` | zamknięcie bonusu: opadające rozwiązanie, „zamykający się portal” | 2 400 ms | nie | sfx | −5 | 5 | 1 plik, stereo; T | szum BP 6 000 → 400 Hz (whoosh w dół, 600 ms); dzwony opadają po dźwiękach C-dur G6–E6–C6–G5 (co 120 ms) i lądują na trzymanym akordzie C-dur (pad + dzwony, 900 ms); sub **C2 65,4 Hz** (wykonanie, zamiast 55 Hz = A1, § 8.10); pogłos 2 s. **Bez kadencji F → C:** po T akord F staje się G-dur w S2 (B nie należy do hidżazu) i A-dur w S3 (A nie należy do E lidyjskiej) — „rozwiązanie” daje ruch w dół na jednym akordzie |
 
 **Dlaczego stopy bębnów rosną (C5 → D5 → E5 → G5 → A5 → C6):** kolejne stopy budują frazę wznoszącą — po
 ostatnim bębnie ucho „czeka na rozwiązanie”, którym jest dźwięk wygranej albo cisza. To klasyczny zabieg slotów;
@@ -753,7 +765,7 @@ Dźwięki S2 komponujemy od razu w tonacji gry (D hidżaz), więc nie mają tran
 | ID | Opis brzmienia | Długość | Pętla? | Szyna | Poziom dB | Prio | Warianty | Jak powstaje |
 |---|---|---|---|---|---|---|---|---|
 | `sfx_s2_wild_rozszerzenie` | kamień trze o kamień, słup światła rośnie, chór w skali hidżaz, uderzenie przy pełnej kolumnie | 1 600 ms | nie | sfx | −4 | 4 | 1 plik, stereo; `syncPoint` 600 ms | 0–600 ms: tarcie kamienia (szum brązowy → BP 200 → 900 Hz + trzaski ziarniste 40/s) i złoty połysk w górę (szum BP 2 → 9 kHz); 300–1 600 ms: chór (piły przez formanty „a”) — akord D–F♯–A z ozdobnikiem E♭ → D; 600 ms: uderzenie — sub 55 → 35 Hz + krótki gong (parcjały jak `sfx_s2_gong`, zaniki ×0,25); pogłos 2,2 s |
-| `sfx_s2_gong` | wielki gong świątynny: uderzenie pałki, rozkwit wysokich parcjałów, długie, falujące wybrzmienie | 3 500 ms | nie | sfx | −5 | 4 | 1 plik, stereo | 12 parcjałów na podstawie D2 (73,42 Hz) × {1; 1,52; 2,03; 2,48; 2,97; 3,53; 4,11; 4,75; 5,42; 6,20; 7,10; 8,30}; zaniki 4,0 → 1,2 s (wyższe krócej); **rozkwit**: parcjały od 5. w górę narastają 100–400 ms po uderzeniu (cecha prawdziwego gongu); dryft wysokości −15 c w 2 s; dudnienia: każdy parcjał jako para sinusów odstrojonych o 0,3–1,5 Hz; pałka: szum LP 300 Hz, 30 ms; stereo: różne fazy parcjałów w L i P |
+| `sfx_s2_gong` | wielki gong świątynny: uderzenie pałki, rozkwit wysokich parcjałów, długie, falujące wybrzmienie | 3 500 ms | nie | sfx | −5 | 4 | 1 plik, stereo | 12 parcjałów na podstawie D2 (73,42 Hz) × {1; 1,52; 2,03; 2,48; 2,97; 3,53; 4,11; 4,75; 5,42; 6,20; 7,10; 8,30}; zaniki 4,0 → 1,2 s (wyższe krócej); **rozkwit**: parcjały od 5. w górę narastają 100–400 ms po uderzeniu (cecha prawdziwego gongu); dryft wysokości −15 c w 2 s; dudnienia: każdy parcjał jako para sinusów odstrojonych o 0,3–1,5 Hz; pałka: szum LP 300 Hz, 30 ms; stereo: różne fazy parcjałów w L i P; **wykonanie (§ 8.10):** dodatkowa warstwa „blasku” — 28 gęstych, nieharmonicznych parcjałów 0,7–5,5 kHz, które też rozkwitają po uderzeniu, i szum blachy (BP 2,6 kHz); bez niej 12 parcjałów kończy się na ~600 Hz i gong brzmi głucho |
 
 ### 3.6. S3 „Kryształowa Kaskada” (7 dźwięków)
 
@@ -1519,8 +1531,8 @@ Front niczego nie losuje i nie liczy wyniku — z kroków odczytuje tylko, **co*
 |---|---|---|---|
 | synteza (w pamięci) | NumPy `float64` | 48 000 Hz | pełna precyzja obliczeń, brak przesterowań w trakcie miksu warstw |
 | plik pośredni | WAV PCM 24 bit | 48 000 Hz, mono lub stereo, `tools/audio/build/wav/<ID>.wav` (katalog w `.gitignore`) | bezstratny, do odsłuchu i pomiarów; 24 bity = zapas dynamiki bez ditheringu |
-| aplikacja (1) | **Opus w WebM** — `<ID>.webm` | mono **64 kb/s**, stereo **96 kb/s**, VBR | najmniejsze pliki przy bardzo dobrej jakości; Opus pełnopasmowy działa przy 48 kHz (sygnał o innej częstotliwości koder przepróbkowuje, a dekoder i tak oddaje 48 kHz) — stąd 48 kHz w całym pipeline (bez przepróbkowania) |
-| aplikacja (2) | **AAC-LC w MP4** — `<ID>.m4a` | mono **96 kb/s**, stereo **128 kb/s** | zapas dla przeglądarek bez Opus w WebM (Safari / iOS w części wersji) |
+| aplikacja (1) | **Opus w WebM** — `<ID>.webm` | mono **64 kb/s**, stereo **96 kb/s**, **VBR „constrained”** (`-vbr constrained`, ramka 20 ms) | najmniejsze pliki przy bardzo dobrej jakości; Opus pełnopasmowy działa przy 48 kHz (sygnał o innej częstotliwości koder przepróbkowuje, a dekoder i tak oddaje 48 kHz) — stąd 48 kHz w całym pipeline (bez przepróbkowania). Zwykłe VBR dawało na gęstej muzyce do ~130 kb/s zamiast 96 i przekraczało budżet S2/S3 (§ 8.10) |
+| aplikacja (2) | **AAC-LC w MP4** — `<ID>.m4a` | mono **96 kb/s**, stereo **128 kb/s**, **koder `fast`** (`-aac_coder fast`) | zapas dla przeglądarek bez Opus w WebM (Safari / iOS w części wersji). Domyślny koder `twoloop` potrafił podbić szczyt o 3,4 dB i miał średnio większy błąd względem WAV (§ 8.10) |
 
 **Wybór formatu w przeglądarce** (jest w v1): `canPlayType('audio/webm; codecs="opus"')` zwraca `"probably"`,
 `"maybe"` albo `""`. Niepusty wynik → `.webm`, w przeciwnym razie `.m4a`. Uzupełnienie w wersji docelowej: jeśli
@@ -1641,15 +1653,15 @@ Polecenie `ffmpeg` poniżej to ręczny pomiar kontrolny.
 ffmpeg -hide_banner -nostats -i tools/audio/build/wav/mus_s2.wav \
        -af loudnorm=I=-14:TP=-1:LRA=11:print_format=json -f null -
 
-# Opus w WebM (mono 64k / stereo 96k)
+# Opus w WebM (mono 64k / stereo 96k) — tak jak tools/audio/eksport.py
 ffmpeg -y -hide_banner -i tools/audio/build/wav/sfx_wild.wav \
-       -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio \
+       -c:a libopus -b:a 64k -vbr constrained -compression_level 10 -application audio -frame_duration 20 \
        -map_metadata -1 -fflags +bitexact -flags:a +bitexact \
        src/main/resources/static/assets/audio/sfx_wild.webm
 
-# AAC w M4A (mono 96k / stereo 128k)
+# AAC w M4A (mono 96k / stereo 128k), koder "fast"
 ffmpeg -y -hide_banner -i tools/audio/build/wav/sfx_wild.wav \
-       -c:a aac -b:a 96k -movflags +faststart \
+       -c:a aac -aac_coder fast -b:a 96k -movflags +faststart \
        -map_metadata -1 -fflags +bitexact -flags:a +bitexact \
        src/main/resources/static/assets/audio/sfx_wild.m4a
 ```
@@ -1769,8 +1781,7 @@ flowchart LR
 
 ### 8.2. Pliki i katalogi
 
-Stan na 2026-10-11 (pipeline powstaje równolegle z tym dokumentem — po zmianach w `tools/audio/` ten opis trzeba
-z nimi porównać):
+Stan na 2026-10-11 (pipeline gotowy, wszystkie 67 ID wygenerowane; porównane z `tools/audio/README.md`):
 
 ```text
 tools/audio/
@@ -1801,8 +1812,9 @@ audio/
     └── LICENCJE.md        źródło, autor, licencja i data sprawdzenia każdego pliku (§ 12)
 ```
 
-Brakuje jeszcze (zapowiedziane w nagłówkach modułów albo w tym dokumencie): `README.md` z opisem „do obrony”,
-`wymagania.txt` i testów `pytest` z § 8.9.
+Są też `README.md` (opis technik syntezy „do obrony”, pętle, głośność, podmiana na Suno) i `wymagania.txt`
+(NumPy, opcjonalnie Pillow). Brakuje jeszcze testów `pytest` z § 8.9 — te same własności sprawdza `sprawdz.py`
+na wyniku pipeline'u.
 
 Wymagania: Python ≥ 3.11 (sprawdzone na 3.13), NumPy ≥ 2.0 (sprawdzone na 2.5; **bez SciPy** — wszystkie filtry,
 splot i pomiary są w `dsp.py` / `analiza.py`), Pillow tylko do obrazków PNG w `analiza.py` (opcjonalnie),
@@ -1939,7 +1951,8 @@ for _k, _nuta in _NUTY_STOPOW.items():
   przepisy (`wstaw(..., zawijaj=True)`, filtry `okresowy=True`), § 7.3.
 * Generator `rng` ma ziarno wyliczone z ID (`generuj_wszystko.py`: `np.random.default_rng(zlib.crc32(id.encode()))`), więc render jest **deterministyczny**: ten sam
   kod → te same próbki WAV (bajty plików skompresowanych — patrz zastrzeżenie w § 7.4).
-* **Do zmiany w kodzie po tej recenzji** (kod powstał według wcześniejszej wersji § 3): wyjątek S2 w `keyTrack`
+* **Naniesione w kodzie po recenzji** (sprawdzone 2026-10-11 w `dzwieki.py` i `assets/audio/manifest.json`; kod
+  powstał według wcześniejszej wersji § 3): wyjątek S2 w `keyTrack`
   (`{"s2": 100}`) dla `sfx_beben_stop_2`, `sfx_beben_stop_5`, `sfx_moneta_2`, `sfx_moneta_5` (§ 1.2); nuty
   `sfx_licznik_tik` (G6 / C7), `sfx_saldo_puls` (E5 → G5), `sfx_scatter_2` (G5 pod E6), bieg `sfx_wygrana_medium`
   (C–E–G–C–E, monety na C7 / E7 / G7); `sfx_antycypacja_narastanie` z T, `syncPoint` 1,2 s i klastrem C3–G3–C4;
@@ -2076,6 +2089,27 @@ Dziś te same własności sprawdza `sprawdz.py` na wyniku całego pipeline'u; te
 | Karplus–Strong | `karplus_strong` dla A3 … C6 | wysokość ±2 c (przepróbkowanie, § 8.3) |
 | tonacja S2 | wszystkie pliki z `keyTrack` po przesunięciu dla `s2` | składowe tonalne wyłącznie z dźwięków skali hidżaz (§ 1.2) |
 | manifest | lista ID z briefu | 67 wpisów, wszystkie pola wymagane |
+
+### 8.10. Odstępstwa wykonania od specyfikacji (z raportu wykonawcy pipeline'u)
+
+Przy pisaniu przepisów w `tools/audio/` kilka decyzji z tego dokumentu zmieniliśmy — każdą z powodu technicznego
+albo muzycznego. Tabela jest źródłem prawdy o tym, **co jest w plikach**; wiersze specyfikacji w § 3–7 mają przy tych
+miejscach dopisek „wykonanie”.
+
+| Element | Specyfikacja (ten dokument) | Wykonanie (kod) | Dlaczego | Gdzie w kodzie |
+|---|---|---|---|---|
+| sub w `sfx_free_spins_koniec` i `sfx_bigwin_koniec` | sub 55 Hz | sub **C2 (65,41 Hz)** | 55 Hz to A1 — dźwięk spoza akordu C-dur, na którym oba dźwięki lądują; sub na A pod akordem C daje mętny Am7 i dudnienia w basie. Prymą akordu jest C | `tools/audio/dzwieki.py` — `sfx_bigwin_koniec` (`:746`), `sfx_free_spins_koniec` (`:829`), `hz("C2")` |
+| gong (`sfx_s2_gong`, gong w `mus_s2`, krótki gong w `sfx_s2_wild_rozszerzenie`) | 12 parcjałów na D2 (do ×8,30, czyli ~600 Hz) | 12 parcjałów **+ warstwa „blasku”**: 28 gęstych nieharmonicznych parcjałów 0,7–5,5 kHz z rozkwitem po uderzeniu + szum blachy (BP 2,6 kHz) | sam przepis z 12 parcjałów kończy się na ~600 Hz — gong brzmiał głucho, „jak garnek”; prawdziwy gong świątynny ma gęste, jasne widmo | `tools/audio/instrumenty.py` — `gong(…, blask=True)` (`:167`, warstwa od `:193`) |
+| chór w `mus_s3_fs` | samogłoski „a” → „o” → „a” | cykl **3 + 3 takty** (okres 6 taktów, dokładnie 2 cykle na 12-taktową pętlę) | pierwsza wersja zakładała 4 + 4 takty, ale 8 nie dzieli 12 — pętla kończyłaby się na „o”, a zaczynała na „a” (słyszalny szew barwy). **Naniesione** w § 4.3.6 i § 7.3 | `tools/audio/muzyka.py` — `mus_s3_fs` (`:492`), `okres_samoglosek = 6 * u.takt_s` |
+| kodowanie Opus | VBR | **VBR „constrained”** (`-vbr constrained`, ramka 20 ms) | zwykłe VBR na gęstej muzyce dawało do ~130 kb/s zamiast 96 i przekraczało budżet sieci stron S2/S3 (§ 7.6); constrained nadal zmienia przepływność ramka po ramce, ale trzyma średnią | `tools/audio/eksport.py` — `koduj` (`:33`) |
+| kodowanie AAC | AAC-LC 96/128 kb/s (koder domyślny) | koder **`fast`** (`-aac_coder fast`) | domyślny `twoloop` potrafił podbić szczyt o 3,4 dB (glitch na nagłym starcie basu) i miał średnio większy błąd względem WAV (−21,6 vs −25,4 dB); sprawdzone na wszystkich 67 plikach | `tools/audio/eksport.py` (`:43–46`) |
+| głośność muzyki | −14 LUFS | **−14 LUFS** pliku; szyna `music` 0,45 (−6,9 dB) → muzyka w sesji ok. **−22 LUFS** | zgodne z § 4.1 pkt 5, § 5.1 i § 5.7 — wiersz dla porządku, bo wykonawca potwierdził cel pomiarem (`analiza.lufs` + `ffmpeg ebur128`) | `tools/audio/mastering.py` — `CEL_LUFS_MUZYKA = -14.0` (`:23`) |
+| pętle w przeglądarce | `source.loopStart` / `loopEnd` z manifestu, start od `loopStart` (§ 7.3) | **zrobione** w silniku: `audio-engine.js:416–438` (pętla między punktami i start od `loopStart`; przy `syncPoint` — wejście w środek pętli) | pliki mają zakładki 0,1 s (efekty) / 0,25 s (muzyka); zapętlenie całego bufora dawałoby „czkawkę” co obieg. `tools/audio/README.md` § 4 opisuje jeszcze stan sprzed tej zmiany | `static/js/audio/audio-engine.js` |
+
+Zgodność z `tools/audio/README.md` (sprawdzone 2026-10-11): lista plików i ról (§ 8.2), formaty i przepływności
+(§ 7.1), normalizacja (efekty −1 dBTP, pętle efektów −18 LUFS, muzyka −14 LUFS — § 7.4), zakładki pętli (§ 7.3),
+determinizm (ziarno = CRC32 z ID — § 8.4, flagi `-bitexact` — § 7.4), podmiana na Suno (§ 8.8) i znane ograniczenia
+(AAC do ok. −0,5 dBTP — ostrzeżenie A04, § 8.6) są zgodne. Jedyna rozbieżność: wspomniane zdanie README o `loopStart` / `loopEnd`.
 
 ---
 
