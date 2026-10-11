@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="cebulion">
+  <!-- Zastępcza moneta cebulion (01 §2.5): złoty otok, perełkowanie, cebula w koronie w reliefie.
+       Gdy pipeline grafiki dostarczy g_moneta_przod, strona używa obrazu z manifestu. -->
+  <defs>
+    <linearGradient id="o" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF6D6"/>
+      <stop offset=".28" stop-color="#FFE08A"/>
+      <stop offset=".6" stop-color="#D9A21E"/>
+      <stop offset="1" stop-color="#5C3A00"/>
+    </linearGradient>
+    <radialGradient id="p" cx=".4" cy=".35" r=".75">
+      <stop offset="0" stop-color="#FFE9A8"/>
+      <stop offset=".45" stop-color="#F5C542"/>
+      <stop offset="1" stop-color="#B8860B"/>
+    </radialGradient>
+  </defs>
+  <circle cx="32" cy="32" r="30" fill="url(#o)" stroke="#3F2700" stroke-width="1.4"/>
+  <circle cx="32" cy="32" r="24.5" fill="url(#p)" stroke="#8A5E05" stroke-width="1"/>
+  <circle cx="32" cy="32" r="27.3" fill="none" stroke="#FFF6D6" stroke-width="1.7" stroke-linecap="round" stroke-dasharray="0.01 2.85" opacity=".9"/>
+  <!-- relief: cień, światło, bryła -->
+  <g transform="translate(.8 .9)" fill="#8A5E05" opacity=".7">
+    <path d="M32 24c3 6 12 8 12 17 0 7-6 10-12 10s-12-3-12-10c0-9 9-11 12-17z"/>
+    <path d="M24 23l-2-9 5 4 3-7 2 6 2-6 3 7 5-4-2 9z"/>
+  </g>
+  <g transform="translate(-.5 -.5)" fill="#FFF6D6" opacity=".55">
+    <path d="M32 24c3 6 12 8 12 17 0 7-6 10-12 10s-12-3-12-10c0-9 9-11 12-17z"/>
+    <path d="M24 23l-2-9 5 4 3-7 2 6 2-6 3 7 5-4-2 9z"/>
+  </g>
+  <g fill="#E8B530">
+    <path d="M32 24c3 6 12 8 12 17 0 7-6 10-12 10s-12-3-12-10c0-9 9-11 12-17z"/>
+    <path d="M24 23l-2-9 5 4 3-7 2 6 2-6 3 7 5-4-2 9z"/>
+  </g>
+  <path d="M32 27c-2 6-3 14-1 22M32 27c2 6 3 14 1 22" fill="none" stroke="#B8860B" stroke-width="1" stroke-linecap="round"/>
+  <ellipse cx="22" cy="17" rx="9" ry="5" fill="#fff" opacity=".28" transform="rotate(-35 22 17)"/>
+</svg>

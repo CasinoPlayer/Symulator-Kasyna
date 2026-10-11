@@ -4,165 +4,346 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#07060F">
-<meta name="description" content="Cebulion Casino: symulator kasyna z wirtualną walutą cebulion. Projekt zespołowy WdTB 2026, Uniwersytet WSB Merito Wrocław.">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Cebulion Casino: symulator kasyna z wirtualną walutą cebulion. Trzy automaty, 10 000 cebulionów na start, wynik liczy serwer w Javie. Projekt zespołowy WdTB 2026, Uniwersytet WSB Merito Wrocław.">
 <title>Cebulion Casino · symulator kasyna</title>
-<style>
-  /* Tokeny kolorów marki (docs/projekt/01-kierunek-artystyczny.md) */
-  :root {
-    --bg-0: #07060F; --bg-1: #120B2A; --bg-2: #1E1442;
-    --gold-1: #FFE08A; --gold-2: #F5C542; --gold-3: #B8860B;
-    --magenta: #FF2E88; --cyan: #21E6FF; --win-green: #3DFF8F;
-    --text-1: #FFFFFF; --text-2: #C9C3E6; --line: rgba(245, 197, 66, .22);
-  }
-  * { box-sizing: border-box; }
-  html { background: var(--bg-0); }
-  body {
-    margin: 0; min-height: 100dvh; color: var(--text-1);
-    font: 16px/1.6 "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
-    background:
-      radial-gradient(1200px 600px at 15% -10%, rgba(255, 46, 136, .16), transparent 60%),
-      radial-gradient(900px 500px at 100% 0%, rgba(33, 230, 255, .12), transparent 55%),
-      linear-gradient(180deg, var(--bg-1), var(--bg-0) 55%);
-    padding: max(24px, env(safe-area-inset-top)) 16px 64px;
-  }
-  main { max-width: 1040px; margin: 0 auto; display: grid; gap: 22px; }
-  a { color: var(--gold-1); }
-  code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .88em; background: rgba(255, 255, 255, .07); padding: 2px 6px; border-radius: 6px; }
-
-  header { display: grid; gap: 14px; padding: 8px 0 6px; }
-  .topline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
-  .status { display: inline-flex; gap: 10px; align-items: center; font-weight: 700; color: var(--win-green); font-size: 14px; letter-spacing: .02em; }
-  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--win-green); box-shadow: 0 0 0 4px rgba(61, 255, 143, .18), 0 0 14px var(--win-green); }
-  .merito { height: 40px; width: auto; background: #fff; border-radius: 8px; padding: 4px 8px; }
-  .brand {
-    margin: 0; font-family: "Cinzel", "Trajan Pro", Georgia, "Times New Roman", serif; font-weight: 900;
-    font-size: clamp(34px, 7vw, 68px); line-height: 1.02; letter-spacing: .04em;
-    background: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 45%, var(--gold-3) 100%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    filter: drop-shadow(0 4px 18px rgba(245, 197, 66, .25));
-  }
-  .tagline { margin: 0; color: var(--text-2); font-size: clamp(16px, 2.4vw, 20px); }
-
-  .card { background: linear-gradient(180deg, rgba(30, 20, 66, .72), rgba(18, 11, 42, .72)); border: 1px solid var(--line); border-radius: 18px; padding: 20px 22px; }
-  .card h2 { margin: 0 0 12px; font-family: "Cinzel", Georgia, serif; font-size: 20px; letter-spacing: .03em; color: var(--gold-1); }
-  .card h3 { margin: 16px 0 6px; font-size: 16px; }
-  .card p { margin: 0; }
-  .hero { border: 1px solid rgba(245, 197, 66, .5); box-shadow: 0 0 0 1px rgba(245, 197, 66, .08), 0 20px 60px rgba(0, 0, 0, .45); }
-  .pitch { font-size: clamp(17px, 2.2vw, 20px); }
-  .grid { display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
-
-  table { border-collapse: collapse; width: 100%; font-size: 15px; }
-  td, th { padding: 8px 10px; border-bottom: 1px solid rgba(255, 255, 255, .08); vertical-align: top; text-align: left; }
-  th { color: var(--text-2); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
-  td.key { color: var(--text-2); white-space: nowrap; width: 1%; }
-  .table-scroll { overflow-x: auto; }
-
-  ul, ol { margin: 6px 0 0; padding-left: 20px; }
-  li + li { margin-top: 4px; }
-  .muted { color: var(--text-2); font-size: 14px; }
-
-  .games { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); margin-top: 6px; }
-  .game { border-radius: 14px; padding: 16px; border: 1px solid rgba(255, 255, 255, .1); background: rgba(7, 6, 15, .45); }
-  .game b { display: block; font-size: 17px; margin-bottom: 4px; }
-  .game.s1 b { color: var(--magenta); }
-  .game.s2 b { color: var(--gold-2); }
-  .game.s3 b { color: var(--cyan); }
-  .chip { display: inline-block; font-size: 12px; font-weight: 700; color: var(--bg-0); background: var(--gold-2); border-radius: 999px; padding: 2px 10px; margin-top: 8px; }
-
-  .btn { display: inline-block; margin-top: 14px; color: var(--bg-0); text-decoration: none; font-weight: 800; padding: 11px 18px; border-radius: 999px; background: linear-gradient(180deg, var(--gold-1), var(--gold-2) 55%, var(--gold-3)); box-shadow: 0 6px 20px rgba(245, 197, 66, .25); }
-  .btn:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
-  pre { background: rgba(255, 255, 255, .06); border-radius: 10px; padding: 12px 14px; overflow-x: auto; margin: 10px 0 0; font-size: 14px; }
-
-  footer { text-align: center; color: var(--text-2); font-size: 13px; padding-top: 6px; }
-
-  /* Elementy siatki CSS mają domyślnie min-width: auto i rozpychałyby stronę szerzej niż ekran telefonu. */
-  main > *, .grid > *, .games > * { min-width: 0; }
-  code { overflow-wrap: anywhere; }
-
-  /* Telefon: tabele „klucz → wartość” układamy pionowo, zamiast ściskać dwie kolumny. */
-  @media (max-width: 560px) {
-    .card { padding: 18px 16px; }
-    td.key { display: block; width: auto; white-space: normal; border-bottom: 0; padding: 10px 0 2px; font-size: 13px; }
-    td.key + td { display: block; padding: 0 0 10px; }
-    td, th { padding-left: 6px; padding-right: 6px; }
-  }
-</style>
+<link rel="icon" href="icons/emblemat.svg" type="image/svg+xml">
+<!-- Fonty widoczne od pierwszej klatki pobieramy z wyprzedzeniem (preload), reszta wczytuje się w miarę potrzeby. -->
+<link rel="preload" href="fonts/manrope-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/manrope-latin-ext-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/cinzel-latin-900-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/lobby.css">
+<script>
+  // Klasa .js włącza animacje wejścia; zabezpieczenie: gdyby skrypt modułu nie ruszył, treść i tak się pokaże.
+  document.documentElement.classList.add('js');
+  setTimeout(function () { document.body && document.body.classList.add('is-ready'); }, 2500);
+</script>
+<script type="module" src="js/lobby.js"></script>
 </head>
 <body>
-<main>
-  <header>
-    <div class="topline">
-      <span class="status"><span class="dot" aria-hidden="true"></span>Backend działa</span>
-      <img class="merito" src="merito-logo.png" alt="Uniwersytet WSB Merito Wrocław">
+<a class="skip-link" href="#tresc">Przejdź do treści</a>
+<div class="page-bg" id="tlo" aria-hidden="true"></div>
+
+<div id="app">
+  <!-- ================================================================ PASEK GÓRNY -->
+  <header class="topbar" id="topbar">
+    <div class="container topbar__inner">
+      <a class="brand" href="./" aria-label="Cebulion Casino — strona główna">
+        <img class="brand__emblem" src="icons/emblemat.svg" data-asset="g_emblemat" alt="" width="46" height="46">
+        <span class="brand__word" aria-hidden="true"><span class="brand__name">CEBULION</span><span class="brand__casino">CASINO</span></span>
+      </a>
+
+      <nav class="topnav" aria-label="Sekcje lobby">
+        <a href="#automaty">Automaty</a>
+        <a href="#wygrane">Wygrane</a>
+        <a href="#ranking">Ranking</a>
+        <a href="#o-projekcie">O projekcie</a>
+      </nav>
+
+      <div class="topbar__actions">
+        <button type="button" class="btn btn--primary btn--sm topbar__login" id="btn-zaloguj">
+          <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#uzytkownik"/></svg><span>Zaloguj</span>
+        </button>
+
+        <div class="topbar__actions" id="topbar-gracz" hidden>
+          <div class="balance-pill" id="saldo">
+            <span class="sr-only">Saldo:</span>
+            <img class="coin" src="icons/moneta.svg" data-asset="g_moneta_przod" alt="" width="32" height="32">
+            <span class="balance-pill__value num">0</span>
+            <span class="sr-only balance-pill__unit">cebulionów</span>
+          </div>
+          <div class="user-menu">
+            <button type="button" class="user-menu__button" id="btn-menu" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-gracza">
+              <span class="avatar" id="awatar" aria-hidden="true"></span>
+              <span class="user-menu__nick" id="nick-gracza"></span>
+              <svg class="icon user-menu__chev" aria-hidden="true"><use href="icons/ikony.svg#strzalka"/></svg>
+              <span class="sr-only">Menu gracza</span>
+            </button>
+            <div class="menu" id="menu-gracza" role="menu" aria-label="Menu gracza" hidden>
+              <div class="menu__head">
+                <span class="avatar avatar--lg" id="menu-awatar" aria-hidden="true"></span>
+                <div>
+                  <p class="menu__nick" id="menu-nick"></p>
+                  <p class="menu__sub" id="menu-saldo"></p>
+                </div>
+              </div>
+              <button type="button" class="menu__item" role="menuitem" id="menu-historia">
+                <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#historia"/></svg>Historia gry
+              </button>
+              <button type="button" class="menu__item menu__item--switch" role="menuitemcheckbox" aria-checked="true" id="menu-dzwiek">
+                <span style="display:flex;align-items:center;gap:12px"><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#dzwiek_wl"/></svg>Dźwięk</span>
+                <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
+              </button>
+              <div class="menu__sep" role="separator"></div>
+              <button type="button" class="menu__item" role="menuitem" id="menu-wyloguj">
+                <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#wyloguj"/></svg>Wyloguj
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <h1 class="brand">Cebulion Casino</h1>
-    <p class="tagline">Graj bez ryzyka. Wygrywaj z klasą.</p>
   </header>
 
-  <!-- LAB 01 (R1.04): wizytówka projektu, na jej podstawie prezentujemy projekt na początku LAB 02. -->
-  <section class="card hero" aria-labelledby="o-projekcie">
-    <h2 id="o-projekcie">O projekcie</h2>
-    <p class="pitch">Symulator kasyna online dla osób, które chcą poczuć emocje gier slotowych <b>bez ryzyka utraty prawdziwych pieniędzy</b>.
-      Gramy wirtualną walutą <b>cebulion</b>, a o każdym wyniku decyduje serwer w Javie, nie przeglądarka.</p>
-    <div class="table-scroll">
-      <table>
-        <tr><td class="key">Autorzy</td><td>Konrad Paulus (112960), Dominik Pacanowski (112961), Dawid Majewski (113154)</td></tr>
-        <tr><td class="key">Dla kogo</td><td>Kamil, student, lubi gry slotowe i chce sprawdzać strategie zakładów i przeżywać emocje wygranej, nie ryzykując własnych pieniędzy.</td></tr>
-        <tr><td class="key">Najważniejsze funkcje</td><td>
-          <ol>
-            <li>Logowanie samą nazwą gracza i <b>10 000 cebulionów</b> na start.</li>
-            <li>Trzy automaty z animacjami, dźwiękiem i efektami; wynik każdego spinu liczy serwer.</li>
-            <li>Portfel z historią transakcji, statystyki gracza i ranking najlepszych wygranych.</li>
-          </ol>
-        </td></tr>
-      </table>
-    </div>
-    <h3>Zmiany w projekcie</h3>
-    <ul>
-      <li><b>LAB 01:</b> nazwa projektu <code>kasyno</code> (pakiet <code>pl.wsb.kasyno</code>, klasa <code>KasynoApplication</code>,
-        <code>artifactId</code> <code>wdtb-2026-backend-kasyno</code>), wersja z numerami indeksów zespołu,
-        konta zespołu w <code>data.sql</code>, ta wizytówka oraz plan projektu (<code>docs/plan-projektu.md</code>).</li>
-    </ul>
-    <p class="muted" style="margin-top:10px">Na kolejnych laboratoriach dopisujemy tu kolejne punkty.</p>
-  </section>
+  <main id="tresc">
+    <!-- ================================================================ SEKCJA POWITALNA -->
+    <section class="hero" id="start" aria-labelledby="hero-tytul">
+      <canvas class="hero__fx" id="hero-fx" aria-hidden="true"></canvas>
+      <div class="container hero__grid">
+        <div class="hero__copy">
+          <span class="chip hero__eyebrow intro" style="--i:0"><span class="dot" aria-hidden="true"></span>Symulator kasyna · waluta bez wartości</span>
+          <h1 class="hero__title intro" id="hero-tytul" style="--i:1">
+            <img class="hero__title-logo" data-asset="g_logo" data-asset-show hidden alt="Cebulion Casino">
+            <span class="hero__brand">CEBULION</span>
+            <span class="hero__casino">CASINO</span>
+          </h1>
+          <p class="hero__tagline intro" style="--i:2">Graj bez ryzyka. Wygrywaj z klasą.</p>
+          <p class="hero__lead intro" style="--i:3">Trzy automaty, <b>10&nbsp;000 cebulionów</b> na start i wynik każdego spinu liczony uczciwie przez serwer w&nbsp;Javie. Bez wpłat i bez wypłat — sama gra.</p>
 
-  <section class="card" aria-labelledby="automaty">
-    <h2 id="automaty">Trzy automaty</h2>
-    <div class="games">
-      <div class="game s1"><b>Cebulowy 777</b>Klasyk retro-neon: 3 bębny × 3 rzędy, 5 linii, WILD „Złota Cebula”.<br><span class="chip">RTP ~95%</span></div>
-      <div class="game s2"><b>Złoty Faraon</b>Skarbiec faraona: 5 × 3, 20 linii, darmowe spiny i rozszerzający się WILD.<br><span class="chip">RTP ~96%</span></div>
-      <div class="game s3"><b>Kryształowa Kaskada</b>Kryształowa jaskinia: 6 × 5, wygrane klastrowe, kaskady i kule mnożników.<br><span class="chip">RTP ~96%</span></div>
-    </div>
-  </section>
+          <div class="hero__cta intro" style="--i:4">
+            <button type="button" class="btn btn--primary btn--lg" id="cta-glowne">
+              <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#prezent"/></svg><span>Odbierz 10&nbsp;000 na start</span>
+            </button>
+            <a class="btn btn--secondary btn--lg" id="cta-drugie" href="#automaty">Zobacz automaty</a>
+          </div>
 
-  <div class="grid">
-    <section class="card" aria-labelledby="dane">
-      <h2 id="dane">Dane i moduły</h2>
-      <table>
-        <tr><th>Moduł</th><th>Dane</th></tr>
-        <tr><td>account</td><td>konta graczy (<code>user_account</code>)</td></tr>
-        <tr><td>wallet</td><td>portfele i transakcje w cebulionach</td></tr>
-        <tr><td>slots</td><td>automaty, symbole, rundy (status: rozpoczęta → rozstrzygnięta → rozliczona)</td></tr>
-        <tr><td>report</td><td>ranking i pytania „inwestora” (RTP, popularność, gospodarka)</td></tr>
-      </table>
+          <!-- Bankructwo (E09): saldo poniżej minimalnego zakładu → bonus ratunkowy (E10) -->
+          <div class="rescue" id="ratunek" hidden>
+            <img class="rescue__art" src="icons/emblemat.svg" data-asset="g_maskotka_bankrut" alt="">
+            <div>
+              <p class="rescue__title">Kieszenie puste? Bywa.</p>
+              <p class="rescue__text" id="ratunek-opis">Pan Cebulion stawia: 10&nbsp;000 cebulionów na koszt firmy.</p>
+            </div>
+            <button type="button" class="btn btn--primary rescue__btn" id="btn-ratunek"><span>Odbierz 10&nbsp;000 cebulionów</span></button>
+          </div>
+
+          <ul class="hero__stats intro" style="--i:5" role="list">
+            <li class="stat"><strong class="stat__value num">10&nbsp;000</strong><span class="stat__label">cebulionów na start</span></li>
+            <li class="stat"><strong class="stat__value num">3</strong><span class="stat__label">automaty</span></li>
+            <li class="stat"><strong class="stat__value num">95–96%</strong><span class="stat__label">docelowy RTP</span></li>
+          </ul>
+        </div>
+
+        <div class="hero__visual intro" style="--i:2" aria-hidden="true">
+          <div class="medal" id="medal">
+            <div class="medal__rays"></div>
+            <div class="medal__halo"></div>
+            <img class="medal__emblem" src="icons/emblemat.svg" data-asset="g_emblemat" alt="" width="420" height="420">
+            <img class="medal__mascot" data-asset="g_maskotka_powitanie" data-asset-show hidden alt="">
+            <span class="medal__coin c1"><img src="icons/moneta.svg" data-asset="g_moneta_przod" alt=""></span>
+            <span class="medal__coin c2"><img src="icons/moneta.svg" data-asset="g_moneta_przod" alt=""></span>
+            <span class="medal__coin c3"><img src="icons/moneta.svg" data-asset="g_moneta_przod" alt=""></span>
+            <span class="medal__coin c4"><img src="icons/moneta.svg" data-asset="g_moneta_przod" alt=""></span>
+            <div class="medal__floor"></div>
+          </div>
+        </div>
+      </div>
+      <a class="hero__scroll" href="#automaty">Automaty<svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#strzalka"/></svg></a>
     </section>
 
-    <section class="card" aria-labelledby="baza">
-      <h2 id="baza">Baza danych H2</h2>
-      <table>
-        <tr><td class="key">JDBC URL</td><td><code>jdbc:h2:file:./data/wdtb</code></td></tr>
-        <tr><td class="key">Użytkownik</td><td><code>sa</code></td></tr>
-        <tr><td class="key">Hasło</td><td>(puste)</td></tr>
-      </table>
-      <a class="btn" href="/h2-console">Otwórz konsolę H2</a>
-      <pre>SELECT display_name, email, role FROM user_account;</pre>
+    <!-- ================================================================ AUTOMATY -->
+    <section class="section" id="automaty" aria-labelledby="automaty-tytul">
+      <div class="container">
+        <header class="section-head" data-reveal>
+          <p class="kicker">Automaty</p>
+          <h2 class="section-title" id="automaty-tytul">Wybierz swój automat</h2>
+          <p class="section-lead">Trzy różne charaktery: szybki neonowy klasyk, skarbiec faraona z darmowymi spinami i kryształowe kaskady z mnożnikami. Wynik każdego spinu liczy serwer.</p>
+        </header>
+        <div class="tiles" id="kafle" aria-busy="true">
+          <div class="tile tile--skeleton" aria-hidden="true"><div class="tile__media skeleton"></div></div>
+          <div class="tile tile--skeleton" aria-hidden="true"><div class="tile__media skeleton"></div></div>
+          <div class="tile tile--skeleton" aria-hidden="true"><div class="tile__media skeleton"></div></div>
+        </div>
+        <div class="tiles__dots" id="kafle-kropki" aria-hidden="true"></div>
+      </div>
     </section>
-  </div>
 
-  <footer>
-    Cebulion Casino to symulator: cebuliony nie mają wartości i nie można ich kupić ani wypłacić.<br>
-    Wprowadzenie do technologii backendowych 2026 · Uniwersytet WSB Merito Wrocław
+    <!-- ================================================================ WYGRANE I RANKING -->
+    <section class="section" id="wygrane" aria-labelledby="wygrane-tytul">
+      <div class="container">
+        <header class="section-head" data-reveal>
+          <p class="kicker">Na żywo</p>
+          <h2 class="section-title" id="wygrane-tytul">Wygrane i ranking</h2>
+        </header>
+        <div class="social">
+          <article class="card" data-reveal aria-labelledby="feed-tytul">
+            <div class="panel-head">
+              <h3 class="panel-title" id="feed-tytul"><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#iskra"/></svg>Ostatnie duże wygrane</h3>
+              <span class="chip chip--gold">od 15× zakładu</span>
+            </div>
+            <ul class="wins" id="feed" aria-busy="true" role="list">
+              <li class="skeleton skeleton-row"></li><li class="skeleton skeleton-row"></li>
+              <li class="skeleton skeleton-row"></li><li class="skeleton skeleton-row"></li>
+            </ul>
+          </article>
+
+          <article class="card" id="ranking" data-reveal aria-labelledby="ranking-tytul">
+            <div class="panel-head">
+              <h3 class="panel-title" id="ranking-tytul"><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#puchar"/></svg>Ranking</h3>
+              <div class="tabs" role="tablist" aria-label="Rodzaj rankingu">
+                <button type="button" class="tab" role="tab" id="tab-wygrana" aria-selected="true" aria-controls="ranking-lista" data-type="biggest-win"><span class="tab__full">Największa wygrana</span><span class="tab__short">Wygrana</span></button>
+                <button type="button" class="tab" role="tab" id="tab-saldo" aria-selected="false" aria-controls="ranking-lista" data-type="balance" tabindex="-1"><span class="tab__full">Najwyższe saldo</span><span class="tab__short">Saldo</span></button>
+              </div>
+            </div>
+            <ol class="ranks" id="ranking-lista" role="tabpanel" aria-labelledby="tab-wygrana" aria-busy="true">
+              <li class="skeleton skeleton-row"></li><li class="skeleton skeleton-row"></li><li class="skeleton skeleton-row"></li>
+            </ol>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ O PROJEKCIE — wizytówka zespołu (reguła R1.04) -->
+    <!-- LAB 01 (R1.04): wizytówka projektu, na jej podstawie prezentujemy projekt na początku LAB 02. -->
+    <section class="section about" id="o-projekcie" aria-labelledby="o-projekcie-tytul">
+      <div class="container">
+        <header class="section-head" data-reveal>
+          <p class="kicker">Wizytówka zespołu</p>
+          <h2 class="section-title" id="o-projekcie-tytul">O projekcie</h2>
+          <p class="about-pitch">Symulator kasyna online dla osób, które chcą poczuć emocje gier slotowych <b>bez ryzyka utraty prawdziwych pieniędzy</b>.
+            Gramy wirtualną walutą <b>cebulion</b>, a o każdym wyniku decyduje serwer w Javie, nie przeglądarka.</p>
+        </header>
+
+        <div class="about-grid about-grid--3">
+          <article class="card about-card" data-reveal>
+            <h3><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#uzytkownik"/></svg>Autorzy</h3>
+            <ul class="team" role="list">
+              <li><span class="avatar" style="--av-a:#6A3CFF;--av-b:#FF2E88" aria-hidden="true">KP</span><div><b>Konrad Paulus</b><span class="idx">nr indeksu 112960</span></div></li>
+              <li><span class="avatar" style="--av-a:#F5C542;--av-b:#D9480F" aria-hidden="true">DP</span><div><b>Dominik Pacanowski</b><span class="idx">nr indeksu 112961</span></div></li>
+              <li><span class="avatar" style="--av-a:#21E6FF;--av-b:#1F4FD8" aria-hidden="true">DM</span><div><b>Dawid Majewski</b><span class="idx">nr indeksu 113154</span></div></li>
+            </ul>
+          </article>
+
+          <article class="card about-card" data-reveal>
+            <h3><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#korona"/></svg>Dla kogo</h3>
+            <blockquote class="persona__quote">„Lubię sloty. Chcę sprawdzać strategie zakładów i przeżywać emocje wygranej, nie ryzykując własnych pieniędzy.”</blockquote>
+            <p class="persona__who"><b>Kamil</b>, student, lubi gry slotowe i chce sprawdzać strategie zakładów i przeżywać emocje wygranej, nie ryzykując własnych pieniędzy.</p>
+          </article>
+
+          <article class="card about-card" data-reveal>
+            <h3><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#iskra"/></svg>Najważniejsze funkcje</h3>
+            <ol class="features">
+              <li><span>Logowanie samą nazwą gracza i <b>10&nbsp;000 cebulionów</b> na start.</span></li>
+              <li><span>Trzy automaty z animacjami, dźwiękiem i efektami; wynik każdego spinu liczy serwer.</span></li>
+              <li><span>Portfel z historią transakcji, statystyki gracza i ranking najlepszych wygranych.</span></li>
+            </ol>
+          </article>
+        </div>
+
+        <div class="about-grid about-grid--2">
+          <article class="card about-card about-changes" data-reveal>
+            <h3><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#historia"/></svg>Zmiany w projekcie</h3>
+            <ol class="timeline">
+              <li><span class="timeline__tag">LAB 01</span>
+                <p>Nazwa projektu <code>kasyno</code> (pakiet <code>pl.wsb.kasyno</code>, klasa <code>KasynoApplication</code>,
+                  <code>artifactId</code> <code>wdtb-2026-backend-kasyno</code>), wersja z numerami indeksów zespołu,
+                  konta zespołu w <code>data.sql</code>, ta wizytówka oraz plan projektu (<code>docs/plan-projektu.md</code>).</p></li>
+              <li><span class="timeline__tag">LAB 01</span>
+                <p>Lobby kasyna i logowanie: strona główna z trzema automatami, logowanie samą nazwą gracza z bonusem
+                  powitalnym 10&nbsp;000 cebulionów, bonus ratunkowy po bankructwie, ranking i ostatnie duże wygrane,
+                  wspólny wygląd (design system) w kolorach marki.</p></li>
+            </ol>
+            <p class="muted">Na kolejnych laboratoriach dopisujemy tu kolejne punkty.</p>
+          </article>
+
+          <article class="card about-card about-tech" data-reveal>
+            <h3><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#serwer"/></svg>Dane i moduły</h3>
+            <div style="overflow-x:auto">
+              <table class="kv">
+                <thead><tr><th scope="col">Moduł</th><th scope="col">Dane</th></tr></thead>
+                <tbody>
+                  <tr><td>account</td><td>konta graczy (<code>user_account</code>)</td></tr>
+                  <tr><td>wallet</td><td>portfele i transakcje w cebulionach</td></tr>
+                  <tr><td>slots</td><td>automaty, symbole, rundy (status: rozpoczęta → rozstrzygnięta → rozliczona)</td></tr>
+                  <tr><td>report</td><td>ranking i pytania „inwestora” (RTP, popularność, gospodarka)</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <h3><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#baza"/></svg>Baza danych H2</h3>
+            <table class="kv kv--stack">
+              <tbody>
+                <tr><td>JDBC URL</td><td><code>jdbc:h2:file:./data/wdtb</code></td></tr>
+                <tr><td>Użytkownik</td><td><code>sa</code></td></tr>
+                <tr><td>Hasło</td><td>(puste)</td></tr>
+              </tbody>
+            </table>
+            <a class="btn btn--secondary btn--sm" href="h2-console"><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#baza"/></svg>Otwórz konsolę H2</a>
+            <pre><code>SELECT display_name, email, role FROM user_account;</code></pre>
+          </article>
+        </div>
+
+        <div class="about-foot" data-reveal>
+          <div class="about-foot__school">
+            <img class="merito" src="merito-logo.png" alt="Uniwersytet WSB Merito Wrocław" width="120" height="40">
+            <span>Wprowadzenie do technologii backendowych 2026</span>
+          </div>
+          <span class="server-status" id="status-serwera" role="status"><span class="server-status__dot" aria-hidden="true"></span><span>Sprawdzam serwer…</span></span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================================================================ STOPKA -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <img src="icons/emblemat.svg" data-asset="g_emblemat" alt="" width="34" height="34">
+        <span class="brand__word" aria-hidden="true"><span class="brand__name">CEBULION</span><span class="brand__casino">CASINO</span></span>
+      </div>
+      <p class="footer__tagline">Graj bez ryzyka. Wygrywaj z klasą.</p>
+      <p class="footer__disclaimer"><svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#tarcza"/></svg>
+        <span>Cebulion Casino to symulator — cebuliony nie mają wartości i nie można ich kupić ani wypłacić.</span></p>
+      <p class="footer__meta">Wprowadzenie do technologii backendowych 2026 · Uniwersytet WSB Merito Wrocław · Konrad Paulus, Dominik Pacanowski, Dawid Majewski</p>
+    </div>
   </footer>
-</main>
+</div>
+
+<!-- ================================================================ OKNO LOGOWANIA (E04) — poza #app, bo #app dostaje inert -->
+<div class="modal" id="modal-logowanie" role="dialog" aria-modal="true" aria-labelledby="logowanie-tytul" aria-describedby="logowanie-opis" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__panel">
+    <button type="button" class="btn-icon modal__close" data-close aria-label="Zamknij okno logowania">
+      <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#zamknij"/></svg>
+    </button>
+    <img class="login-emblem" src="icons/emblemat.svg" data-asset="g_emblemat" alt="" width="84" height="84">
+    <h2 class="modal__title" id="logowanie-tytul">Witaj w Cebulion Casino</h2>
+    <p class="modal__lead" id="logowanie-opis">Wpisz nazwę gracza. Pierwsze wejście to <b>10&nbsp;000 cebulionów</b> na start.</p>
+    <form class="login-form" id="form-logowanie" novalidate>
+      <div class="field" id="pole-nick">
+        <label class="field__label" for="nick">Nazwa gracza</label>
+        <div class="field__control">
+          <input class="field__input" id="nick" name="nick" type="text" inputmode="text" autocomplete="nickname"
+                 autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="16" enterkeyhint="go"
+                 placeholder="np. Kamil_77" aria-describedby="nick-podpowiedz nick-blad" required>
+          <span class="field__counter num" id="nick-licznik" aria-hidden="true">0/16</span>
+        </div>
+        <p class="field__hint" id="nick-podpowiedz">3–16 znaków: litery (także polskie), cyfry, „_” i „-”.</p>
+        <p class="field__error" id="nick-blad" aria-live="assertive"></p>
+      </div>
+      <button type="submit" class="btn btn--primary btn--lg btn--block" id="btn-wejdz"><span>Wejdź do kasyna</span></button>
+    </form>
+    <p class="modal__note">Bez hasła — to symulator z walutą bez wartości. Każdy, kto zna Twoją nazwę gracza, może wejść na to konto.</p>
+  </div>
+</div>
+
+<!-- ================================================================ OKNO HISTORII GRY -->
+<div class="modal" id="modal-historia" role="dialog" aria-modal="true" aria-labelledby="historia-tytul" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__panel modal__panel--wide">
+    <button type="button" class="btn-icon modal__close" data-close aria-label="Zamknij historię gry">
+      <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#zamknij"/></svg>
+    </button>
+    <h2 class="modal__title" id="historia-tytul">Historia gry</h2>
+    <p class="modal__lead">Ostatnie rundy na wszystkich automatach. Każdą rundę rozliczył serwer.</p>
+    <div class="history" id="historia-lista" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- Płótno efektów (monety, iskry) na całym ekranie — nie przechwytuje kliknięć. -->
+<canvas class="fx-layer" id="fx" aria-hidden="true"></canvas>
 </body>
 </html>

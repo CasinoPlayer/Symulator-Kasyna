@@ -1,0 +1,114 @@
+/* =====================================================================================================
+   tokens.css — tokeny projektu (design tokens) Cebulion Casino.
+
+   Po co: jedno miejsce z kolorami, fontami, odstępami, promieniami, cieniami i czasami animacji.
+   Komponenty używają WYŁĄCZNIE tych zmiennych, więc zmiana np. odcienia złota to jedna linia tutaj.
+   Źródło wartości: brief §1 (paleta globalna — niezmienna) i docs/projekt/01-kierunek-artystyczny.md §3.3
+   (tokeny pochodne). Gry (S1–S3) nadpisują tylko zmienne --accent-* w swoich motywach.
+   ===================================================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* --- Paleta globalna (brief §1) — NIE ZMIENIAĆ, z tych wartości korzystają też obrazy z ChatGPT --- */
+  --bg-0: #07060F;        /* najgłębsza czerń z nutą granatu: tło strony */
+  --bg-1: #120B2A;        /* ciemny granat-fiolet: panele, pasek górny */
+  --bg-2: #1E1442;        /* fiolet nocy: szkło, pola formularzy */
+  --gold-1: #FFE08A;      /* jasne złoto: liczby wygranych, akcenty */
+  --gold-2: #F5C542;      /* złoto królewskie: przycisk główny, ramki */
+  --gold-3: #B8860B;      /* ciemne złoto: obrysy, dolny stop gradientu */
+  --magenta: #FF2E88;     /* neon ciepły: wyróżnienia, poziom MEGA */
+  --cyan: #21E6FF;        /* neon chłodny: fokus klawiatury, stany aktywne */
+  --win-green: #3DFF8F;   /* semantyka: zysk (zawsze razem ze znakiem „+”) */
+  --danger: #FF4D4D;      /* semantyka: błąd (zawsze razem z tekstem/ikoną) */
+  --text-1: #FFFFFF;      /* tekst główny */
+  --text-2: #C9C3E6;      /* tekst drugorzędny (lawendowa szarość, kontrast ≥ 10:1) */
+
+  /* --- Tokeny pochodne (01 §3.3) --- */
+  --gold-hi: #FFF6D6;
+  --gold-deep: #5C3A00;
+  --gold-core: #2B1A00;
+  --ink-on-gold: var(--bg-0);              /* tekst na złocie MUSI być ciemny (biały ma kontrast 1,62:1) */
+  --glass: rgba(30, 20, 66, 0.80);         /* minimum krycia dla czytelności tekstu nad obrazem (01 §3.6) */
+  --glass-strong: rgba(18, 11, 42, 0.88);  /* panel nad wideo i efektami */
+  --glass-soft: rgba(30, 20, 66, 0.55);    /* tylko dekoracyjne tła bez tekstu drugorzędnego */
+  --line-gold: rgba(245, 197, 66, 0.35);   /* linie ozdobne */
+  --line-gold-ui: rgba(245, 197, 66, 0.50);/* obramowania elementów interaktywnych (kontrast 3,63:1) */
+  --line-soft: rgba(255, 255, 255, 0.08);
+  --violet-epic: #8F3DFF;
+  --focus: var(--cyan);
+  --gold-grad: linear-gradient(180deg, #FFE08A 0%, #F5C542 55%, #B8860B 100%);
+  --gold-grad-text: linear-gradient(180deg, #FFF6D6 0%, #FFE08A 22%, #F5C542 55%, #B8860B 100%);
+  --spectrum: linear-gradient(90deg, var(--cyan), var(--violet-epic), var(--magenta), var(--gold-1));
+
+  /* --- Akcenty gier (nadpisywane przez .theme-s1/.theme-s2/.theme-s3) --- */
+  --accent-1: var(--gold-2);
+  --accent-2: var(--cyan);
+  --s1-pink: #FF2E88;  --s1-blue: #21E6FF;  --s1-night: #12002E;
+  --s2-gold: #F5C542;  --s2-lapis: #1F4FD8; --s2-night: #050B24;
+  --s3-violet: #8F3DFF; --s3-cyan: #21E6FF; --s3-night: #070A1F;
+
+  /* --- Typografia (brief §1: Cinzel nagłówki, Manrope UI, fonty gier) --- */
+  --font-display: "Cinzel", "Trajan Pro", Georgia, "Times New Roman", serif;
+  --font-ui: "Manrope", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --font-s1: "Bungee", "Manrope", system-ui, sans-serif;
+  --font-s2: "Cinzel Decorative", "Cinzel", Georgia, serif;
+  --font-s3: "Marcellus", "Cinzel", Georgia, serif;
+
+  /* Skala płynna: clamp(min, preferowana, max) — rośnie z szerokością okna bez skoków między breakpointami. */
+  --fs-2xs: 0.6875rem;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: clamp(1.2rem, 1.05rem + 0.6vw, 1.5rem);
+  --fs-2xl: clamp(1.55rem, 1.15rem + 1.6vw, 2.35rem);
+  --fs-3xl: clamp(2rem, 1.3rem + 2.8vw, 3.2rem);
+  --fs-hero: clamp(2.15rem, 1.1rem + 4.4vw, 4.75rem);
+
+  /* --- Odstępy (siatka 4 px) --- */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px; --sp-5: 24px;
+  --sp-6: 32px; --sp-7: 48px; --sp-8: 64px; --sp-9: 96px;
+  --gutter: 16px;                    /* margines boczny strony; rośnie w breakpointach niżej */
+  --section-gap: clamp(56px, 4vw + 36px, 112px);
+  --content-max: 1240px;
+  --topbar-h: 56px;
+
+  /* --- Promienie --- */
+  --r-xs: 6px; --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-xl: 28px; --r-pill: 999px;
+
+  /* --- Cienie i poświaty --- */
+  --shadow-1: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-2: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --glow-gold: 0 0 0 1px rgba(245, 197, 66, 0.25), 0 8px 28px rgba(245, 197, 66, 0.28);
+  --glow-gold-strong: 0 0 0 1px rgba(255, 224, 138, 0.55), 0 10px 40px rgba(245, 197, 66, 0.45);
+  --inner-glass: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+
+  /* --- Ruch: tylko transform/opacity (kompozytor GPU, bez przeliczania układu) --- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-1: 120ms; --dur-2: 200ms; --dur-3: 320ms; --dur-4: 600ms; --dur-5: 900ms;
+
+  /* --- Warstwy (z-index) — jedna tabela, żeby nic się nie „przebijało” przypadkiem --- */
+  --z-bg: -1;
+  --z-content: 1;
+  --z-topbar: 50;
+  --z-overlay: 45;   /* sekwencja bonusu: POD paskiem górnym, żeby monety leciały do widocznego salda */
+  --z-fx: 60;        /* płótno cząsteczek: nad paskiem (monety przelatują nad pigułką salda) */
+  --z-menu: 70;
+  --z-modal: 100;
+  --z-toast: 120;
+}
+
+/* Breakpointy (06-interfejs-ux): ≤480 telefon, 481–900 duży telefon/tablet, 901–1440 laptop, ≥1441 duży ekran. */
+@media (min-width: 481px) {
+  :root { --gutter: 24px; }
+}
+@media (min-width: 901px) {
+  :root { --gutter: 32px; --topbar-h: 68px; }
+}
+@media (min-width: 1441px) {
+  :root { --gutter: 48px; --content-max: 1360px; }
+}

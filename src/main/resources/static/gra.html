@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07060F">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Cebulion Casino — automat do gry. Symulator: cebuliony nie mają wartości.">
+<title>Gra · Cebulion Casino</title>
+<link rel="icon" href="icons/emblemat.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/manrope-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/gra.css">
+<script type="module" src="js/gra.js"></script>
+</head>
+<body class="game-page">
+<!--
+  Szkielet strony gry. Ten etap: pasek górny, ekran ładowania, scena PixiJS z podglądem układu bębnów,
+  panel sterowania (bez logiki spinu). Silnik animacji gier (bębny, efekty, dźwięk) dochodzi w kolejnym etapie.
+-->
+<div class="page-bg game-bg" id="tlo" aria-hidden="true"></div>
+
+<div id="app" class="game">
+  <header class="game-bar">
+    <a class="btn-icon game-bar__back" href="./" id="btn-lobby">
+      <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#wstecz"/></svg><span>Lobby</span>
+      <span class="sr-only">Wróć do lobby</span>
+    </a>
+    <div class="game-bar__title">
+      <img src="icons/emblemat.svg" data-asset="g_emblemat" alt="" width="30" height="30">
+      <h1 class="game-bar__name" id="gra-nazwa">Cebulion Casino</h1>
+    </div>
+    <div class="game-bar__right">
+      <div class="balance-pill" id="saldo">
+        <span class="sr-only">Saldo:</span>
+        <img class="coin" src="icons/moneta.svg" data-asset="g_moneta_przod" alt="" width="28" height="28">
+        <span class="balance-pill__value num">0</span>
+        <span class="sr-only balance-pill__unit">cebulionów</span>
+      </div>
+      <button type="button" class="btn-icon" id="btn-dzwiek" aria-pressed="false" aria-label="Wycisz dźwięk">
+        <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#dzwiek_wl"/></svg>
+      </button>
+      <button type="button" class="btn-icon" id="btn-info" aria-label="Zasady i tabela wypłat">
+        <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#info"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="stage" id="scena" aria-label="Automat">
+    <!-- E20 gra_ladowanie -->
+    <div class="loader" id="ladowanie" role="status" aria-live="polite">
+      <img class="loader__emblem" src="icons/emblemat.svg" data-asset="g_emblemat" alt="" width="150" height="150">
+      <p class="loader__title" id="ladowanie-gra">Cebulion Casino</p>
+      <div class="progress" id="ladowanie-pasek" role="progressbar" aria-label="Ładowanie gry" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="progress__bar"></div>
+        <div class="progress__shine"></div>
+      </div>
+      <p class="loader__step" id="ladowanie-krok">Łączenie z kasynem…</p>
+      <div class="loader__actions" id="ladowanie-akcje" hidden>
+        <button type="button" class="btn btn--primary btn--sm" id="btn-ponow">Spróbuj ponownie</button>
+        <a class="btn btn--secondary btn--sm" href="./">Wróć do lobby</a>
+      </div>
+      <p class="loader__tagline">Graj bez ryzyka. Wygrywaj z klasą.</p>
+    </div>
+    <p class="chip stage__note" id="scena-opis" title="Animacje bębnów, efekty i dźwięk dochodzą w kolejnym etapie projektu" hidden>Podgląd układu bębnów</p>
+  </main>
+
+  <section class="controls" aria-label="Panel sterowania">
+    <!-- Na telefonie pionowo saldo jest w panelu (jak w mobilnych slotach), na większych ekranach — w pasku górnym. -->
+    <div class="controls__balance">
+      <span class="controls__label">Saldo</span>
+      <div class="balance-pill balance-pill--panel" id="saldo-panel">
+        <img class="coin" src="icons/moneta.svg" data-asset="g_moneta_przod" alt="" width="26" height="26">
+        <span class="balance-pill__value num">0</span>
+        <span class="sr-only balance-pill__unit">cebulionów</span>
+      </div>
+    </div>
+
+    <div class="controls__bet">
+      <span class="controls__label" id="zaklad-etykieta">Zakład</span>
+      <div class="bet" role="group" aria-labelledby="zaklad-etykieta">
+        <button type="button" class="btn-icon bet__btn" id="bet-minus" aria-label="Zmniejsz zakład">
+          <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#minus"/></svg>
+        </button>
+        <output class="bet__value num" id="bet-wartosc" aria-live="polite">10</output>
+        <button type="button" class="btn-icon bet__btn" id="bet-plus" aria-label="Zwiększ zakład">
+          <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#plus"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="controls__main">
+      <button type="button" class="ctrl-toggle" id="btn-auto" aria-pressed="false">
+        <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#autoplay"/></svg><span>Auto</span>
+      </button>
+      <button type="button" class="spin" id="btn-spin" aria-label="Zakręć (spacja)" aria-keyshortcuts="Space">
+        <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-13.7 5.6"/><path d="M4 12a8 8 0 0 1 13.7-5.6"/><path d="M18 3v3.6h-3.6"/><path d="M6 21v-3.6h3.6"/></svg>
+      </button>
+      <button type="button" class="ctrl-toggle" id="btn-turbo" aria-pressed="false">
+        <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#turbo"/></svg><span>Turbo</span>
+      </button>
+    </div>
+
+    <div class="controls__win">
+      <span class="controls__label">Wygrana</span>
+      <output class="controls__win-value num" id="wygrana">0</output>
+    </div>
+  </section>
+</div>
+
+<!-- Okno: zasady i tabela wypłat (dane z GET /api/slots/{code}) -->
+<div class="modal" id="modal-info" role="dialog" aria-modal="true" aria-labelledby="info-tytul" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__panel modal__panel--wide">
+    <button type="button" class="btn-icon modal__close" data-close aria-label="Zamknij zasady">
+      <svg class="icon" aria-hidden="true"><use href="icons/ikony.svg#zamknij"/></svg>
+    </button>
+    <h2 class="modal__title" id="info-tytul">Zasady gry</h2>
+    <p class="modal__lead" id="info-opis"></p>
+    <div id="info-tresc"></div>
+    <p class="modal__note">Symulator: cebuliony nie mają wartości. Wynik każdego spinu liczy serwer.</p>
+  </div>
+</div>
+</body>
+</html>

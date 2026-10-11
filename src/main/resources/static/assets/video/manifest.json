@@ -1,0 +1,5 @@
+{
+  "_opis": "Lista filmików z prawdziwej rozgrywki do kafli w lobby (plan § 7). Klucz = kod gry z API. Pliki leżą obok tego manifestu: <kod>.mp4 (H.264, +faststart) i <kod>.webm (VP9), plakat <kod>.jpg/.webp. Front prosi tylko o pliki wpisane tutaj, więc brak filmu nie daje błędów 404. Skrypt nagrywający dopisuje wpisy, np. \"cebulowy-777\": { \"mp4\": \"cebulowy-777.mp4\", \"webm\": \"cebulowy-777.webm\", \"poster\": \"cebulowy-777.webp\" }.",
+  "version": 1,
+  "videos": {}
+}

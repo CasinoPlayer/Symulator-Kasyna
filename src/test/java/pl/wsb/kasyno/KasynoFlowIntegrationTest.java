@@ -1,0 +1,311 @@
+package pl.wsb.kasyno;
+
+import com.jayway.jsonpath.JsonPath;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
+import pl.wsb.kasyno.account.application.LoginService;
+import pl.wsb.kasyno.slots.application.SpinCommand;
+import pl.wsb.kasyno.slots.application.SpinService;
+import pl.wsb.kasyno.slots.application.engine.FakeSlotEngine;
+import pl.wsb.kasyno.support.MutableClock;
+import pl.wsb.kasyno.wallet.api.WalletFacade;
+import pl.wsb.kasyno.wallet.domain.InsufficientFundsException;
+
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+/**
+ * Test całej aplikacji (wszystkie warstwy, prawdziwa baza H2 w pamięci, {@code data.sql} z trzema automatami):
+ * logowanie → bonus → spin → historia → ranking → raporty → bankructwo → bonus ratunkowy.
+ *
+ * <p>Prawdziwych silników gier jeszcze nie ma (osobny etap), więc dla gry {@code cebulowy-777} podpinamy
+ * {@link FakeSlotEngine} z zaplanowanymi wygranymi. Zegar to {@link MutableClock}, żeby sprawdzić odliczanie
+ * bonusu ratunkowego bez czekania 10 minut.
+ */
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Import(KasynoFlowIntegrationTest.TestBeans.class)
+@DisplayName("Pełny przepływ gracza (integracja wszystkich warstw)")
+class KasynoFlowIntegrationTest {
+
+    private static final Instant START = Instant.parse("2026-10-11T12:00:00Z");
+
+    @TestConfiguration
+    static class TestBeans {
+
+        @Bean
+        FakeSlotEngine fakeCebulowyEngine() {
+            return new FakeSlotEngine("cebulowy-777");
+        }
+
+        /** {@code @Primary}: wygrywa z zegarem systemowym z {@code TimeConfig} przy wstrzykiwaniu {@code Clock}. */
+        @Bean
+        @Primary
+        MutableClock testClock() {
+            return new MutableClock(START);
+        }
+    }
+
+    @Autowired
+    private MockMvc mvc;
+    @Autowired
+    private FakeSlotEngine engine;
+    @Autowired
+    private MutableClock clock;
+    @Autowired
+    private LoginService loginService;
+    @Autowired
+    private SpinService spinService;
+    @Autowired
+    private WalletFacade walletFacade;
+
+    @BeforeEach
+    void setUp() {
+        engine.reset();
+        clock.set(START);
+    }
+
+    private MockHttpSession login(String nick, boolean expectNew) throws Exception {
+        MvcResult result = mvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nick\":\"" + nick + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.newPlayer").value(expectNew))
+                .andReturn();
+        return (MockHttpSession) result.getRequest().getSession(false);
+    }
+
+    private ResultActions spin(MockHttpSession session, String game, long bet, String key) throws Exception {
+        var request = post("/api/slots/" + game + "/spins").session(session)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"bet\":" + bet + "}");
+        if (key != null) {
+            request.header("Idempotency-Key", key);
+        }
+        return mvc.perform(request);
+    }
+
+    private static Number number(MvcResult result, String path) throws Exception {
+        return JsonPath.read(result.getResponse().getContentAsString(), path);
+    }
+
+    @Test
+    @DisplayName("logowanie → spin z wygraną → idempotencja → historia, ranking, feed, raporty")
+    void playerJourney() throws Exception {
+        MockHttpSession session = login("Gracz_Testowy", true);
+        login("GRACZ_testowy", false);
+
+        mvc.perform(get("/api/me").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nick").value("Gracz_Testowy"))
+                .andExpect(jsonPath("$.balance").value(10000))
+                .andExpect(jsonPath("$.minBet").value(10));
+
+        mvc.perform(post("/api/me/rescue").session(session))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("RESCUE_NOT_AVAILABLE"));
+
+        engine.willWin(2_000);
+        MvcResult first = spin(session, "cebulowy-777", 100, "klucz-1")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.win").value(2000))
+                .andExpect(jsonPath("$.multiplier").value(20))
+                .andExpect(jsonPath("$.tier").value("big"))
+                .andExpect(jsonPath("$.status").value("SETTLED"))
+                .andExpect(jsonPath("$.balance").value(11900))
+                .andExpect(jsonPath("$.replayed").value(false))
+                .andExpect(jsonPath("$.result.engine").value("fake"))
+                .andReturn();
+        long roundId = number(first, "$.roundId").longValue();
+
+        // podwójne kliknięcie: ten sam klucz → ta sama runda, bez drugiego zakładu
+        spin(session, "cebulowy-777", 100, "klucz-1")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.roundId").value(roundId))
+                .andExpect(jsonPath("$.replayed").value(true))
+                .andExpect(jsonPath("$.balance").value(11900));
+        assertThat(engine.calls()).hasSize(1);
+
+        spin(session, "cebulowy-777", 200, "klucz-1")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("IDEMPOTENCY_CONFLICT"));
+        spin(session, "zloty-faraon", 20, null)
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.code").value("GAME_NOT_READY"));
+        spin(session, "cebulowy-777", 7, null)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("BET_INVALID"));
+
+        mvc.perform(get("/api/me/history").session(session))
+                .andExpect(jsonPath("$.totalItems").value(1))
+                .andExpect(jsonPath("$.items[0].gameName").value("Cebulowy 777"))
+                .andExpect(jsonPath("$.items[0].win").value(2000));
+        mvc.perform(get("/api/me/stats").session(session))
+                .andExpect(jsonPath("$[0].gameCode").value("cebulowy-777"))
+                .andExpect(jsonPath("$[0].spins").value(1))
+                .andExpect(jsonPath("$[0].totalWagered").value(100))
+                .andExpect(jsonPath("$[0].biggestWin").value(2000));
+        mvc.perform(get("/api/me/transactions").session(session))
+                .andExpect(jsonPath("$.totalItems").value(3))
+                .andExpect(jsonPath("$.items[0].type").value("WIN"))
+                .andExpect(jsonPath("$.items[0].balanceAfter").value(11900))
+                .andExpect(jsonPath("$.items[0].roundId").value(roundId))
+                .andExpect(jsonPath("$.items[1].type").value("BET"))
+                .andExpect(jsonPath("$.items[1].amount").value(-100))
+                .andExpect(jsonPath("$.items[2].type").value("WELCOME_BONUS"));
+
+        mvc.perform(get("/api/leaderboard").param("type", "biggest-win"))
+                .andExpect(jsonPath("$[0].rank").value(1))
+                .andExpect(jsonPath("$[0].nick").value("Gracz_Testowy"))
+                .andExpect(jsonPath("$[0].value").value(2000))
+                .andExpect(jsonPath("$[0].gameCode").value("cebulowy-777"));
+        mvc.perform(get("/api/leaderboard").param("type", "balance"))
+                .andExpect(jsonPath("$[0].value").isNumber());
+        mvc.perform(get("/api/feed/big-wins"))
+                .andExpect(jsonPath("$[0].nick").value("Gracz_Testowy"))
+                .andExpect(jsonPath("$[0].gameName").value("Cebulowy 777"))
+                .andExpect(jsonPath("$[0].tier").value("big"));
+
+        mvc.perform(get("/api/reports/popular-games"))
+                .andExpect(jsonPath("$[0].gameCode").value("cebulowy-777"));
+        mvc.perform(get("/api/reports/rtp"))
+                .andExpect(jsonPath("$[0].gameCode").value("cebulowy-777"))
+                .andExpect(jsonPath("$[0].targetRtp").value(95));
+        mvc.perform(get("/api/reports/top-players"))
+                .andExpect(jsonPath("$.byBiggestWin[0].nick").isString());
+        mvc.perform(get("/api/reports/economy"))
+                .andExpect(jsonPath("$.players").isNumber())
+                .andExpect(jsonPath("$.totalWelcomeBonus").isNumber());
+        mvc.perform(get("/api/reports/peak-hours"))
+                .andExpect(jsonPath("$[0].hour").value(12));
+    }
+
+    @Test
+    @DisplayName("bankructwo → bonus ratunkowy → odliczanie 10 minut (zegar testowy)")
+    void bankruptcyAndRescue() throws Exception {
+        MockHttpSession session = login("Bankrut_1", true);
+
+        for (int i = 0; i < 10; i++) {
+            spin(session, "cebulowy-777", 1000, null).andExpect(status().isOk());
+        }
+        spin(session, "cebulowy-777", 10, null)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INSUFFICIENT_FUNDS"));
+        // nieudany spin nie zostawia rundy (transakcja wycofana razem z zakładem)
+        mvc.perform(get("/api/me/history").session(session)).andExpect(jsonPath("$.totalItems").value(10));
+
+        mvc.perform(get("/api/me").session(session))
+                .andExpect(jsonPath("$.balance").value(0))
+                .andExpect(jsonPath("$.canRescue").value(true));
+        mvc.perform(post("/api/me/rescue").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.amount").value(10000))
+                .andExpect(jsonPath("$.player.balance").value(10000));
+
+        for (int i = 0; i < 10; i++) {
+            spin(session, "cebulowy-777", 1000, null).andExpect(status().isOk());
+        }
+        clock.advance(Duration.ofMinutes(4));
+        mvc.perform(post("/api/me/rescue").session(session))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("RESCUE_NOT_AVAILABLE"))
+                .andExpect(jsonPath("$.retryAfterSeconds").value(360));
+        mvc.perform(get("/api/me").session(session))
+                .andExpect(jsonPath("$.canRescue").value(false))
+                .andExpect(jsonPath("$.rescueAvailableInSeconds").value(360));
+
+        clock.advance(Duration.ofMinutes(6));
+        mvc.perform(post("/api/me/rescue").session(session)).andExpect(status().isOk());
+        mvc.perform(get("/api/reports/economy"))
+                .andExpect(jsonPath("$.totalRescueBonus").isNumber());
+    }
+
+    @Test
+    @DisplayName("16 równoległych spinów po 1000 przy saldzie 10 000: dokładnie 10 przechodzi, saldo nigdy ujemne")
+    void concurrentSpinsNeverOverdraw() throws Exception {
+        Long playerId = loginService.login("Rownolegly").playerId();
+        int threads = 16;
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        CountDownLatch start = new CountDownLatch(1);
+        List<Future<Boolean>> results = new ArrayList<>();
+        for (int i = 0; i < threads; i++) {
+            results.add(pool.submit(() -> {
+                start.await();
+                try {
+                    spinService.spin(new SpinCommand(playerId, "cebulowy-777", BigDecimal.valueOf(1000), null));
+                    return true;
+                } catch (InsufficientFundsException expected) {
+                    return false;
+                }
+            }));
+        }
+        start.countDown();
+        int succeeded = 0;
+        for (Future<Boolean> result : results) {
+            succeeded += result.get(30, TimeUnit.SECONDS) ? 1 : 0;
+        }
+        pool.shutdown();
+
+        // blokada pesymistyczna portfela szereguje spiny: każdy widzi saldo po poprzednim
+        assertThat(succeeded).isEqualTo(10);
+        assertThat(walletFacade.balance(playerId)).isEqualByComparingTo("0");
+    }
+
+    @Test
+    @DisplayName("wylogowanie: sesja unieważniona, potem 401 NOT_LOGGED_IN")
+    void logout() throws Exception {
+        MockHttpSession session = login("Wylogowany", true);
+
+        mvc.perform(post("/api/auth/logout").session(session)).andExpect(status().isNoContent());
+
+        assertThat(session.isInvalid()).isTrue();
+        mvc.perform(get("/api/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("NOT_LOGGED_IN"));
+    }
+
+    @Test
+    @DisplayName("katalog gier z data.sql: 3 automaty zgodne z briefem")
+    void catalogFromDataSql() throws Exception {
+        mvc.perform(get("/api/slots"))
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].code").value("cebulowy-777"))
+                .andExpect(jsonPath("$[1].code").value("zloty-faraon"))
+                .andExpect(jsonPath("$[1].lines").value(20))
+                .andExpect(jsonPath("$[2].code").value("krysztalowa-kaskada"))
+                .andExpect(jsonPath("$[2].engineType").value("CLUSTER"));
+        mvc.perform(get("/api/slots/zloty-faraon"))
+                .andExpect(jsonPath("$.name").value("Złoty Faraon"))
+                .andExpect(jsonPath("$.features.length()").value(5))
+                .andExpect(jsonPath("$.symbols").isArray());
+    }
+}

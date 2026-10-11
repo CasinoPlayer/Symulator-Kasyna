@@ -1,0 +1,25 @@
+{
+  "name": "cebulion-casino-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Narzędzia front-endu Cebulion Casino: wendorowanie PixiJS i fontów, serwer atrapy API, testy e2e. Aplikacja NIE potrzebuje Node.js do działania (pliki wynikowe są w repozytorium).",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "vendor": "node vendor.mjs",
+    "dev": "node dev/mock-api.mjs",
+    "dev:pusty": "node dev/mock-api.mjs --pusty",
+    "e2e": "node e2e/smoke.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/bungee": "5.3.0",
+    "@fontsource/cinzel": "5.3.0",
+    "@fontsource/cinzel-decorative": "5.3.0",
+    "@fontsource/manrope": "5.3.0",
+    "@fontsource/marcellus": "5.3.0",
+    "pixi.js": "8.22.0",
+    "playwright-core": "1.56.1"
+  }
+}

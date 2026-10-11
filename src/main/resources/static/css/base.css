@@ -1,0 +1,181 @@
+/* =====================================================================================================
+   base.css — fundament wspólny dla wszystkich stron (lobby i gra).
+
+   Po co: reset przeglądarki, typografia, tło strony, fokus klawiatury, ograniczenie ruchu
+   (prefers-reduced-motion) i obsługa „bezpiecznych obszarów” telefonów z wycięciem (safe-area).
+   Zero logiki wyglądu konkretnych elementów — to jest w components.css i lobby.css / gra.css.
+   ===================================================================================================== */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--bg-0);
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--topbar-h) + 16px); /* kotwice (#automaty) nie chowają się pod paskiem górnym */
+  hanging-punctuation: first;
+}
+
+/* 4K i duże monitory: delikatnie większa baza, żeby interfejs nie był „mrówczy”. */
+@media (min-width: 1921px) { html { font-size: 112.5%; } }
+@media (min-width: 2561px) { html { font-size: 131.25%; } }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;          /* dvh: wysokość bez paska adresu w mobilnym Safari/Chrome */
+  color: var(--text-1);
+  /* Bez własnego tła: kolor bazowy ma <html>, a warstwa .page-bg (z-index −1) musi być widoczna nad nim.
+     Tło na <body> przykryłoby ją, bo body jest rysowane PO elementach z ujemnym z-index. */
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  line-height: 1.6;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;            /* zabezpieczenie: dekoracje wychodzące poza ekran nie tworzą poziomego przewijania */
+}
+
+img, svg, video, canvas { display: block; max-width: 100%; }
+img, video { height: auto; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a { color: var(--gold-1); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--gold-hi); }
+h1, h2, h3, h4 { margin: 0; line-height: 1.15; font-weight: 700; text-wrap: balance; }
+p { margin: 0; text-wrap: pretty; }
+ul, ol { margin: 0; padding: 0; }
+table { border-collapse: collapse; }
+[hidden] { display: none !important; }
+
+code, kbd {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.86em;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--line-soft);
+  padding: 1px 6px;
+  border-radius: var(--r-xs);
+  overflow-wrap: anywhere;
+}
+
+::selection { background: rgba(245, 197, 66, 0.35); color: var(--text-1); }
+
+/* Fokus klawiatury: wyraźny cyjanowy obrys tylko przy nawigacji klawiaturą (:focus-visible), nie przy kliknięciu. */
+:focus { outline: none; }
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: var(--r-xs);
+}
+
+/* Przewijanie: ciemny pasek w kolorach marki (Chrome/Edge/Safari + Firefox). */
+html { scrollbar-color: rgba(245, 197, 66, 0.35) var(--bg-0); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg-0); }
+::-webkit-scrollbar-thumb { background: linear-gradient(var(--gold-3), #6b4a07); border-radius: 10px; border: 2px solid var(--bg-0); }
+
+/* Gdy otwarty jest modal: blokujemy przewijanie strony pod spodem (klasę dodaje js/ui/modal.js). */
+html.is-locked { overflow: hidden; }
+html.is-locked body { padding-right: var(--scrollbar-w, 0px); }
+
+/* ---------------------------------------------------------------------------------------------------
+   Tło strony — osobna warstwa „fixed”, żeby przewijanie nie przerysowywało gradientów (płynność na telefonach).
+   Jeśli w manifeście jest g_tlo_lobby_*, JS ustawia --page-bg-image i obraz pojawia się pod gradientami.
+   --------------------------------------------------------------------------------------------------- */
+.page-bg {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-bg);
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 720px at 50% -260px, rgba(245, 197, 66, 0.17), transparent 70%),
+    radial-gradient(900px 640px at -12% 8%, rgba(255, 46, 136, 0.16), transparent 62%),
+    radial-gradient(900px 640px at 112% 22%, rgba(33, 230, 255, 0.11), transparent 60%),
+    radial-gradient(1000px 700px at 50% 120%, rgba(143, 61, 255, 0.16), transparent 65%),
+    linear-gradient(180deg, var(--bg-1) 0%, #0b0820 45%, var(--bg-0) 100%);
+  transform: translateZ(0);
+}
+.page-bg::before {               /* obraz tła z manifestu (opcjonalny) — przyciemniony pod UI */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--page-bg-image, none);
+  background-size: cover;
+  background-position: center 30%;
+  opacity: 0.42;
+  filter: saturate(1.1);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.75) 55%, rgba(0, 0, 0, 0.25) 100%);
+}
+.page-bg::after {                /* ziarno filmowe (SVG feTurbulence) — usuwa „pasy” w gradientach, dodaje fakturę */
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+}
+
+/* Kontener treści: szerokość z marginesem bocznym i obsługą wycięcia ekranu (safe-area w poziomie). */
+.container {
+  width: 100%;
+  max-width: calc(var(--content-max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: max(var(--gutter), env(safe-area-inset-left)) max(var(--gutter), env(safe-area-inset-right));
+}
+
+/* Tekst tylko dla czytników ekranu. */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0);
+  white-space: nowrap; border: 0;
+}
+
+/* „Przejdź do treści” — pierwszy element dla klawiatury, widoczny dopiero po fokusie. */
+.skip-link {
+  position: absolute;
+  left: 12px; top: -60px;
+  z-index: calc(var(--z-toast) + 1);
+  padding: 10px 16px;
+  border-radius: var(--r-pill);
+  background: var(--gold-2);
+  color: var(--ink-on-gold);
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+.skip-link:focus-visible { transform: translateY(76px); }
+
+/* Liczby salda i wygranych: cyfry o stałej szerokości, żeby licznik nie „tańczył” podczas odliczania. */
+.num { font-variant-numeric: tabular-nums lining-nums; font-feature-settings: "tnum" 1, "lnum" 1; }
+
+/* Złoty napis gradientem (logotyp HTML, nagłówki). */
+.text-gold {
+  background: var(--gold-grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------------------------------------------------------------------------------------------------
+   prefers-reduced-motion: użytkownik poprosił system o mniej ruchu. Wyłączamy animacje i przejścia
+   (zostaje natychmiastowa zmiana stanu). Cząsteczki, błyski i drżenie wyłącza też JS (fx-lite.js).
+   --------------------------------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

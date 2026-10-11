@@ -1,0 +1,117 @@
+### Cebulion Casino: przykładowe żądania REST (IntelliJ HTTP Client: zielona strzałka przy żądaniu)
+# Uruchom aplikację (KasynoApplication albo `mvn spring-boot:run`), potem wykonuj żądania po kolei.
+# IntelliJ sam zapamiętuje ciasteczko sesji (JSESSIONID) po logowaniu i wysyła je w kolejnych żądaniach.
+# Dokumentacja wszystkich endpointów: http://localhost:8080/swagger-ui.html
+@host = http://localhost:8080
+
+### 1. Bez logowania: 401 NOT_LOGGED_IN (application/problem+json)
+GET {{host}}/api/me
+
+### 2. Logowanie nazwą gracza: nowy gracz dostaje 10 000 cebulionów (newPlayer: true)
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "nick": "Kamil_77"
+}
+
+### 3. To samo logowanie inną wielkością liter: ten sam gracz, newPlayer: false, welcomeBonus: 0
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "nick": "  KAMIL_77 "
+}
+
+### 4. Bieżący gracz i saldo
+GET {{host}}/api/me
+
+### 5. Niepoprawna nazwa: 400 NICK_INVALID
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "nick": "a b"
+}
+
+### 6. Zakazana nazwa: 400 NICK_FORBIDDEN
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "nick": "Adm1n"
+}
+
+### 7. Katalog gier
+GET {{host}}/api/slots
+
+### 8. Szczegóły gry: tabela wypłat (symbols) i opis funkcji (features)
+GET {{host}}/api/slots/zloty-faraon
+
+### 9. Nieznana gra: 404 GAME_NOT_FOUND
+GET {{host}}/api/slots/nie-ma-takiej
+
+### 10. Spin z kluczem idempotencji (dopóki gra nie ma silnika: 503 GAME_NOT_READY)
+POST {{host}}/api/slots/cebulowy-777/spins
+Content-Type: application/json
+Idempotency-Key: {{$uuid}}
+
+{
+  "bet": 100
+}
+
+### 11. Zakład spoza listy betLevels: 400 BET_INVALID
+POST {{host}}/api/slots/cebulowy-777/spins
+Content-Type: application/json
+
+{
+  "bet": 7
+}
+
+### 12. Brak zakładu: 400 VALIDATION_FAILED z listą errors
+POST {{host}}/api/slots/cebulowy-777/spins
+Content-Type: application/json
+
+{}
+
+### 13. Bonus ratunkowy przy pełnym saldzie: 409 RESCUE_NOT_AVAILABLE
+POST {{host}}/api/me/rescue
+
+### 14. Historia portfela (stronicowana)
+GET {{host}}/api/me/transactions?page=0&size=20
+
+### 15. Historia rund
+GET {{host}}/api/me/history?page=0&size=20
+
+### 16. Statystyki gracza na automatach
+GET {{host}}/api/me/stats
+
+### 17. Za duża strona: 400 VALIDATION_FAILED (maks. 100)
+GET {{host}}/api/me/history?size=500
+
+### 18. Ranking: największa pojedyncza wygrana
+GET {{host}}/api/leaderboard?type=biggest-win&limit=10
+
+### 19. Ranking: najwyższe saldo
+GET {{host}}/api/leaderboard?type=balance&limit=10
+
+### 20. Feed dużych wygranych (≥ 15× zakładu)
+GET {{host}}/api/feed/big-wins?limit=10
+
+### 21. Pytanie inwestora 1: najpopularniejsze automaty w ostatnich 7 dniach
+GET {{host}}/api/reports/popular-games?days=7
+
+### 22. Pytanie inwestora 2: rzeczywisty RTP w porównaniu z docelowym
+GET {{host}}/api/reports/rtp
+
+### 23. Pytanie inwestora 3: liderzy (bilans i największa wygrana)
+GET {{host}}/api/reports/top-players?limit=10
+
+### 24. Pytanie inwestora 4: gracze „na zero” i cebuliony w obiegu
+GET {{host}}/api/reports/economy
+
+### 25. Pytanie inwestora 5: godziny szczytu (UTC) i średni zakład
+GET {{host}}/api/reports/peak-hours
+
+### 26. Wylogowanie: 204, potem GET /api/me zwraca 401
+POST {{host}}/api/auth/logout

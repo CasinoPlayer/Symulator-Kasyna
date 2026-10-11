@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Emblemat Cebulion Casino">
+  <!-- Zastępczy emblemat marki (złota cebula w koronie na medalionie, 01 §2.4), rysowany wektorowo.
+       Gdy pipeline grafiki dostarczy g_emblemat, strona podmienia ten plik na obraz z manifestu. -->
+  <defs>
+    <linearGradient id="z" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF6D6"/>
+      <stop offset=".22" stop-color="#FFE08A"/>
+      <stop offset=".55" stop-color="#F5C542"/>
+      <stop offset="1" stop-color="#8A5E05"/>
+    </linearGradient>
+    <linearGradient id="zr" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF6D6"/>
+      <stop offset=".3" stop-color="#F5C542"/>
+      <stop offset=".62" stop-color="#B8860B"/>
+      <stop offset=".8" stop-color="#FFE08A"/>
+      <stop offset="1" stop-color="#5C3A00"/>
+    </linearGradient>
+    <radialGradient id="e" cx=".5" cy=".42" r=".6">
+      <stop offset="0" stop-color="#3A2A7A"/>
+      <stop offset=".6" stop-color="#1E1442"/>
+      <stop offset="1" stop-color="#0B0720"/>
+    </radialGradient>
+    <radialGradient id="c" cx=".38" cy=".3" r=".8">
+      <stop offset="0" stop-color="#FFF6D6"/>
+      <stop offset=".25" stop-color="#FFE08A"/>
+      <stop offset=".6" stop-color="#F5C542"/>
+      <stop offset="1" stop-color="#9A6A06"/>
+    </radialGradient>
+    <radialGradient id="g" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#FFE08A" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#FFE08A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- medalion: złoty pierścień + gilosz + emaliowane pole -->
+  <circle cx="64" cy="74" r="51" fill="#2B1A00"/>
+  <circle cx="64" cy="74" r="48" fill="none" stroke="url(#zr)" stroke-width="7"/>
+  <circle cx="64" cy="74" r="43.5" fill="none" stroke="#B8860B" stroke-width="1.2" stroke-dasharray="1.2 1.6"/>
+  <circle cx="64" cy="74" r="42" fill="url(#e)"/>
+  <!-- promienisty „sunburst” na emalii -->
+  <g stroke="#F5C542" stroke-opacity=".12" stroke-width="2.2">
+    <path d="M64 32V116M22 74H106M34.3 44.3L93.7 103.7M93.7 44.3L34.3 103.7M48 35.2L80 112.8M80 35.2L48 112.8M25.2 58L102.8 90M25.2 90L102.8 58"/>
+  </g>
+  <circle cx="64" cy="78" r="30" fill="url(#g)"/>
+
+  <!-- gałązki laurowe -->
+  <g fill="#D9A21E" stroke="#5C3A00" stroke-width=".5">
+    <ellipse cx="38" cy="100" rx="2.6" ry="6" transform="rotate(-50 38 100)"/>
+    <ellipse cx="33" cy="92" rx="2.4" ry="5.5" transform="rotate(-30 33 92)"/>
+    <ellipse cx="31" cy="83" rx="2.2" ry="5" transform="rotate(-10 31 83)"/>
+    <ellipse cx="90" cy="100" rx="2.6" ry="6" transform="rotate(50 90 100)"/>
+    <ellipse cx="95" cy="92" rx="2.4" ry="5.5" transform="rotate(30 95 92)"/>
+    <ellipse cx="97" cy="83" rx="2.2" ry="5" transform="rotate(10 97 83)"/>
+  </g>
+
+  <!-- złota cebula -->
+  <path d="M64 44C70 57 90 63 90 82C90 98 78 106 64 106C50 106 38 98 38 82C38 63 58 57 64 44Z" fill="url(#c)" stroke="#5C3A00" stroke-width="1.2"/>
+  <g fill="none" stroke="#8A5E05" stroke-width="1.3" stroke-linecap="round" opacity=".75">
+    <path d="M64 48C60 64 57 84 60 104"/>
+    <path d="M64 48C68 64 71 84 68 104"/>
+    <path d="M63 50C53 64 46 82 50 100"/>
+    <path d="M65 50C75 64 82 82 78 100"/>
+  </g>
+  <path d="M50 70C46 78 46 88 50 94" fill="none" stroke="#FFF6D6" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>
+  <!-- korzonki -->
+  <g stroke="#B8860B" stroke-width="1.4" stroke-linecap="round">
+    <path d="M60 106l-3 5M64 106v6M68 106l3 5"/>
+  </g>
+
+  <!-- korona wychodząca poza obrys medalionu -->
+  <path d="M47 41L42 18L53 29L58 11L64 25L70 11L75 29L86 18L81 41Z" fill="url(#z)" stroke="#5C3A00" stroke-width="1.3" stroke-linejoin="round"/>
+  <rect x="45.5" y="37" width="37" height="9" rx="2.5" fill="url(#z)" stroke="#5C3A00" stroke-width="1.3"/>
+  <circle cx="42" cy="18" r="3" fill="#FFF6D6" stroke="#B8860B"/>
+  <circle cx="58" cy="11" r="3" fill="#FFF6D6" stroke="#B8860B"/>
+  <circle cx="70" cy="11" r="3" fill="#FFF6D6" stroke="#B8860B"/>
+  <circle cx="86" cy="18" r="3" fill="#FFF6D6" stroke="#B8860B"/>
+  <circle cx="64" cy="25" r="2.4" fill="#FFF6D6" stroke="#B8860B"/>
+  <circle cx="64" cy="41.5" r="3.3" fill="#FF2E88" stroke="#5C1030" stroke-width=".8"/>
+  <circle cx="54" cy="41.5" r="2.3" fill="#21E6FF" stroke="#06404A" stroke-width=".7"/>
+  <circle cx="74" cy="41.5" r="2.3" fill="#21E6FF" stroke="#06404A" stroke-width=".7"/>
+  <circle cx="63" cy="40.4" r=".9" fill="#fff" opacity=".9"/>
+</svg>

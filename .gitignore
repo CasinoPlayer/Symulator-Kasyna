@@ -5,3 +5,6 @@ target/
 .DS_Store
 *.log
 /data/
+# Narzędzia front-endu (tools/): zależności npm i zrzuty z testów e2e nie trafiają do repozytorium
+node_modules/
+tools/e2e/zrzuty/
