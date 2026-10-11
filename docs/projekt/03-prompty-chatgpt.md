@@ -41,7 +41,7 @@
 | Konto ChatGPT z generowaniem obrazów, **przeglądarka na komputerze** | na komputerze pobierzesz oryginalny PNG z przezroczystością (aplikacja na telefonie potrafi zamienić PNG na JPEG — [02 § 4.3](02-lista-obrazow.md#43-jak-pobrać-oryginał-z-chatgpt)) |
 | Folder roboczy z podfolderami `makiety/`, `global/`, `s1/`, `s2/`, `s3/` | tu od razu zapisujesz pliki pod właściwymi nazwami (struktura jak w [02 § 4.2](02-lista-obrazow.md#42-foldery-i-nazwy)) |
 | Ten dokument otwarty na GitHubie | każdy blok promptu ma w prawym górnym rogu **ikonę kopiowania** — jedno kliknięcie kopiuje cały blok |
-| Około 1–2 godziny na czat (czat 4: 2–3 godziny) | nie musisz robić czatu za jednym posiedzeniem — do czatu można wrócić (§ 1.7) |
+| Około 1,5–2,5 godziny na czat (czat 4: ~3 godziny; razem ~14 h — § 1.9) | nie musisz robić czatu za jednym posiedzeniem — do czatu można wrócić (§ 1.7) |
 
 **Nie używaj czatu tymczasowego** (trybu bez historii). Do każdego czatu będziesz wracać, a czat tymczasowy znika.
 Dobrze jest od razu nazwać czat na liście po lewej, np. „Cebulion — czat 3 S1”.
@@ -63,7 +63,19 @@ zaakceptowanych we wcześniejszych (kotwice stylu, [01 § 1.4](01-kierunek-artys
 
 **Szybka ścieżka do pierwszej grywalnej wersji (34 obrazy P0).** Jeśli liczy się czas, po czacie 0 zrób w czatach
 1 i 2 tylko obrazy P0 (pomijaj P1 komendą `IDŹ DO:`), potem cały czat 3. Obrazy P1 dorobisz później w tych samych
-czatach. Kolejność dostaw: [02 § 4.7](02-lista-obrazow.md#47-kolejność-dostaw).
+czatach. Kolejność dostaw: [02 § 4.7](02-lista-obrazow.md#47-kolejność-dostaw). Gotowe komendy przeskoku
+(zamiast `DALEJ` po zaakceptowaniu wskazanego obrazu):
+
+| Czat | Po zaakceptowaniu | Napisz | Pomijasz (P1, na później) |
+|---|---|---|---|
+| 1 | 07 `g_maskotka_powitanie` | `IDŹ DO: g_font_cyfry` | 08 `g_maskotka_wygrana`, 09 `g_maskotka_bankrut` |
+| 1 | 10 `g_font_cyfry` | `IDŹ DO: g_tlo_lobby_desktop` | 11 `g_awatary` |
+| 2 | 06 `g_ui_przycisk_drugi` | `IDŹ DO: g_win_big` | 07 `g_ui_ornament` |
+| 2 | 08 `g_win_big` | `IDŹ DO: g_fx_promienie` | 09–12 `g_win_mega` … `g_win_free_spins` |
+| 2 | 15 `g_fx_iskry` | — (koniec P0 w czacie 2) | 16–18 `g_fx_blyskawice`, `g_fx_dym`, `g_fx_konfetti` |
+
+Po powrocie do pominiętych obrazów zacznij od `IDŹ DO: <ID>`; pozycje `EDIT` (np. `g_win_mega` z `g_win_big`) mogą
+wtedy wymagać załączenia obrazu źródłowego (§ 1.6).
 
 ### 1.3. Jak prowadzić czat — krok po kroku
 
@@ -73,26 +85,34 @@ czatach. Kolejność dostaw: [02 § 4.7](02-lista-obrazow.md#47-kolejność-dost
 3. **Skopiuj cały blok** danego czatu (ikona kopiowania w prawym górnym rogu bloku) i wklej go do tej samej
    wiadomości, pod załącznikami. Wyślij.
 4. ChatGPT od razu generuje **obraz nr 01** i nad nim pisze jedną linię: `ID: … | proporcja | typ tła`.
+   Jeśli tej linii zabraknie, nic się nie dzieje — numer obrazu sprawdzisz komendą `STATUS`.
 5. **Sprawdź obraz** z checklistą pod blokiem danego czatu (1–3 minuty).
 6. **Dobry?** Pobierz oryginał (§ 1.8), nazwij `ID.png`, napisz `DALEJ`. **Zły?** Napisz `POPRAW: …`
    (gotowe teksty poprawek w § 9; możesz też opisać problem własnymi słowami, nawet po polsku).
-7. Powtarzaj do końca listy. Po ostatnim obrazie ChatGPT napisze `KONIEC CZATU`.
+7. Powtarzaj do końca listy. Gdy po ostatnim obrazie napiszesz `DALEJ`, ChatGPT odpowie tylko `KONIEC CZATU`.
 
 Zasada: **jeden obraz na odpowiedź**. Jeśli ChatGPT narysuje kilka obiektów naraz, kolaż albo zacznie zadawać
 pytania zamiast rysować — użyj poprawki P22 z § 9.
 
 ### 1.4. Komendy
 
-Komendy są zdefiniowane w każdym bloku, więc ChatGPT je rozumie. Pisz je wielkimi literami, jako całą wiadomość.
+Komendy są zdefiniowane w każdym bloku, więc ChatGPT je rozumie. Pisz je jako całą wiadomość (najlepiej wielkimi
+literami; blok każe ChatGPT przyjmować też małe litery i wersję bez polskich znaków, np. `IDZ DO:`).
 
 | Komenda | Co robi | Kiedy |
 |---|---|---|
 | `DALEJ` | obraz zaakceptowany → ChatGPT generuje następne ID z listy | po pobraniu dobrego obrazu |
 | `POPRAW: <uwagi>` | ten sam ID jeszcze raz; zostaje to, co dobre, poprawiane jest tylko to, co opiszesz | literówka, przycięcie, zła poświata, za ciemne… (§ 9) |
 | `NOWA WERSJA` | ten sam ID od zera, świeże ujęcie tego samego opisu | gdy dwie–trzy poprawki nie pomagają albo kierunek jest zły |
-| `IDŹ DO: <ID>` | przeskok do wskazanego ID | powrót po przerwie, pominięcie obrazów P1, powtórka starszego ID |
-| `ZASADY` | ChatGPT ponownie czyta całą pierwszą wiadomość (wszystkie zasady) | gdy zaczyna „zapominać” reguły: pojawia się tekst, cień, szachownica, zły format |
+| `IDŹ DO: <ID>` | przeskok do wskazanego ID i **od razu** jego generacja | powrót po przerwie, pominięcie obrazów P1, powtórka starszego ID |
+| `ZASADY` | ChatGPT ponownie czyta wiadomość z zasadami (ostatnio wklejony blok) i odpowiada **jedną linią tekstu, bez obrazu** (`ZASADY OK - next: <ID>`); potem piszesz `DALEJ` albo `POPRAW: …` | gdy zaczyna „zapominać” reguły: pojawia się tekst, cień, szachownica, zły format |
 | `STATUS` | tylko tekst: które ID są zrobione, które zostały | gdy nie pamiętasz, gdzie skończyłeś |
+
+**Gdy `ZASADY` nie pomaga.** ChatGPT ma ograniczoną pamięć rozmowy (tzw. okno kontekstu, zależne od planu i modelu —
+dokładnej wielkości nie znamy). W bardzo długim czacie pierwsza wiadomość z zasadami może z niej „wypaść” i wtedy
+`ZASADY` nie ma czego przeczytać. Rozwiązanie: **wklej ponownie cały blok w tym samym czacie**, a pod nim, w tej
+samej wiadomości, linię `IDŹ DO: <ID>` (ostatnia linia bloku każe wtedy zacząć od tego ID, a nie od 01). Pozycje
+`EDIT` mogą wtedy potrzebować załączonego obrazu źródłowego (§ 1.6).
 
 ### 1.5. Referencje stylu: makiety i kotwice
 
@@ -137,8 +157,13 @@ temu moneta z trzech ujęć jest tą samą monetą, a przycisk STOP — tym samy
 
 **Jeśli ChatGPT „nie widzi” obrazu źródłowego** (np. wróciłeś po kilku dniach, czat był bardzo długi albo zacząłeś
 nowy czat): załącz plik źródłowy PNG do wiadomości i napisz `IDŹ DO: <ID>` — w bloku jest instrukcja, że załączony
-obraz jest bazą dla pozycji `EDIT`. Edycja czasem zmienia rozdzielczość albo proporcję — po każdej edycji sprawdź
-wymiary (§ 1.8).
+obraz jest bazą dla pozycji `EDIT`. Edycja czasem zmienia rozdzielczość albo proporcję i potrafi **zgubić
+przezroczystość** (obiekt wraca na białym lub szarym tle) — po każdej edycji sprawdź wymiary (§ 1.8) i alfę
+(§ 11.1, krok 2; poprawka P2 z § 9).
+
+**Edycja nie jest „kopiuj-wklej”.** Generator przy edycji rysuje cały obraz od nowa, więc drobne różnice (np. liczba
+nacięć pierścienia SPIN, faktura rantu monety) są normalne. Akceptuj, jeśli różnice nie są widoczne przy przełączaniu
+dwóch plików w przeglądarce obrazów; większe różnice → P18. Plan B dla par, które muszą się nakładać, jest w § 12.
 
 ### 1.7. Limity generowania i przerwy
 
@@ -148,10 +173,11 @@ konkretnych liczb**. Gdy pojawi się komunikat o limicie:
 1. **Nie zakładaj nowego czatu.** Zapamiętaj ID, na którym skończyłeś (albo napisz później `STATUS`).
 2. Odczekaj czas podany w komunikacie.
 3. Wróć do **tego samego czatu** i napisz `DALEJ` (albo `IDŹ DO: <ID>`, jeśli nie masz pewności).
-4. Jeśli po długiej przerwie ChatGPT przestaje trzymać się reguł, napisz `ZASADY`.
+4. Jeśli po długiej przerwie ChatGPT przestaje trzymać się reguł, napisz `ZASADY`; gdy to nie wystarczy — wklej
+   ponownie blok z linią `IDŹ DO: <ID>` pod spodem (§ 1.4, „Gdy `ZASADY` nie pomaga”).
 
-**Kiedy jednak nowy czat:** gdy czat zrobił się bardzo długi (np. ponad 40 generacji) i mimo `ZASADY` styl się
-rozjeżdża. Wtedy otwórz nowy czat, załącz te same referencje **plus** 2–3 zaakceptowane obrazy z tego czatu,
+**Kiedy jednak nowy czat:** gdy czat zrobił się bardzo długi (np. ponad 40 generacji) i mimo `ZASADY` oraz ponownego
+wklejenia bloku styl się rozjeżdża. Wtedy otwórz nowy czat, załącz te same referencje **plus** 2–3 zaakceptowane obrazy z tego czatu,
 wklej ten sam blok i **na samym końcu tej samej wiadomości**, pod blokiem, dopisz linię `IDŹ DO: <ID>` — ChatGPT
 zacznie od wskazanego obrazu zamiast od nr 01. Pozycje `EDIT` w nowym czacie potrzebują obrazu źródłowego
 w załączniku (§ 1.6).
@@ -218,7 +244,7 @@ Każdy blok czatu ma ten sam szkielet. Warto go znać, żeby świadomie poprawia
 | `ROLE` | ChatGPT działa jako art director studia AAA tworzącego sloty mobilne: precyzyjny, spójny, bez improwizacji | — |
 | `PROJECT` | czym jest Cebulion Casino, maskotka, trzy gry; że obrazy to osobne assety, a ruch, cienie i tekst UI dodaje kod | § 1.2 |
 | `THIS CHAT` | numer czatu, zakres, liczba obrazów | Załącznik A |
-| `STYLE DNA` | kanoniczny akapit stylu, zawsze ten sam | § 4.10 |
+| `STYLE DNA` + `ALWAYS` | kanoniczny akapit stylu (w czatach 4–5 bez neonowej magenty, zgodnie ze stylem gry) i linia reguł obowiązujących zawsze: osobno dla każdego obrazu i dla assetów izolowanych (bez cienia i podłogi — tła `PELNE` mogą mieć podłogę) | § 4.10 |
 | `PALETTE` | tokeny hex + rampa złota + proporcje (70% ciemne, 20% złoto, ≤ 10% neon) | § 3 |
 | `LIGHTING` / `CAMERA` | key z lewej-góry, fill lawendowy, rim cyjan z prawej, rim magenta z lewej-dołu; modyfikacje gry | § 4.2–4.3, § 9–11 |
 | `MATERIALS` | frazy materiałów (złoto polerowane i satynowe, szkło, emalia…) | § 4.4 |
@@ -254,8 +280,8 @@ kolejnych czatów.
 
 | # | ID | Format | Tło | Najważniejsze teksty na obrazie |
 |---|---|---|---|---|
-| 01 | `m01_lobby_desktop` | 3:2 | PELNE | „CEBULION CASINO”, „Zaloguj”, „Wybierz grę”, nazwy 3 gier |
-| 02 | `m02_logowanie` | 3:2 | PELNE | „Witaj w Cebulion Casino”, „Nazwa gracza”, „Wejdź do kasyna” |
+| 01 | `m01_lobby_desktop` | 3:2 | PELNE | „CEBULION CASINO”, „Zaloguj”, „Graj bez ryzyka. Wygrywaj z klasą.”, „Wybierz grę”, nazwy 3 gier |
+| 02 | `m02_logowanie` | 3:2 | PELNE | „Witaj w Cebulion Casino”, „Nazwa gracza”, „Wejdź do kasyna”, „Na start: 10 000 cebulionów” |
 | 03 | `m03_bonus_powitalny` | 3:2 | PELNE | „+10 000”, „Bonus powitalny”, „Saldo”, „Odbierz” |
 | 04 | `m04_lobby_mobile` | 2:3 | PELNE | „Saldo”, „Graj”, „Wybierz grę”, nazwy 3 gier |
 | 05 | `m05_s1_desktop` | 3:2 | PELNE | „CEBULOWY 777”, „Saldo”, „Zakład”, „Wygrana”, „SPIN” |
@@ -278,8 +304,9 @@ money, no prizes, no deposits. Brand idea: a premium, dark luxury casino with a 
 ("cebula" in Polish) treated as royal luxury. Brand mark: a golden onion wearing a crown on a round navy
 enamel medallion. Mascot: "Pan Cebulion" - an elegant plump golden onion gentleman with a black-violet
 silk top hat, a gold monocle, a magenta bow tie, a white wing collar, cream gloves and a curled golden
-moustache made of onion roots; charismatic host, never childish. Login: the player types a name in the
-top-right corner and is logged in at once; first login gives 10 000 cebulions. Three slot games:
+moustache made of onion roots; charismatic host, never childish. Login: the player clicks "Zaloguj" in the
+top-right corner, types a name into a small modal window and is logged in at once; first login gives
+10 000 cebulions. Three slot games:
 "Cebulowy 777" (3x3 retro Las Vegas neon, chrome and synthwave), "Złoty Faraon" (5x3 ancient Egyptian
 treasure vault), "Kryształowa Kaskada" (6x5 cluster game in a magical crystal cave). The user interface
 is in Polish.
@@ -338,6 +365,8 @@ TEXT ON IMAGES
   ą = a with ogonek (a small hook under the right side of the a); ę = e with ogonek;
   ó = o with an acute accent; ź = z with an acute accent (a small slanted stroke above the z).
   Never replace them with plain letters.
+- Where I spell a word out (B-I-G, or Z, Ł, O, T, Y), that is only a spelling aid for you: render the
+  plain word, with no hyphens, commas or extra spaces between its letters.
 
 ORIGINALITY / FORBIDDEN
 - Do not imitate or reference any real casino, slot game, game studio, brand, logo, trademark, mascot,
@@ -360,10 +389,12 @@ WORKFLOW PROTOCOL (very important)
    DALEJ            = accepted; generate the next ID from the list.
    POPRAW: <notes>  = regenerate the SAME ID; keep everything that was right, fix only what I describe.
    NOWA WERSJA      = regenerate the SAME ID from scratch with a fresh take on the same brief.
-   IDŹ DO: <id>     = jump to that ID (I use it when I come back later or want to redo an item).
-   ZASADY           = re-read this whole first message (all rules) and apply it to the next image.
+   IDŹ DO: <id>     = jump to that ID and generate it now (used after a break, to skip or redo an item).
+   ZASADY           = re-read the latest copy of this whole rules message; reply with ONE text line only,
+                      "ZASADY OK - next: <id>", no image; apply all rules to every following image.
    STATUS           = reply with text only: which IDs are done and which remain. No image.
-5. After the last item write only: KONIEC CZATU.
+   Accept the commands in any letter case and without Polish letters (e.g. "IDZ DO: <id>").
+5. When I write DALEJ after the last item, reply only: KONIEC CZATU.
 
 IMAGE LIST
 
@@ -396,7 +427,8 @@ synthwave - golden onion in a pink-cyan neon ring, red 7s, cherries; (2) Egyptia
 golden pharaoh mask in torchlight, lapis and gold; (3) magical crystal cave - glowing gems, amethyst and
 sapphire crystals, teal bioluminescence. A small round play icon on each tile; the middle tile is
 slightly enlarged and tilted in 3D with a stronger gold glow (hover state). Gold caption under each tile.
-LIGHT: warm chandelier light from the upper left, gold rim on the tiles, cyan focus glow nowhere yet.
+LIGHT: warm chandelier light from the upper left, gold rim on the tiles; no cyan focus glow anywhere
+(nothing is selected yet - the hovered middle tile glows gold).
 MOOD: premium, inviting, cinematic night luxury - a VIP lounge, not a flashy arcade.
 
 --------------------------------------------------------------------
@@ -565,7 +597,8 @@ The screen edges stay darker (vignette) so the centre pops.
 LIGHT: the title is the brightest object; additive glow behind it, never washing out the letters.
 MOOD: explosive, triumphant, top-tier slot celebration - but clean and readable.
 
-Start now with image 01.
+Start now with image 01. Exception: if a line "IDŹ DO: <id>" follows below this sentence, start with
+that ID instead.
 ```
 
 ### 3.2. Checklista czatu 0
@@ -640,8 +673,9 @@ neon magenta (#FF2E88) and cyan (#21E6FF). Cinematic studio lighting: warm key l
 left, soft lavender fill from the right, thin cool cyan rim light on the right edges, subtle magenta
 rim on the lower left. Clean bevels, bold readable silhouette, rich but controlled detail, subtle
 tight glow. Not photorealistic, not flat vector, not a cartoon for kids, no anime.
-ALWAYS: no text unless specified, no watermark, no signature, no cast shadow, no floor, no reflection
-below the object, no painted checkerboard, nothing cropped by the image edge.
+ALWAYS: no text unless an item gives EXACT TEXT, no watermark, no signature, no painted checkerboard.
+Isolated assets (ALFA, SHEET, FRAME, CZARNE) also: no cast shadow, no floor, no reflection below the
+object, nothing cut by the image edge. Backgrounds (PELNE) follow their own zones and may have floors.
 
 PALETTE (hex)
 - Darks: #07060F (deepest), #120B2A, #1E1442 - about 70% of every scene.
@@ -693,7 +727,7 @@ TECHNICAL RULES BY BACKGROUND TYPE (each item says which one applies)
 - Clean anti-aliased edges, no white, grey or coloured halo around the silhouette.
 - No text unless the item gives EXACT TEXT.
 
-[PELNE] = FULL-BLEED IMAGE
+[PELNE] = FULL-BLEED OPAQUE IMAGE (no transparency)
 - Painted edge to edge: no border, no frame around the picture, no rounded corners, no letterbox bars.
 - No text, letters, numbers, logos, UI or people. Signs and screens in the scene stay blank or blurred.
 - Follow the composition zones in the item: the area where the interface will sit is the darkest and
@@ -718,8 +752,10 @@ TECHNICAL RULES BY BACKGROUND TYPE (each item says which one applies)
 - The result keeps the item's exact aspect ratio and background type.
 
 TEXT ON IMAGES
-- Render text ONLY where an item gives EXACT TEXT. Copy it letter by letter, in capitals exactly as
-  given, with nothing added (no slogans, no taglines, no fake letters anywhere else).
+- Render text ONLY where an item gives EXACT TEXT. Copy it letter by letter, in exactly the letter
+  case given, with nothing added (no slogans, no taglines, no fake letters anywhere else).
+- Where I spell a word out (B-I-G, or Z, Ł, O, T, Y), that is only a spelling aid for you: render the
+  plain word, with no hyphens, commas or extra spaces between its letters.
 
 ORIGINALITY / FORBIDDEN
 - Do not imitate or reference any real casino, slot game, game studio, brand, logo, trademark, mascot,
@@ -749,10 +785,12 @@ WORKFLOW PROTOCOL (very important)
    DALEJ            = accepted; generate the next ID from the list.
    POPRAW: <notes>  = regenerate the SAME ID; keep everything that was right, fix only what I describe.
    NOWA WERSJA      = regenerate the SAME ID from scratch with a fresh take on the same brief.
-   IDŹ DO: <id>     = jump to that ID (I use it when I come back later or skip an item).
-   ZASADY           = re-read this whole first message (all rules) and apply it to the next image.
+   IDŹ DO: <id>     = jump to that ID and generate it now (used after a break, to skip or redo an item).
+   ZASADY           = re-read the latest copy of this whole rules message; reply with ONE text line only,
+                      "ZASADY OK - next: <id>", no image; apply all rules to every following image.
    STATUS           = reply with text only: which IDs are done and which remain. No image.
-6. After the last item write only: KONIEC CZATU.
+   Accept the commands in any letter case and without Polish letters (e.g. "IDZ DO: <id>").
+6. When I write DALEJ after the last item, reply only: KONIEC CZATU.
 
 IMAGE LIST
 
@@ -798,8 +836,9 @@ Transparent background, no shadow.
 ASPECT: 1:1 square (1024x1024) | BACKGROUND: ALFA | EXACT TEXT: none
 SUBJECT: the brand emblem of Cebulion Casino - a royal seal: a golden onion wearing a crown on a round
 medallion. Used as app icon, favicon, loader and header mark.
-COMPOSITION: round medallion about 78% of the canvas width, placed slightly below centre so that the
-crown, which rises ABOVE the medallion outline, still keeps the 6% top margin.
+COMPOSITION: round medallion about 78% of the canvas width, placed slightly below centre; the crown rises
+ABOVE the medallion outline by at most 10% of the canvas height. The whole emblem (medallion + crown) keeps
+the 6% margin on all four sides - the crown never touches the top edge, the medallion never the bottom.
 DESIGN: outer ring of mirror-polished gold (thickness about 7% of the radius), behind it a thin ring of
 fine guilloche engraving (wavy lines). Inner field: deep navy-violet enamel (#1E1442) with a subtle
 radial sunburst. In the centre a plump polished-gold onion with 5 visible vertical ribs and a gently
@@ -820,8 +859,8 @@ SUBJECT: the main logotype of Cebulion Casino, vertical lockup.
 COMPOSITION (top to bottom): (1) the emblem from image 04 (same design), centred, about 40% of the
 logo's height; (2) the word CEBULION across the full logo width, cap height about 22% of the logo
 height; (3) the word CASINO with caps about 45% of CEBULION's height, wide letter spacing, and on both
-sides of it thin gold lines ending in small diamonds. The whole lockup about 84% of the canvas width,
-at least 6% margin on every side, centred.
+sides of it thin gold lines ending in small diamonds. The whole lockup about 84% of the canvas width and
+at most 86% of its height (shrink everything evenly if needed), at least 6% margin on every side, centred.
 LETTERING: classical Roman inscription capitals like the Cinzel typeface - sharp, finely bracketed
 serifs, clear thick-thin contrast. Letters are extruded mirror-polished gold with a bevelled edge
 (extrusion depth about 6% of the letter height). The bevel catches warm light from the upper left; the
@@ -866,6 +905,8 @@ light-gold moustache made of onion roots - his signature feature; a confident cl
 POSE: a slight bow (torso tilted about 8 deg); his right hand (left side of the image) lifts the top hat
 a little off his head; his left hand makes an open inviting gesture at waist height toward the viewer.
 He winks with his left eye (the right eye stays behind the monocle); one eyebrow raised.
+ORIGINAL CHARACTER: he never holds a walking cane; his golden onion bulb, root moustache, thick eyebrows
+and magenta bow tie make him unique - he must not look like any existing advertising mascot.
 COMPOSITION: full figure, about 82% of the canvas height, centred, feet fully visible, at least 6%
 margin; stands on nothing - no floor, no shadow.
 LIGHT: global scheme; cyan rim along his right-side contour, magenta rim lower left.
@@ -907,7 +948,8 @@ EXACT TEXT (one glyph per cell, in this order):
   row 3: ,  +  ×  EMPTY  EMPTY
   ("," = comma, "+" = plus sign, "×" = multiplication sign - a diagonal cross, NOT the letter X;
   the last two cells of row 3 stay completely empty)
-SUBJECT: a bitmap font of golden 3D numerals for win counters ("12 400", "x10", "+10").
+SUBJECT: a bitmap font of golden 3D numerals for win counters (the game composes amounts, multipliers and
+bonuses from these single glyphs - draw only the 13 glyphs listed, never a whole number).
 LETTERING: heavy, massive lining numerals with classical serifs (like a heavier Cinzel Black), extruded
 mirror-polished gold with a depth of 8-10% of the glyph height, bevelled front edges, front faces with a
 vertical gradient #FFE08A to #F5C542 to #B8860B, a dark violet outline (#1A0B33, 3-4% of the glyph
@@ -925,7 +967,9 @@ SUBJECT: 8 round player avatars - the "vegetable aristocracy", friends of Pan Ce
 EACH CELL: one round medallion about 76% of the cell width, centred: a polished gold ring, a glossy
 enamel background in the colour given, and inside a head-and-shoulders portrait of the character,
 frontal or slight three-quarter, same render and light as the mascot. Elegant, witty, not childish.
-Nobody wears a top hat or a monocle (reserved for the mascot).
+Nobody wears a top hat or a monocle (reserved for the mascot). Each is a stylised living vegetable with
+a natural vegetable shape and its own face - never a plastic toy, no detachable toy parts, no big
+cartoon lips, and none resembles an existing toy or cartoon character.
 ORDER (row 1, left to right):
   1) Lady Red Onion: red onion with violet-pink skin, pearl earrings, small feather fascinator;
      enamel turquoise #1BB5C9.
@@ -936,7 +980,8 @@ ORDER (row 2, left to right):
   5) Captain Leek: green-and-white leek, white captain's cap with a gold anchor; enamel dark magenta #B3135C.
   6) Duke Eggplant: violet eggplant, velvet beret with a feather; enamel gold #F5C542.
   7) Madame Radish: magenta-and-white radish, feather boa; enamel dark teal #0E6E73.
-  8) Mister Mushroom: cream mushroom cap, sunglasses, polka-dot bow tie; enamel ruby #A3122E.
+  8) Mister Mushroom: plain cream mushroom cap (no spots), sunglasses, polka-dot bow tie; enamel ruby
+     #A3122E.
 READABILITY: each avatar must be recognisable at 32 px by head silhouette and background colour.
 No text, no names.
 
@@ -968,7 +1013,8 @@ up to 15% on each side); bottom third darker, carpet fading to #07060F. Keep imp
 x 16-84%, y 6-94%.
 KEEP IDENTICAL: materials, colours, light direction, mood, night darkness. No people, no text.
 
-Start now with image 01.
+Start now with image 01. Exception: if a line "IDŹ DO: <id>" follows below this sentence, start with
+that ID instead.
 ```
 
 ### 4.2. Checklista czatu 1
@@ -981,19 +1027,21 @@ Start now with image 01.
 - [ ] Światło z lewej-góry, cyjanowy rim po prawej stronie obiektów.
 - [ ] **Monety:** trzy ujęcia to ta sama moneta (ten sam relief, złoto, światło), ta sama wysokość i środek;
       `skos` = elipsa ~0,7:1 z rantem po prawej; `bok` = wąska elipsa z żłobkowanym rantem; **brak napisów i cyfr**.
-- [ ] **Emblemat:** emalia granatowo-fioletowa, rubin i szafiry w koronie, korona wychodzi ponad medalion i mieści się
-      w marginesie; w 32 px czytelny jako „złoty krążek z koroną”; nie myli się z monetą.
+- [ ] **Emblemat:** emalia granatowo-fioletowa, rubin i szafiry w koronie, korona wychodzi ponad medalion, a całość
+      (korona u góry, medalion u dołu) mieści się w marginesie 6%; w 32 px czytelny jako „złoty krążek z koroną”; nie myli się z monetą.
 - [ ] **Logo:** dokładnie `CEBULION` i `CASINO` (litera po literze), litery jak Cinzel, złote z fazą i ciemnym konturem,
       emblemat nad napisem jest tym samym projektem co `g_emblemat`.
 - [ ] **Skrzynia:** fioletowe lakierowane drewno + złote okucia, zamek z cebulą, wieko ~110°, poświata zwarta,
       brak podłogi i monet leżących obok.
 - [ ] **Maskotka (3 pozy):** ta sama postać — monokl na prawym oku postaci (po **lewej** stronie obrazu), magentowa
       muszka, wąsy z korzonków, 7 żeber, cylinder przechylony w prawo; oczy migdałowe (nie „kawaii”); cała postać
-      w kadrze, stopy widoczne; monety w pozie „wygrana” w całości w kadrze; „bankrut” zabawny, nie smutny.
+      w kadrze, stopy widoczne; monety w pozie „wygrana” w całości w kadrze; „bankrut” zabawny, nie smutny;
+      bez laski i bez podobieństwa do znanych maskotek reklamowych (§ 12, pkt 12).
 - [ ] **Cyfry:** siatka 5×3, kolejność `0 1 2 3 4 / 5 6 7 8 9 / , + ×` + 2 puste komórki; znak `×` to krzyżyk, nie
       litera X; wszystkie cyfry tej samej wysokości i na tej samej linii bazowej; nic nie wchodzi do sąsiedniej komórki.
 - [ ] **Awatary:** siatka 4×2, 8 różnych postaci w kolejności z listy, każda z innym kolorem emalii, nikt nie ma
-      cylindra ani monokla, rozpoznawalne po zmniejszeniu do 32 px.
+      cylindra ani monokla, rozpoznawalne po zmniejszeniu do 32 px; to żywe warzywa, a nie plastikowe zabawki
+      (Baron Ziemniak nie może przypominać znanej zabawki, grzyb bez kropek).
 - [ ] **Tła lobby:** ciemny, spokojny środek (tu staną kafle gier), bokeh żyrandoli u góry, automaty po bokach
       rozmyte, brak ludzi i napisów; wersja mobile przekomponowana (nie rozciągnięta), ważne elementy w x 16–84%.
 
@@ -1055,8 +1103,9 @@ neon magenta (#FF2E88) and cyan (#21E6FF). Cinematic studio lighting: warm key l
 left, soft lavender fill from the right, thin cool cyan rim light on the right edges, subtle magenta
 rim on the lower left. Clean bevels, bold readable silhouette, rich but controlled detail, subtle
 tight glow. Not photorealistic, not flat vector, not a cartoon for kids, no anime.
-ALWAYS: no text unless specified, no watermark, no signature, no cast shadow, no floor, no reflection
-below the object, no painted checkerboard, nothing cropped by the image edge.
+ALWAYS: no text unless an item gives EXACT TEXT, no watermark, no signature, no painted checkerboard.
+Isolated assets (ALFA, SHEET, FRAME, CZARNE) also: no cast shadow, no floor, no reflection below the
+object, nothing cut by the image edge. Backgrounds (PELNE) follow their own zones and may have floors.
 
 PALETTE (hex)
 - Darks: #07060F (deepest), #120B2A, #1E1442.
@@ -1099,7 +1148,7 @@ TECHNICAL RULES BY BACKGROUND TYPE (each item says which one applies)
 - Clean anti-aliased edges, no white, grey or coloured halo around the silhouette.
 - No text unless the item gives EXACT TEXT.
 
-[CZARNE] = PURE BLACK BACKGROUND FOR ADDITIVE BLENDING
+[CZARNE] = OPAQUE PURE BLACK BACKGROUND FOR ADDITIVE BLENDING (not a transparent image)
 - The background is solid pure black #000000 (RGB 0,0,0) everywhere: no gradient, no vignette, no noise,
   no stars, no dust, no smoke unless the item is smoke.
 - The effect is neutral warm white (#FFF3D1 family) unless the item says otherwise - the game tints it
@@ -1132,8 +1181,10 @@ TECHNICAL RULES BY BACKGROUND TYPE (each item says which one applies)
 - The result keeps the item's exact aspect ratio and background type.
 
 TEXT ON IMAGES
-- Render text ONLY where an item gives EXACT TEXT. Copy it letter by letter, in capitals exactly as
-  given, with nothing added (no slogans, no extra words, no fake letters anywhere else).
+- Render text ONLY where an item gives EXACT TEXT. Copy it letter by letter, in exactly the letter
+  case given, with nothing added (no slogans, no extra words, no fake letters anywhere else).
+- Where I spell a word out (B-I-G, or Z, Ł, O, T, Y), that is only a spelling aid for you: render the
+  plain word, with no hyphens, commas or extra spaces between its letters.
 
 ORIGINALITY / FORBIDDEN
 - Do not imitate or reference any real casino, slot game, game studio, brand, logo, trademark, mascot,
@@ -1163,10 +1214,12 @@ WORKFLOW PROTOCOL (very important)
    DALEJ            = accepted; generate the next ID from the list.
    POPRAW: <notes>  = regenerate the SAME ID; keep everything that was right, fix only what I describe.
    NOWA WERSJA      = regenerate the SAME ID from scratch with a fresh take on the same brief.
-   IDŹ DO: <id>     = jump to that ID (I use it when I come back later or skip an item).
-   ZASADY           = re-read this whole first message (all rules) and apply it to the next image.
+   IDŹ DO: <id>     = jump to that ID and generate it now (used after a break, to skip or redo an item).
+   ZASADY           = re-read the latest copy of this whole rules message; reply with ONE text line only,
+                      "ZASADY OK - next: <id>", no image; apply all rules to every following image.
    STATUS           = reply with text only: which IDs are done and which remain. No image.
-6. After the last item write only: KONIEC CZATU.
+   Accept the commands in any letter case and without Polish letters (e.g. "IDZ DO: <id>").
+6. When I write DALEJ after the last item, reply only: KONIEC CZATU.
 
 IMAGE LIST
 
@@ -1277,7 +1330,8 @@ MOOD: pure, heavy, triumphant gold.
 09/18  ID: g_win_mega
 ASPECT: 3:2 landscape (1536x1024) | BACKGROUND: ALFA
 EXACT TEXT: two lines - "MEGA" and "WIN". Letters: M-E-G-A and W-I-N.
-EDIT of image 08 (g_win_big): same lettering style, extrusion, outline, arc and size of the text block.
+EDIT of image 08 (g_win_big): same lettering style, extrusion, outline, arc, letter height and line
+spacing (make the letters smaller only if a longer word would exceed 84% of the canvas width).
 CHANGE: the text, and the letters are now studded with rows of cut magenta rubies (#FF2E88) and cyan
 sapphires (#21E6FF) set along the strokes; a gold laurel ribbon curves under the second line (inside the
 margin). Richer and stronger than BIG WIN.
@@ -1286,7 +1340,8 @@ margin). Richer and stronger than BIG WIN.
 10/18  ID: g_win_epic
 ASPECT: 3:2 landscape (1536x1024) | BACKGROUND: ALFA
 EXACT TEXT: two lines - "EPIC" and "WIN". Letters: E-P-I-C and W-I-N.
-EDIT of image 08 (g_win_big): same lettering style, extrusion, outline, arc and size of the text block.
+EDIT of image 08 (g_win_big): same lettering style, extrusion, outline, arc, letter height and line
+spacing (make the letters smaller only if a longer word would exceed 84% of the canvas width).
 CHANGE: the text; the gold letters get dark violet metal inlays; stylised violet flames (#8F3DFF with
 magenta #FF2E88 cores) lick the letters from below. The flames are compact, opaque in their cores and
 end well inside the 6% margin (no smoke, no haze).
@@ -1295,19 +1350,23 @@ end well inside the 6% margin (no smoke, no haze).
 11/18  ID: g_win_ultra
 ASPECT: 3:2 landscape (1536x1024) | BACKGROUND: ALFA
 EXACT TEXT: two lines - "ULTRA" and "WIN". Letters: U-L-T-R-A and W-I-N.
-EDIT of image 08 (g_win_big): same letter shapes, outline, arc and size of the text block.
+EDIT of image 08 (g_win_big): same letter shapes, outline, arc, letter height and line spacing (make
+the letters smaller only if a longer word would exceed 84% of the canvas width).
 CHANGE: the text; the letter faces are made of rainbow faceted crystal (spectrum cyan #21E6FF to violet #8F3DFF
 to magenta #FF2E88 to gold #FFE08A, with white sparkles) held in polished gold frames; a small gold
 crown with gems floats above the first line; a few crystal shards float around the words; rainbow
-dispersion on facet edges. The most spectacular of all titles, still clean and readable.
+dispersion on facet edges. The crown and the shards stay inside the 6% margin. The most spectacular
+of all titles, still clean and readable.
 
 --------------------------------------------------------------------
 12/18  ID: g_win_free_spins
 ASPECT: 3:2 landscape (1536x1024) | BACKGROUND: ALFA
 EXACT TEXT: two lines - "FREE" and "SPINS". Letters: F-R-E-E and S-P-I-N-S.
-EDIT of image 08 (g_win_big): same lettering style, extrusion, outline, arc and size of the text block.
+EDIT of image 08 (g_win_big): same lettering style, extrusion, outline, arc, letter height and line
+spacing (make the letters smaller only if a longer word would exceed 84% of the canvas width).
 CHANGE: the text; a cyan-turquoise glow shines from inside the letters (as if lit from within) and a few
-small four-point stars sparkle around them. Calmer than MEGA WIN (it appears more often).
+small four-point stars sparkle around them, all inside the 6% margin. Calmer than MEGA WIN (it appears
+more often).
 
 --------------------------------------------------------------------
 13/18  ID: g_fx_promienie
@@ -1325,7 +1384,8 @@ ASPECT: 1:1 square (1024x1024) | BACKGROUND: CZARNE (pure black #000000) | EXACT
 SUBJECT: a lens flare star for flashes (symbol landings, win hits).
 DESIGN: centred: a hot white core about 3-4% of the canvas; four long thin arms (horizontal and
 vertical) and four shorter diagonal arms; a thin faint halo ring at about 25% of the flare radius; a
-delicate horizontal anamorphic streak. Neutral white. All arms fade to pure black before the 8% margin.
+delicate horizontal anamorphic streak. Neutral white. All arms and the streak fade to pure black before
+the 8% margin.
 No lens ghosts, no coloured circles in the corners.
 
 --------------------------------------------------------------------
@@ -1369,7 +1429,8 @@ ORDER AND COLOURS (gold = the gold ramp, magenta #FF2E88, cyan #21E6FF):
 Each piece centred in its cell, about 40-70% of the cell, at least 10% margin; transparent background
 (these are drawn with normal blending, not on black).
 
-Start now with image 01.
+Start now with image 01. Exception: if a line "IDŹ DO: <id>" follows below this sentence, start with
+that ID instead.
 ```
 
 ### 5.2. Checklista czatu 2
@@ -1387,7 +1448,8 @@ Start now with image 01.
       plamek, iskier, zmian faktury; `przycisk_drugi` ma ten sam kształt i rozmiar co `przycisk_glowny`.
 - [ ] **Ornament:** symetryczny, proporcja ~6:1, w środku sylwetka cebuli w koronie.
 - [ ] **Napisy wygranych:** dokładnie `BIG/WIN`, `MEGA/WIN`, `EPIC/WIN`, `ULTRA/WIN`, `FREE/SPINS` (dwa wiersze,
-      litera po literze); ten sam krój, kontur i wielkość bloku we wszystkich pięciu (połóż je obok siebie);
+      litera po literze); ten sam krój, kontur, łuk i wysokość liter we wszystkich pięciu (połóż je obok siebie;
+      litery mogą być mniejsze tylko tam, gdzie dłuższe słowo, np. `ULTRA`, nie zmieściłoby się w 84% szerokości);
       litery pasują do `g_font_cyfry`; bez promieni i tła; płomienie EPIC i kryształy ULTRA w marginesie;
       eskalacja widoczna: BIG < MEGA < EPIC < ULTRA.
 - [ ] **Efekty `CZARNE`:** tło czysto czarne (bez winiety i szumu), efekt neutralnie biały (nie złoty, nie kolorowy),
@@ -1404,7 +1466,7 @@ Start now with image 01.
 okładka kafla i baner do lobby. Ta gra wyznacza poziom jakości dla S2 i S3 ([01 § 9](01-kierunek-artystyczny.md#9-gra-s1-cebulowy-777)).
 
 **Załącz na początku:** `m05_s1_desktop`, `g_moneta_przod`, `g_ui_spin`.
-**Kolejność:** najpierw symbol najwyższy (`siodemka`) jako kotwica zestawu, potem WILD i reszta symboli, potem logo
+**Kolejność:** najpierw najwyższy symbol zwykły (`siodemka`) jako kotwica zestawu, potem WILD i reszta symboli, potem logo
 (potrzebne na okładce), ramka i tła.
 
 | # | ID | Format | Tło | Edycja z | Tekst na obrazie |
@@ -1457,8 +1519,9 @@ neon magenta (#FF2E88) and cyan (#21E6FF). Cinematic studio lighting: warm key l
 left, soft lavender fill from the right, thin cool cyan rim light on the right edges, subtle magenta
 rim on the lower left. Clean bevels, bold readable silhouette, rich but controlled detail, subtle
 tight glow. Not photorealistic, not flat vector, not a cartoon for kids, no anime.
-ALWAYS: no text unless specified, no watermark, no signature, no cast shadow, no floor, no reflection
-below the object, no painted checkerboard, nothing cropped by the image edge.
+ALWAYS: no text unless an item gives EXACT TEXT, no watermark, no signature, no painted checkerboard.
+Isolated assets (ALFA, SHEET, FRAME, CZARNE) also: no cast shadow, no floor, no reflection below the
+object, nothing cut by the image edge. Backgrounds (PELNE) follow their own zones and may have floors.
 
 GAME PALETTE (hex)
 - S1 night #0B0624 (top of the sky, reel backing), synthwave violet #3A0CA3, hot pink neon #FF2E88,
@@ -1520,7 +1583,7 @@ TECHNICAL RULES BY BACKGROUND TYPE (each item says which one applies)
 - Everything outside the frame is transparent too. The frame keeps the 6% margin to the canvas edges.
 - The inner edge of the window is a crisp, straight, thin trim; nothing protrudes into the window.
 
-[PELNE] = FULL-BLEED IMAGE (backgrounds, cover, banner)
+[PELNE] = FULL-BLEED OPAQUE IMAGE, no transparency (backgrounds, cover, banner)
 - Painted edge to edge: no border, no frame around the picture, no rounded corners, no letterbox bars.
 - No text, letters, numbers, logos or UI unless the item gives EXACT TEXT. Signs stay blank (shapes and
   bulbs only). No people. Game backgrounds contain NO slot machine, NO reels, NO frame, NO symbols.
@@ -1537,9 +1600,11 @@ TECHNICAL RULES BY BACKGROUND TYPE (each item says which one applies)
 - The result keeps the item's exact aspect ratio and background type.
 
 TEXT ON IMAGES
-- Render text ONLY where an item gives EXACT TEXT. Copy it letter by letter, in capitals exactly as
-  given, with nothing added. Letters on symbols at least 18% of the symbol height. All text in this game
+- Render text ONLY where an item gives EXACT TEXT. Copy it letter by letter, in exactly the letter
+  case given, with nothing added. Letters on symbols at least 18% of the symbol height. All text in this game
   uses bold, rounded retro sign letters (the character of the Bungee typeface).
+- Where I spell a word out (B-I-G, or Z, Ł, O, T, Y), that is only a spelling aid for you: render the
+  plain word, with no hyphens, commas or extra spaces between its letters.
 
 ORIGINALITY / FORBIDDEN
 - Do not imitate or reference any real casino, slot game, game studio, Las Vegas landmark sign, brand,
@@ -1568,17 +1633,20 @@ WORKFLOW PROTOCOL (very important)
    DALEJ            = accepted; generate the next ID from the list.
    POPRAW: <notes>  = regenerate the SAME ID; keep everything that was right, fix only what I describe.
    NOWA WERSJA      = regenerate the SAME ID from scratch with a fresh take on the same brief.
-   IDŹ DO: <id>     = jump to that ID (I use it when I come back later or skip an item).
-   ZASADY           = re-read this whole first message (all rules) and apply it to the next image.
+   IDŹ DO: <id>     = jump to that ID and generate it now (used after a break, to skip or redo an item).
+   ZASADY           = re-read the latest copy of this whole rules message; reply with ONE text line only,
+                      "ZASADY OK - next: <id>", no image; apply all rules to every following image.
    STATUS           = reply with text only: which IDs are done and which remain. No image.
-6. After the last item write only: KONIEC CZATU.
+   Accept the commands in any letter case and without Polish letters (e.g. "IDZ DO: <id>").
+6. When I write DALEJ after the last item, reply only: KONIEC CZATU.
 
 IMAGE LIST
 
 --------------------------------------------------------------------
 01/14  ID: s1_sym_siodemka
 ASPECT: 1:1 square (1024x1024) | BACKGROUND: ALFA | EXACT TEXT: "7" (one digit)
-SUBJECT: the highest symbol - the lucky seven. This image sets the style for the whole symbol set.
+SUBJECT: the highest regular symbol (only the WILD ranks above it) - the lucky seven. This image sets the
+style for the whole symbol set.
 DESIGN: a massive, chunky italic digit 7 of glossy cherry-red candy enamel (#E3122B) inside a thick,
 bevelled, mirror-polished gold frame that follows the digit's outline; a thin white-hot neon line runs
 inside the enamel along the strokes; two small four-point sparkle stars at the upper-right corner and
@@ -1738,7 +1806,8 @@ calm synthwave sky with the sun low at the horizon - empty space for an HTML tit
 Important elements inside x 6-94%, y 9-91%.
 MOOD: energetic, glowing, inviting.
 
-Start now with image 01.
+Start now with image 01. Exception: if a line "IDŹ DO: <id>" follows below this sentence, start with
+that ID instead.
 ```
 
 ### 6.2. Checklista czatu 3
@@ -1839,8 +1908,9 @@ brushed gold, dark smoked glass, deep navy-violet blacks (#07060F, #120B2A, #1E1
 lighting with a warm key light from the upper left and thin cool rim light on the right edges. Clean
 bevels, bold readable silhouette, rich but controlled detail, subtle tight glow. Not photorealistic,
 not flat vector, not a cartoon for kids, no anime.
-ALWAYS: no text unless specified, no watermark, no signature, no cast shadow, no floor, no reflection
-below the object, no painted checkerboard, nothing cropped by the image edge.
+ALWAYS: no text unless an item gives EXACT TEXT, no watermark, no signature, no painted checkerboard.
+Isolated assets (ALFA, SHEET, FRAME, CZARNE) also: no cast shadow, no floor, no reflection below the
+object, nothing cut by the image edge. Backgrounds (PELNE) follow their own zones and may have floors.
 THIS GAME HAS NO NEON: no hot pink, no electric blue, no neon tubes. Turquoise and lapis instead.
 
 GAME PALETTE (hex)
@@ -1895,7 +1965,7 @@ TECHNICAL RULES BY BACKGROUND TYPE (each item says which one applies)
 - Clean anti-aliased edges, no white, grey or coloured halo around the silhouette.
 - No text unless the item gives EXACT TEXT.
 
-[CZARNE] = PURE BLACK BACKGROUND FOR ADDITIVE BLENDING
+[CZARNE] = OPAQUE PURE BLACK BACKGROUND FOR ADDITIVE BLENDING (not a transparent image)
 - Solid pure black #000000 everywhere: no gradient, no vignette, no noise, no stars, no dust.
 - Every glow fades smoothly to pure black before the cell edges (at least 10% black margin per cell).
 
@@ -1912,7 +1982,7 @@ TECHNICAL RULES BY BACKGROUND TYPE (each item says which one applies)
 - Everything outside the frame is transparent too. The whole frame keeps the 6% margin to the canvas.
 - The inner edge of the window is a crisp, straight, thin trim; nothing protrudes into the window.
 
-[PELNE] = FULL-BLEED IMAGE (backgrounds, cover, banner)
+[PELNE] = FULL-BLEED OPAQUE IMAGE, no transparency (backgrounds, cover, banner)
 - Painted edge to edge: no border, no frame around the picture, no rounded corners, no letterbox bars.
 - No text, letters, logos or UI unless the item gives EXACT TEXT (wall hieroglyphs are decorative
   patterns only). No people, no mummies. Game backgrounds contain NO slot machine, reels or symbols.
@@ -1928,12 +1998,14 @@ TECHNICAL RULES BY BACKGROUND TYPE (each item says which one applies)
 - The result keeps the item's exact aspect ratio and background type.
 
 TEXT ON IMAGES
-- Render text ONLY where an item gives EXACT TEXT. Copy it letter by letter, in capitals exactly as
-  given, with nothing added. Letters on symbols at least 18% of the symbol height.
+- Render text ONLY where an item gives EXACT TEXT. Copy it letter by letter, in exactly the letter
+  case given, with nothing added. Letters on symbols at least 18% of the symbol height.
 - Card symbols: classical serif capitals with wedge-shaped serifs. WILD, SCATTER and the logo: ornate,
   decorative Roman capitals (the character of the Cinzel Decorative typeface).
 - Polish letter in this chat: Ł = L with stroke - a capital L with a short diagonal bar crossing its
   vertical stem. Never replace it with a plain L.
+- Where I spell a word out (B-I-G, or Z, Ł, O, T, Y), that is only a spelling aid for you: render the
+  plain word, with no hyphens, commas or extra spaces between its letters.
 
 ORIGINALITY / FORBIDDEN
 - Do not imitate or reference any real casino, slot game, game studio, film, brand, logo, trademark,
@@ -1964,10 +2036,12 @@ WORKFLOW PROTOCOL (very important)
    DALEJ            = accepted; generate the next ID from the list.
    POPRAW: <notes>  = regenerate the SAME ID; keep everything that was right, fix only what I describe.
    NOWA WERSJA      = regenerate the SAME ID from scratch with a fresh take on the same brief.
-   IDŹ DO: <id>     = jump to that ID (I use it when I come back later or skip an item).
-   ZASADY           = re-read this whole first message (all rules) and apply it to the next image.
+   IDŹ DO: <id>     = jump to that ID and generate it now (used after a break, to skip or redo an item).
+   ZASADY           = re-read the latest copy of this whole rules message; reply with ONE text line only,
+                      "ZASADY OK - next: <id>", no image; apply all rules to every following image.
    STATUS           = reply with text only: which IDs are done and which remain. No image.
-6. After the last item write only: KONIEC CZATU.
+   Accept the commands in any letter case and without Polish letters (e.g. "IDZ DO: <id>").
+6. When I write DALEJ after the last item, reply only: KONIEC CZATU.
 
 IMAGE LIST
 
@@ -2004,15 +2078,19 @@ ASPECT: 1:1 square (1024x1024) | BACKGROUND: ALFA | EXACT TEXT: "SCATTER" (lette
 SUBJECT: the SCATTER symbol - the only cool-coloured symbol of the game.
 DESIGN: a sandstone pyramid in cool night light with a gold capstone (pyramidion); from the capstone a
 vertical beam of cyan-white light (#9FE8FF) rises upward and fades out completely before the top margin;
-a glowing turquoise eye (Eye of Horus style) shines on the pyramid face. At the base a lapis-and-gold
-plaque with the word SCATTER in gold ornate Roman capitals (at least 18% of the symbol height).
+thin lines of turquoise magic light glow in the joints between the large stone blocks (a few bold lines,
+readable at 64 px). NO eye and no other symbol on the pyramid face
+(an eye inside a triangle is forbidden; the Eye of Horus is a separate symbol). At the base a
+lapis-and-gold plaque with the word SCATTER in gold ornate Roman capitals (at least 18% of the symbol
+height).
 COMPOSITION: about 85% of the canvas including the beam, centred; silhouette = triangle + vertical beam.
 LIGHT: cool moonlight on the stone, warm gold only on the capstone and plaque frame.
 
 --------------------------------------------------------------------
 04/22  ID: s2_sym_anubis
 ASPECT: 1:1 square (1024x1024) | BACKGROUND: ALFA | EXACT TEXT: none
-SUBJECT: high symbol - bust of Anubis in three-quarter view.
+SUBJECT: high symbol - bust of Anubis in a slight three-quarter view (head turned about 15 deg, the same
+camera as the other symbols).
 DESIGN: a jackal head of polished black obsidian (#15121C) with tall pointed ears, ears and eyes outlined
 in gold, glowing amber eyes; a gold usekh collar with lapis and turquoise bands on the shoulders. The
 darkest symbol of the game - keep it readable with strong turquoise rim light and gold edges.
@@ -2217,7 +2295,8 @@ DESIGN: each sign drawn as a single clean glowing line (line width about 3% of t
 with a soft turquoise glow, centred in its cell, about 60% of the cell's shorter side, at least 10% pure
 black around it. Pure black #000000 everywhere else; glows fade to black inside the cell.
 
-Start now with image 01.
+Start now with image 01. Exception: if a line "IDŹ DO: <id>" follows below this sentence, start with
+that ID instead.
 ```
 
 ### 7.2. Checklista czatu 4
@@ -2232,7 +2311,7 @@ Start now with image 01.
 - [ ] Hierarchia: litery (kamień) < ankh/oko/skarabeusz/Anubis/faraon (złoto, inkrustacje) < WILD i SCATTER
       (najjaśniejsze); faraon ma najbogatszy detal i najjaśniejsze złoto.
 - [ ] Anubis (najciemniejszy) czytelny dzięki turkusowemu rimowi i złotym krawędziom; scatter jedynym chłodnym symbolem,
-      wiązka wygasa przed górnym marginesem.
+      wiązka wygasa przed górnym marginesem, **na ścianie piramidy nie ma oka** (oko w trójkącie jest zakazane — § 12).
 - [ ] Test 64 px i skali szarości: wszystkie sylwetki różne, brak dwóch symboli o tej samej sylwetce i jasności.
 - [ ] **Rozszerzony WILD:** pionowa kolumna ~1:3 na środku, po bokach przezroczystość, relikwia ta sama co w
       `s2_sym_wild`, napis `WILD`.
@@ -2309,7 +2388,8 @@ crystals levitate, everything glows stronger and more saturated. Our brand twist
 a crystal onion with golden layers inside.
 Symbols: low = loose gems sapphire, emerald, amethyst, topaz (no settings); high = heart ruby, diamond,
 crystal onion (highest) in gold settings; special = SCATTER (rainbow prism "Heart of the Cave"),
-MULTIPLIER orb (a crystal ball with an empty bright centre - the code writes "x2" ... "x100" on it).
+MULTIPLIER orb (a crystal ball with an empty bright centre - the game code prints the multiplier value
+on it later).
 On phones a symbol cell is only about 56 px wide, so readability is critical.
 
 STYLE DNA (Cebulion Casino): premium dark luxury casino, high-end stylized 3D render in the quality of
@@ -2318,8 +2398,9 @@ navy-violet blacks (#07060F, #120B2A, #1E1442), accents of cyan (#21E6FF) and ma
 Cinematic studio lighting: warm key light from the upper left, thin cool rim light on the right edges,
 subtle violet rim on the lower left. Clean bevels, bold readable silhouette, rich but controlled detail,
 subtle tight glow. Not photorealistic, not flat vector, not a cartoon for kids, no anime.
-ALWAYS: no text unless specified, no watermark, no signature, no cast shadow, no floor, no reflection
-below the object, no painted checkerboard, nothing cropped by the image edge.
+ALWAYS: no text unless an item gives EXACT TEXT, no watermark, no signature, no painted checkerboard.
+Isolated assets (ALFA, SHEET, FRAME, CZARNE) also: no cast shadow, no floor, no reflection below the
+object, nothing cut by the image edge. Backgrounds (PELNE) follow their own zones and may have floors.
 
 GAME PALETTE (hex)
 - Cave #070A1F and #0D1638; bioluminescence #19F5D2; sapphire #2F6BFF; emerald #19D17A; amethyst
@@ -2383,7 +2464,7 @@ TECHNICAL RULES BY BACKGROUND TYPE (each item says which one applies)
 - Everything outside the frame is transparent too. The whole frame keeps the 6% margin to the canvas.
 - The inner edge of the window is a crisp, straight, thin trim.
 
-[PELNE] = FULL-BLEED IMAGE (backgrounds, cover, banner)
+[PELNE] = FULL-BLEED OPAQUE IMAGE, no transparency (backgrounds, cover, banner)
 - Painted edge to edge: no border, no frame around the picture, no rounded corners, no letterbox bars.
 - No text, letters, logos or UI unless the item gives EXACT TEXT. No people, no creatures. Game
   backgrounds contain NO slot machine, NO grid, NO symbols.
@@ -2399,12 +2480,14 @@ TECHNICAL RULES BY BACKGROUND TYPE (each item says which one applies)
 - The result keeps the item's exact aspect ratio and background type.
 
 TEXT ON IMAGES
-- Render text ONLY where an item gives EXACT TEXT. Copy it letter by letter, in capitals exactly as
-  given, with nothing added. All text in this game uses elegant flared serif capitals (the character of
+- Render text ONLY where an item gives EXACT TEXT. Copy it letter by letter, in exactly the letter
+  case given, with nothing added. All text in this game uses elegant flared serif capitals (the character of
   the Marcellus typeface), made of crystal.
 - Polish letter in this chat: Ł = L with stroke - a capital L with a short diagonal bar crossing its
   vertical stem. Never replace it with a plain L.
-- NEVER draw numbers or "x2"-style labels on the multiplier orb - its centre stays empty.
+- NEVER draw any number, letter or multiplication sign on the multiplier orb - its centre stays empty.
+- Where I spell a word out (B-I-G, or Z, Ł, O, T, Y), that is only a spelling aid for you: render the
+  plain word, with no hyphens, commas or extra spaces between its letters.
 
 ORIGINALITY / FORBIDDEN
 - Do not imitate or reference any real casino, slot game, game studio, film, brand, logo, trademark,
@@ -2434,10 +2517,12 @@ WORKFLOW PROTOCOL (very important)
    DALEJ            = accepted; generate the next ID from the list.
    POPRAW: <notes>  = regenerate the SAME ID; keep everything that was right, fix only what I describe.
    NOWA WERSJA      = regenerate the SAME ID from scratch with a fresh take on the same brief.
-   IDŹ DO: <id>     = jump to that ID (I use it when I come back later or skip an item).
-   ZASADY           = re-read this whole first message (all rules) and apply it to the next image.
+   IDŹ DO: <id>     = jump to that ID and generate it now (used after a break, to skip or redo an item).
+   ZASADY           = re-read the latest copy of this whole rules message; reply with ONE text line only,
+                      "ZASADY OK - next: <id>", no image; apply all rules to every following image.
    STATUS           = reply with text only: which IDs are done and which remain. No image.
-6. After the last item write only: KONIEC CZATU.
+   Accept the commands in any letter case and without Polish letters (e.g. "IDZ DO: <id>").
+6. When I write DALEJ after the last item, reply only: KONIEC CZATU.
 
 IMAGE LIST
 
@@ -2467,7 +2552,7 @@ LIGHT: same as image 01; the brightest, most colourful symbol.
 --------------------------------------------------------------------
 03/18  ID: s3_sym_mnoznik
 ASPECT: 1:1 square (1024x1024) | BACKGROUND: ALFA | EXACT TEXT: none - NO numbers, NO "x"
-SUBJECT: the multiplier orb (the code writes "x2" ... "x100" on its centre in dark letters).
+SUBJECT: the multiplier orb (the game code later prints the value on its centre in dark letters).
 DESIGN: a crystal ball held in a delicate golden cage made of two crossing rings. The CENTRE of the ball
 is a smooth, milky-white, evenly glowing disc about 55% of the ball diameter with absolutely no detail,
 no facets, no reflections, no text. The ball itself in neutral cool-white tones (no strong colour - the
@@ -2479,7 +2564,8 @@ LIGHT: same as image 01; the bright centre stays uniform.
 04/18  ID: s3_sym_diament
 ASPECT: 1:1 square (1024x1024) | BACKGROUND: ALFA | EXACT TEXT: none
 SUBJECT: high symbol - a diamond (the brightest gem).
-DESIGN: a brilliant-cut diamond in three-quarter view (wide crown, sharp pointed pavilion), icy white
+DESIGN: a brilliant-cut diamond seen from the side and slightly above (the classic diamond silhouette:
+wide crown, sharp pointed pavilion), icy white
 (#E8FBFF) with strong rainbow dispersion on the facet edges, held in a white-gold setting with a thin
 yellow-gold rim. Few large facets, strong contrast between light and dark facets.
 COMPOSITION: about 83% of the canvas, centred; classic diamond silhouette.
@@ -2490,7 +2576,7 @@ LIGHT: same as image 01.
 ASPECT: 1:1 square (1024x1024) | BACKGROUND: ALFA | EXACT TEXT: none
 SUBJECT: high symbol - a heart-cut ruby.
 DESIGN: an intense red-pink ruby (#FF2D55) cut as a heart, in a delicate gold filigree setting with four
-prongs; a bright pulsing core.
+prongs; a bright glowing core.
 COMPOSITION: about 82% of the canvas, centred; silhouette = heart.
 LIGHT: same as image 01.
 
@@ -2609,8 +2695,8 @@ MOOD: the magic is awake - clearly "you are in the bonus".
 ASPECT: 2:3 portrait (1024x1536) | BACKGROUND: PELNE | EXACT TEXT: none
 EDIT: the LAYOUT of image 14 (s3_tlo_mobile) with the SCENE of image 15 (s3_tlo_fs_desktop).
 ZONES: aurora ribbons and levitating crystals in the band y 0-20%; the grid zone (x 4-96%, y 20-66%) dark;
-glowing crystal walls close to the side edges (may be cropped); dark water under the panel, fading to #07060F
-. Keep important elements inside x 16-84%, y 6-94%.
+glowing crystal walls close to the side edges (may be cropped); dark water under the panel, fading to
+#07060F. Keep important elements inside x 16-84%, y 6-94%.
 
 --------------------------------------------------------------------
 17/18  ID: s3_okladka
@@ -2631,7 +2717,8 @@ COMPOSITION: in the RIGHT ~60% a cascade of gems falling from above and the crys
 01) in a shaft of light; the LEFT ~40% is the dark depth of the cave with soft bioluminescence - empty
 space for an HTML title and button. Important elements inside x 6-94%, y 9-91%.
 
-Start now with image 01.
+Start now with image 01. Exception: if a line "IDŹ DO: <id>" follows below this sentence, start with
+that ID instead.
 ```
 
 ### 8.2. Checklista czatu 5
@@ -2675,7 +2762,7 @@ po prostu precyzyjniejsze. Po **trzech** nieudanych poprawkach: `NOWA WERSJA` al
 | P5 | za dużo detalu, chaos | P16 | tło gry: jasny lub zajęty środek, automat na tle |
 | P6 | dryf stylu, przeciek referencji | P17 | tło darmowych spinów ma inny układ niż bazowe |
 | P7 | zły format (proporcja, rozmiar) | P18 | seria niespójna (moneta, maskotka, SPIN/STOP) |
-| P8 | poświata ucięta na krawędzi / za duża | P19 | ramka: perspektywa albo zła proporcja okna |
+| P8 | poświata ucięta / za duża, `CZARNE` wyszło przezroczyste | P19 | ramka: perspektywa albo zła proporcja okna |
 | P9 | arkusz nierówny, nachodzący, zła kolejność | P20 | obiekt za mały albo za duży w kadrze |
 | P10 | środek 9-slice niejednolity | P21 | zły styl (dziecięcy, zdjęcie, płaska grafika) |
 | P11 | okno ramki nieprzezroczyste | P22 | kilka obrazów naraz, kolaż, pytania zamiast obrazu |
@@ -2710,7 +2797,8 @@ Objaw: brak kreski w `Ł`, zła litera, litera za dużo lub za mało, dodatkowe 
 i rozpisz litery. Na makietach (czat 0) literówki są dopuszczalne; na logo i symbolach — nigdy.
 
 ```text
-POPRAW: the text is misspelled. It must read exactly "<TEKST>" - letter by letter: <L-I-T-E-R-Y>.
+POPRAW: the text is misspelled. It must read exactly "<TEKST>" - letter by letter: <L-I-T-E-R-Y>
+(the spelling is only an aid - draw the plain word, no hyphens).
 Polish letters: Ł = L with stroke (a capital L with a short diagonal bar through its vertical stem);
 Ż = Z with a dot above; Ę = E with ogonek (a small hook under the bottom right of the E); Ą = A with
 ogonek; Ó = O with an acute accent; Ź = Z with an acute accent; Ś = S with an acute accent; Ć = C with an
@@ -2796,14 +2884,21 @@ cropping) the same content.
 
 ### P8. Poświata ucięta na krawędzi albo za duża
 
-Objaw (`CZARNE`): poświata, promień albo dym sięga krawędzi, tło nie jest czysto czarne. Objaw (`ALFA`): wokół obiektu
-rozlana mgła albo poświata dochodzi do marginesu.
+Objaw (`CZARNE`): poświata, promień albo dym sięga krawędzi, tło nie jest czysto czarne (blok 1) albo plik wyszedł
+przezroczysty zamiast na czerni (blok 2). Objaw (`ALFA`): wokół obiektu rozlana mgła albo poświata dochodzi do
+marginesu (blok 3).
 
 ```text
 POPRAW: the glow reaches or is cut by the image edge. Regenerate the same effect smaller: every glow must
 fade smoothly to pure black #000000 well before the edges, with at least 8% pure black margin on every
 side (10% of each cell in a sheet). The background is pure black everywhere: no gradient, no vignette,
 no noise, no stars.
+```
+
+```text
+POPRAW: this item is CZARNE but the image came out transparent (or on a grey/coloured background).
+Regenerate it as an opaque image on solid pure black #000000 everywhere - not transparent - with the
+same effect; every glow fades to pure black before the 8% margin.
 ```
 
 ```text
@@ -3015,7 +3110,8 @@ transparency. Instead:
 - The object has NO glow, NO aura, NO light haze and NO semi-transparent parts around its silhouette:
   crisp, clean, fully opaque edges. The background colour must not reflect on the object or tint its edges
   (no colour spill). Light effects that belong to the design (beams, flames, light fans) are drawn as
-  opaque stylised shapes or left out.
+  opaque stylised shapes or left out. Glass and crystal parts are fully opaque too - the background
+  colour never shows through them.
 - Keep the 6% margin, the centring and everything else from the item description.
 - FRAME items: the window and everything outside the frame are filled with the same flat chroma colour.
 - SHEET items: the whole sheet background is the same flat chroma colour.
@@ -3028,8 +3124,9 @@ Keep using PLAN B until I write PLAN B OFF.
 ```text
 POPRAW: transparency does not work for this image. For this ID only use PLAN B: place the object on a
 perfectly flat, uniform background of exactly <#00FF00 | #FF00FF | #0000FF> (no gradient, no shadow, no
-texture), with NO glow or aura around the object, crisp fully opaque edges and no colour spill from the
-background onto the object. Keep the design, size, centring and the 6% margin.
+texture), with NO glow or aura around the object, crisp fully opaque edges (glass and crystal opaque
+too) and no colour spill from the background onto the object. Keep the design, size, centring and the
+6% margin.
 ```
 
 ```text
@@ -3056,7 +3153,8 @@ wystarczy sześć kroków:
 1. **Plik:** nazwa = ID + `.png`, wymiary zgodne z tabelą czatu, rozmiar zwykle 1–3,5 MB.
 2. **Tło:** `ALFA` — przeciągnij plik do karty Chrome/Edge; przez tło ma prześwitywać ciemne tło karty, bez kratki
    ([02 § 4.3](02-lista-obrazow.md#43-jak-pobrać-oryginał-z-chatgpt)). `CZARNE` — tło jednolicie czarne. Ramki — okno
-   puste.
+   puste. Plik `CZARNE` ma być nieprzezroczysty — gdyby wyszedł z alfą, zgłosi to raport
+   po obróbce (wtedy P8, blok 2).
 3. **Kadr:** nic nie dotyka krawędzi, margines ~6% (ok. 60 px przy 1024 px); `CZARNE` — poświata gaśnie przed krawędzią.
 4. **Mały rozmiar:** ustaw w eksploratorze plików widok „Średnie ikony” (miniatury ~48–96 px) — symbole i ikony
    mają być rozpoznawalne od razu.
@@ -3116,14 +3214,17 @@ raport z ewentualnymi poprawkami w formacie „ID — kod kontroli — gotowa po
 | # | Kwestia | Ryzyko | Plan / decyzja |
 |---|---|---|---|
 | 1 | Przezroczystość PNG w ChatGPT | generator może narysować szachownicę albo oddać tło | P1/P2, potem Plan B (§ 10); pipeline naprawia szachownicę i usuwa jednolite tło (02 § 5.3–5.4) |
-| 2 | Okna ramek `s2_ramka` i `s3_ramka` mniejsze niż w 01 § 10.8 / § 11.8 (~70% zamiast ~80% szerokości kadru) | 01 i 03 podają inne liczby | świadoma zmiana: 80% okna + boki ramy ~10% dawało 100% szerokości i łamało margines 6% z briefu; proporcje okien (5:3, 6:5) bez zmian; **do naniesienia w 01**. Dla `s3_ramka` okno ~717 px → @1x 864 px to powiększenie ×1,2 (limit 02 § 2.6: ×1,25) |
+| 2 | Okna ramek `s2_ramka` i `s3_ramka` mniejsze niż w 01 § 10.8 / § 11.8 (~70% zamiast ~80% szerokości kadru) | 01 i 03 podają inne liczby | świadoma zmiana: 80% okna + boki ramy ~10% dawało 100% szerokości i łamało margines 6% z briefu; proporcje okien (5:3, 6:5) bez zmian; **do naniesienia w 01 oraz w 02 § 2.5** (tam podano rozmiary okien za 01: 1229×737 i 819×686 px). Dla `s3_ramka` okno ~717 px → @1x 864 px to powiększenie ×1,2 (limit 02 § 2.6: ×1,25) |
 | 3 | `s2_wild_rozszerzony` ma nieprzezroczysty pionowy kartusz z lapisu jako tło kolumny | 01 § 10.5 mówi tylko o „słupie złotego światła” | doprecyzowanie: półprzezroczysty słup światła w PNG z alfą dawałby brudne krawędzie (01 § 4.5); kolumna jest nieprzezroczysta, poświatę wokół dokłada kod (wariant `glow`) — do potwierdzenia z 04 (E60) |
 | 4 | Litera Ł w logo S2 i S3 | generator może uparcie rysować `L` | P3 z rozpisanymi literami; po 3 próbach — ręczny retusz kreski w edytorze grafiki (litery są duże, ~10 minut pracy), plik zapisany jako `<ID>.v2.png` |
-| 5 | Spójność serii (3 ujęcia monety, 3 pozy maskotki, SPIN/STOP, 5 napisów WIN) | edycja może zmienić szczegóły | pozycje `EDIT` + P18; plan B dla monety: obrót składany w kodzie albo sprite-sheet z Blendera (01 § 2.5) |
+| 5 | Spójność serii (3 ujęcia monety, 3 pozy maskotki, SPIN/STOP, 5 napisów WIN) | edycja może zmienić szczegóły | pozycje `EDIT` + P18; plan B dla monety: obrót składany w kodzie albo sprite-sheet z Blendera (01 § 2.5); plan B dla SPIN/STOP (generator nigdy nie oddaje edycji „piksel w piksel”): zespół składa `g_ui_spin_stop` z pierścienia i kopuły `g_ui_spin` oraz samej ikony kwadratu wyciętej z wygenerowanego STOP (maska koła, ~15 min w edytorze grafiki) |
 | 6 | Limity generowania i zmiany modelu | przerwy, inny wygląd po aktualizacji modelu | kontynuacja w tym samym czacie (§ 1.7); przy wyraźnej zmianie stylu — kotwice jako referencje w nowym czacie |
-| 7 | Długość bloku (najdłuższy, czat 4, ma ok. 28 tys. znaków) | interfejs mógłby odrzucić zbyt długą wiadomość | nie spodziewamy się tego; gdyby się zdarzyło — wyślij blok w dwóch częściach: do linii `IMAGE LIST` z dopiskiem `Do not generate yet - the image list follows in my next message.`, a potem resztę |
+| 7 | Długość bloku (najdłuższy, czat 4, ma ok. 29 tys. znaków, ~7 tys. tokenów) | interfejs mógłby odrzucić zbyt długą wiadomość | nie spodziewamy się tego; gdyby się zdarzyło — wyślij blok w dwóch częściach: do linii `IMAGE LIST` z dopiskiem `Do not generate yet - the image list follows in my next message.`, a potem resztę |
 | 8 | Liczba załączników w jednej wiadomości | nieznany dokładny limit | używamy maks. 4 obrazów; w razie odmowy — załącz 2 najważniejsze (makieta gry + `g_moneta_przod`) |
 | 9 | Promienie `g_fx_promienie` kończą się na 42% szerokości (01: „przed 45%”), błyskawice mają ~80% wysokości komórki (01: ~85%) | drobna różnica liczb | zaostrzenie, żeby zachować margines czerni 8% / 10% komórki z briefu; zgodne z intencją 01 |
+| 10 | `s2_sym_scatter`: 01 § 10.4 każe narysować „turkusowe oko na ścianie” piramidy, a 01 § 12 zakazuje „oka w trójkącie” | oko na ścianie piramidy to dokładnie zakazany motyw (i dubluje symbol `s2_sym_oko`) | rozstrzygnięcie w prompcie: zamiast oka kilka wyraźnych, świecących turkusowo spoin między blokami; brief („piramida ze świecącym okiem/wiązką”) spełnia wiązka. **Do naniesienia w 01 § 10.4** |
+| 11 | Pamięć rozmowy (okno kontekstu) ChatGPT jest ograniczona i zależy od planu | w długim czacie pierwsza wiadomość z zasadami może „wypaść” — `ZASADY` wtedy nie działa | ponowne wklejenie bloku z linią `IDŹ DO: <ID>` (§ 1.4), w ostateczności nowy czat (§ 1.7); bloki są samowystarczalne, więc ponowne wklejenie niczego nie psuje |
+| 12 | Podobieństwo do cudzych postaci: maskotka (cylinder, monokl, getry) i awatary (ziemniak w meloniku, grzyb) | generator może „dociągnąć” wygląd do znanej maskotki reklamowej lub zabawki | w promptach: zakaz laski, nacisk na cebulową bulwę, wąsy z korzonków i magentową muszkę; awatary jako żywe warzywa, nie plastikowe zabawki, grzyb bez kropek; przy podobieństwie — `NOWA WERSJA`, a gdy nie pomoże, zespół zmienia rekwizyt (np. melonik → obszyta futrem arystokratyczna czapka; beret ma już Diuk Bakłażan) i nanosi to w 01 § 7.10 |
 
 ---
 
