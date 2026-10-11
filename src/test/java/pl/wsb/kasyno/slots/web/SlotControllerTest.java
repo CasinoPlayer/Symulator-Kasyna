@@ -219,6 +219,34 @@ class SlotControllerTest {
         assertThat(command.getValue().gameCode()).isEqualTo("cebulowy-777");
         assertThat(command.getValue().bet()).isEqualByComparingTo("100");
         assertThat(command.getValue().idempotencyKey()).isEqualTo("3f1c-uuid");
+        assertThat(command.getValue().demoSeed()).isNull();
+    }
+
+    @Test
+    @DisplayName("X-Demo-Seed poza profilem demo: nagłówek nie trafia do polecenia (ziarno zostaje losowe)")
+    void demoSeedIgnoredOutsideDemo() throws Exception {
+        when(spinService.spin(any())).thenReturn(spinResult(false));
+
+        mvc.perform(post("/api/slots/cebulowy-777/spins").session(session)
+                        .header(SlotController.DEMO_SEED_HEADER, "5f3a9c0e7b21d4a8")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"bet\":100}"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<SpinCommand> command = ArgumentCaptor.forClass(SpinCommand.class);
+        verify(spinService).spin(command.capture());
+        assertThat(command.getValue().demoSeed()).isNull();
+    }
+
+    @Test
+    @DisplayName("format X-Demo-Seed: szesnastkowo jak pole seed (z 0x lub bez), ffffffffffffffff = −1")
+    void demoSeedFormat() {
+        assertThat(SlotController.parseDemoSeed("000000000000002a")).isEqualTo(42L);
+        assertThat(SlotController.parseDemoSeed(" 0x2A ")).isEqualTo(42L);
+        assertThat(SlotController.parseDemoSeed("ffffffffffffffff")).isEqualTo(-1L);
+        assertThat(SlotController.parseDemoSeed(null)).isNull();
+        assertThat(SlotController.parseDemoSeed("  ")).isNull();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> SlotController.parseDemoSeed("xyz"))
+                .isInstanceOf(pl.wsb.kasyno.shared.error.CasinoException.class);
     }
 
     @Test

@@ -145,6 +145,12 @@ class KasynoFlowIntegrationTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("RESCUE_NOT_AVAILABLE"));
 
+        // feed i ranking trafiają do pamięci podręcznej JESZCZE PRZED spinem; po zatwierdzonym spinie muszą pokazać
+        // wygraną od razu (unieważnia je zdarzenie po commicie: LobbyBoardsListener, @TransactionalEventListener)
+        mvc.perform(get("/api/feed/big-wins")).andExpect(jsonPath("$[?(@.nick == 'Gracz_Testowy')]").isEmpty());
+        mvc.perform(get("/api/leaderboard").param("type", "biggest-win"))
+                .andExpect(jsonPath("$[?(@.nick == 'Gracz_Testowy')]").isEmpty());
+
         engine.willWin(2_000);
         MvcResult first = spin(session, "cebulowy-777", 100, "klucz-1")
                 .andExpect(status().isOk())
