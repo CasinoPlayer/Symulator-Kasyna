@@ -86,6 +86,21 @@ export const assets = {
     return manifest?.nineSlice?.[id] ?? null;
   },
 
+  /** Surowy wpis manifestu (z polami `variants`, `widths`, `w`, `h`) — używa go runtime gier (js/game/core/resources.js). */
+  entry(id) {
+    return (id && manifest?.images?.[id]) || null;
+  },
+
+  /** Dowolna sekcja manifestu (`frames`, `fonts`, `sheets`…) albo pusty obiekt. */
+  section(name) {
+    return manifest?.[name] ?? {};
+  },
+
+  /** Pełny adres pliku podanego ścieżką względną z manifestu (z wersją, jak `get`). */
+  url(path) {
+    return resolve(path);
+  },
+
   /**
    * Tworzy <img> dla ID albo zwraca null (wtedy wywołujący pokazuje grafikę zastępczą).
    * @param {string} id

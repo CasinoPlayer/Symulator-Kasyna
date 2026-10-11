@@ -1,0 +1,207 @@
+/* =====================================================================================================
+   game.css — elementy strony gry dodane razem z runtime (js/game/**): przycisk SPIN w stanie STOP i autoplay,
+   menu AUTO, panel przygaszony w Big Win, przycisk „Graj”, nakładka utraty kontekstu WebGL, licznik darmowych
+   spinów, okna ustawień i braku środków, diagramy linii, panel ?fx=debug.
+   Uzupełnia gra.css (układ strony) — tamten plik zostaje bez zmian.
+   ===================================================================================================== */
+
+/* ------------------------------------------------------------------------------------------------- scena */
+.stage > canvas { touch-action: manipulation; }
+.loader { transition: opacity 420ms ease, visibility 0s linear 420ms; }
+.loader__play {
+  min-width: 200px;
+  margin-top: 4px;
+  font-size: var(--fs-lg);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  animation: play-pulse 1.7s ease-in-out infinite;
+}
+@keyframes play-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 197, 66, 0.0), var(--glow-gold); }
+  50% { box-shadow: 0 0 0 10px rgba(245, 197, 66, 0.12), var(--glow-gold-strong); }
+}
+
+.stage-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  background: rgba(7, 6, 15, 0.82);
+  text-align: center;
+}
+.stage-overlay__text { font-weight: 800; color: var(--text-1); }
+
+/* licznik darmowych spinów (S2/S3, E36) i podpowiedź przewinięcia Big Win */
+.stage__fs {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.stage__hint {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  z-index: 3;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border-radius: var(--r-pill);
+  background: rgba(7, 6, 15, 0.55);
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+  animation: hint-in 600ms ease 1.2s both;
+}
+@keyframes hint-in { from { opacity: 0; } to { opacity: 0.85; } }
+
+/* ------------------------------------------------------------------------------------------------- panel */
+/* wejście panelu w intro (E21, 800 ms): y +24 px → 0, alfa */
+.controls { transition: opacity 260ms ease, transform 350ms var(--ease-out); }
+body.game-page:not(.is-ready-panel) .controls:not(.is-in) { opacity: 0; transform: translateY(24px); pointer-events: none; }
+/* Big Win (E30): panel przygasa do 0,35; aktywny zostaje tylko SPIN (przewinięcie) */
+.controls.is-dimmed { opacity: 0.35; }
+.controls.is-dimmed .ctrl-toggle,
+.controls.is-dimmed .bet { pointer-events: none; }
+.controls.is-dimmed .spin { opacity: 1; }
+
+.game-bar__back.is-disabled { opacity: 0.45; pointer-events: none; }
+
+/* SPIN: ikona strzałek ↔ STOP (kwadrat) w trakcie obrotu; liczba spinów autoplay na środku */
+.spin .spin__stop { position: absolute; width: 38%; height: 38%; fill: currentColor; stroke: none; opacity: 0; transform: scale(0.6); transition: opacity 120ms ease, transform 160ms var(--ease-spring); }
+.spin .spin__go { transition: opacity 120ms ease, transform 600ms var(--ease-out); }
+.spin.is-stop .spin__go { opacity: 0; transform: scale(0.6) rotate(90deg); }
+.spin.is-stop .spin__stop { opacity: 1; transform: none; }
+.spin__count {
+  position: absolute;
+  inset: auto 0 18%;
+  text-align: center;
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  color: var(--gold-1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+.spin.is-auto .spin__go { transform: translateY(-12%) scale(0.82); }
+/* wirujący przerywany pierścień autoplay (E38) — conic-gradient, 1 obrót / 2 s */
+.spin.is-auto::after {
+  content: "";
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, var(--cyan) 0 8%, transparent 8% 17%, var(--cyan) 17% 25%, transparent 25% 33%, var(--cyan) 33% 42%, transparent 42% 50%, var(--cyan) 50% 58%, transparent 58% 67%, var(--cyan) 67% 75%, transparent 75% 83%, var(--cyan) 83% 92%, transparent 92%);
+  -webkit-mask: radial-gradient(circle, transparent 64%, #000 65%, #000 70%, transparent 71%);
+  mask: radial-gradient(circle, transparent 64%, #000 65%, #000 70%, transparent 71%);
+  animation: auto-ring 2s linear infinite;
+  pointer-events: none;
+}
+@keyframes auto-ring { to { transform: rotate(360deg); } }
+
+/* E23: wartość zakładu „toczy się” (140 ms), MAX przy najwyższym poziomie */
+.bet__value { position: relative; }
+.bet__value.is-roll-up { animation: roll-up 140ms var(--ease-out); }
+.bet__value.is-roll-down { animation: roll-down 140ms var(--ease-out); }
+@keyframes roll-up { from { transform: translateY(60%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes roll-down { from { transform: translateY(-60%); opacity: 0; } to { transform: none; opacity: 1; } }
+.bet__value.is-max::after {
+  content: "MAX";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--gold-1);
+}
+
+/* E39: turbo — cyjanowa poświata i smugi przy włączeniu */
+.ctrl-toggle { position: relative; overflow: hidden; }
+.ctrl-toggle.is-flash::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(100deg, transparent 0 14px, rgba(255, 255, 255, 0.55) 15px 16px, transparent 17px 30px);
+  animation: turbo-streak 300ms linear both;
+}
+@keyframes turbo-streak { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+/* ------------------------------------------------------------------------------------------------- menu AUTO */
+.auto-wrap { position: relative; }
+.auto-menu {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%;
+  z-index: 20;
+  width: min(300px, calc(100vw - 32px));
+  transform: translateX(-30%);
+  padding: 16px;
+  border-radius: var(--r-lg);
+  background: var(--glass-strong);
+  box-shadow: inset 0 0 0 1px var(--line-gold-ui), var(--shadow-3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: menu-in 200ms var(--ease-out);
+}
+@keyframes menu-in { from { opacity: 0; transform: translateX(-30%) translateY(8px); } }
+.auto-menu__title { font-family: var(--font-display); font-weight: 700; color: var(--gold-1); margin-bottom: 8px; }
+.auto-menu__group { border: 0; margin: 0 0 10px; padding: 0; }
+.auto-menu__group legend, .settings-group legend { font-size: var(--fs-2xs); font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-2); margin-bottom: 6px; }
+.auto-menu__note { font-size: var(--fs-xs); color: var(--text-2); margin: 4px 0 12px; }
+
+/* przełącznik segmentowy (radio) */
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; padding: 3px; border-radius: var(--r-pill); background: rgba(7, 6, 15, 0.7); box-shadow: inset 0 0 0 1px var(--line-soft); }
+.seg label { position: relative; display: block; cursor: pointer; }
+.seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.seg span { display: block; padding: 7px 6px; border-radius: var(--r-pill); text-align: center; font-size: var(--fs-sm); font-weight: 800; color: var(--text-2); transition: background-color var(--dur-2), color var(--dur-2); }
+.seg input:checked + span { background: var(--gold-grad); color: var(--ink-on-gold); }
+.seg input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 2px; }
+.seg--wide span { padding: 9px 6px; }
+
+/* ------------------------------------------------------------------------------------------------- okna */
+.settings-group { border: 0; margin: 18px 0 0; padding: 0; }
+.settings-note { margin-top: 6px; font-size: var(--fs-xs); color: var(--text-2); }
+.settings-switch { margin-top: 20px; }
+.funds-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+
+.paylines { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; margin-top: 14px; }
+.payline { margin: 0; padding: 8px; border-radius: var(--r-sm); background: rgba(255, 255, 255, 0.035); text-align: center; }
+.payline__grid { display: grid; grid-template-columns: repeat(var(--cols, 3), 1fr); gap: 3px; }
+.payline__grid span { aspect-ratio: 1; border-radius: 3px; background: rgba(255, 255, 255, 0.08); }
+.payline__grid span.is-on { background: linear-gradient(135deg, var(--magenta), var(--cyan)); box-shadow: 0 0 8px rgba(255, 46, 136, 0.6); }
+.payline figcaption { margin-top: 6px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
+
+/* panel deweloperski ?fx=debug (04 § 9) */
+.fx-debug {
+  position: fixed;
+  left: 8px;
+  top: 64px;
+  z-index: 300;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #9CFFB5;
+  font: 600 11px/1.4 ui-monospace, Consolas, monospace;
+  pointer-events: none;
+  white-space: pre;
+}
+
+/* tryb ograniczonego ruchu — bez wirującego pierścienia i pulsowania „Graj” (04 § 1.5) */
+@media (prefers-reduced-motion: reduce) {
+  .spin.is-auto::after, .loader__play { animation: none; }
+}
+.ruch-ograniczony .spin.is-auto::after,
+.ruch-ograniczony .loader__play { animation: none; }
+
+/* telefon poziomo: menu AUTO otwiera się w lewo (panel jest przy prawej krawędzi) */
+@media (orientation: landscape) and (max-height: 500px) {
+  .auto-menu { bottom: auto; top: 50%; left: auto; right: calc(100% + 12px); transform: translateY(-50%); animation: none; }
+  .spin.is-auto::after { inset: -12px; }
+}
