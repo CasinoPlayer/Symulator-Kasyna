@@ -20,7 +20,8 @@
 * 3 szyny (`ui`, `sfx`, `music`) → kompresor efektów → limiter → master; ducking muzyki **−3 dB** przy wygranych,
   **−6 dB** w sekwencji big win.
 * Limit **24 głosów** jednocześnie (16 na poziomie jakości Low), kradzież głosów według 5 priorytetów.
-* Wszystkie tonalne efekty skomponowane w **pentatonice C** i transponowane do tonacji gry: S1 0, S2 +200, S3 +400 centów.
+* Wszystkie tonalne efekty skomponowane w **pentatonice C** i transponowane do tonacji gry: S1 0, S2 +200, S3 +400 centów
+  (w S2 nuty D i A przesuwamy o +100 c, bo D-dur-owe E i H nie należą do skali hidżaz — § 1.2).
 * Muzyka: 8 pętli o długości będącej całkowitą liczbą taktów (15–40 s), przejścia kwantyzowane do miary lub taktu.
 * Pliki: WAV 48 kHz → **Opus w WebM** (64 kb/s mono, 96 kb/s stereo) + **AAC w M4A** (96/128 kb/s) dla Safari.
 * Budżet sieci: lobby ≤ 0,8 MB, jedna gra ≤ 1,8 MB (Opus); pamięć po dekodowaniu ≤ 24 MB w lobby i ≤ 56 MB na stronie gry.
@@ -50,8 +51,8 @@
 
 ### 1.1. Po co ten dokument i jak go czytać
 
-W topowych slotach mobilnych (Pragmatic Play, NetEnt, Play'n GO) dźwięk odpowiada za co najmniej połowę wrażenia
-„premium”. Gracz rzadko patrzy na wszystkie bębny naraz — to dźwięk mówi mu, że bęben stanął, że wypadł drugi scatter
+W topowych slotach mobilnych (Pragmatic Play, NetEnt, Play'n GO) dźwięk odpowiada za dużą część wrażenia
+„premium” (łatwo to sprawdzić: ten sam automat z wyłączonym dźwiękiem wydaje się wolniejszy i tańszy). Gracz rzadko patrzy na wszystkie bębny naraz — to dźwięk mówi mu, że bęben stanął, że wypadł drugi scatter
 i że trzeci bęben „coś szykuje”. Ten sam obraz z tanim, powtarzalnym dźwiękiem wygląda amatorsko. Dlatego każdy dźwięk
 ma tu ID, przepis, poziom głośności i dokładny moment startu.
 
@@ -80,7 +81,7 @@ pięć materiałów, z których budujemy wszystkie dźwięki:
 | **Szkło / kryształ** | wysoki, czysty, lekko nieharmoniczny „ting” | dzwon FM 1:3,5 albo addytywne parcjały nieharmoniczne | S3, `sfx_blysk`, `sfx_scatter_*` |
 | **Moneta** | krótki metaliczny dźwięk z nutą z pentatoniki | model modalny (5 tłumionych parcjałów) + warstwa tonalna | `sfx_moneta_1` … `sfx_moneta_5`, `sfx_monety_fontanna` |
 | **Aksamit** | miękkie pady i dywan harmoniczny | odstrojone piły / sinusy przez filtr dolnoprzepustowy, wolny atak | muzyka, `sfx_logowanie`, przejścia |
-| **Głębia** | sub-bas z harmonicznymi słyszalnymi na telefonie | sinus z opadającą wysokością + nasycenie tanh | `sfx_uderzenie_basu`, wejście big win, stopy bębnów |
+| **Głębia** | sub-bas z harmonicznymi słyszalnymi na telefonie | sinus z opadającą wysokością + nasycenie tanh (asymetryczne — także harmoniczne parzyste, § 3.0) | `sfx_uderzenie_basu`, wejście big win, stopy bębnów |
 
 **Motyw Cebuliona (logo dźwiękowe).** Cztery nuty **G4 – C5 – E5 – G5** (392,00 / 523,25 / 659,26 / 783,99 Hz),
 rytm: trzy ósemki i ćwierćnuta z wybrzmieniem („Ce-bu-li-on”). Przy 120 BPM: 250 + 250 + 250 ms + 500 ms i ogon.

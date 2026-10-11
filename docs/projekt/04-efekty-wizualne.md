@@ -1445,9 +1445,9 @@ ani obrysów (pokazywałyby niewłaściwe pola): jest tylko kwota, migotania wok
 
 | ms (0 = początek prezentacji: osiadanie ostatniego bębna; S3: koniec kaskad) | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
-| 0 | `L4` | przyciemnienie niewygrywających (200 ms, § 2.13) | `sfx_wygrana_small_1` (`m < 1`, ciszej o 6 dB — 05), `sfx_wygrana_small_2` (`1 ≤ m < 2,5`), `sfx_wygrana_small_3` (`2,5 ≤ m < 5`) | `H_lekki` (tylko `m ≥ 1`) |
-| 0 | `L5` | wygrywające symbole: puls 420 ms, `glow` tint `--gold-1`, przelot połysku; `iskry_migot` 6–12 na symbol (tylko `m ≥ 1`) | — | — |
-| 0, 350, 700 … | `L6` | S1/S2: linie rysują się kolejno co 350 ms (każda w 220 ms, § 2.16); S3: obrysy wszystkich klastrów rundy naraz na 600 ms | `sfx_linia` przy każdej linii (`m < 1`: bez — 05) | — |
+| 0 | `L4` | S1/S2: przyciemnienie niewygrywających (200 ms, § 2.13); S3: bez przyciemnienia | `sfx_wygrana_small_1` (`m < 1`, ciszej o 6 dB — 05), `sfx_wygrana_small_2` (`1 ≤ m < 2,5`), `sfx_wygrana_small_3` (`2,5 ≤ m < 5`) | `H_lekki` (tylko `m ≥ 1`) |
+| 0 | `L5` | S1/S2: wygrywające symbole (`wins[].positions`): puls 420 ms, `glow` tint `--gold-1`, przelot połysku; `iskry_migot` 6–12 na symbol (tylko `m ≥ 1`). S3: `iskry_migot` 12 / 8 / 4 wokół kwoty (tylko `m ≥ 1`) | — | — |
+| 0, 350, 700 … | `L6` | S1/S2: linie rysują się kolejno co 350 ms (każda w 220 ms, § 2.16); S3: — (obrysy klastrów były w E70) | `sfx_linia` przy każdej linii (`m < 1`: bez — 05) | — |
 | 100 | `L11` | kwota na środku okna bębnów: `m ≥ 1` — „+120” złotymi cyframi 48 px; `m < 1` — Manrope 800 28 px w kolorze `--text-1`, bez złota (R3); skala 0,6 → 1 (250 ms `easeOutBack`) | — | — |
 | 100 → 100 + T | panel HTML | pole „WYGRANA” liczy (T z § 2.17: 500–1300 ms) | `sfx_licznik_tik`, gdy T > 400 ms (`m < 1`: bez tiku — 05) | — |
 | 100 + T | panel, saldo | koniec liczenia: saldo rośnie z pulsem (E08); kwota w scenie po 400 ms odpływa (y −20 px, alfa → 0, 300 ms) | `sfx_saldo_puls` (zaksięgowanie) | — |
@@ -1460,15 +1460,17 @@ ani obrysów (pokazywałyby niewłaściwe pola): jest tylko kwota, migotania wok
 
 **Cel:** wyraźna radość (`m ≥ 5`): cząsteczki, mocniejszy dźwięk, delikatne drżenie (brief § 3). **Technika:**
 Pixi + HTML. **Czas:** 1300–1800 ms liczenia + pętla linii; SPIN aktywny od 0 ms. Oś czasu = plik
-`fx/osie/e29-wygrana-medium.js` z § 2.1.
+`fx/osie/e29-wygrana-medium.js` z § 2.1. **Wyzwalacz:** jak E28, gdy jednostka prezentacji ma `5 ≤ m < 15` (§ 2.19).
+W S3 (suma sekwencji po kaskadach) wiersze z symbolami i liniami odpadają tak jak w E28 — błysk lokalny i iskry
+wychodzą z miejsca kwoty, nie z symboli.
 
 | ms (0 = początek prezentacji) | Warstwa | Co widać | Dźwięk | Haptyka |
 |---|---|---|---|---|
 | 0 | `L4` | przyciemnienie (200 ms) | `sfx_wygrana_medium` | `H_sredni` |
 | 0 | `L5` | puls wygrywających symboli (420 ms), `glow` tint `--gold-2`, przelot połysku | — | — |
-| 0 | `L10` | błysk lokalny `syl` (alfa 0,6) na wszystkich wygrywających symbolach naraz — jeden błysk przez strażnika | — | — |
-| 0 | `L10` | `iskry_wybuch` 24 / 14 / 6 na każdy wygrywający symbol, tint `--cyan` (01 § 3.5: złoto + chłodne iskry) | — | — |
-| 0 | kamera | trauma 0,25 | — | — |
+| 0 | `L10` | błysk lokalny `syl` (alfa 0,6) na wszystkich wygrywających symbolach naraz — jeden błysk przez strażnika (S3: radialny błysk 360 px za kwotą, alfa 0,5) | — | — |
+| 0 | `L10` | `iskry_wybuch` 24 / 14 / 6 na każdy wygrywający symbol, tint `--cyan` (01 § 3.5: złoto + chłodne iskry); S3: jedna salwa 60 / 36 / 16 z miejsca kwoty | — | — |
+| 0 | kamera | trauma 0,35 (szczyt ≈ 2,2 px, § 2.5) | — | — |
 | 0, 350, 700 … | `L6` | linie / obrysy rysują się kolejno co 350 ms, poświata linii alfa 0,5 | `sfx_linia` przy każdej linii | — |
 | 50–400 | `L9` | `monety_wybuch`: 16 / 10 / 4 monety z miejsca kwoty, wyrzucane w 6 porcjach rozłożonych w 350 ms | 6 × `sfx_moneta_1` … `sfx_moneta_5` (losowo) w 50–400 ms, razem z porcjami monet (05) | — |
 | 60 | `L11` | kwota „+1 250” złotymi cyframi 56 px: wejście `punch(0,2)` 300 ms; za nią mini promienie (360 px, alfa 0,5, 6°/s, tint `--gold-2`) wchodzą w 400 ms | — | — |
