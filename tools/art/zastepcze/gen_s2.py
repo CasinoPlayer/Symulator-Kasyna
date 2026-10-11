@@ -290,8 +290,8 @@ def s2_sym_scatter():
 # ------------------------------------------------------------------------------------------------
 def s2_ramka():
     W, H = 1536, 1024
-    ox0, oy0, ox1, oy1 = 153, 143, 1383, 881            # okno 1230×738 (5:3)
-    rama = B.maska_rysunku(W, H, lambda d, s: (d.rectangle([24 * s, 30 * s, (W - 24) * s, (H - 30) * s], fill=255),
+    ox0, oy0, ox1, oy1 = 230, 190, 1305, 835            # okno 1075×645 (5:3), rama w 88% kadru (01 § 10.8)
+    rama = B.maska_rysunku(W, H, lambda d, s: (d.rectangle([94 * s, 64 * s, (W - 94) * s, (H - 64) * s], fill=255),
                                                d.rectangle([ox0 * s, oy0 * s, ox1 * s, oy1 * s], fill=0)))
     hr = B.wysokosc(rama, 26, "okragly")
     kam = B.szum(H, W, 18, 4, 5)
@@ -300,29 +300,29 @@ def s2_ramka():
     rgb = rgb * B.gradient_pionowy(H, W, [(0, "#FFFFFF"), (1, "#8A7A70")])        # ciemniej ku dołowi
     out = np.concatenate([rgb, rama[..., None]], -1).astype(np.float32)
     # kolumny: pasy lapisu i turkusu + kapitele lotosu
-    for x0, x1 in ((40, 137), (W - 137, W - 40)):
-        for j, (y, kol) in enumerate(((300, "#1B3FA0"), (340, "#2EC4B6"), (620, "#1B3FA0"), (660, "#2EC4B6"))):
+    for x0, x1 in ((112, 212), (W - 212, W - 112)):
+        for j, (y, kol) in enumerate(((330, "#1B3FA0"), (370, "#2EC4B6"), (640, "#1B3FA0"), (680, "#2EC4B6"))):
             pm = B.maska_rysunku(W, H, lambda d, s, y=y, x0=x0, x1=x1: d.rectangle([x0 * s, y * s, x1 * s, (y + 26) * s], fill=255))
             B.nakladaj(out, B.relief(pm, "emalia", 5, G, kol))
         kap = B.maska_rysunku(W, H, lambda d, s, x0=x0, x1=x1: d.polygon(
-            [((x0 - 12) * s, 150 * s), ((x1 + 12) * s, 150 * s), ((x1 - 8) * s, 215 * s), ((x0 + 8) * s, 215 * s)], fill=255))
+            [((x0 - 10) * s, 196 * s), ((x1 + 10) * s, 196 * s), ((x1 - 8) * s, 256 * s), ((x0 + 8) * s, 256 * s)], fill=255))
         B.nakladaj(out, B.relief(kap, "zloto", 10, G))
     # nadproże: złoty płaski pas na logo + skrzydła po bokach
-    pas = B.maska_rysunku(W, H, lambda d, s: d.rectangle([420 * s, 48 * s, 1116 * s, 125 * s], fill=255))
+    pas = B.maska_rysunku(W, H, lambda d, s: d.rectangle([450 * s, 92 * s, 1086 * s, 160 * s], fill=255))
     B.nakladaj(out, B.relief(pas, "zloto_satyna", 10, G))
     from gen_napisy import skrzydlaty_dysk
-    sk = skrzydlaty_dysk(620)
+    sk = skrzydlaty_dysk(520)
     for strona in (-1, 1):
         polowa = sk[:, :sk.shape[1] // 2] if strona < 0 else sk[:, sk.shape[1] // 2:]
-        B.nakladaj_srodek(out, polowa, W / 2 + strona * 470, 88)
+        B.nakladaj_srodek(out, polowa, W / 2 + strona * 450, 126)
     # cokół: pas hieroglificzny i złota listwa
     znaki = B.maska_rysunku(W, H, lambda d, s: [
-        d.ellipse([(x - 10) * s, 930 * s, (x + 10) * s, 950 * s], fill=255) if (x // 40) % 3 == 0 else
-        d.rectangle([(x - 5) * s, 922 * s, (x + 5) * s, 958 * s], fill=255) if (x // 40) % 3 == 1 else
-        d.polygon([((x - 12) * s, 958 * s), (x * s, 922 * s), ((x + 12) * s, 958 * s)], fill=255)
-        for x in range(220, 1320, 40)])
+        d.ellipse([(x - 10) * s, 888 * s, (x + 10) * s, 908 * s], fill=255) if (x // 40) % 3 == 0 else
+        d.rectangle([(x - 5) * s, 880 * s, (x + 5) * s, 916 * s], fill=255) if (x // 40) % 3 == 1 else
+        d.polygon([((x - 12) * s, 916 * s), (x * s, 880 * s), ((x + 12) * s, 916 * s)], fill=255)
+        for x in range(290, 1250, 40)])
     B.nakladaj(out, B.relief(znaki, "zloto", 3, G))
-    listwa = B.maska_rysunku(W, H, lambda d, s: d.rectangle([140 * s, 975 * s, (W - 140) * s, 985 * s], fill=255))
+    listwa = B.maska_rysunku(W, H, lambda d, s: d.rectangle([200 * s, 930 * s, (W - 200) * s, 940 * s], fill=255))
     B.nakladaj(out, B.relief(listwa, "zloto", 4, G))
     # krawędź okna: złota listwa perełkowa z inkrustacją lapisu
     kr = np.clip(B.maska_rysunku(W, H, lambda d, s: d.rectangle([(ox0 - 22) * s, (oy0 - 22) * s, (ox1 + 22) * s,
@@ -337,7 +337,7 @@ def s2_ramka():
     rgbk = B.material(nk, "zloto", G) * (1 - lapis[..., None]) + B.material(nk, "emalia", G, "#1B3FA0") * lapis[..., None]
     B.nakladaj(out, np.concatenate([rgbk, kr[..., None]], -1).astype(np.float32))
     # narożne kartusze
-    for (cx, cy) in ((88, 88), (W - 88, 88), (88, H - 88), (W - 88, H - 88)):
+    for (cx, cy) in ((160, 128), (W - 160, 128), (160, H - 128), (W - 160, H - 128)):
         km = B.maska_rysunku(110, 70, lambda d, s: d.rounded_rectangle([4 * s, 4 * s, 106 * s, 66 * s], radius=30 * s, fill=255))
         B.nakladaj_srodek(out, B.zloty_napis(km, faza=6, glebokosc=5, kontur=3, gra=G,
                                              wkladki=[(B.rozmyj(B.erozja(km > 0.5, 12).astype(np.float32), 1), "emalia",

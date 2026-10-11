@@ -45,8 +45,8 @@ def s3_sym_scatter():
 
 def s3_ramka():
     N = S
-    ox0, oy0, ox1, oy1 = 102, 170, 922, 853                  # okno 820×683 (6:5)
-    rama = B.maska_rysunku(N, N, lambda d, s: (d.rounded_rectangle([34 * s, 50 * s, (N - 34) * s, (N - 40) * s],
+    ox0, oy0, ox1, oy1 = 153, 213, 870, 811                  # okno 717×598 (6:5), rama w 88% kadru (01 § 11.8)
+    rama = B.maska_rysunku(N, N, lambda d, s: (d.rounded_rectangle([66 * s, 76 * s, (N - 66) * s, (N - 66) * s],
                                                                    radius=40 * s, fill=255),
                                                d.rectangle([ox0 * s, oy0 * s, ox1 * s, oy1 * s], fill=0)))
     skala = B.szum(N, N, 16, 4, 9)
@@ -58,16 +58,16 @@ def s3_ramka():
     mech = B.plotno(N, N)
     rng = np.random.default_rng(4)
     for i in range(140):
-        x, y = rng.uniform(60, N - 60), rng.uniform(N - 150, N - 60)
+        x, y = rng.uniform(110, N - 110), rng.uniform(N - 190, N - 100)
         r = rng.uniform(3, 9)
         B.nakladaj_srodek(mech, B.z_maska(B.radialny(int(r * 4), int(r * 4), r * 2, r * 2, r * 2, 0.8), "#19F5D2"), x, y)
     B.nakladaj(out, B.poswiata(mech, 6, "#19F5D2", 0.6), -12, -12)
     # skupiska kryształów: narożniki i „korona” na środku góry
-    for nazwa, (cx, cy), wys, odbicie in (("s3_krysztaly_ametyst", (512, 165), 220, False),
-                                          ("s3_krysztaly_szafir", (120, 150), 200, True),
-                                          ("s3_krysztaly_szafir", (904, 150), 200, False),
-                                          ("s3_krysztaly_ametyst", (115, 900), 170, True),
-                                          ("s3_krysztaly_ametyst", (909, 900), 170, False)):
+    for nazwa, (cx, cy), wys, odbicie in (("s3_krysztaly_ametyst", (512, 172), 210, False),
+                                          ("s3_krysztaly_szafir", (150, 175), 190, True),
+                                          ("s3_krysztaly_szafir", (874, 175), 190, False),
+                                          ("s3_krysztaly_ametyst", (150, 880), 150, True),
+                                          ("s3_krysztaly_ametyst", (874, 880), 150, False)):
         kr = B.przytnij_alfa(B.render(nazwa))
         kr = B.skaluj(kr, int(kr.shape[1] * wys / kr.shape[0]), wys)
         if odbicie:
@@ -75,12 +75,12 @@ def s3_ramka():
         B.nakladaj_srodek(out, kr, cx, cy)
     zl = B.przytnij_alfa(B.render("s3_cebula"))
     zl = B.skaluj(zl, int(zl.shape[1] * 120 / zl.shape[0]), 120)
-    B.nakladaj_srodek(out, B.poswiata(zl, 10, "gold2", 0.4), 512, 128)
+    B.nakladaj_srodek(out, B.poswiata(zl, 10, "gold2", 0.4), 512, 140)
     # drobne kryształy wzdłuż dołu
-    for i, x in enumerate(range(170, 880, 90)):
+    for i, x in enumerate(range(230, 820, 85)):
         kr = B.przytnij_alfa(B.render("s3_krysztaly_szafir" if i % 2 else "s3_krysztaly_ametyst"))
         kr = B.skaluj(kr, int(kr.shape[1] * 90 / kr.shape[0]), 90)
-        B.nakladaj_srodek(out, kr, x, 920)
+        B.nakladaj_srodek(out, kr, x, 885)
     # czysta, prosta listwa z białego złota przy oknie
     kraw = np.clip(B.maska_rysunku(N, N, lambda d, s: d.rectangle([(ox0 - 14) * s, (oy0 - 14) * s, (ox1 + 14) * s,
                                                                      (oy1 + 14) * s], fill=255))

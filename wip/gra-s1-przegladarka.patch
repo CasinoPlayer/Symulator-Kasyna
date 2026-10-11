@@ -425,7 +425,7 @@ index d344d10..0d5e6cd 100644
     * Tworzy <img> dla ID albo zwraca null (wtedy wywołujący pokazuje grafikę zastępczą).
     * @param {string} id
 diff --git a/src/main/resources/static/js/audio/audio-engine.js b/src/main/resources/static/js/audio/audio-engine.js
-index 6c764ec..e67ec62 100644
+index 6c764ec..0cc84c4 100644
 --- a/src/main/resources/static/js/audio/audio-engine.js
 +++ b/src/main/resources/static/js/audio/audio-engine.js
 @@ -5,9 +5,11 @@
@@ -443,6 +443,15 @@ index 6c764ec..e67ec62 100644
   *
   * Zasady:
   *   * przeglądarki blokują dźwięk do pierwszego gestu użytkownika — wołamy unlock() przy kliknięciu
+@@ -24,7 +26,7 @@ const BUSES = ['ui', 'sfx', 'music'];
+ const MANIFEST_URL = new URL('assets/audio/manifest.json', document.baseURI);
+ 
+ /** Uchwyt grającego dźwięku; dla dźwięków, których nie ma, zwracamy ten „pusty”. */
+-const SILENT = Object.freeze({ stop() {}, setRate() {}, playing: false });
++const SILENT = Object.freeze({ stop() {}, setRate() {}, setVolume() {}, playing: false });
+ 
+ function loadSettings() {
+   try {
 @@ -48,9 +50,16 @@ class AudioEngine extends EventTarget {
    #manifestPromise = null;
    #buffers = new Map();      // ID → AudioBuffer
@@ -987,7 +996,7 @@ index 0000000..ea87549
 +}
 diff --git a/src/main/resources/static/js/game/base-game.js b/src/main/resources/static/js/game/base-game.js
 new file mode 100644
-index 0000000..77742c1
+index 0000000..2e8aae1
 --- /dev/null
 +++ b/src/main/resources/static/js/game/base-game.js
 @@ -0,0 +1,868 @@
@@ -1402,7 +1411,7 @@ index 0000000..77742c1
 +    const tw = this.gameApp.tweener;
 +    const tempo = ctx.tempo;
 +    for (const [r, row] of step.removed ?? []) {
-+      const s = this.reels.cell(r, row);
++      const s = this.reels.slotAt(r, row);
 +      if (!s) continue;
 +      const c = this.reels.cellCenter(r, row);
 +      this.particles.sparks('fxAdd', c.x, c.y, this.particles.count([8, 5, 2]), { tint: 0xa64dff, speed: [200, 600] });
@@ -1417,7 +1426,7 @@ index 0000000..77742c1
 +    // opad: zmienione kolumny wjeżdżają z góry (uproszczona fizyka — pełna w S3: 04 § 2.15)
 +    for (const r of changed) {
 +      for (let row = 0; row < this.config.rows; row++) {
-+        const s = this.reels.cell(r, row);
++        const s = this.reels.slotAt(r, row);
 +        if (!s) continue;
 +        const y = s.root.y;
 +        s.root.y = y - this.reels.cell * (this.config.rows - row + 1);
@@ -5868,10 +5877,10 @@ index 0000000..678cc3d
 +}
 diff --git a/src/main/resources/static/js/game/games/s1-art.js b/src/main/resources/static/js/game/games/s1-art.js
 new file mode 100644
-index 0000000..44887ad
+index 0000000..903d925
 --- /dev/null
 +++ b/src/main/resources/static/js/game/games/s1-art.js
-@@ -0,0 +1,874 @@
+@@ -0,0 +1,878 @@
 +/**
 + * game/games/s1-art.js — grafika zastępcza S1 „Cebulowy 777” rysowana w kodzie (Canvas 2D).
 + *
@@ -6404,16 +6413,20 @@ index 0000000..44887ad
 +  x.clip();
 +  x.fillStyle = radial(x, sx, sy, R * 0.8, R * 2.2, [[0, 'rgba(255,122,61,0.45)'], [1, 'rgba(255,46,136,0)']]);
 +  x.fillRect(0, 0, w, hy);
-+  x.beginPath();
-+  x.arc(sx, sy, R, 0, Math.PI * 2);
-+  x.fillStyle = linear(x, 0, sy - R, 0, sy + R, [[0, '#FFE45C'], [0.45, '#FF9A3D'], [1, '#FF2E88']]);
-+  x.fill();
-+  x.globalCompositeOperation = 'destination-out';
++  // tarcza słońca na osobnym płótnie: pasy wycinamy tylko z tarczy, nie z nieba wokół
++  const sun = makeCanvas(R * 2 + 4, R * 2 + 4);
++  const sx2 = sun.getContext('2d');
++  sx2.beginPath();
++  sx2.arc(R + 2, R + 2, R, 0, Math.PI * 2);
++  sx2.fillStyle = linear(sx2, 0, 2, 0, R * 2 + 2, [[0, '#FFE45C'], [0.45, '#FF9A3D'], [1, '#FF2E88']]);
++  sx2.fill();
++  sx2.globalCompositeOperation = 'destination-out';
 +  for (let i = 0; i < 7; i++) {
 +    const t = i / 7;
-+    const by = sy + R * (0.05 + t * 0.95);
-+    x.fillRect(sx - R, by, R * 2, R * (0.025 + t * 0.07));
++    const by = R + 2 + R * (0.05 + t * 0.95);
++    sx2.fillRect(0, by, R * 2 + 4, R * (0.025 + t * 0.07));
 +  }
++  x.drawImage(sun, sx - R - 2, sy - R - 2);
 +  x.restore();
 +  // podłoga
 +  x.fillStyle = linear(x, 0, hy, 0, h, [[0, '#1A0640'], [0.5, '#0B0624'], [1, '#05030F']]);
@@ -6748,7 +6761,7 @@ index 0000000..44887ad
 +}
 diff --git a/src/main/resources/static/js/game/games/s1.js b/src/main/resources/static/js/game/games/s1.js
 new file mode 100644
-index 0000000..e4c0b5b
+index 0000000..689ee85
 --- /dev/null
 +++ b/src/main/resources/static/js/game/games/s1.js
 @@ -0,0 +1,1149 @@
@@ -7333,7 +7346,7 @@ index 0000000..e4c0b5b
 +    const row = fxRng.int(0, 2);
 +    if (reel === this.lastIdle?.[0] && row === this.lastIdle?.[1]) return;
 +    this.lastIdle = [reel, row];
-+    const s = this.reels.cell(reel, row);
++    const s = this.reels.slotAt(reel, row);
 +    if (!s) return;
 +    this.shine.run(s.main, { duration: 550, silhouette: null, strength: 0.6 });
 +    const c = this.reels.cellCenter(reel, row);
@@ -7470,7 +7483,7 @@ index 0000000..e4c0b5b
 +    const reduced = ga.motion.reduced;
 +    const S = this.geo.cell;
 +    const c = this.reels.cellCenter(reel, row);
-+    const slot = this.reels.cell(reel, row);
++    const slot = this.reels.slotAt(reel, row);
 +    this.ui.haptic?.('H_sredni');
 +    if (!reduced && slot) {
 +      // błysk lokalny `syl` (alfa 0,8, 40 + 80 ms) przez strażnika — podłoże: złoty symbol
@@ -8253,7 +8266,7 @@ index 0000000..a2c2bc9
 +}
 diff --git a/src/main/resources/static/js/game/reels/reelset.js b/src/main/resources/static/js/game/reels/reelset.js
 new file mode 100644
-index 0000000..a902157
+index 0000000..6b00bbd
 --- /dev/null
 +++ b/src/main/resources/static/js/game/reels/reelset.js
 @@ -0,0 +1,498 @@
@@ -8411,7 +8424,7 @@ index 0000000..a902157
 +  }
 +
 +  /** Slot pokazujący pole (bęben, rząd), gdy bębny stoją. */
-+  cell(reel, row) {
++  slotAt(reel, row) {
 +    const r = this.reels[reel];
 +    const idx = row - Math.round(r.p);
 +    return r.slots.find((s) => s.index === idx) ?? null;
@@ -8719,7 +8732,7 @@ index 0000000..a902157
 +  /** Przenosi slot pola na inną warstwę (np. L5 nad przyciemnieniem), zachowując położenie na ekranie. */
 +  lift(reel, row, layer) {
 +    const r = this.reels[reel];
-+    const slot = this.cell(reel, row);
++    const slot = this.slotAt(reel, row);
 +    if (!slot || r.lifted.has(slot)) return slot;
 +    r.lifted.add(slot);
 +    const gx = r.container.x + slot.root.x;

@@ -659,9 +659,10 @@ def m_s3_szmaragd():
 
 def m_s3_ametyst():
     _gem_scena()
-    obrys = [(0.55 * math.cos(math.radians(60 * i)), 0.55 * math.sin(math.radians(60 * i))) for i in range(6)]
+    # sześciokąt poziomy (wierzchołki z lewej i prawej), szer. : wys. ≈ 1,25 : 1, jasny orchideowy fiolet (01 § 11.4)
+    obrys = [(0.6 * math.cos(math.radians(60 * i)), 0.415 * math.sin(math.radians(60 * i))) for i in range(6)]
     g = klejnot("ametyst", obrys, h_korony=0.12, tafla=0.66, h_pawilonu=0.34, pierscien_korony=0.85,
-                mat=szklo("#B05CFF", 1.55, cienka_warstwa=380))
+                mat=szklo("#C77DFF", 1.55, cienka_warstwa=380))
     g.rotation_euler = (math.radians(78), 0, 0)
     k = kamera()
     kadruj(k, 0.05)

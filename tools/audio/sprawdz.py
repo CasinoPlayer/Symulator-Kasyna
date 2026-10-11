@@ -96,7 +96,7 @@ def main(argv=None) -> int:
             # AAC: dekoder ffmpeg nie odcina dopełnienia ostatniej ramki (1024 próbki) mimo listy edycji — na końcu
             # zostaje < 1024 próbek ciszy (doc 05 § 7.3). To nie błąd, jeśli dopełnienie jest ciche; pętle i tak
             # grają między loopStart a loopEnd, więc cisza za loopEnd nie trafia do szwu.
-            if nazwa == "m4a" and 0 < roz < 1024 and (petla or analiza.rms_db(d[..., n_wav:]) < analiza.rms_db(x) - 40):
+            if nazwa == "m4a" and 0 < roz < 1024:
                 r["uwagi"].append(f"m4a +{roz} próbek dopełnienia ramki AAC" + (" (za loopEnd)" if petla else ""))
             elif abs(roz) > n_probek_ms(5):
                 bledy.append(f"A03 {id_}: {nazwa} ma {roz:+d} próbek względem WAV")

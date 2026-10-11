@@ -108,11 +108,13 @@ def s1_ramka():
     """Chromowana obudowa automatu: grzebień z żarówkami i gwiazdką, różowa rurka neonowa po zewnętrznej
     krawędzi, cyjanowa po wewnętrznej, złota listwa przy oknie, półka z nitami. Okno 3×3 w pełni przezroczyste."""
     N = S
-    okno = (192, 222, 832, 862)                   # 640×640, przesunięte 3% w dół pod grzebień
+    # cała ramka (z grzebieniem i poświatą neonu) w 88% kadru, okno 640×640 od ~22% wysokości (01 § 9.6)
+    okno = (192, 225, 832, 865)
+
     def obudowa(d, s):
-        d.rounded_rectangle([70 * s, 130 * s, 954 * s, 935 * s], radius=90 * s, fill=255)
-        d.ellipse([250 * s, 34 * s, 774 * s, 300 * s], fill=255)
-        d.rounded_rectangle([40 * s, 880 * s, 984 * s, 975 * s], radius=30 * s, fill=255)
+        d.rounded_rectangle([86 * s, 168 * s, 938 * s, 905 * s], radius=86 * s, fill=255)
+        d.ellipse([272 * s, 84 * s, 752 * s, 330 * s], fill=255)
+        d.rounded_rectangle([78 * s, 872 * s, 946 * s, 942 * s], radius=26 * s, fill=255)
     m = B.maska_rysunku(N, N, obudowa)
     mo = B.maska_rysunku(N, N, lambda d, s: d.rectangle([okno[0] * s, okno[1] * s, okno[2] * s, okno[3] * s], fill=255))
     korpus = np.clip(m - mo, 0, 1)
@@ -133,18 +135,18 @@ def s1_ramka():
     # żarówki na grzebieniu i gwiazdka „atomic age”
     for i in range(15):
         a = math.pi * (1.08 + 0.84 * i / 14)
-        x, y = 512 + 225 * math.cos(a), 170 + 108 * math.sin(a)
+        x, y = 512 + 205 * math.cos(a), 207 + 100 * math.sin(a)
         zar = B.z_maska(B.radialny(30, 30, 15, 15, 13, 0.5), "#FFF3D1")
         B.nakladaj_srodek(out, B.poswiata(zar, 8, "#FFC86B", 0.9), x, y)
     gw = B.maska_rysunku(160, 160, lambda d, s: d.polygon(
         [((80 + (70 if i % 2 == 0 else 22) * math.cos(-math.pi / 2 + i * math.pi / 4)) * s,
           (80 + (70 if i % 2 == 0 else 22) * math.sin(-math.pi / 2 + i * math.pi / 4)) * s) for i in range(8)], fill=255))
-    B.nakladaj_srodek(out, B.zloty_napis(gw, faza=6, glebokosc=5, kontur=3, gra="s1", poswiata_r=10), 512, 175)
+    B.nakladaj_srodek(out, B.zloty_napis(gw, faza=6, glebokosc=5, kontur=3, gra="s1", poswiata_r=10), 512, 200)
     for x in (300, 724):
         nit = B.maska_rysunku(60, 60, lambda d, s: d.polygon(
             [((30 + (26 if i % 2 == 0 else 10) * math.cos(-math.pi / 2 + i * math.pi / 4)) * s,
               (30 + (26 if i % 2 == 0 else 10) * math.sin(-math.pi / 2 + i * math.pi / 4)) * s) for i in range(8)], fill=255))
-        B.nakladaj_srodek(out, B.relief(nit, "zloto", 4, "s1"), x, 928)
+        B.nakladaj_srodek(out, B.relief(nit, "zloto", 4, "s1"), x, 907)
     out[okno[1]:okno[3], okno[0]:okno[2], 3] = 0.0           # okno MUSI być w 100% przezroczyste
     return out
 

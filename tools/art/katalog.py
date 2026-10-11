@@ -249,7 +249,7 @@ ASSETY: list[Asset] = [
 
 # Kolory symboli S3 z 01 § 11.4 — kod barwi nimi neutralne odłamki przy pękaniu (pole ``tint`` w manifeście).
 TINT_S3 = {
-    "s3_sym_szafir": "#2F6BFF", "s3_sym_szmaragd": "#19D17A", "s3_sym_ametyst": "#A64DFF",
+    "s3_sym_szafir": "#2F6BFF", "s3_sym_szmaragd": "#19D17A", "s3_sym_ametyst": "#C77DFF",
     "s3_sym_topaz": "#FFB23D", "s3_sym_rubin": "#FF2D55", "s3_sym_diament": "#E8FBFF",
     "s3_sym_cebula": "#F5C542", "s3_sym_scatter": "#19F5D2", "s3_sym_mnoznik": "#E8FBFF",
 }

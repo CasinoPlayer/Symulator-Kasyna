@@ -324,6 +324,36 @@ def test_calosc_pipeline():
     assert wynik[..., 3][0, :].max() == 0, "tło symbolu nie jest przezroczyste"
 
 
+def test_brak_zrodla_zostawia_wynik():
+    """Gdy dla ID nie ma żadnego źródła, poprzedni wynik i wpis w manifeście zostają, a raport ostrzega."""
+    import przetworz
+    wy = WYNIKI / "img"
+    przed = json.loads((wy / "manifest.json").read_text())["images"]["s1_sym_dzwonek"]
+    kod = przetworz.main(["--tylko", "s1_sym_dzwonek", "--zrodla", str(WYNIKI / "pusto"),
+                          "--zastepcze", str(WYNIKI / "pusto"), "--wyjscie", str(wy),
+                          "--raport", str(WYNIKI / "raport"), "--watki", "1"])
+    po = json.loads((wy / "manifest.json").read_text())["images"]["s1_sym_dzwonek"]
+    raport = json.loads((WYNIKI / "raport" / "raport.json").read_text())["obrazy"]["s1_sym_dzwonek"]
+    print(f"    kod {kod}, uwagi: {[u[2] for u in raport['uwagi']]}")
+    assert po == przed and (wy / po["src"]).exists()
+    assert any(u[1] == "Q01" for u in raport["uwagi"])
+
+
+def test_determinizm():
+    """Te same wejścia = te same bajty (git pokazuje tylko prawdziwe zmiany)."""
+    import hashlib
+    import przetworz
+    wy = WYNIKI / "img"
+    def skroty():
+        return {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in (wy / "s1").glob("s1_sym_dzwonek*")}
+    a = skroty()
+    przetworz.main(["--tylko", "s1_sym_dzwonek", "--zrodla", str(WYNIKI / "zrodla"), "--zastepcze", str(WYNIKI / "brak"),
+                    "--wyjscie", str(wy), "--raport", str(WYNIKI / "raport"), "--watki", "1"])
+    b = skroty()
+    print(f"    {len(a)} plików, identyczne: {a == b}")
+    assert a == b and len(a) >= 8
+
+
 def main():
     testy = [(n, f) for n, f in globals().items() if n.startswith("test_") and callable(f)]
     ok = 0

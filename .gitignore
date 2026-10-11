@@ -19,3 +19,6 @@ __pycache__/
 
 # Grafika zastępcza generowana skryptami tools/art/zastepcze (odtwarzalna)
 art/zastepcze/
+# Raport jakości i pliki pośrednie pipeline'u grafiki (tools/art/przetworz.py) — odtwarzalne
+art/raport/
+art/robocze/
