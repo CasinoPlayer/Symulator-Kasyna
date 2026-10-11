@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.IllegalTransactionStateException;
 import org.springframework.transaction.support.TransactionTemplate;
 import pl.wsb.kasyno.report.application.LobbyBoardsCache.Board;
 import pl.wsb.kasyno.shared.domain.Money;
@@ -18,6 +19,7 @@ import java.util.EnumMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Słuchacz {@code @TransactionalEventListener(AFTER_COMMIT)} w prawdziwym kontekście Springa: reaguje dopiero po
@@ -110,12 +112,19 @@ class LobbyBoardsListenerTest {
     }
 
     @Test
-    @DisplayName("zdarzenie poza transakcją jest pomijane (fallbackExecution = false)")
+    @DisplayName("zdarzenie poza transakcją: słuchacz AFTER_COMMIT je pomija (fallbackExecution = false)")
     void outsideTransaction() {
         Map<Board, Long> before = generations();
 
-        events.publishEvent(spin(100, 2000));
+        events.publishEvent(new BalanceChanged(1L, Money.of(100), Money.of(100), "WIN", Instant.now()));
 
         assertThat(generations()).isEqualTo(before);
+    }
+
+    @Test
+    @DisplayName("dla porównania: SpinCompleted poza transakcją odrzuca synchroniczny StatsUpdater (MANDATORY)")
+    void statsUpdaterRequiresTransaction() {
+        assertThatThrownBy(() -> events.publishEvent(spin(100, 2000)))
+                .isInstanceOf(IllegalTransactionStateException.class);
     }
 }

@@ -1,0 +1,31 @@
+# =====================================================================================================
+# Render.com Blueprint: aplikacja w Javie jako usługa WWW z naszego Dockerfile (plan darmowy).
+#
+# Jak włączyć (raz, robi to osoba z dostępem do repozytorium):
+#   render.com → New → Blueprint → wybierz repozytorium → Render czyta ten plik → Apply.
+# Każdy push na gałąź domyślną repozytorium (main) buduje i wdraża nową wersję (autoDeploy).
+#
+# Ograniczenia planu darmowego (stan na 2026, sprawdźcie aktualny cennik Render):
+#   * usługa zasypia po ok. 15 minutach bez ruchu; pierwsze wejście po przerwie budzi ją ok. minuty,
+#   * dysk kontenera jest ulotny: przy uśpieniu, restarcie i każdym wdrożeniu plik bazy H2 znika
+#     (trwałe dyski są tylko w planach płatnych). Na prezentację to wystarcza: data.sql wczyta się od nowa.
+#     Prawdziwie trwałe dane: zewnętrzny PostgreSQL (np. Render PostgreSQL, Neon, Supabase) i w panelu usługi
+#     Environment → zmienne SPRING_DATASOURCE_URL=jdbc:postgresql://HOST:5432/BAZA, SPRING_DATASOURCE_USERNAME,
+#     SPRING_DATASOURCE_PASSWORD (bez zmiany kodu; opis w docs/obrona/00-uruchomienie.md).
+# =====================================================================================================
+services:
+  - type: web
+    name: cebulion-casino
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # Render uznaje wdrożenie za udane, gdy ten adres odpowiada 200 (katalog gier z bazy)
+    healthCheckPath: /api/slots
+    autoDeploy: true
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: JAVA_TOOL_OPTIONS
+        value: -XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError
