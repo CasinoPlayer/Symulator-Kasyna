@@ -169,13 +169,19 @@ def s2_sym_anubis():
     oko = _m(lambda d, s: d.polygon([(400 * s, 400 * s), (470 * s, 380 * s), (490 * s, 405 * s), (420 * s, 418 * s)], fill=255))
     obw_oka = np.clip(_w(B.dylatacja(oko > 0.5, 8)) - oko, 0, 1)
     szczeka = _m(lambda d, s: d.line([(230 * s, 488 * s), (400 * s, 515 * s), (470 * s, 630 * s)], fill=255, width=int(10 * s)))
-    B.nakladaj(out, B.wysrodkuj_rgba(B.zloty_napis(
-        gm, faza=16, glebokosc=20, kontur=8, rodzaj="emalia", gra=G, kolor="#15121C", gradient=False,
-        kontur_kolor="#05040A",
-        wkladki=[(zl_ucha, "zloto", None, "okragly"), (np.maximum(ucho1, ucho2) * _w(B.erozja(np.maximum(ucho1, ucho2) > 0.5, 6)),
-                                                       "emalia", "#3A2A10", "plaski"),
+    # Głowa z polerowanego obsydianu: czarna sylwetka na ciemnym bębnie ginęła (test czytelności 64 px), więc
+    # obsydian jest jaśniejszy (fioletowa czerń), a sylwetkę obiega złota listwa i ciepła poświata pochodni.
+    pas_brzegu = _pas(gm, 0, 9)
+    glowa = B.zloty_napis(
+        gm, faza=16, glebokosc=20, kontur=0, rodzaj="emalia", gra=G, kolor="#2A2342", gradient=False,
+        wkladki=[(pas_brzegu, "zloto", None, "okragly"),
+                 (zl_ucha, "zloto", None, "okragly"), (np.maximum(ucho1, ucho2) * _w(B.erozja(np.maximum(ucho1, ucho2) > 0.5, 6)),
+                                                       "emalia", "#1B3FA0", "plaski"),
                  (obw_oka, "zloto", None, "okragly"), (oko, "swiecace", "#FFB030", "plaski"),
-                 (_w(szczeka) * gm, "zloto", None, "okragly")]), gm), 0, 0)
+                 (_w(szczeka) * gm, "zloto", None, "okragly")])
+    glowa = B.obrys(np.pad(glowa, ((12, 12), (12, 12), (0, 0))), 5, "#05040A")
+    glowa = B.poswiata(glowa, 16, "#FFB347", 0.45)
+    B.nakladaj(out, B.wysrodkuj_rgba(glowa, gm), 0, 0)
     return B.wpasuj(out, S, S, WYP["wysokie"])
 
 
@@ -252,36 +258,42 @@ def tabliczka(tekst, szer, wys, font="cinzeldeco900", kolor_pola="#1B3FA0", rodz
 
 def s2_sym_wild():
     rel = B.przytnij_alfa(B.render("s2_relikwia"))
-    rel = B.skaluj(rel, int(rel.shape[1] * 860 / rel.shape[0]), 860)
+    rel = B.skaluj(rel, int(rel.shape[1] * 760 / rel.shape[0]), 760)
     out = B.plotno(S, S)
-    B.nakladaj_srodek(out, B.poswiata(rel, 22, "gold2", 0.35), S / 2, S / 2 - 40)
-    B.nakladaj_srodek(out, tabliczka("WILD", 640, 210), S / 2, S * 0.74)
+    B.nakladaj_srodek(out, B.poswiata(rel, 22, "gold2", 0.35), S / 2, S / 2 - 70)
+    # tabliczka szeroka na ~80% symbolu: przy 64–96 px na bębnie napis WILD musi być czytelny (01 § 5.2)
+    B.nakladaj_srodek(out, tabliczka("WILD", 820, 270), S / 2, S * 0.76)
     return B.wpasuj(out, S, S, WYP["specjalne"])
 
 
 def s2_sym_scatter():
     pir = B.przytnij_alfa(B.render("s2_piramida"))
-    pir = B.skaluj(pir, 900)
+    pir = B.skaluj(pir, 780)
     out = B.plotno(S, S)
-    py = S * 0.62
-    B.nakladaj_srodek(out, pir, S / 2, py)
+    px, py = S / 2, S * 0.56
+    B.nakladaj_srodek(out, pir, px, py)
+    # wierzchołek i oświetlona (lewa, duża) ściana — z alfy renderu, bo bryła jest obrócona
+    a = pir[..., 3] > 0.5
+    ys, xs = np.nonzero(a)
+    apex_x = px - pir.shape[1] / 2 + float(xs[ys <= ys.min() + 3].mean())
+    apex_y = py - pir.shape[0] / 2 + float(ys.min()) + 4
     # pionowa wiązka cyjanowo-białego światła z piramidionu, wygasa przed górnym marginesem
-    apex_y = py - pir.shape[0] / 2 + 4
     yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
     t = np.clip((apex_y - yy) / apex_y, 0, 1)
-    wiazka = (np.exp(-((xx - S / 2) / (8 + 26 * t)) ** 2) * (yy < apex_y) * B.smoothstep(1 - t, 0.12, 0.5))
-    halo = np.exp(-((xx - S / 2) / (60 + 50 * t)) ** 2) * (yy < apex_y + 10) * B.smoothstep(1 - t, 0.1, 0.6) * 0.45
+    wiazka = (np.exp(-((xx - apex_x) / (8 + 30 * t)) ** 2) * (yy < apex_y) * B.smoothstep(1 - t, 0.08, 0.45))
+    halo = np.exp(-((xx - apex_x) / (60 + 60 * t)) ** 2) * (yy < apex_y + 10) * B.smoothstep(1 - t, 0.06, 0.55) * 0.5
     swiatlo = np.clip(wiazka + halo, 0, 1)
     warstwa = np.zeros((S, S, 4), np.float32)
     warstwa[..., :3] = np.array([0.75, 0.97, 1.0]) * (0.6 + 0.4 * wiazka[..., None])
     warstwa[..., 3] = swiatlo
     B.nakladaj(out, warstwa, 0, 0, tryb="screen")
-    # turkusowe oko na ścianie piramidy
-    oko = B.maska_rysunku(160, 80, lambda d, s: d.ellipse([4 * s, 14 * s, 156 * s, 66 * s], fill=255))
-    zren = B.maska_rysunku(160, 80, lambda d, s: d.ellipse([58 * s, 18 * s, 102 * s, 62 * s], fill=255))
+    out = B.blysk(out, apex_x, apex_y, 70, 0.9)                     # rozbłysk na piramidionie
+    # turkusowe oko na oświetlonej ścianie
+    oko = B.maska_rysunku(180, 90, lambda d, s: d.ellipse([4 * s, 16 * s, 176 * s, 74 * s], fill=255))
+    zren = B.maska_rysunku(180, 90, lambda d, s: d.ellipse([66 * s, 20 * s, 114 * s, 70 * s], fill=255))
     o = B.z_maska(np.maximum(oko - zren * 0.6, 0), "#7FF7EE")
-    B.nakladaj_srodek(out, B.poswiata(o, 10, "#2EC4B6", 1.0), S / 2, py + pir.shape[0] * 0.08)
-    B.nakladaj_srodek(out, tabliczka("SCATTER", 760, 170), S / 2, S * 0.86)
+    B.nakladaj_srodek(out, B.poswiata(o, 12, "#2EC4B6", 1.0), apex_x - pir.shape[1] * 0.1, py + pir.shape[0] * 0.08)
+    B.nakladaj_srodek(out, tabliczka("SCATTER", 880, 220), S / 2, S * 0.86)
     return B.wpasuj(out, S, S, WYP["specjalne"])
 
 

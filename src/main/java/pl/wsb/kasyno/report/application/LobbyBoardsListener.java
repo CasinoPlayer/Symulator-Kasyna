@@ -10,6 +10,8 @@ import pl.wsb.kasyno.shared.config.CasinoProperties;
 import pl.wsb.kasyno.slots.api.SpinCompleted;
 import pl.wsb.kasyno.wallet.api.BalanceChanged;
 
+import java.math.BigDecimal;
+
 /**
  * Reaguje na zdarzenia z innych modułów <b>po zatwierdzeniu transakcji</b> (LAB 06): odświeża feed dużych wygranych
  * i rankingi w lobby oraz zapisuje duże wygrane w logu.
@@ -64,8 +66,8 @@ public class LobbyBoardsListener {
             cache.invalidate(Board.BIG_WINS);
             // log w formacie klucz=wartość: czytelny dla człowieka i łatwy do przefiltrowania (grep big_win)
             log.info("big_win round={} player={} game={} bet={} win={} multiplier={} tier={} at={}",
-                    event.roundId(), event.playerId(), event.gameCode(), event.bet().toPlainString(),
-                    event.win().toPlainString(), event.multiplier().toPlainString(), event.tier(), event.at());
+                    event.roundId(), event.playerId(), event.gameCode(), plain(event.bet()), plain(event.win()),
+                    plain(event.multiplier()), event.tier(), event.at());
         }
     }
 
@@ -73,5 +75,10 @@ public class LobbyBoardsListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onBalanceChanged(BalanceChanged event) {
         cache.invalidate(Board.BALANCE);
+    }
+
+    /** {@code 350.00 → 350}, {@code 17.50 → 17.5}: kwoty w logu tak jak w API. */
+    private static String plain(BigDecimal value) {
+        return value.stripTrailingZeros().toPlainString();
     }
 }

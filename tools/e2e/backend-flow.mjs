@@ -100,7 +100,9 @@ async function spin(page, game, bet, { key = randomUUID(), expectOk = true } = {
     && Number.isFinite(r.balanceBefore) && Number.isFinite(r.balanceAfter) && /^[0-9a-f]{16}$/.test(r.seed ?? '')
     && Array.isArray(r.steps) && r.steps.length > 0 && r.steps[0].type === 'spin';
   if (!shapeOk) state.shapeBreaks.push(`${label}: ${res.text.slice(0, 160)}`);
-  if (state.balance !== null && r.balanceBefore !== state.balance) {
+  // powtórka idempotentna to bajt w bajt dokument TAMTEJ rundy (z jej saldami), więc nie wchodzi do łańcucha sald
+  const replayed = res.headers['idempotent-replayed'] === 'true';
+  if (!replayed && state.balance !== null && r.balanceBefore !== state.balance) {
     state.chainBreaks.push(`${label}: balanceBefore ${r.balanceBefore} ≠ poprzednie saldo ${state.balance}`);
   }
   if (r.balanceAfter !== r.balanceBefore - r.bet + r.totalWin) {
@@ -109,7 +111,7 @@ async function spin(page, game, bet, { key = randomUUID(), expectOk = true } = {
   const withTotals = r.steps.filter((s) => Number.isFinite(s.totalWin));
   const lastTotal = withTotals.length ? withTotals.at(-1).totalWin : 0;
   if (lastTotal !== r.totalWin) state.stepBreaks.push(`${label}: ostatni totalWin w krokach ${lastTotal} ≠ ${r.totalWin}`);
-  if (res.headers['idempotent-replayed'] !== 'true') {
+  if (!replayed) {
     state.rounds += 1;
     state.roundsByGame[game] = (state.roundsByGame[game] ?? 0) + 1;
     state.balance = r.balanceAfter;

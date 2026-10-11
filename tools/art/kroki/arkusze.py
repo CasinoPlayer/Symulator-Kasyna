@@ -55,6 +55,15 @@ def _grupuj_wiersze(ys: np.ndarray, wiersze: int) -> np.ndarray:
     return nr
 
 
+def _wyglada_na_podpis(sk: Skladowe, k: int, ziarno: int) -> bool:
+    """Plama ``k`` to raczej podpis niż kawałek elementu ``ziarno``: niska i szeroka (linijka tekstu, po domknięciu
+    litery zlewają się w jeden pasek), cała pod albo nad elementem i wyraźnie od niego mniejsza. ChatGPT często
+    dopisuje nazwy pod ikonami, choć prompt mówi „bez tekstu” — doklejony podpis zepsułby ikonę."""
+    w, h = sk.x1[k] - sk.x0[k], sk.y1[k] - sk.y0[k]
+    pod_albo_nad = sk.y0[k] >= sk.y1[ziarno] or sk.y1[k] <= sk.y0[ziarno]
+    return w >= 2.5 * h and pod_albo_nad and sk.pole[k] < 0.25 * sk.pole[ziarno]
+
+
 def tnij(rgba: np.ndarray, siatka: tuple[int, int], oczekiwane: int, czarne: bool, uwagi: list) -> list[Element | None]:
     """Zwraca listę elementów w kolejności komórek (wierszami). ``None`` = pusta komórka."""
     H, W = rgba.shape[:2]
@@ -72,11 +81,18 @@ def tnij(rgba: np.ndarray, siatka: tuple[int, int], oczekiwane: int, czarne: boo
         ziarna = duze[:oczekiwane]
         przydzial = {z: [z] for z in ziarna}
         srodki = {k: ((sk.x0[k] + sk.x1[k]) / 2, (sk.y0[k] + sk.y1[k]) / 2) for k in duze}
+        podpisy = 0
         for k in duze[oczekiwane:]:
             najbl = min(ziarna, key=lambda z: (srodki[z][0] - srodki[k][0]) ** 2 + (srodki[z][1] - srodki[k][1]) ** 2)
+            if _wyglada_na_podpis(sk, k, najbl):
+                podpisy += 1                                 # tekst pod/nad elementem nie należy do grafiki
+                continue
             przydzial[najbl].append(k)
-        if len(duze) > oczekiwane:
-            uwagi.append(("info", "Q13", f"połączono rozbite elementy arkusza ({len(duze)} plam → {oczekiwane})"))
+        if podpisy:
+            uwagi.append(("ostrzezenie", "Q13", f"pominięto {podpisy} podpis(y) pod/nad elementami arkusza "
+                                                "(ChatGPT dopisał tekst) — sprawdź komórki w raporcie"))
+        if len(duze) - podpisy > oczekiwane:
+            uwagi.append(("info", "Q13", f"połączono rozbite elementy arkusza ({len(duze) - podpisy} plam → {oczekiwane})"))
         elementy = []
         for z, czlonki in przydzial.items():
             m = sk.maska(czlonki) & maska

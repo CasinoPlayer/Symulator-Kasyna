@@ -95,18 +95,40 @@ def _okno_zamalowane(rgba: np.ndarray, uwagi: list):
     lab = rgb_do_lab(rgba[..., :3])
     srodek = lab[cy - 4:cy + 4, cx - 4:cx + 4].reshape(-1, 3).mean(0)
     podobne = (np.linalg.norm(lab - srodek, axis=-1) < 10) & (rgba[..., 3] > 0.5)
-    sk = Skladowe(podobne)
-    k = sk.etykiety[cy, cx]
-    if k == 0 or sk.brzeg[k]:
-        return None
-    x0, y0, x1, y1 = sk.x0[k], sk.y0[k], sk.x1[k], sk.y1[k]
-    prost = sk.pole[k] / float((x1 - x0) * (y1 - y0))
     pole_ramki = (xs.max() - xs.min()) * (ys.max() - ys.min())
-    if prost < 0.95 or (x1 - x0) * (y1 - y0) < 0.25 * pole_ramki:
+    for maska, opis in ((podobne, "okno było zamalowane"),
+                        (_okno_w_szachownicy(rgba, cx, cy, xs, ys), "okno miało narysowaną szachownicę")):
+        if maska is None:
+            continue
+        sk = Skladowe(maska)
+        k = sk.etykiety[cy, cx]
+        if k == 0 or sk.brzeg[k]:
+            continue
+        x0, y0, x1, y1 = sk.x0[k], sk.y0[k], sk.x1[k], sk.y1[k]
+        prost = sk.pole[k] / float((x1 - x0) * (y1 - y0))
+        if prost < 0.95 or (x1 - x0) * (y1 - y0) < 0.25 * pole_ramki:
+            continue
+        rgba[y0:y1, x0:x1, 3] = 0.0
+        uwagi.append(("ostrzezenie", "Q15", f"{opis} — wycięte automatycznie"))
+        return int(x0), int(y0), int(x1), int(y1)
+    return None
+
+
+def _okno_w_szachownicy(rgba: np.ndarray, cx: int, cy: int, xs: np.ndarray, ys: np.ndarray):
+    """Ramka z prawdziwą alfą NA ZEWNĄTRZ, ale z szachownicą narysowaną w oknie (częsta pomyłka generatora).
+    Szachownicę wykrywamy na wycinku ze środka ramki, a potem szukamy wszystkich pikseli zgodnych z tym wzorem."""
+    from .alfa import odleglosc_od_wzoru, wykryj_szachownice   # import lokalny: alfa nie zależy od geometrii
+    p = int(0.15 * min(xs.max() - xs.min(), ys.max() - ys.min()))
+    if p < 24:
         return None
-    rgba[y0:y1, x0:x1, 3] = 0.0
-    uwagi.append(("ostrzezenie", "Q15", "okno było zamalowane — wycięte automatycznie"))
-    return int(x0), int(y0), int(x1), int(y1)
+    y0, x0 = max(0, cy - p), max(0, cx - p)
+    s = wykryj_szachownice(rgba[y0:cy + p, x0:cx + p, :3])
+    if s is None or s.pewnosc < 0.8:
+        return None
+    s.x0 += x0                                   # faza wzoru we współrzędnych całego obrazu
+    s.y0 += y0
+    D, _ = odleglosc_od_wzoru(rgba[..., :3], s)
+    return (D <= 14 / 255) & (rgba[..., 3] > 0.5)
 
 
 def sprawdz_proporcje_okna(okno, siatka, uwagi):

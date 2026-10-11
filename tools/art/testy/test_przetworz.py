@@ -293,6 +293,124 @@ def test_skladowe():
     assert sk.n == 2 and sorted(sk.pole[1:].tolist()) == [42, 50] and sk.brzeg.sum() == 1
 
 
+# ------------------------------------------------------------------------------------------------
+# Dalsze typowe wady obrazów z ChatGPT (dopisane po recenzji pipeline'u)
+# ------------------------------------------------------------------------------------------------
+def test_ramka_alfa_do_krawedzi():
+    """Ramka z PRAWDZIWĄ alfą narysowana od brzegu do brzegu płótna: pas brzegowy jest kryjący, ale obraz ma
+    przezroczyste okno — to nadal prawdziwa alfa (wcześniej złota rama była wycinana jako „jednolite tło”)."""
+    im = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 1023, 1023], fill=(200, 160, 60, 255))
+    d.rectangle([150, 150, 873, 873], fill=(0, 0, 0, 0))
+    w = alfa.napraw_alfe(np.asarray(im, np.float32) / 255, "ramka")
+    uw = []
+    okno = geometria.wykryj_okno(w.rgba, uw)
+    print(f"    metoda={w.metoda} okno={okno}")
+    assert w.metoda == "alfa" and okno == (150, 150, 874, 874)
+
+
+def test_dziura_na_bialym_i_czarnym_tle():
+    """Dziura w uchwycie (≈ 1% kadru) na białym i prawie czarnym, zaszumionym tle musi stać się przezroczysta
+    (pętla anchu, przestrzeń między ogonkami wiśni) — wcześniej zostawała kryjącą plamą koloru tła."""
+    rgb, a = obiekt_ze_znana_alfa()
+    szum = np.random.default_rng(3).normal(0, 1.5 / 255, rgb.shape)
+    for nazwa, kolor, n in (("biale", 1.0, 0.0), ("czarne", 6 / 255, 1.0)):
+        I = np.clip(rgb * a[..., None] + kolor * (1 - a[..., None]) + szum * n, 0, 1)
+        w = alfa.napraw_alfe(np.concatenate([I, np.ones_like(a)[..., None]], -1).astype(np.float32), "obiekt")
+        sr, maks_tla = blad_alfy(w.rgba[..., 3], a)
+        print(f"    {nazwa}: błąd krawędzi {sr * 255:.1f}/255, maks α tła {maks_tla:.3f}")
+        assert maks_tla < 0.05 and sr * 255 < 8
+        assert any(u[1] == "Q06" and "dziury" in u[2] for u in w.uwagi), "brak informacji o wyciętej dziurze"
+
+
+def test_okno_ramki_z_szachownica():
+    """Prawdziwa alfa na zewnątrz ramki, ale w oknie generator narysował szachownicę."""
+    rgba = ramka_testowa()
+    rgba[120:320, 100:400, :3] = szachownica(1024, 20)[120:320, 100:400]
+    rgba[120:320, 100:400, 3] = 1
+    w = alfa.napraw_alfe(rgba, "ramka")
+    uw = []
+    okno = geometria.wykryj_okno(w.rgba, uw)
+    print(f"    okno={okno} uwagi={[u[2] for u in uw]}")
+    assert okno is not None and abs(okno[0] - 100) <= 2 and abs(okno[2] - 400) <= 2 and abs(okno[3] - 320) <= 2
+
+
+def test_arkusz_z_podpisami():
+    """ChatGPT dopisał nazwy pod ikonami — podpisy są pomijane, a ikony mają swój własny rozmiar."""
+    from PIL import ImageFont
+    im = Image.new("RGBA", (1536, 1024), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    f = ImageFont.load_default(size=28)
+    for r in range(3):
+        for c in range(4):
+            cx, cy = 192 + c * 384, 150 + r * 341
+            d.ellipse([cx - 110, cy - 110, cx + 110, cy + 110], fill=(245, 197, 66, 255))
+            d.text((cx - 50, cy + 130), "ikona", fill=(255, 255, 255, 255), font=f)
+    uw = []
+    el = arkusze.tnij(np.asarray(im, np.float32) / 255, (4, 3), 12, False, uw)
+    rozm = {(e.x1 - e.x0, e.y1 - e.y0) for e in el}
+    print(f"    rozmiary elementów: {rozm}, uwagi: {[u[2][:50] for u in uw]}")
+    assert rozm == {(221, 221)} and any(u[0] == "ostrzezenie" and u[1] == "Q13" for u in uw)
+
+
+def test_nieznane_nazwy_plikow():
+    """Q02: literówki i „przeróbki” nazw przy pobieraniu dostają podpowiedź zamiast cichego pominięcia."""
+    import przetworz
+    kat = WYNIKI / "zrodla_q02"
+    for f in ("s1/s1_sym_wisnia.png", "s1/S1-SYM-WILD (1).png", "global/s1_sym_bar.png", "s1/s1_sym_bar.v2.png",
+              "s2/s2_sym_a.png.png", "makiety/m01_lobby_desktop.png", "s3/README.md"):
+        p = kat / f
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(b"x")
+    kom = przetworz.nieznane_pliki(kat)
+    for k in kom:
+        print(f"    {k}")
+    tekst = "\n".join(kom)
+    assert len(kom) == 4, "poprawne pliki, makiety i README nie mogą być zgłaszane"
+    assert "s1_sym_wisnie.png" in tekst and "czy chodzi o: s1_sym_wild.png" in tekst
+    assert "przenieś do art/zrodla/s1/s1_sym_bar.png" in tekst and "czy chodzi o: s2_sym_a.png" in tekst
+
+
+def test_typ_pliku_i_tryby_obrazu():
+    """Q04: JPEG jako obraz ALFA → ostrzeżenie; wczytywanie trybów P (paleta), LA i 16-bit szarości."""
+    import przetworz
+    import katalog
+    p = WYNIKI / "s1_sym_wild.png"
+    Image.new("RGB", (64, 64), (255, 255, 255)).save(p, "JPEG")      # JPEG z rozszerzeniem .png
+    uw = []
+    przetworz.sprawdz_typ_pliku(katalog.PO_ID["s1_sym_wild"], p, uw)
+    assert uw and uw[0][1] == "Q04" and uw[0][0] == "ostrzezenie"
+    kolo = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    ImageDraw.Draw(kolo).ellipse([16, 16, 48, 48], fill=(250, 200, 50, 255))
+    kolo.convert("P", palette=Image.Palette.ADAPTIVE).save(WYNIKI / "paleta.png", transparency=0)
+    kolo.convert("LA").save(WYNIKI / "la.png")
+    Image.fromarray((np.linspace(0, 65535, 64 * 64).reshape(64, 64)).astype(np.uint16)).save(WYNIKI / "szary16.png")
+    for nazwa in ("paleta.png", "la.png"):
+        r = wczytaj_rgba(WYNIKI / nazwa)
+        assert r[0, 0, 3] == 0 and r[32, 32, 3] == 1, nazwa
+    s16 = wczytaj_rgba(WYNIKI / "szary16.png")
+    assert s16[0, 0, 0] < 0.01 and s16[-1, -1, 0] > 0.98 and 0.4 < s16[32, 0, 0] < 0.6, "16-bit: zła skala jasności"
+    print("    JPEG → Q04, tryby P / LA / 16-bit wczytane poprawnie")
+
+
+def test_fx_szum_i_przezroczystosc():
+    """Efekt CZARNE: tło z szumem (~4/255) staje się czystą czernią z zerową krawędzią; efekt oddany z kanałem
+    alfa (zamiast czerni) jest spłaszczany na czerń z ostrzeżeniem Q11."""
+    from kroki import fx
+    yy, xx = np.mgrid[0:512, 0:512] / 512
+    g = np.exp(-(((xx - .5) ** 2 + (yy - .5) ** 2) / 0.01))[..., None] * np.ones(3)
+    I = np.clip(g + 4 / 255 + np.random.default_rng(5).normal(0, 2 / 255, g.shape), 0, 1)
+    uw = []
+    out = fx.przygotuj_fx(np.concatenate([I, np.ones_like(I[..., :1])], -1).astype(np.float32), uw, srodek=True)
+    brzeg = max(out[0, :, :3].max(), out[-1, :, :3].max(), out[:, 0, :3].max(), out[:, -1, :3].max())
+    assert brzeg * 255 < 0.5 and np.median(out[..., :3]) * 255 < 3 and not any(u[0] == "blad" for u in uw)
+    uw = []
+    out = fx.przygotuj_fx(np.concatenate([np.ones_like(g), g[..., :1]], -1).astype(np.float32), uw)
+    assert out[256, 256, :3].min() > 0.95 and out[5, 5, :3].max() < 0.01 and any(u[1] == "Q11" for u in uw)
+    print(f"    krawędź efektu {brzeg * 255:.2f}/255; alfa → czerń z ostrzeżeniem Q11")
+
+
 def test_calosc_pipeline():
     """Pełne uruchomienie przetworz.py na obrazach z wadami podłożonych jako „grafika z ChatGPT”."""
     import przetworz

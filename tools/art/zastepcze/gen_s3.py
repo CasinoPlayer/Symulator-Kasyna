@@ -19,25 +19,55 @@ def _render_sym(nazwa, poziom):
     return lambda: B.wpasuj(B.render(nazwa), S, S, WYP[poziom])
 
 
+def _widmo(t: np.ndarray) -> np.ndarray:
+    """Barwy tęczy dla t ∈ [0, 1) (koło barw HSV przy pełnym nasyceniu) — korona rozszczepionego światła."""
+    k = (t[..., None] * 6 + np.array([0.0, 4.0, 2.0])) % 6
+    return np.clip(np.minimum(k, 4 - k), 0, 1).astype(np.float32)
+
+
 def s3_sym_scatter():
+    """SCATTER „Serce Jaskini”: duży pryzmat stojący na tle tęczowej korony, w środku pulsujące turkusowe serce,
+    pod spodem szeroka tabliczka. Symbol specjalny musi wybijać się z planszy 6×5 już przy 64 px."""
     pr = B.przytnij_alfa(B.render("s3_pryzmat"))
-    pr = B.skaluj(pr, 820)
+    pr = B.skaluj(pr, int(pr.shape[1] * 700 / pr.shape[0]), 700)
     out = B.plotno(S, S)
-    cx, cy = S / 2, S * 0.42
-    # wachlarz tęczy rozszczepionego światła (w obrębie marginesu)
+    cx, cy = S / 2, S * 0.43
     yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
     r = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
-    a = np.degrees(np.arctan2(yy - cy, xx - cx))
-    t = np.clip((a + 8) / 42, 0, 1)
-    widmo = np.stack([np.interp(t, [0, 0.2, 0.4, 0.6, 0.8, 1], c) for c in
-                      ([1, 1, 1, 0.1, 0.2, 0.6], [0.2, 0.6, 1, 1, 0.6, 0.2], [0.3, 0.1, 0.2, 0.5, 1, 1])], -1)
-    wachlarz = ((a > -8) & (a < 34)).astype(np.float32) * B.smoothstep(r, 90, 170) * np.clip(1 - r / (0.47 * S), 0, 1) ** 0.7
-    wachlarz = B.rozmyj(wachlarz, 5)
-    warstwa = np.concatenate([np.clip(widmo * 0.85 + 0.15, 0, 1), np.clip(wachlarz, 0, 1)[..., None]], -1).astype(np.float32)
-    B.nakladaj(out, warstwa, 0, 0)
+    kat = np.arctan2(yy - cy, xx - cx)
+    # tęczowa korona z promieniami (alfa ≤ 0,45 — nie liczy się do „masy” symbolu przy normalizacji wielkości)
+    promienie = 0.55 + 0.45 * np.cos(kat * 14) ** 2
+    # wygaszenie przed 45% kadru: inaczej słaba poświata „rozpycha” prostokąt obiektu i pryzmat by zmalał
+    wygas = B.smoothstep(0.45 * S - r, 0, 90)
+    pierscien = np.exp(-((r - 290) / 90) ** 2) * promienie * wygas
+    korona = np.concatenate([_widmo((kat / (2 * np.pi) + 0.5) % 1.0) * 0.8 + 0.2,
+                             (np.clip(pierscien, 0, 1) * 0.45)[..., None]], -1).astype(np.float32)
+    B.nakladaj(out, korona, 0, 0)
+    poswiata = np.exp(-(r / 250) ** 2) * wygas
+    B.nakladaj(out, np.concatenate([np.broadcast_to(B.kol("#19F5D2"), (S, S, 3)), (poswiata * 0.4)[..., None]],
+                                   -1).astype(np.float32), 0, 0)
     B.nakladaj_srodek(out, pr, cx, cy)
-    B.nakladaj_srodek(out, tabliczka("SCATTER", 720, 170, font="marcellus", kolor_pola="#3A1670", rodzaj_liter="bialezloto",
-                                     gra="s3", teczowe=True), S / 2, S * 0.84)
+    # „serce” w środku kryształu: świecący kształt serca, mieszany jak światło (screen)
+    def serce(d, s_):
+        pts = []
+        for i in range(80):
+            t = 2 * np.pi * i / 80
+            x = 16 * np.sin(t) ** 3
+            y = 13 * np.cos(t) - 5 * np.cos(2 * t) - 2 * np.cos(3 * t) - np.cos(4 * t)
+            pts.append(((120 + x * 5.2) * s_, (110 - y * 5.2) * s_))
+        d.polygon(pts, fill=255)
+    m = B.maska_rysunku(240, 220, serce)
+    rdzen = np.zeros((220, 240, 4), np.float32)
+    rdzen[..., :3] = B.kol("#B8FFF2")
+    rdzen[..., 3] = np.clip(B.rozmyj(m, 3) * 0.95 + B.rozmyj(m, 22) * 0.8, 0, 1)
+    plotno_r = B.plotno(S, S)
+    B.nakladaj_srodek(plotno_r, rdzen, cx, cy + pr.shape[0] * 0.12)
+    B.nakladaj(out, plotno_r, 0, 0, tryb="screen")
+    for (bx, by, br) in ((cx, cy - pr.shape[0] * 0.47, 60), (cx - pr.shape[1] * 0.42, cy + pr.shape[0] * 0.42, 40),
+                         (cx + pr.shape[1] * 0.4, cy + pr.shape[0] * 0.4, 46)):
+        out = B.blysk(out, bx, by, br, 0.85)
+    B.nakladaj_srodek(out, tabliczka("SCATTER", 860, 210, font="marcellus", kolor_pola="#3A1670", rodzaj_liter="bialezloto",
+                                     gra="s3", teczowe=True), S / 2, S * 0.86)
     return B.wpasuj(out, S, S, WYP["specjalne"])
 
 

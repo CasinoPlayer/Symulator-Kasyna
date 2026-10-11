@@ -109,6 +109,9 @@ dla kolejnych bębnów, np. S1: `[[1,1,1],[0,0,0],[2,2,2],[0,1,2],[2,1,0]]`. Num
 `POST /api/slots/{code}/spins` — ciało `{ "bet": 100 }`, nagłówek `Idempotency-Key: <uuid>`.
 Ten sam klucz idempotencji zwraca tę samą rundę zamiast losować nową (podwójne kliknięcie, ponowienie po zerwanym
 połączeniu): identyczną treść i nagłówek `Idempotent-Replayed: true`. Format odpowiedzi — § 2.4.
+Okno idempotencji: serwer pamięta klucz 24 godziny (`kasyno.schedule.idempotency-key-ttl`), potem ten sam klucz
+oznacza już nową rundę. Tylko w profilu `demo` (nagrywanie filmików) żądanie może podać ziarno rundy w nagłówku
+`X-Demo-Seed` (szesnastkowo, jak pole `seed`); w pozostałych profilach serwer ten nagłówek ignoruje.
 
 ### 2.4. Odpowiedź spinu (kroki animacji) — wspólna dla wszystkich gier
 

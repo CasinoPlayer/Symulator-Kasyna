@@ -30,20 +30,25 @@ def _zapisz16(h: np.ndarray, nazwa: str) -> Path:
     return p
 
 
+def promien_cebuli(t: float) -> float:
+    """Promień sylwetki cebuli (0–1) na wysokości t (0 = korzeń, 1 = czubek): okrągła bulwa najszersza na ~40%
+    wysokości i wklęsła szyjka zwężająca się w czubek (wykładnik rośnie ku górze)."""
+    return max(0.0, math.sin(math.pi * t ** 0.78)) ** (1.0 + 1.4 * t * t)
+
+
 def sylwetka_cebuli_w_koronie(N: int, cx: float, cy: float, s: float):
-    """Maski (cebula, korona) w pikselach: wspólny motyw monety, emblematu i ornamentów."""
+    """Maski (cebula, korona) w pikselach: wspólny motyw monety, emblematu i ornamentów.
+
+    Korona siedzi na szyjce cebuli (czubek chowa się w obręczy), bulwa zajmuje dolne ~3/4 motywu — tak, żeby
+    nawet w małej skali sylwetka czytała się jako cebula, a nie „kopiec” przykryty koroną."""
     def cebula(d, k):
-        pts = []
-        for i in range(81):
-            t = i / 80
-            r = math.sin(math.pi * t ** 0.62) ** 1.05
-            pts.append((r, t))
-        lewa = [((cx - r * 0.5 * s) * k, (cy + 0.45 * s - t * 0.95 * s) * k) for r, t in pts]
-        prawa = [((cx + r * 0.5 * s) * k, (cy + 0.45 * s - t * 0.95 * s) * k) for r, t in reversed(pts)]
+        pts = [(promien_cebuli(t), t) for t in np.linspace(0.015, 1.0, 97)]     # od 0,015: krótki płaski korzeń
+        lewa = [((cx - r * 0.47 * s) * k, (cy + 0.44 * s - t * 0.86 * s) * k) for r, t in pts]
+        prawa = [((cx + r * 0.47 * s) * k, (cy + 0.44 * s - t * 0.86 * s) * k) for r, t in reversed(pts)]
         d.polygon(lewa + prawa, fill=255)
 
     def korona(d, k):
-        y0 = cy - 0.36 * s
+        y0 = cy - 0.33 * s
         w = 0.26 * s
         d.rectangle([(cx - w) * k, (y0 - 0.02 * s) * k, (cx + w) * k, (y0 + 0.07 * s) * k], fill=255)
         for i, dx in enumerate((-1, -0.5, 0, 0.5, 1)):
@@ -56,14 +61,27 @@ def sylwetka_cebuli_w_koronie(N: int, cx: float, cy: float, s: float):
     return B.maska_rysunku(N, N, cebula), B.maska_rysunku(N, N, korona)
 
 
+def poludniki_cebuli(N: int, cx: float, cy: float, s: float, szer: float):
+    """Maska „południków” — łukowatych żłobień od korzenia do szyjki, które w płaskorzeźbie najmocniej mówią
+    oku „to jest cebula” (współrzędne zgodne z ``sylwetka_cebuli_w_koronie``)."""
+    def rys(d, k):
+        for f in (-0.62, -0.24, 0.24, 0.62):
+            pts = [((cx + f * promien_cebuli(t) * 0.47 * s) * k, (cy + 0.44 * s - t * 0.86 * s) * k)
+                   for t in np.linspace(0.07, 0.8, 40)]
+            d.line(pts, fill=255, width=max(1, int(szer * k)), joint="curve")
+    return B.maska_rysunku(N, N, rys)
+
+
 def relief_monety(N: int = 1024) -> Path:
-    p = WYJ / "relief_monety.png"
-    if p.exists():
-        return p
+    # Bez pamięci podręcznej „jeśli plik istnieje”: liczenie trwa ~1 s, a stara mapa po zmianie kodu
+    # dawałaby po cichu stary relief.
     jedn = N / (2 * 0.82)                     # 1 jednostka modelu w pikselach
     c = N / 2
     ceb, kor = sylwetka_cebuli_w_koronie(N, c, c + 0.07 * jedn, 0.8 * jedn)
     h = B.kopula(ceb, 1.0, 0.12 * jedn) * 0.9
+    # żłobione południki bulwy (rozmyte, żeby światło „spływało” do rowka, a nie łamało się na schodku)
+    pol = B.rozmyj(poludniki_cebuli(N, c, c + 0.07 * jedn, 0.8 * jedn, 0.016 * jedn), 0.008 * jedn)
+    h = h - 0.28 * pol * ceb
     h = np.maximum(h, B.wysokosc(kor, 0.03 * jedn, "okragly") / (0.03 * jedn) * 0.75)
 
     def gwiazdy(d, k):
@@ -110,9 +128,6 @@ def relief_monety(N: int = 1024) -> Path:
 
 
 def sunburst(N: int = 512, promienie: int = 36) -> Path:
-    p = WYJ / "sunburst.png"
-    if p.exists():
-        return p
     yy, xx = np.mgrid[0:N, 0:N].astype(np.float32)
     a = np.arctan2(yy - N / 2, xx - N / 2)
     r = np.sqrt((xx - N / 2) ** 2 + (yy - N / 2) ** 2) / (N / 2)

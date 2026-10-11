@@ -84,6 +84,18 @@ Content-Type: application/json
   "bet": 1e999999999
 }
 
+### 12b. Profil demo (LAB 06): ziarno rundy z nagłówka X-Demo-Seed → "seed" w odpowiedzi = podany, ta sama runda
+# za każdym razem. Działa TYLKO po uruchomieniu z --spring.profiles.active=demo (kasyno.demo.allow-seed=true);
+# w profilu dev i prod nagłówek jest ignorowany i ziarno losuje SecureRandom.
+POST {{host}}/api/slots/zloty-faraon/spins
+Content-Type: application/json
+Idempotency-Key: {{$uuid}}
+X-Demo-Seed: 5f3a9c0e7b21d4a8
+
+{
+  "bet": 20
+}
+
 ### 13. Bonus ratunkowy przy pełnym saldzie: 409 RESCUE_NOT_AVAILABLE
 POST {{host}}/api/me/rescue
 

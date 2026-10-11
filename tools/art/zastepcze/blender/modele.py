@@ -121,7 +121,9 @@ def m_s1_cytryna():
     prof[0] = (0.0, -0.84)
     prof[-1] = (0.0, 0.84)
     c = tokarka("cytryna", prof, segmenty=96)
-    m = emalia("#FFCC1A", 0.32)
+    # cytrynowa żółć (odcień ~55°): przy bursztynowym #FFCC1A cytryna wyglądała jak mango i zlewała się
+    # barwą ze złotym dzwonkiem
+    m = emalia("#FFE52E", 0.3)
     nt = m.node_tree
     p = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
     sz = nt.nodes.new("ShaderNodeTexNoise")
@@ -577,9 +579,15 @@ def m_s2_relikwia():
 
 
 def m_s2_piramida():
-    nowa_scena((512, 512), 48, "s2_noc")
+    # światło pochodni z lewej (jak pozostałe symbole S2), słabe wypełnienie i rim: lewa-frontowa ściana świeci
+    # ciepłym piaskowcem, prawa tonie w cieniu — dwie ściany o różnej jasności czytają się jako bryła
+    nowa_scena((512, 512), 48, "s2")
+    bpy.data.objects["key"].data.color = lin("#FFDDB0")[:3]   # pochodnia bliżej bieli: piaskowiec, nie łosoś
+    bpy.data.objects["fill"].data.energy = 90
+    bpy.data.objects["rim"].data.energy = 220
+    bpy.data.objects["rim2"].data.energy = 120
     bm = bmesh.new()
-    s, h = 0.85, 0.95
+    s, h = 0.8, 1.22                     # stromo (stylizacja jak w slotach) — niska bryła czytała się jak dach
     v = [bm.verts.new(p) for p in ((-s, -s, 0), (s, -s, 0), (s, s, 0), (-s, s, 0), (0, 0, h))]
     bm.faces.new((v[0], v[1], v[4]))
     bm.faces.new((v[1], v[2], v[4]))
@@ -587,7 +595,7 @@ def m_s2_piramida():
     bm.faces.new((v[3], v[0], v[4]))
     bm.faces.new((v[3], v[2], v[1], v[0]))
     pir = z_bmesh("piramida", bm, gladko=False)
-    m = matowy("#C89B5A", 0.75, nazwa="piaskowiec")
+    m = matowy("#D9B47E", 0.75, nazwa="piaskowiec")      # jaśniejszy piasek: w świetle pochodni daje złoto, nie pomarańcz
     nt = m.node_tree
     p = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
     tc = nt.nodes.new("ShaderNodeTexCoord")
@@ -610,9 +618,11 @@ def m_s2_piramida():
     szczyt = z_bmesh("piramidion", bm, gladko=False)
     przypisz(szczyt, zloto(0.12))
     szczyt.scale = (1.04, 1.04, 1.0)
-    pir.rotation_euler = (0, 0, math.radians(32))
-    szczyt.rotation_euler = (0, 0, math.radians(32))
-    k = kamera(wzniesienie_st=16)
+    # obrót −24°: duża ściana frontowa patrzy w key light (lewa-góra), wąska prawa ściana w cień —
+    # kontrast dwóch ścian robi z trójkąta bryłę 3D
+    pir.rotation_euler = (0, 0, math.radians(-24))
+    szczyt.rotation_euler = (0, 0, math.radians(-24))
+    k = kamera(wzniesienie_st=9)
     kadruj(k, 0.05)
     return k
 
@@ -715,16 +725,12 @@ def m_s3_rubin():
 
 
 def m_s3_diament():
+    """Diament z PROFILU (korona z taflą, rondysta, ostry pawilon) — ikoniczna sylwetka „💎”. Widok z góry dawał
+    okrągły krążek w oprawie, łudząco podobny do kuli mnożnika (01 § 5.2, test sylwetek)."""
     _gem_scena()
-    g = klejnot("diament", obrys_okregu(16, 0.55), h_korony=0.2, tafla=0.52, h_pawilonu=0.5, pierscien_korony=0.8,
-                mat=szklo("#F4FDFF", 2.42, cienka_warstwa=300))
-    oprawa = torus("oprawa", 0.565, 0.03, (0, 0, -0.02), mat=_bz())
-    torus("obwodka", 0.565, 0.012, (0, 0, 0.012), mat=zloto(0.12))
-    rodzic = bpy.data.objects.new("rodzic", None)
-    bpy.context.scene.collection.objects.link(rodzic)
-    for ob in (g, oprawa, bpy.data.objects["obwodka"]):
-        ob.parent = rodzic
-    rodzic.rotation_euler = (math.radians(58), 0, 0)
+    g = klejnot("diament", obrys_okregu(24, 0.6), h_korony=0.26, tafla=0.56, h_pawilonu=0.66, pierscien_korony=0.8,
+                mat=szklo("#EEFBFF", 2.42, cienka_warstwa=320))
+    g.rotation_euler = (math.radians(16), 0, math.radians(7))     # tafla lekko do kamery — widać jej elipsę
     k = kamera()
     kadruj(k, 0.05)
     return k
@@ -756,26 +762,20 @@ def m_s3_cebula():
 
 
 def m_s3_pryzmat():
+    """Pryzmat „Serce Jaskini”: trójgraniasty kryształ stojący na podstawie (wierzchołek w górę);
+    poświatę „serca” i tęczę dokłada kompozycja w gen_s3 (łatwiej sterować kolorem niż światłem w szkle)."""
     _gem_scena()
-    bpy.ops.mesh.primitive_cylinder_add(vertices=3, radius=0.55, depth=0.5, location=(0, 0, 0.05))
+    bpy.ops.mesh.primitive_cylinder_add(vertices=3, radius=0.62, depth=0.42, location=(0, 0, 0))
     pr = bpy.context.object
     mod = pr.modifiers.new("faza", "BEVEL")
-    mod.width = 0.02
+    mod.width = 0.025
     mod.segments = 2
-    przypisz(pr, szklo("#F6FBFF", 1.65, cienka_warstwa=520))
-    # trójkątna ściana zwrócona do kamery, lekko obrócona — widać grubość bryły
-    pr.rotation_euler = (math.radians(70), math.radians(16), 0)
-    random.seed(4)
-    for i in range(16):
-        a = 2 * math.pi * i / 16
-        r = 0.86
-        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=0.045 + 0.03 * random.random(),
-                                              location=(r * math.cos(a), 0.2 * math.sin(a), 0.05 + r * 0.62 * math.sin(a)))
-        ob = bpy.context.object
-        ob.rotation_euler = (random.random() * 3, random.random() * 3, random.random() * 3)
-        przypisz(ob, szklo(random.choice(["#8FDFFF", "#E2B6FF", "#FFFFFF", "#9CFFE0", "#FFC2E6"]), 1.6))
+    przypisz(pr, szklo("#F2FBFF", 1.62, cienka_warstwa=520))
+    # pierwszy wierzchołek walca leży na osi +Y: obrót o 90° wokół X kładzie oś walca wzdłuż Y (trójkątna
+    # ściana do kamery) z wierzchołkiem w górę; skręt wokół Z pokazuje grubość bryły
+    pr.rotation_euler = (math.radians(90), 0, math.radians(14))
     k = kamera()
-    kadruj(k, 0.05)
+    kadruj(k, 0.05, obiekty=[pr])
     return k
 
 

@@ -1,31 +1,34 @@
 {
  "podsumowanie": {
   "pipeline": "1.0.0",
-  "uruchomienie": "2026-10-11T14:50:35Z",
-  "bledy": 0,
-  "ostrzezenia": 0,
-  "chatgpt": 0,
-  "zastepcze": 85
+  "uruchomienie": "2026-10-11T15:16:58Z",
+  "bledy": 2,
+  "ostrzezenia": 1,
+  "nieznane_pliki": [
+   "_do-poprawy/g_win_epic_EIG-zamiast-EPIC.png: plik zostanie pominięty — nieznane ID (lista: tools/art/katalog.py)"
+  ],
+  "chatgpt": 9,
+  "zastepcze": 76
  },
  "budzety": {
   "lobby": {
-   "desktop": 1999056,
-   "telefon": 1056618,
+   "desktop": 2065516,
+   "telefon": 1073736,
    "limit": 3000000
   },
   "s1": {
-   "desktop": 2321840,
-   "telefon": 1732532,
+   "desktop": 2414910,
+   "telefon": 1762112,
    "limit": 6000000
   },
   "s2": {
-   "desktop": 2514280,
-   "telefon": 1787850,
+   "desktop": 2670404,
+   "telefon": 1837020,
    "limit": 6000000
   },
   "s3": {
-   "desktop": 2586504,
-   "telefon": 1882838,
+   "desktop": 2669414,
+   "telefon": 1903304,
    "limit": 6000000
   }
  },
@@ -72,53 +75,53 @@
   },
   "g_moneta_przod": {
    "id": "g_moneta_przod",
-   "zrodlo": "zastepcze",
-   "plik_zrodla": "art/zastepcze/global/g_moneta_przod.png",
+   "zrodlo": "chatgpt",
+   "plik_zrodla": "art/zrodla/global/g_moneta_przod.png",
    "rozmiar": "256×256 +@2x",
-   "waga": 61556,
-   "waga_desktop": 43286,
-   "waga_telefon": 18270,
+   "waga": 107708,
+   "waga_desktop": 79566,
+   "waga_telefon": 28142,
    "pliki": {
-    "global/g_moneta_przod.webp": 14986,
-    "global/g_moneta_przod@2x.webp": 34568,
-    "global/g_moneta_przod.male.webp": 2398,
-    "global/g_moneta_przod.male@2x.webp": 6240,
-    "global/g_moneta_przod.ikona.webp": 886,
-    "global/g_moneta_przod.ikona@2x.webp": 2478
+    "global/g_moneta_przod.webp": 23902,
+    "global/g_moneta_przod@2x.webp": 67834,
+    "global/g_moneta_przod.male.webp": 3102,
+    "global/g_moneta_przod.male@2x.webp": 8636,
+    "global/g_moneta_przod.ikona.webp": 1138,
+    "global/g_moneta_przod.ikona@2x.webp": 3096
    },
    "uwagi": [],
    "metoda_alfy": "alfa"
   },
   "g_moneta_skos": {
    "id": "g_moneta_skos",
-   "zrodlo": "zastepcze",
-   "plik_zrodla": "art/zastepcze/global/g_moneta_skos.png",
+   "zrodlo": "chatgpt",
+   "plik_zrodla": "art/zrodla/global/g_moneta_skos.png",
    "rozmiar": "256×256 +@2x",
-   "waga": 51014,
-   "waga_desktop": 35988,
-   "waga_telefon": 15026,
+   "waga": 75220,
+   "waga_desktop": 55774,
+   "waga_telefon": 19446,
    "pliki": {
-    "global/g_moneta_skos.webp": 13122,
-    "global/g_moneta_skos@2x.webp": 30716,
-    "global/g_moneta_skos.male.webp": 1904,
-    "global/g_moneta_skos.male@2x.webp": 5272
+    "global/g_moneta_skos.webp": 17250,
+    "global/g_moneta_skos@2x.webp": 49618,
+    "global/g_moneta_skos.male.webp": 2196,
+    "global/g_moneta_skos.male@2x.webp": 6156
    },
    "uwagi": [],
    "metoda_alfy": "alfa"
   },
   "g_moneta_bok": {
    "id": "g_moneta_bok",
-   "zrodlo": "zastepcze",
-   "plik_zrodla": "art/zastepcze/global/g_moneta_bok.png",
+   "zrodlo": "chatgpt",
+   "plik_zrodla": "art/zrodla/global/g_moneta_bok.png",
    "rozmiar": "256×256 +@2x",
-   "waga": 29972,
-   "waga_desktop": 21420,
-   "waga_telefon": 8552,
+   "waga": 43192,
+   "waga_desktop": 31814,
+   "waga_telefon": 11378,
    "pliki": {
-    "global/g_moneta_bok.webp": 7530,
-    "global/g_moneta_bok@2x.webp": 18542,
-    "global/g_moneta_bok.male.webp": 1022,
-    "global/g_moneta_bok.male@2x.webp": 2878
+    "global/g_moneta_bok.webp": 10040,
+    "global/g_moneta_bok@2x.webp": 28092,
+    "global/g_moneta_bok.male.webp": 1338,
+    "global/g_moneta_bok.male@2x.webp": 3722
    },
    "uwagi": [],
    "metoda_alfy": "alfa"
@@ -678,24 +681,30 @@
   },
   "s1_sym_cytryna": {
    "id": "s1_sym_cytryna",
-   "zrodlo": "zastepcze",
-   "plik_zrodla": "art/zastepcze/s1/s1_sym_cytryna.png",
+   "zrodlo": "chatgpt",
+   "plik_zrodla": "art/zrodla/s1/s1_sym_cytryna.png",
    "rozmiar": "256×256 +@2x",
-   "waga": 41130,
-   "waga_desktop": 33314,
-   "waga_telefon": 24694,
+   "waga": 74818,
+   "waga_desktop": 59924,
+   "waga_telefon": 37156,
    "pliki": {
-    "s1/s1_sym_cytryna.webp": 5752,
-    "s1/s1_sym_cytryna@2x.webp": 12194,
-    "s1/s1_sym_cytryna.ruch1.webp": 4668,
-    "s1/s1_sym_cytryna.ruch2.webp": 4906,
-    "s1/s1_sym_cytryna.syl.webp": 2596,
-    "s1/s1_sym_cytryna.glow.webp": 2632,
-    "s1/s1_sym_cytryna.cien.webp": 2076,
-    "s1/s1_sym_cytryna.mini.webp": 2064,
-    "s1/s1_sym_cytryna.mini@2x.webp": 4242
+    "s1/s1_sym_cytryna.webp": 11702,
+    "s1/s1_sym_cytryna@2x.webp": 29720,
+    "s1/s1_sym_cytryna.ruch1.webp": 7034,
+    "s1/s1_sym_cytryna.ruch2.webp": 7222,
+    "s1/s1_sym_cytryna.syl.webp": 2850,
+    "s1/s1_sym_cytryna.glow.webp": 2782,
+    "s1/s1_sym_cytryna.cien.webp": 2374,
+    "s1/s1_sym_cytryna.mini.webp": 3192,
+    "s1/s1_sym_cytryna.mini@2x.webp": 7942
    },
-   "uwagi": [],
+   "uwagi": [
+    [
+     "blad",
+     "Q07",
+     "obiekt przycięty krawędzią obrazu"
+    ]
+   ],
    "metoda_alfy": "alfa"
   },
   "s1_sym_sliwka": {
@@ -1112,22 +1121,22 @@
   },
   "s2_sym_anubis": {
    "id": "s2_sym_anubis",
-   "zrodlo": "zastepcze",
-   "plik_zrodla": "art/zastepcze/s2/s2_sym_anubis.png",
+   "zrodlo": "chatgpt",
+   "plik_zrodla": "art/zrodla/s2/s2_sym_anubis.png",
    "rozmiar": "192×192 +@2x",
-   "waga": 49414,
-   "waga_desktop": 38848,
-   "waga_telefon": 25928,
+   "waga": 84666,
+   "waga_desktop": 67492,
+   "waga_telefon": 37190,
    "pliki": {
-    "s2/s2_sym_anubis.webp": 7286,
-    "s2/s2_sym_anubis@2x.webp": 16200,
-    "s2/s2_sym_anubis.ruch1.webp": 4692,
-    "s2/s2_sym_anubis.ruch2.webp": 4546,
-    "s2/s2_sym_anubis.syl.webp": 2368,
-    "s2/s2_sym_anubis.glow.webp": 2012,
-    "s2/s2_sym_anubis.cien.webp": 1744,
-    "s2/s2_sym_anubis.mini.webp": 3280,
-    "s2/s2_sym_anubis.mini@2x.webp": 7286
+    "s2/s2_sym_anubis.webp": 12490,
+    "s2/s2_sym_anubis@2x.webp": 34986,
+    "s2/s2_sym_anubis.ruch1.webp": 7054,
+    "s2/s2_sym_anubis.ruch2.webp": 6588,
+    "s2/s2_sym_anubis.syl.webp": 2460,
+    "s2/s2_sym_anubis.glow.webp": 2080,
+    "s2/s2_sym_anubis.cien.webp": 1834,
+    "s2/s2_sym_anubis.mini.webp": 4684,
+    "s2/s2_sym_anubis.mini@2x.webp": 12490
    },
    "uwagi": [],
    "metoda_alfy": "alfa"
@@ -1156,46 +1165,52 @@
   },
   "s2_sym_wild": {
    "id": "s2_sym_wild",
-   "zrodlo": "zastepcze",
-   "plik_zrodla": "art/zastepcze/s2/s2_sym_wild.png",
+   "zrodlo": "chatgpt",
+   "plik_zrodla": "art/zrodla/s2/s2_sym_wild.png",
    "rozmiar": "192×192 +@2x",
-   "waga": 59096,
-   "waga_desktop": 46664,
-   "waga_telefon": 30452,
+   "waga": 93700,
+   "waga_desktop": 75216,
+   "waga_telefon": 38992,
    "pliki": {
-    "s2/s2_sym_wild.webp": 8698,
-    "s2/s2_sym_wild@2x.webp": 19946,
-    "s2/s2_sym_wild.ruch1.webp": 5654,
-    "s2/s2_sym_wild.ruch2.webp": 5508,
-    "s2/s2_sym_wild.syl.webp": 3170,
-    "s2/s2_sym_wild.glow.webp": 1934,
-    "s2/s2_sym_wild.cien.webp": 1754,
-    "s2/s2_sym_wild.mini.webp": 3734,
-    "s2/s2_sym_wild.mini@2x.webp": 8698
+    "s2/s2_sym_wild.webp": 13578,
+    "s2/s2_sym_wild@2x.webp": 41130,
+    "s2/s2_sym_wild.ruch1.webp": 7366,
+    "s2/s2_sym_wild.ruch2.webp": 6886,
+    "s2/s2_sym_wild.syl.webp": 2342,
+    "s2/s2_sym_wild.glow.webp": 2070,
+    "s2/s2_sym_wild.cien.webp": 1844,
+    "s2/s2_sym_wild.mini.webp": 4906,
+    "s2/s2_sym_wild.mini@2x.webp": 13578
    },
    "uwagi": [],
    "metoda_alfy": "alfa"
   },
   "s2_sym_scatter": {
    "id": "s2_sym_scatter",
-   "zrodlo": "zastepcze",
-   "plik_zrodla": "art/zastepcze/s2/s2_sym_scatter.png",
+   "zrodlo": "chatgpt",
+   "plik_zrodla": "art/zrodla/s2/s2_sym_scatter.png",
    "rozmiar": "192×192 +@2x",
-   "waga": 40630,
-   "waga_desktop": 32356,
-   "waga_telefon": 22580,
+   "waga": 80774,
+   "waga_desktop": 64824,
+   "waga_telefon": 34830,
    "pliki": {
-    "s2/s2_sym_scatter.webp": 5568,
-    "s2/s2_sym_scatter@2x.webp": 12482,
-    "s2/s2_sym_scatter.ruch1.webp": 3978,
-    "s2/s2_sym_scatter.ruch2.webp": 4190,
-    "s2/s2_sym_scatter.syl.webp": 2634,
-    "s2/s2_sym_scatter.glow.webp": 1916,
-    "s2/s2_sym_scatter.cien.webp": 1588,
-    "s2/s2_sym_scatter.mini.webp": 2706,
-    "s2/s2_sym_scatter.mini@2x.webp": 5568
+    "s2/s2_sym_scatter.webp": 11658,
+    "s2/s2_sym_scatter@2x.webp": 34286,
+    "s2/s2_sym_scatter.ruch1.webp": 6276,
+    "s2/s2_sym_scatter.ruch2.webp": 5990,
+    "s2/s2_sym_scatter.syl.webp": 2562,
+    "s2/s2_sym_scatter.glow.webp": 2226,
+    "s2/s2_sym_scatter.cien.webp": 1826,
+    "s2/s2_sym_scatter.mini.webp": 4292,
+    "s2/s2_sym_scatter.mini@2x.webp": 11658
    },
-   "uwagi": [],
+   "uwagi": [
+    [
+     "blad",
+     "Q07",
+     "obiekt przycięty krawędzią obrazu"
+    ]
+   ],
    "metoda_alfy": "alfa"
   },
   "s2_wild_rozszerzony": {
@@ -1488,21 +1503,21 @@
   },
   "s3_sym_diament": {
    "id": "s3_sym_diament",
-   "zrodlo": "zastepcze",
-   "plik_zrodla": "art/zastepcze/s3/s3_sym_diament.png",
+   "zrodlo": "chatgpt",
+   "plik_zrodla": "art/zrodla/s3/s3_sym_diament.png",
    "rozmiar": "144×144 +@2x",
-   "waga": 52916,
-   "waga_desktop": 41192,
-   "waga_telefon": 20196,
+   "waga": 57364,
+   "waga_desktop": 44456,
+   "waga_telefon": 22514,
    "pliki": {
-    "s3/s3_sym_diament.webp": 7460,
-    "s3/s3_sym_diament@2x.webp": 21052,
-    "s3/s3_sym_diament.ruch1.webp": 4232,
-    "s3/s3_sym_diament.syl.webp": 1478,
-    "s3/s3_sym_diament.glow.webp": 1532,
-    "s3/s3_sym_diament.cien.webp": 1230,
-    "s3/s3_sym_diament.mini.webp": 4264,
-    "s3/s3_sym_diament.mini@2x.webp": 11668
+    "s3/s3_sym_diament.webp": 8200,
+    "s3/s3_sym_diament@2x.webp": 22370,
+    "s3/s3_sym_diament.ruch1.webp": 5028,
+    "s3/s3_sym_diament.syl.webp": 1712,
+    "s3/s3_sym_diament.glow.webp": 1576,
+    "s3/s3_sym_diament.cien.webp": 1290,
+    "s3/s3_sym_diament.mini.webp": 4708,
+    "s3/s3_sym_diament.mini@2x.webp": 12480
    },
    "uwagi": [],
    "metoda_alfy": "alfa"
@@ -1530,29 +1545,23 @@
   },
   "s3_sym_scatter": {
    "id": "s3_sym_scatter",
-   "zrodlo": "zastepcze",
-   "plik_zrodla": "art/zastepcze/s3/s3_sym_scatter.png",
+   "zrodlo": "chatgpt",
+   "plik_zrodla": "art/zrodla/s3/s3_sym_scatter.png",
    "rozmiar": "144×144 +@2x",
-   "waga": 56884,
-   "waga_desktop": 43344,
-   "waga_telefon": 27186,
+   "waga": 72774,
+   "waga_desktop": 56530,
+   "waga_telefon": 28216,
    "pliki": {
-    "s3/s3_sym_scatter.webp": 8302,
-    "s3/s3_sym_scatter@2x.webp": 18102,
-    "s3/s3_sym_scatter.ruch1.webp": 6666,
-    "s3/s3_sym_scatter.syl.webp": 3682,
-    "s3/s3_sym_scatter.glow.webp": 1744,
-    "s3/s3_sym_scatter.cien.webp": 1554,
-    "s3/s3_sym_scatter.mini.webp": 5238,
-    "s3/s3_sym_scatter.mini@2x.webp": 11596
+    "s3/s3_sym_scatter.webp": 10424,
+    "s3/s3_sym_scatter@2x.webp": 28674,
+    "s3/s3_sym_scatter.ruch1.webp": 6634,
+    "s3/s3_sym_scatter.syl.webp": 2204,
+    "s3/s3_sym_scatter.glow.webp": 1728,
+    "s3/s3_sym_scatter.cien.webp": 1406,
+    "s3/s3_sym_scatter.mini.webp": 5820,
+    "s3/s3_sym_scatter.mini@2x.webp": 15884
    },
-   "uwagi": [
-    [
-     "info",
-     "Q10",
-     "usunięto pyłki: 2"
-    ]
-   ],
+   "uwagi": [],
    "metoda_alfy": "alfa"
   },
   "s3_sym_mnoznik": {

@@ -78,6 +78,70 @@ def znajdz_zrodlo(a: katalog.Asset, ust: dict) -> tuple[Path | None, str, list]:
     return None, "brak", uwagi
 
 
+ROZSZERZENIA = (".png", ".webp", ".jpg", ".jpeg")
+POMIJANE_FOLDERY = {"makiety", "nieposortowane"}       # makiety nie trafiają do aplikacji; nieposortowane — 02 § 4.6
+
+
+def _znormalizuj_nazwe(nazwa: str) -> str:
+    """Typowe „przeróbki” nazwy przy pobieraniu: wielkie litery, myślniki/spacje zamiast podkreśleń, dopisek
+    „ (1)” albo „ copy”, podwójne rozszerzenie ``.png.png``. Zwraca rdzeń nazwy bez rozszerzenia."""
+    n = nazwa.lower()
+    while Path(n).suffix in ROZSZERZENIA:
+        n = n[: -len(Path(n).suffix)]
+    n = re.sub(r"\s*\(\d+\)$", "", n)
+    n = re.sub(r"[\s_-]*(copy|kopia)(\s*\d+)?$", "", n)
+    n = re.sub(r"\.v\d+$", "", n)
+    return re.sub(r"[\s-]+", "_", n.strip())
+
+
+def nieznane_pliki(zrodla: Path) -> list[str]:
+    """Q02: pliki w ``art/zrodla``, których pipeline NIE użyje (zła nazwa albo zły folder), z podpowiedzią.
+
+    Bez tej kontroli literówka w nazwie (``s1_sym_wisnia.png``) kończy się cichym użyciem grafiki zastępczej
+    i trudnym do zauważenia „dlaczego mój obraz się nie pojawił?”."""
+    import difflib
+    komunikaty = []
+    if not zrodla.is_dir():
+        return komunikaty
+    wszystkie_id = list(katalog.PO_ID)
+    for p in sorted(zrodla.rglob("*")):
+        if not p.is_file() or p.name.startswith(".") or p.suffix.lower() not in ROZSZERZENIA:
+            continue
+        rel = p.relative_to(zrodla)
+        folder = rel.parts[0] if len(rel.parts) > 1 else ""
+        if folder in POMIJANE_FOLDERY:
+            continue
+        m = re.fullmatch(r"(.+?)(?:\.v\d+)?\.(png|webp|jpe?g)", p.name, re.IGNORECASE)
+        rdzen = m.group(1).lower() if m else ""
+        a = katalog.PO_ID.get(rdzen)
+        if a and a.pakiet == folder and len(rel.parts) == 2:
+            continue                                         # poprawny plik — znajdz_zrodlo go użyje
+        if a:
+            komunikaty.append(f"{rel}: zły folder — przenieś do art/zrodla/{a.pakiet}/{p.name}")
+            continue
+        kand = _znormalizuj_nazwe(p.name)
+        if kand in katalog.PO_ID:
+            podp = [kand]
+        else:
+            podp = difflib.get_close_matches(kand, wszystkie_id, n=3, cutoff=0.6)
+        rada = f"czy chodzi o: {', '.join(i + '.png' for i in podp)}?" if podp else "nieznane ID (lista: tools/art/katalog.py)"
+        komunikaty.append(f"{rel}: plik zostanie pominięty — {rada}")
+    return komunikaty
+
+
+def sprawdz_typ_pliku(a: katalog.Asset, sciezka: Path, uwagi: list) -> None:
+    """Q04: prawdziwy format pliku (po sygnaturze, nie po rozszerzeniu). JPEG nie ma kanału alfa, a jego artefakty
+    kompresji przy krawędziach zostają w wyciętej alfie — dla obrazów ALFA prosimy o PNG."""
+    from PIL import Image
+    with Image.open(sciezka) as im:
+        fmt = (im.format or "").upper()
+    if fmt == "JPEG" and a.tlo == "ALFA":
+        uwagi.append(["ostrzezenie", "Q04", "plik to JPEG (bez przezroczystości, artefakty na krawędziach) — "
+                                            "pobierz z ChatGPT oryginalny PNG"])
+    elif fmt and fmt != "PNG" and sciezka.suffix.lower() == ".png":
+        uwagi.append(["info", "Q04", f"plik .png jest naprawdę w formacie {fmt}"])
+
+
 def sprawdz_wymiary(a: katalog.Asset, rgba: np.ndarray, uwagi: list) -> None:
     H, W = rgba.shape[:2]
     ew, eh = a.wymiary_zrodla
@@ -197,6 +261,8 @@ def przygotuj(a: katalog.Asset, ust: dict) -> Przygotowany | None:
     if sciezka is None:
         return Przygotowany(a, None, "brak", None, uwagi)
     rgba = wczytaj_rgba(sciezka)
+    if zrodlo == "chatgpt":
+        sprawdz_typ_pliku(a, sciezka, uwagi)
     sprawdz_wymiary(a, rgba, uwagi)
     metoda = ""
     if a.tlo == "ALFA":
@@ -920,9 +986,15 @@ def main(argv=None) -> int:
             else:
                 print(f"UWAGA Q30: {len(osierocone)} plików w assets/img bez wpisu w manifeście "
                       f"(np. {osierocone[0].relative_to(kat_img)}) — uruchom z --sprzataj")
-    for rel in [r for img in nowy["images"].values() for r in (img.get("src"), img.get("src2x")) if r]:
-        if not (kat_img / rel).exists():
-            print(f"BŁĄD Q30: w manifeście jest {rel}, ale pliku nie ma")
+    # brakujący plik z manifestu = zepsuty obrazek na froncie, więc to błąd wpływający na kod wyjścia
+    brakujace_pliki = 0
+    for img in nowy["images"].values():
+        sciezki = [img.get("src"), img.get("src2x")] + [v.get(k) for v in img.get("variants", {}).values()
+                                                        for k in ("src", "src2x")]
+        for rel in filter(None, sciezki):
+            if not (kat_img / rel).exists():
+                print(f"BŁĄD Q30: w manifeście jest {rel}, ale pliku nie ma")
+                brakujace_pliki += 1
 
     # --- raport ---
     kolej = {a.id: i for i, a in enumerate(katalog.ASSETY)}
@@ -943,8 +1015,13 @@ def main(argv=None) -> int:
     bud = raport.budzety(wszystkie, katalog.ASSETY, katalog.BUDZETY)
     czas = time.time() - t0
     raport.drukuj(wiersze, bud, czas)
-    bledy = sum(1 for w in wiersze.values() for u in w.uwagi if u[0] == "blad")
+    bledy = sum(1 for w in wiersze.values() for u in w.uwagi if u[0] == "blad") + brakujace_pliki
     ostrz = sum(1 for w in wiersze.values() for u in w.uwagi if u[0] == "ostrzezenie")
+    # --- Q02: pliki w art/zrodla, których pipeline nie użyje (literówka w nazwie, zły folder) ---
+    nieznane = nieznane_pliki(Path(arg.zrodla))
+    for k in nieznane:
+        print(f"UWAGA Q02: {k}")
+    ostrz += len(nieznane)
     for nazwa, b in bud.items():
         if b["desktop"] > b["limit"]:
             bledy += 1
@@ -952,7 +1029,7 @@ def main(argv=None) -> int:
         elif b["desktop"] >= 0.85 * b["limit"]:
             ostrz += 1
     podsumowanie = {"pipeline": WERSJA_PIPELINE, "uruchomienie": nowy["version"], "bledy": bledy,
-                    "ostrzezenia": ostrz,
+                    "ostrzezenia": ostrz, "nieznane_pliki": nieznane,
                     "chatgpt": sum(1 for w in wszystkie.values() if w.zrodlo == "chatgpt"),
                     "zastepcze": sum(1 for w in wszystkie.values() if w.zrodlo == "zastepcze")}
     kat_r = Path(arg.raport)
