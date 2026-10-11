@@ -1,56 +1,40 @@
 package pl.wsb.kasyno.slots.web;
 
-import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.swagger.v3.oas.annotations.media.Schema;
-import pl.wsb.kasyno.slots.application.SpinResult;
-import pl.wsb.kasyno.slots.domain.SpinStatus;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Odpowiedź na spin. Pole {@code result} to przebieg rundy wygenerowany przez silnik gry (kroki animacji:
- * obrót, linie, kaskady, darmowe spiny), wstawiony do JSON bez zmian ({@code @JsonRawValue}); jego dokładny
- * format opisuje {@code docs/projekt/07-gry-i-matematyka.md}. Pozostałe pola są wspólne dla wszystkich gier.
+ * Kształt odpowiedzi na spin (kontrakt API § 2.4) opisany typami Javy dla dokumentacji OpenAPI (Swagger UI).
  *
- * @param roundId    identyfikator rundy
- * @param gameCode   kod gry
- * @param bet        zakład
- * @param win        łączna wygrana rundy
- * @param multiplier wygrana jako wielokrotność zakładu
- * @param tier       poziom wygranej: {@code none}, {@code small}, {@code medium}, {@code big}, {@code mega},
- *                   {@code epic}, {@code ultra}
- * @param status     status rundy ({@code SETTLED})
- * @param balance    saldo po rundzie
- * @param replayed   {@code true}: odpowiedź na powtórzone żądanie z tym samym {@code Idempotency-Key}
- * @param result     przebieg rundy z silnika gry
- * @param createdAt  kiedy runda się rozpoczęła (UTC)
+ * <p>W działaniu kontroler <b>nie</b> buduje tego rekordu: wysyła dokument rundy zapisany w
+ * {@code spin_round.result_json} ({@code SpinDocument}), dzięki czemu powtórka z tym samym {@code Idempotency-Key}
+ * jest identyczna co do bajtu. Ten rekord istnieje, żeby Swagger pokazał pola i ich znaczenie zamiast „string”.
+ *
+ * @param roundId       identyfikator rundy
+ * @param gameCode      kod gry
+ * @param bet           zakład całkowity (pobrany raz, także gdy runda zawiera darmowe spiny)
+ * @param totalWin      suma wszystkich wygranych rundy
+ * @param multiplier    {@code totalWin / bet}
+ * @param tier          {@code none}, {@code small}, {@code medium}, {@code big}, {@code mega}, {@code epic}, {@code ultra}
+ * @param balanceBefore saldo przed pobraniem zakładu
+ * @param balanceAfter  saldo po zaksięgowaniu wygranej
+ * @param seed          ziarno losowania rundy (16 cyfr szesnastkowych)
+ * @param steps         kroki animacji: {@code spin}, {@code win}, {@code cascade}, {@code expandWild}, {@code feature},
+ *                      {@code applyMultiplier}, {@code freeSpinsStart}, {@code freeSpinsRetrigger}, {@code freeSpinsEnd}
  */
+@Schema(description = "Odpowiedź spinu: cała runda jako lista kroków animacji (docs/projekt/09 § 2.4)")
 public record SpinResponse(
-        Long roundId,
-        String gameCode,
-        BigDecimal bet,
-        BigDecimal win,
-        BigDecimal multiplier,
-        String tier,
-        SpinStatus status,
-        BigDecimal balance,
-        boolean replayed,
-        @JsonRawValue @Schema(type = "object", description = "Przebieg rundy (format: docs/projekt/07)") String result,
-        Instant createdAt) {
-
-    public static SpinResponse from(SpinResult result) {
-        return new SpinResponse(
-                result.roundId(),
-                result.gameCode(),
-                result.bet(),
-                result.win(),
-                result.multiplier(),
-                result.tier(),
-                result.status(),
-                result.balance(),
-                result.replayed(),
-                result.resultJson(),
-                result.createdAt());
-    }
+        @Schema(example = "1042") Long roundId,
+        @Schema(example = "zloty-faraon") String gameCode,
+        @Schema(example = "100") BigDecimal bet,
+        @Schema(example = "2350") BigDecimal totalWin,
+        @Schema(example = "23.5") BigDecimal multiplier,
+        @Schema(example = "big") String tier,
+        @Schema(example = "10000") BigDecimal balanceBefore,
+        @Schema(example = "12250") BigDecimal balanceAfter,
+        @Schema(example = "5f3a9c0e7b21d4a8") String seed,
+        @Schema(description = "Kroki animacji w kolejności odgrywania (pole type)") List<Map<String, Object>> steps) {
 }

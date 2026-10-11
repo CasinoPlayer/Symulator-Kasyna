@@ -1,5 +1,6 @@
 package pl.wsb.kasyno.slots.web;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import pl.wsb.kasyno.slots.domain.EngineType;
 import pl.wsb.kasyno.slots.domain.SlotMachine;
 import pl.wsb.kasyno.slots.domain.Volatility;
@@ -8,8 +9,9 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * Szczegóły gry ({@code GET /api/slots/{code}}): pola z listy gier plus tabela wypłat ({@code symbols})
- * i opis funkcji ({@code features}) do ekranu informacyjnego.
+ * Szczegóły gry ({@code GET /api/slots/{code}}): pola z listy gier plus tabela wypłat ({@code symbols}),
+ * opis funkcji ({@code features}) do ekranu informacyjnego i, dla gier liniowych, linie wygrywające
+ * ({@code paylines}: dla każdej linii indeksy rzędów kolejnych bębnów, 0 = górny; pole pomijane w grze klastrowej).
  */
 public record SlotDetailsResponse(
         String code,
@@ -23,6 +25,7 @@ public record SlotDetailsResponse(
         BigDecimal maxBet,
         BigDecimal targetRtp,
         Volatility volatility,
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<List<Integer>> paylines,
         List<SymbolResponse> symbols,
         List<String> features) {
 
@@ -39,6 +42,7 @@ public record SlotDetailsResponse(
                 machine.getMaxBet(),
                 machine.getTargetRtp(),
                 machine.getVolatility(),
+                machine.getPaylines() == null ? null : machine.getPaylines().asList(),
                 machine.getSymbols().stream().map(SymbolResponse::from).toList(),
                 machine.getFeatureList());
     }

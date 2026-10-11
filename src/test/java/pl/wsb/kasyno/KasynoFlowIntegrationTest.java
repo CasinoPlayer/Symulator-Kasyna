@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.convention.TestBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -21,6 +22,8 @@ import pl.wsb.kasyno.account.application.LoginService;
 import pl.wsb.kasyno.slots.application.SpinCommand;
 import pl.wsb.kasyno.slots.application.SpinService;
 import pl.wsb.kasyno.slots.application.engine.FakeSlotEngine;
+import pl.wsb.kasyno.slots.application.engine.SlotEngine;
+import pl.wsb.kasyno.slots.web.SlotController;
 import pl.wsb.kasyno.support.MutableClock;
 import pl.wsb.kasyno.wallet.api.WalletFacade;
 import pl.wsb.kasyno.wallet.domain.InsufficientFundsException;
@@ -39,6 +42,8 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -46,9 +51,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Test całej aplikacji (wszystkie warstwy, prawdziwa baza H2 w pamięci, {@code data.sql} z trzema automatami):
  * logowanie → bonus → spin → historia → ranking → raporty → bankructwo → bonus ratunkowy.
  *
- * <p>Prawdziwych silników gier jeszcze nie ma (osobny etap), więc dla gry {@code cebulowy-777} podpinamy
- * {@link FakeSlotEngine} z zaplanowanymi wygranymi. Zegar to {@link MutableClock}, żeby sprawdzić odliczanie
- * bonusu ratunkowego bez czekania 10 minut.
+ * <p>Żeby salda były przewidywalne, prawdziwy silnik gry {@code cebulowy-777} podmieniamy ({@code @TestBean})
+ * na {@link FakeSlotEngine} z zaplanowanymi wygranymi; prawdziwe silniki w pełnym przepływie sprawdza
+ * {@code SlotEnginesIntegrationTest}. Zegar to {@link MutableClock}, żeby sprawdzić odliczanie bonusu ratunkowego
+ * bez czekania 10 minut.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -59,13 +65,10 @@ class KasynoFlowIntegrationTest {
 
     private static final Instant START = Instant.parse("2026-10-11T12:00:00Z");
 
+    private static final FakeSlotEngine FAKE_CEBULOWY_ENGINE = new FakeSlotEngine("cebulowy-777");
+
     @TestConfiguration
     static class TestBeans {
-
-        @Bean
-        FakeSlotEngine fakeCebulowyEngine() {
-            return new FakeSlotEngine("cebulowy-777");
-        }
 
         /** {@code @Primary}: wygrywa z zegarem systemowym z {@code TimeConfig} przy wstrzykiwaniu {@code Clock}. */
         @Bean
@@ -75,10 +78,18 @@ class KasynoFlowIntegrationTest {
         }
     }
 
+    /** Bean {@code cebulowy777Engine} z {@code SlotEnginesConfig} zastąpiony fałszywym silnikiem. */
+    @TestBean(name = "cebulowy777Engine", methodName = "fakeCebulowyEngine")
+    private SlotEngine cebulowyEngine;
+
+    static SlotEngine fakeCebulowyEngine() {
+        return FAKE_CEBULOWY_ENGINE;
+    }
+
+    private final FakeSlotEngine engine = FAKE_CEBULOWY_ENGINE;
+
     @Autowired
     private MockMvc mvc;
-    @Autowired
-    private FakeSlotEngine engine;
     @Autowired
     private MutableClock clock;
     @Autowired
@@ -137,30 +148,28 @@ class KasynoFlowIntegrationTest {
         engine.willWin(2_000);
         MvcResult first = spin(session, "cebulowy-777", 100, "klucz-1")
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.win").value(2000))
+                .andExpect(jsonPath("$.totalWin").value(2000))
                 .andExpect(jsonPath("$.multiplier").value(20))
                 .andExpect(jsonPath("$.tier").value("big"))
-                .andExpect(jsonPath("$.status").value("SETTLED"))
-                .andExpect(jsonPath("$.balance").value(11900))
-                .andExpect(jsonPath("$.replayed").value(false))
-                .andExpect(jsonPath("$.result.engine").value("fake"))
+                .andExpect(jsonPath("$.balanceBefore").value(10000))
+                .andExpect(jsonPath("$.balanceAfter").value(11900))
+                .andExpect(jsonPath("$.seed").isString())
+                .andExpect(jsonPath("$.steps").isArray())
+                .andExpect(header().doesNotExist(SlotController.REPLAYED_HEADER))
                 .andReturn();
         long roundId = number(first, "$.roundId").longValue();
 
-        // podwójne kliknięcie: ten sam klucz → ta sama runda, bez drugiego zakładu
+        // podwójne kliknięcie: ten sam klucz → ta sama runda (identyczna odpowiedź), bez drugiego zakładu
         spin(session, "cebulowy-777", 100, "klucz-1")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.roundId").value(roundId))
-                .andExpect(jsonPath("$.replayed").value(true))
-                .andExpect(jsonPath("$.balance").value(11900));
+                .andExpect(header().string(SlotController.REPLAYED_HEADER, "true"))
+                .andExpect(content().string(first.getResponse().getContentAsString()));
         assertThat(engine.calls()).hasSize(1);
 
         spin(session, "cebulowy-777", 200, "klucz-1")
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("IDEMPOTENCY_CONFLICT"));
-        spin(session, "zloty-faraon", 20, null)
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.code").value("GAME_NOT_READY"));
         spin(session, "cebulowy-777", 7, null)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("BET_INVALID"));
@@ -168,6 +177,7 @@ class KasynoFlowIntegrationTest {
         mvc.perform(get("/api/me/history").session(session))
                 .andExpect(jsonPath("$.totalItems").value(1))
                 .andExpect(jsonPath("$.items[0].gameName").value("Cebulowy 777"))
+                .andExpect(jsonPath("$.items[0].status").value("SETTLED"))
                 .andExpect(jsonPath("$.items[0].win").value(2000));
         mvc.perform(get("/api/me/stats").session(session))
                 .andExpect(jsonPath("$[0].gameCode").value("cebulowy-777"))
@@ -306,7 +316,7 @@ class KasynoFlowIntegrationTest {
             MvcResult result = future.get(30, TimeUnit.SECONDS);
             assertThat(result.getResponse().getStatus()).isEqualTo(200);
             roundIds.add(number(result, "$.roundId").longValue());
-            boolean replayed = JsonPath.read(result.getResponse().getContentAsString(), "$.replayed");
+            boolean replayed = "true".equals(result.getResponse().getHeader(SlotController.REPLAYED_HEADER));
             fresh += replayed ? 0 : 1;
         }
         pool.shutdown();
@@ -379,7 +389,8 @@ class KasynoFlowIntegrationTest {
                 .andExpect(jsonPath("$[2].engineType").value("CLUSTER"));
         mvc.perform(get("/api/slots/zloty-faraon"))
                 .andExpect(jsonPath("$.name").value("Złoty Faraon"))
-                .andExpect(jsonPath("$.features.length()").value(5))
-                .andExpect(jsonPath("$.symbols").isArray());
+                .andExpect(jsonPath("$.features.length()").value(6))
+                .andExpect(jsonPath("$.symbols.length()").value(12))
+                .andExpect(jsonPath("$.paylines.length()").value(20));
     }
 }
