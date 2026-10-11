@@ -1047,9 +1047,13 @@ body.is-leaving::after { opacity: 1; pointer-events: auto; }
 }
 .features b { color: var(--gold-1); }
 
-.timeline { list-style: none; display: grid; gap: 14px; }
-.timeline li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; }
+/* Wspólna kolumna etykiet (subgrid): teksty wszystkich wpisów zaczynają się w jednej linii,
+   niezależnie od długości etykiety („LAB 01” / „Przed LAB 02”). */
+.timeline { list-style: none; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px 12px; }
+.timeline li { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: start; }
+.timeline__tag { justify-self: start; }
 @media (max-width: 480px) {
+  .timeline { grid-template-columns: minmax(0, 1fr); }
   .timeline li { grid-template-columns: minmax(0, 1fr); gap: 6px; justify-items: start; }
 }
 .timeline__tag {

@@ -8,6 +8,8 @@ target/
 # Narzędzia front-endu (tools/): zależności npm i zrzuty z testów e2e nie trafiają do repozytorium
 node_modules/
 tools/e2e/zrzuty/
+# Pipeline dźwięku: pliki pośrednie (WAV 24 bit, raport) — odtwarzalne skryptem tools/audio/generuj_wszystko.py
+tools/audio/build/
 # Skompilowany kod Pythona (skrypty tools/art, tools/audio) powstaje sam przy uruchomieniu
 __pycache__/
 *.pyc

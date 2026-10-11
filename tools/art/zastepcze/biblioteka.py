@@ -250,9 +250,9 @@ def bokeh(rgb: np.ndarray, punkty, seed: int = 3, tryb: str = "add") -> np.ndarr
             continue
         yy, xx = np.mgrid[y0:y1, x0:x1].astype(np.float32)
         d = np.sqrt((xx - x) ** 2 + (yy - y) ** 2) / r
-        dysk = smoothstep(1.0, 0.86, d)
-        brzeg = np.exp(-((d - 0.9) / 0.08) ** 2) * 0.35
-        warstwa[y0:y1, x0:x1] += (dysk * (0.55 + 0.45 * (1 - d * d).clip(0)) + brzeg)[..., None] * (kol(k) * j)
+        dysk = smoothstep(d, 1.0, 0.8)
+        brzeg = np.exp(-((d - 0.88) / 0.07) ** 2) * 0.12
+        warstwa[y0:y1, x0:x1] += (dysk * (0.75 + 0.25 * (1 - d * d).clip(0)) + brzeg)[..., None] * (kol(k) * j)
     return np.clip(rgb + warstwa, 0, 1) if tryb == "add" else 1 - (1 - rgb) * (1 - np.clip(warstwa, 0, 1))
 
 

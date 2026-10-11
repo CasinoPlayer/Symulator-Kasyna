@@ -1,0 +1,1216 @@
+{
+  "version": "f4d82fd320d0",
+  "sounds": {
+    "ui_hover": {
+      "webm": "ui_hover.webm",
+      "m4a": "ui_hover.m4a",
+      "loop": false,
+      "duration": 0.04,
+      "bus": "ui",
+      "channels": 1,
+      "gainDb": -16,
+      "priority": 1,
+      "maxVoices": 1,
+      "cooldownMs": 80,
+      "pitchCents": 30,
+      "gainJitterDb": 0.5,
+      "pack": "ui",
+      "packs": [
+        "ui"
+      ],
+      "source": "synteza"
+    },
+    "ui_klik": {
+      "webm": "ui_klik.webm",
+      "m4a": "ui_klik.m4a",
+      "loop": false,
+      "duration": 0.07,
+      "bus": "ui",
+      "channels": 1,
+      "gainDb": -8,
+      "priority": 3,
+      "pitchCents": 30,
+      "gainJitterDb": 0.5,
+      "pack": "ui",
+      "packs": [
+        "ui"
+      ],
+      "source": "synteza"
+    },
+    "ui_otworz": {
+      "webm": "ui_otworz.webm",
+      "m4a": "ui_otworz.m4a",
+      "loop": false,
+      "duration": 0.3,
+      "bus": "ui",
+      "channels": 1,
+      "gainDb": -10,
+      "priority": 3,
+      "pitchCents": 30,
+      "gainJitterDb": 0.5,
+      "pack": "ui",
+      "packs": [
+        "ui"
+      ],
+      "source": "synteza"
+    },
+    "ui_zamknij": {
+      "webm": "ui_zamknij.webm",
+      "m4a": "ui_zamknij.m4a",
+      "loop": false,
+      "duration": 0.24,
+      "bus": "ui",
+      "channels": 1,
+      "gainDb": -12,
+      "priority": 3,
+      "pitchCents": 30,
+      "gainJitterDb": 0.5,
+      "pack": "ui",
+      "packs": [
+        "ui"
+      ],
+      "source": "synteza"
+    },
+    "ui_blad": {
+      "webm": "ui_blad.webm",
+      "m4a": "ui_blad.m4a",
+      "loop": false,
+      "duration": 0.26,
+      "bus": "ui",
+      "channels": 1,
+      "gainDb": -8,
+      "priority": 4,
+      "pack": "ui",
+      "packs": [
+        "ui"
+      ],
+      "source": "synteza"
+    },
+    "ui_przelacznik": {
+      "webm": "ui_przelacznik.webm",
+      "m4a": "ui_przelacznik.m4a",
+      "loop": false,
+      "duration": 0.1,
+      "bus": "ui",
+      "channels": 1,
+      "gainDb": -10,
+      "priority": 3,
+      "pack": "ui",
+      "packs": [
+        "ui"
+      ],
+      "source": "synteza"
+    },
+    "ui_zaklad_gora": {
+      "webm": "ui_zaklad_gora.webm",
+      "m4a": "ui_zaklad_gora.m4a",
+      "loop": false,
+      "duration": 0.13,
+      "bus": "ui",
+      "channels": 1,
+      "gainDb": -9,
+      "priority": 3,
+      "pack": "ui",
+      "packs": [
+        "ui"
+      ],
+      "source": "synteza"
+    },
+    "ui_zaklad_dol": {
+      "webm": "ui_zaklad_dol.webm",
+      "m4a": "ui_zaklad_dol.m4a",
+      "loop": false,
+      "duration": 0.13,
+      "bus": "ui",
+      "channels": 1,
+      "gainDb": -10,
+      "priority": 3,
+      "pack": "ui",
+      "packs": [
+        "ui"
+      ],
+      "source": "synteza"
+    },
+    "sfx_logowanie": {
+      "webm": "sfx_logowanie.webm",
+      "m4a": "sfx_logowanie.m4a",
+      "loop": false,
+      "duration": 1.8,
+      "bus": "sfx",
+      "channels": 2,
+      "gainDb": -6,
+      "priority": 3,
+      "pack": "lobby",
+      "packs": [
+        "lobby"
+      ],
+      "source": "synteza"
+    },
+    "sfx_skrzynia_otwarcie": {
+      "webm": "sfx_skrzynia_otwarcie.webm",
+      "m4a": "sfx_skrzynia_otwarcie.m4a",
+      "loop": false,
+      "duration": 1.3,
+      "bus": "sfx",
+      "channels": 2,
+      "gainDb": -4,
+      "priority": 3,
+      "pack": "lobby",
+      "packs": [
+        "lobby",
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    },
+    "sfx_monety_fontanna": {
+      "webm": "sfx_monety_fontanna.webm",
+      "m4a": "sfx_monety_fontanna.m4a",
+      "loop": true,
+      "duration": 2.0,
+      "bus": "sfx",
+      "channels": 2,
+      "gainDb": -10,
+      "priority": 2,
+      "maxVoices": 1,
+      "loopStart": 0.0,
+      "loopEnd": 2.0,
+      "pack": "lobby",
+      "packs": [
+        "lobby",
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    },
+    "sfx_moneta_1": {
+      "webm": "sfx_moneta_1.webm",
+      "m4a": "sfx_moneta_1.m4a",
+      "loop": false,
+      "duration": 0.22,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -14,
+      "priority": 1,
+      "group": "moneta",
+      "maxVoices": 6,
+      "cooldownMs": 25,
+      "pitchCents": 5,
+      "gainJitterDb": 1,
+      "keyTrack": true,
+      "pack": "lobby",
+      "packs": [
+        "lobby",
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_moneta_2": {
+      "webm": "sfx_moneta_2.webm",
+      "m4a": "sfx_moneta_2.m4a",
+      "loop": false,
+      "duration": 0.21,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -14,
+      "priority": 1,
+      "group": "moneta",
+      "maxVoices": 6,
+      "cooldownMs": 25,
+      "pitchCents": 5,
+      "gainJitterDb": 1,
+      "keyTrack": true,
+      "pack": "lobby",
+      "packs": [
+        "lobby",
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_moneta_3": {
+      "webm": "sfx_moneta_3.webm",
+      "m4a": "sfx_moneta_3.m4a",
+      "loop": false,
+      "duration": 0.2,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -14,
+      "priority": 1,
+      "group": "moneta",
+      "maxVoices": 6,
+      "cooldownMs": 25,
+      "pitchCents": 5,
+      "gainJitterDb": 1,
+      "keyTrack": true,
+      "pack": "lobby",
+      "packs": [
+        "lobby",
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_moneta_4": {
+      "webm": "sfx_moneta_4.webm",
+      "m4a": "sfx_moneta_4.m4a",
+      "loop": false,
+      "duration": 0.19,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -14,
+      "priority": 1,
+      "group": "moneta",
+      "maxVoices": 6,
+      "cooldownMs": 25,
+      "pitchCents": 5,
+      "gainJitterDb": 1,
+      "keyTrack": true,
+      "pack": "lobby",
+      "packs": [
+        "lobby",
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_moneta_5": {
+      "webm": "sfx_moneta_5.webm",
+      "m4a": "sfx_moneta_5.m4a",
+      "loop": false,
+      "duration": 0.18,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -14,
+      "priority": 1,
+      "group": "moneta",
+      "maxVoices": 6,
+      "cooldownMs": 25,
+      "pitchCents": 5,
+      "gainJitterDb": 1,
+      "keyTrack": true,
+      "pack": "lobby",
+      "packs": [
+        "lobby",
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_licznik_tik": {
+      "webm": "sfx_licznik_tik.webm",
+      "m4a": "sfx_licznik_tik.m4a",
+      "loop": true,
+      "duration": 0.5,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -16,
+      "priority": 2,
+      "maxVoices": 1,
+      "keyTrack": true,
+      "loopStart": 0.0,
+      "loopEnd": 0.5,
+      "pack": "lobby",
+      "packs": [
+        "lobby",
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_licznik_koniec": {
+      "webm": "sfx_licznik_koniec.webm",
+      "m4a": "sfx_licznik_koniec.m4a",
+      "loop": false,
+      "duration": 0.8,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -8,
+      "priority": 3,
+      "pitchCents": 5,
+      "keyTrack": true,
+      "pack": "lobby",
+      "packs": [
+        "lobby",
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_saldo_puls": {
+      "webm": "sfx_saldo_puls.webm",
+      "m4a": "sfx_saldo_puls.m4a",
+      "loop": false,
+      "duration": 0.18,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -16,
+      "priority": 2,
+      "maxVoices": 1,
+      "cooldownMs": 150,
+      "pitchCents": 5,
+      "keyTrack": true,
+      "pack": "lobby",
+      "packs": [
+        "lobby",
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_bankrut": {
+      "webm": "sfx_bankrut.webm",
+      "m4a": "sfx_bankrut.m4a",
+      "loop": false,
+      "duration": 2.0,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -6,
+      "priority": 5,
+      "pack": "lobby",
+      "packs": [
+        "lobby",
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    },
+    "sfx_przejscie_whoosh": {
+      "webm": "sfx_przejscie_whoosh.webm",
+      "m4a": "sfx_przejscie_whoosh.m4a",
+      "loop": false,
+      "duration": 0.65,
+      "bus": "sfx",
+      "channels": 2,
+      "gainDb": -8,
+      "priority": 3,
+      "pitchCents": 100,
+      "gainJitterDb": 1.5,
+      "pack": "lobby",
+      "packs": [
+        "lobby",
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    },
+    "sfx_spin_start": {
+      "webm": "sfx_spin_start.webm",
+      "m4a": "sfx_spin_start.m4a",
+      "loop": false,
+      "duration": 0.38,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -8,
+      "priority": 4,
+      "pitchCents": 5,
+      "keyTrack": true,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_beben_petla_s1": {
+      "webm": "sfx_beben_petla_s1.webm",
+      "m4a": "sfx_beben_petla_s1.m4a",
+      "loop": true,
+      "duration": 1.0,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -16,
+      "priority": 2,
+      "maxVoices": 1,
+      "loopStart": 0.0,
+      "loopEnd": 1.0,
+      "pack": "s1",
+      "packs": [
+        "s1"
+      ],
+      "source": "synteza"
+    },
+    "sfx_beben_petla_s2": {
+      "webm": "sfx_beben_petla_s2.webm",
+      "m4a": "sfx_beben_petla_s2.m4a",
+      "loop": true,
+      "duration": 1.2,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -16,
+      "priority": 2,
+      "maxVoices": 1,
+      "loopStart": 0.0,
+      "loopEnd": 1.2,
+      "pack": "s2",
+      "packs": [
+        "s2"
+      ],
+      "source": "synteza"
+    },
+    "sfx_beben_stop_1": {
+      "webm": "sfx_beben_stop_1.webm",
+      "m4a": "sfx_beben_stop_1.m4a",
+      "loop": false,
+      "duration": 0.28,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -7,
+      "priority": 4,
+      "group": "beben_stop",
+      "maxVoices": 3,
+      "pitchCents": 5,
+      "gainJitterDb": 1,
+      "keyTrack": true,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_beben_stop_2": {
+      "webm": "sfx_beben_stop_2.webm",
+      "m4a": "sfx_beben_stop_2.m4a",
+      "loop": false,
+      "duration": 0.28,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -7,
+      "priority": 4,
+      "group": "beben_stop",
+      "maxVoices": 3,
+      "pitchCents": 5,
+      "gainJitterDb": 1,
+      "keyTrack": true,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_beben_stop_3": {
+      "webm": "sfx_beben_stop_3.webm",
+      "m4a": "sfx_beben_stop_3.m4a",
+      "loop": false,
+      "duration": 0.28,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -7,
+      "priority": 4,
+      "group": "beben_stop",
+      "maxVoices": 3,
+      "pitchCents": 5,
+      "gainJitterDb": 1,
+      "keyTrack": true,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_beben_stop_4": {
+      "webm": "sfx_beben_stop_4.webm",
+      "m4a": "sfx_beben_stop_4.m4a",
+      "loop": false,
+      "duration": 0.28,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -7,
+      "priority": 4,
+      "group": "beben_stop",
+      "maxVoices": 3,
+      "pitchCents": 5,
+      "gainJitterDb": 1,
+      "keyTrack": true,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_beben_stop_5": {
+      "webm": "sfx_beben_stop_5.webm",
+      "m4a": "sfx_beben_stop_5.m4a",
+      "loop": false,
+      "duration": 0.28,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -7,
+      "priority": 4,
+      "group": "beben_stop",
+      "maxVoices": 3,
+      "pitchCents": 5,
+      "gainJitterDb": 1,
+      "keyTrack": true,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_beben_stop_6": {
+      "webm": "sfx_beben_stop_6.webm",
+      "m4a": "sfx_beben_stop_6.m4a",
+      "loop": false,
+      "duration": 0.28,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -7,
+      "priority": 4,
+      "group": "beben_stop",
+      "maxVoices": 3,
+      "pitchCents": 5,
+      "gainJitterDb": 1,
+      "keyTrack": true,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_antycypacja_narastanie": {
+      "webm": "sfx_antycypacja_narastanie.webm",
+      "m4a": "sfx_antycypacja_narastanie.m4a",
+      "loop": false,
+      "duration": 1.2,
+      "bus": "sfx",
+      "channels": 2,
+      "gainDb": -6,
+      "priority": 4,
+      "pack": "gry-dalsze",
+      "packs": [
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    },
+    "sfx_bicie_serca": {
+      "webm": "sfx_bicie_serca.webm",
+      "m4a": "sfx_bicie_serca.m4a",
+      "loop": true,
+      "duration": 0.6,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -8,
+      "priority": 4,
+      "maxVoices": 1,
+      "loopStart": 0.0,
+      "loopEnd": 0.6,
+      "pack": "gry-dalsze",
+      "packs": [
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    },
+    "sfx_scatter_1": {
+      "webm": "sfx_scatter_1.webm",
+      "m4a": "sfx_scatter_1.m4a",
+      "loop": false,
+      "duration": 0.9,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -6,
+      "priority": 4,
+      "group": "scatter",
+      "maxVoices": 2,
+      "cooldownMs": 40,
+      "pitchCents": 5,
+      "keyTrack": true,
+      "syncPoint": 0.08,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_scatter_2": {
+      "webm": "sfx_scatter_2.webm",
+      "m4a": "sfx_scatter_2.m4a",
+      "loop": false,
+      "duration": 1.1,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -5,
+      "priority": 4,
+      "group": "scatter",
+      "maxVoices": 2,
+      "cooldownMs": 40,
+      "pitchCents": 5,
+      "keyTrack": true,
+      "syncPoint": 0.08,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_scatter_3": {
+      "webm": "sfx_scatter_3.webm",
+      "m4a": "sfx_scatter_3.m4a",
+      "loop": false,
+      "duration": 1.7,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -3,
+      "priority": 5,
+      "group": "scatter",
+      "maxVoices": 2,
+      "cooldownMs": 40,
+      "pitchCents": 5,
+      "keyTrack": true,
+      "syncPoint": 0.08,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_wild": {
+      "webm": "sfx_wild.webm",
+      "m4a": "sfx_wild.m4a",
+      "loop": false,
+      "duration": 1.0,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -5,
+      "priority": 4,
+      "maxVoices": 2,
+      "cooldownMs": 40,
+      "pitchCents": 5,
+      "keyTrack": true,
+      "syncPoint": 0.15,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_wygrana_small_1": {
+      "webm": "sfx_wygrana_small_1.webm",
+      "m4a": "sfx_wygrana_small_1.m4a",
+      "loop": false,
+      "duration": 0.7,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -9,
+      "priority": 4,
+      "pitchCents": 5,
+      "gainJitterDb": 1,
+      "keyTrack": true,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_wygrana_small_2": {
+      "webm": "sfx_wygrana_small_2.webm",
+      "m4a": "sfx_wygrana_small_2.m4a",
+      "loop": false,
+      "duration": 0.75,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -9,
+      "priority": 4,
+      "pitchCents": 5,
+      "gainJitterDb": 1,
+      "keyTrack": true,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_wygrana_small_3": {
+      "webm": "sfx_wygrana_small_3.webm",
+      "m4a": "sfx_wygrana_small_3.m4a",
+      "loop": false,
+      "duration": 0.8,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -9,
+      "priority": 4,
+      "pitchCents": 5,
+      "gainJitterDb": 1,
+      "keyTrack": true,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_wygrana_medium": {
+      "webm": "sfx_wygrana_medium.webm",
+      "m4a": "sfx_wygrana_medium.m4a",
+      "loop": false,
+      "duration": 1.6,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -6,
+      "priority": 4,
+      "pitchCents": 5,
+      "keyTrack": true,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_linia": {
+      "webm": "sfx_linia.webm",
+      "m4a": "sfx_linia.m4a",
+      "loop": false,
+      "duration": 0.34,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -12,
+      "priority": 3,
+      "maxVoices": 3,
+      "cooldownMs": 80,
+      "pack": "gry-krytyczne",
+      "packs": [
+        "gry-krytyczne"
+      ],
+      "source": "synteza"
+    },
+    "sfx_bigwin_wejscie": {
+      "webm": "sfx_bigwin_wejscie.webm",
+      "m4a": "sfx_bigwin_wejscie.m4a",
+      "loop": false,
+      "duration": 2.4,
+      "bus": "sfx",
+      "channels": 2,
+      "gainDb": -3,
+      "priority": 5,
+      "syncPoint": 0.3,
+      "pack": "gry-dalsze",
+      "packs": [
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    },
+    "sfx_poziom_w_gore": {
+      "webm": "sfx_poziom_w_gore.webm",
+      "m4a": "sfx_poziom_w_gore.m4a",
+      "loop": false,
+      "duration": 1.4,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -4,
+      "priority": 5,
+      "syncPoint": 0.25,
+      "pack": "gry-dalsze",
+      "packs": [
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    },
+    "sfx_bigwin_koniec": {
+      "webm": "sfx_bigwin_koniec.webm",
+      "m4a": "sfx_bigwin_koniec.m4a",
+      "loop": false,
+      "duration": 2.2,
+      "bus": "sfx",
+      "channels": 2,
+      "gainDb": -4,
+      "priority": 5,
+      "pack": "gry-dalsze",
+      "packs": [
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    },
+    "sfx_blysk": {
+      "webm": "sfx_blysk.webm",
+      "m4a": "sfx_blysk.m4a",
+      "loop": false,
+      "duration": 0.42,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -12,
+      "priority": 3,
+      "maxVoices": 2,
+      "cooldownMs": 333,
+      "pitchCents": 100,
+      "gainJitterDb": 1.5,
+      "syncPoint": 0.03,
+      "pack": "lobby",
+      "packs": [
+        "lobby",
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    },
+    "sfx_uderzenie_basu": {
+      "webm": "sfx_uderzenie_basu.webm",
+      "m4a": "sfx_uderzenie_basu.m4a",
+      "loop": false,
+      "duration": 1.0,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -5,
+      "priority": 4,
+      "pitchCents": 30,
+      "pack": "lobby",
+      "packs": [
+        "lobby",
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    },
+    "sfx_free_spins_start": {
+      "webm": "sfx_free_spins_start.webm",
+      "m4a": "sfx_free_spins_start.m4a",
+      "loop": false,
+      "duration": 3.2,
+      "bus": "sfx",
+      "channels": 2,
+      "gainDb": -3,
+      "priority": 5,
+      "keyTrack": true,
+      "syncPoint": 1.0,
+      "pack": "gry-dalsze",
+      "packs": [
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    },
+    "sfx_free_spins_koniec": {
+      "webm": "sfx_free_spins_koniec.webm",
+      "m4a": "sfx_free_spins_koniec.m4a",
+      "loop": false,
+      "duration": 2.4,
+      "bus": "sfx",
+      "channels": 2,
+      "gainDb": -5,
+      "priority": 5,
+      "keyTrack": true,
+      "pack": "gry-dalsze",
+      "packs": [
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    },
+    "sfx_s1_neon_bzyk": {
+      "webm": "sfx_s1_neon_bzyk.webm",
+      "m4a": "sfx_s1_neon_bzyk.m4a",
+      "loop": false,
+      "duration": 0.65,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -9,
+      "priority": 3,
+      "pitchCents": 20,
+      "pack": "s1",
+      "packs": [
+        "s1"
+      ],
+      "source": "synteza"
+    },
+    "sfx_s1_jackpot": {
+      "webm": "sfx_s1_jackpot.webm",
+      "m4a": "sfx_s1_jackpot.m4a",
+      "loop": false,
+      "duration": 4.0,
+      "bus": "sfx",
+      "channels": 2,
+      "gainDb": -3,
+      "priority": 5,
+      "syncPoint": 0.3,
+      "pack": "s1",
+      "packs": [
+        "s1"
+      ],
+      "source": "synteza"
+    },
+    "sfx_s2_wild_rozszerzenie": {
+      "webm": "sfx_s2_wild_rozszerzenie.webm",
+      "m4a": "sfx_s2_wild_rozszerzenie.m4a",
+      "loop": false,
+      "duration": 1.6,
+      "bus": "sfx",
+      "channels": 2,
+      "gainDb": -4,
+      "priority": 4,
+      "maxVoices": 2,
+      "syncPoint": 0.6,
+      "pack": "s2",
+      "packs": [
+        "s2"
+      ],
+      "source": "synteza"
+    },
+    "sfx_s2_gong": {
+      "webm": "sfx_s2_gong.webm",
+      "m4a": "sfx_s2_gong.m4a",
+      "loop": false,
+      "duration": 3.5,
+      "bus": "sfx",
+      "channels": 2,
+      "gainDb": -5,
+      "priority": 4,
+      "pack": "s2",
+      "packs": [
+        "s2"
+      ],
+      "source": "synteza"
+    },
+    "sfx_s3_pekniecie_1": {
+      "webm": "sfx_s3_pekniecie_1.webm",
+      "m4a": "sfx_s3_pekniecie_1.m4a",
+      "loop": false,
+      "duration": 0.6,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -10,
+      "priority": 3,
+      "group": "pekniecie",
+      "maxVoices": 3,
+      "cooldownMs": 25,
+      "pitchCents": 80,
+      "gainJitterDb": 1.5,
+      "pack": "s3",
+      "packs": [
+        "s3"
+      ],
+      "source": "synteza"
+    },
+    "sfx_s3_pekniecie_2": {
+      "webm": "sfx_s3_pekniecie_2.webm",
+      "m4a": "sfx_s3_pekniecie_2.m4a",
+      "loop": false,
+      "duration": 0.55,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -10,
+      "priority": 3,
+      "group": "pekniecie",
+      "maxVoices": 3,
+      "cooldownMs": 25,
+      "pitchCents": 80,
+      "gainJitterDb": 1.5,
+      "pack": "s3",
+      "packs": [
+        "s3"
+      ],
+      "source": "synteza"
+    },
+    "sfx_s3_pekniecie_3": {
+      "webm": "sfx_s3_pekniecie_3.webm",
+      "m4a": "sfx_s3_pekniecie_3.m4a",
+      "loop": false,
+      "duration": 0.5,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -10,
+      "priority": 3,
+      "group": "pekniecie",
+      "maxVoices": 3,
+      "cooldownMs": 25,
+      "pitchCents": 80,
+      "gainJitterDb": 1.5,
+      "pack": "s3",
+      "packs": [
+        "s3"
+      ],
+      "source": "synteza"
+    },
+    "sfx_s3_pekniecie_4": {
+      "webm": "sfx_s3_pekniecie_4.webm",
+      "m4a": "sfx_s3_pekniecie_4.m4a",
+      "loop": false,
+      "duration": 0.65,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -10,
+      "priority": 3,
+      "group": "pekniecie",
+      "maxVoices": 3,
+      "cooldownMs": 25,
+      "pitchCents": 80,
+      "gainJitterDb": 1.5,
+      "pack": "s3",
+      "packs": [
+        "s3"
+      ],
+      "source": "synteza"
+    },
+    "sfx_s3_opad": {
+      "webm": "sfx_s3_opad.webm",
+      "m4a": "sfx_s3_opad.m4a",
+      "loop": false,
+      "duration": 0.75,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -12,
+      "priority": 3,
+      "pitchCents": 5,
+      "pack": "s3",
+      "packs": [
+        "s3"
+      ],
+      "source": "synteza"
+    },
+    "sfx_s3_mnoznik": {
+      "webm": "sfx_s3_mnoznik.webm",
+      "m4a": "sfx_s3_mnoznik.m4a",
+      "loop": false,
+      "duration": 1.1,
+      "bus": "sfx",
+      "channels": 1,
+      "gainDb": -7,
+      "priority": 4,
+      "maxVoices": 2,
+      "pack": "s3",
+      "packs": [
+        "s3"
+      ],
+      "source": "synteza"
+    },
+    "sfx_s3_mnoznik_zbior": {
+      "webm": "sfx_s3_mnoznik_zbior.webm",
+      "m4a": "sfx_s3_mnoznik_zbior.m4a",
+      "loop": false,
+      "duration": 1.8,
+      "bus": "sfx",
+      "channels": 2,
+      "gainDb": -4,
+      "priority": 5,
+      "syncPoint": 0.9,
+      "pack": "s3",
+      "packs": [
+        "s3"
+      ],
+      "source": "synteza"
+    },
+    "mus_lobby": {
+      "webm": "mus_lobby.webm",
+      "m4a": "mus_lobby.m4a",
+      "loop": true,
+      "duration": 40.0,
+      "bus": "music",
+      "channels": 2,
+      "gainDb": 0.0,
+      "bpm": 96,
+      "beatsPerBar": 4,
+      "loopStart": 0.0,
+      "loopEnd": 40.0,
+      "pack": "lobby",
+      "packs": [
+        "lobby"
+      ],
+      "source": "synteza"
+    },
+    "mus_s1": {
+      "webm": "mus_s1.webm",
+      "m4a": "mus_s1.m4a",
+      "loop": true,
+      "duration": 32.0,
+      "bus": "music",
+      "channels": 2,
+      "gainDb": 0.0,
+      "bpm": 120,
+      "beatsPerBar": 4,
+      "loopStart": 0.0,
+      "loopEnd": 32.0,
+      "pack": "s1",
+      "packs": [
+        "s1"
+      ],
+      "source": "synteza"
+    },
+    "mus_s2": {
+      "webm": "mus_s2.webm",
+      "m4a": "mus_s2.m4a",
+      "loop": true,
+      "duration": 38.4,
+      "bus": "music",
+      "channels": 2,
+      "gainDb": 0.0,
+      "bpm": 100,
+      "beatsPerBar": 4,
+      "loopStart": 0.0,
+      "loopEnd": 38.4,
+      "pack": "s2",
+      "packs": [
+        "s2"
+      ],
+      "source": "synteza"
+    },
+    "mus_s2_fs": {
+      "webm": "mus_s2_fs.webm",
+      "m4a": "mus_s2_fs.m4a",
+      "loop": true,
+      "duration": 38.4,
+      "bus": "music",
+      "channels": 2,
+      "gainDb": 0.0,
+      "bpm": 100,
+      "beatsPerBar": 4,
+      "loopStart": 0.0,
+      "loopEnd": 38.4,
+      "pack": "s2",
+      "packs": [
+        "s2"
+      ],
+      "source": "synteza"
+    },
+    "mus_s3": {
+      "webm": "mus_s3.webm",
+      "m4a": "mus_s3.m4a",
+      "loop": true,
+      "duration": 32.0,
+      "bus": "music",
+      "channels": 2,
+      "gainDb": 0.0,
+      "bpm": 90,
+      "beatsPerBar": 4,
+      "loopStart": 0.0,
+      "loopEnd": 32.0,
+      "pack": "s3",
+      "packs": [
+        "s3"
+      ],
+      "source": "synteza"
+    },
+    "mus_s3_fs": {
+      "webm": "mus_s3_fs.webm",
+      "m4a": "mus_s3_fs.m4a",
+      "loop": true,
+      "duration": 32.0,
+      "bus": "music",
+      "channels": 2,
+      "gainDb": 0.0,
+      "bpm": 90,
+      "beatsPerBar": 4,
+      "loopStart": 0.0,
+      "loopEnd": 32.0,
+      "pack": "s3",
+      "packs": [
+        "s3"
+      ],
+      "source": "synteza"
+    },
+    "mus_bigwin": {
+      "webm": "mus_bigwin.webm",
+      "m4a": "mus_bigwin.m4a",
+      "loop": true,
+      "duration": 15.0,
+      "bus": "music",
+      "channels": 2,
+      "gainDb": 0.0,
+      "bpm": 128,
+      "beatsPerBar": 4,
+      "loopStart": 0.0,
+      "loopEnd": 15.0,
+      "pack": "gry-dalsze",
+      "packs": [
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    },
+    "mus_napiecie": {
+      "webm": "mus_napiecie.webm",
+      "m4a": "mus_napiecie.m4a",
+      "loop": true,
+      "duration": 8.0,
+      "bus": "music",
+      "channels": 2,
+      "gainDb": -6,
+      "loopStart": 0.0,
+      "loopEnd": 8.0,
+      "pack": "gry-dalsze",
+      "packs": [
+        "gry-dalsze"
+      ],
+      "source": "synteza"
+    }
+  }
+}

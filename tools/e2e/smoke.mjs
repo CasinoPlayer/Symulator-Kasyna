@@ -100,6 +100,54 @@ async function balanceText(page, selector = '#saldo .balance-pill__value') {
   return norm(await page.textContent(selector));
 }
 
+/**
+ * Strażnik płynności: wszystkie animacje CSS (@keyframes) działające w tej chwili na stronie mogą zmieniać tylko
+ * właściwości, które liczy kompozytor (transform, translate, rotate, scale, opacity). Animacja np. box-shadow
+ * albo background-position przemalowuje element w każdej klatce — na słabym telefonie to gubienie klatek.
+ * Krótkich przejść stanu (transition przy najechaniu, pasek po przewinięciu) nie liczymy: trwają ≤ 320 ms
+ * i dzieją się raz, a nie w pętli. Zwraca listę naruszeń w postaci „nazwa: właściwości”.
+ */
+async function nonCompositedAnimations(page) {
+  return page.evaluate(() => {
+    const allowed = new Set(['transform', 'translate', 'rotate', 'scale', 'opacity', 'offset', 'easing', 'composite', 'computedOffset']);
+    return document.getAnimations().filter((a) => a.animationName).flatMap((a) => {
+      const props = new Set((a.effect?.getKeyframes?.() ?? []).flatMap((k) => Object.keys(k)));
+      const bad = [...props].filter((p) => !allowed.has(p));
+      return bad.length ? [`${a.animationName ?? a.transitionProperty ?? 'animacja'}: ${bad.join(', ')}`] : [];
+    });
+  });
+}
+
+/** Czy elementy paska górnego (z rzeczywistą szerokością tekstu, nie tylko pudełek) nie nachodzą na siebie. */
+async function topbarProblems(page) {
+  return page.evaluate(() => {
+    const visible = (el) => el && el.getClientRects().length > 0;
+    // zasięg = pudełko elementu ∪ WIDOCZNY tekst (tekst może wylać się poza skurczony kontener); pomijamy
+    // tekst .sr-only — jest przycięty do 1 px, ale jego geometria „wystaje” i dawała fałszywe alarmy
+    const extent = (el) => {
+      const box = el.getBoundingClientRect();
+      let { left, right } = box;
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        if (!node.textContent.trim() || node.parentElement.closest('.sr-only, [hidden]')) continue;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        for (const r of range.getClientRects()) {
+          left = Math.min(left, r.left);
+          right = Math.max(right, r.right);
+        }
+      }
+      return { left, right };
+    };
+    const parts = ['.brand', '.topnav', '#btn-zaloguj', '#saldo', '#btn-menu'].map((s) => document.querySelector(s)).filter(visible).map(extent);
+    const problems = [];
+    for (let i = 1; i < parts.length; i++) if (parts[i].left < parts[i - 1].right - 0.5) problems.push('nachodzenie');
+    if (parts.at(-1).right > window.innerWidth) problems.push('wychodzi poza ekran');
+    if (document.documentElement.scrollWidth > document.documentElement.clientWidth) problems.push('poziome przewijanie');
+    return problems;
+  });
+}
+
 async function login(page, nick) {
   await page.click('#btn-zaloguj');
   await page.waitForSelector('#modal-logowanie.is-open');
@@ -124,6 +172,15 @@ async function main() {
     const box = await page.locator('#btn-zaloguj').boundingBox();
     const topRight = box && box.x + box.width >= vp.width * 0.72 && box.y < 90 && box.x + box.width <= vp.width;
     check(`„Zaloguj” w prawym górnym rogu @${vp.width}px`, topRight, box ? `x=${Math.round(box.x)} y=${Math.round(box.y)} w=${Math.round(box.width)}` : 'brak przycisku');
+    const badAnims = await nonCompositedAnimations(page);
+    check(`animacje tylko transform/opacity @${vp.width}px`, badAnims.length === 0, badAnims.join(' | '));
+    // ≤ 900 px kafle są karuzelą (na tablecie trzy kolumny były za ciasne), od 901 px — siatką 3 kolumn
+    const tiles = await page.evaluate(() => {
+      const list = document.querySelector('#kafle');
+      return { carousel: list.scrollWidth > list.clientWidth + 1, width: Math.round(list.querySelector('.tile').getBoundingClientRect().width) };
+    });
+    if (vp.width <= 900) check(`kafle jako karuzela z czytelnymi kaflami @${vp.width}px`, tiles.carousel && tiles.width >= 220, `szerokość kafla ${tiles.width}px`);
+    else check(`kafle w siatce 3 kolumn @${vp.width}px`, !tiles.carousel, `szerokość kafla ${tiles.width}px`);
     await shot(page, `lobby-${vp.name}-calosc`, true);
     await context.close();
   }
@@ -192,14 +249,48 @@ async function main() {
     check(`po logowaniu saldo 10 000 widoczne @${vp.width}px`, balance === '10 000' && await page.isVisible('#saldo'), balance);
     const toastText = norm(await page.textContent('.toast-region').catch(() => ''));
     check(`toast „Witaj, ${nick}!” @${vp.width}px`, toastText.includes(`Witaj, ${nick}!`), toastText.slice(0, 80));
+    // „Zaloguj” zniknął po zalogowaniu — fokus nie może spaść na <body> (użytkownik klawiatury zaczynałby od początku)
+    const focused = await page.evaluate(() => document.activeElement?.id || document.activeElement?.tagName);
+    check(`fokus po zalogowaniu na menu gracza @${vp.width}px`, focused === 'btn-menu', focused);
     await page.waitForTimeout(400);
     await shot(page, `zalogowany-${vp.name}`);
 
     await page.click('#btn-menu');
     await page.waitForSelector('#menu-gracza:not([hidden])');
     await page.waitForTimeout(350); // animacja otwarcia menu
+    const covered = await page.evaluate(() => {
+      const menu = document.querySelector('#menu-gracza').getBoundingClientRect();
+      return [...document.querySelectorAll('.toast')].some((t) => {
+        const r = t.getBoundingClientRect();
+        return r.left < menu.right && r.right > menu.left && r.top < menu.bottom && r.bottom > menu.top;
+      });
+    });
+    check(`powiadomienie nie zasłania menu gracza @${vp.width}px`, !covered);
     await shot(page, `menu-gracza-${vp.name}`);
     await page.keyboard.press('Escape');
+    // wzorzec „menu button”: Tab z otwartego menu zamyka je (menu nie zostaje otwarte za plecami użytkownika)
+    await page.focus('#btn-menu');
+    await page.keyboard.press('Enter');
+    await page.waitForSelector('#menu-gracza:not([hidden])');
+    await page.keyboard.press('Tab');
+    check(`Tab zamyka menu gracza @${vp.width}px`, await page.isHidden('#menu-gracza'));
+
+    if (vp.name === '1366') {
+      // pasek górny po zalogowaniu (duże saldo i najdłuższa nazwa ustawiamy w DOM — liczy się sam układ)
+      await page.evaluate(() => {
+        document.querySelector('#saldo .balance-pill__value').textContent = '1 234 567';
+        document.querySelector('#nick-gracza').textContent = 'Żółwiowski_Mistr';
+      });
+      const bad = [];
+      for (const w of [320, 360, 400, 440, 490, 520, 560, 640, 660, 700, 740, 820, 900, 1000, 1100, 1200, 1280, 1320, 1440]) {
+        await page.setViewportSize({ width: w, height: 800 });
+        await page.waitForTimeout(40);
+        const problems = await topbarProblems(page);
+        if (problems.length) bad.push(`${w}px: ${problems.join(', ')}`);
+      }
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      check('pasek górny po zalogowaniu bez nachodzenia (320–1440 px, duże saldo, długa nazwa)', bad.length === 0, bad.join(' | '));
+    }
 
     // odświeżenie strony przywraca sesję (GET /api/me)
     await page.reload({ waitUntil: 'load' });
@@ -227,6 +318,16 @@ async function main() {
         await page.waitForTimeout(600);
         const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         check(`strona gry bez poziomego przewijania @${w}×${h}`, over <= 0, over > 0 ? `nadmiar ${over}px` : '');
+        // napis nad planszą mieści się w scenie i nie nachodzi na SPIN; SPIN nie wychodzi poza ekran
+        const layout = await page.evaluate(() => {
+          const r = (s) => document.querySelector(s).getBoundingClientRect();
+          const note = r('#scena-opis');
+          const stage = r('#scena');
+          const spin = r('#btn-spin');
+          const apart = note.bottom <= spin.top || note.top >= spin.bottom || note.right <= spin.left || note.left >= spin.right;
+          return { noteOk: note.top >= stage.top && note.bottom <= stage.bottom && apart, spinOk: spin.bottom <= innerHeight && spin.top >= 0 };
+        });
+        check(`strona gry: napis i SPIN bez nachodzenia @${w}×${h}`, layout.noteOk && layout.spinOk, JSON.stringify(layout));
         await shot(page, name);
       }
       for (const code of ['zloty-faraon', 'krysztalowa-kaskada']) {
@@ -274,6 +375,18 @@ async function main() {
       await page.waitForSelector('#ratunek:not([hidden])', { timeout: 5000 }).catch(() => {});
       check('bankructwo: widoczny przycisk „Odbierz 10 000 cebulionów”', await page.isVisible('#btn-ratunek') && norm(await page.textContent('#btn-ratunek')).includes('Odbierz 10 000'));
       await page.waitForTimeout(700);
+      // bankrut na telefonie: przycisk bonusu ma być widoczny BEZ przewijania (390×844 i najmniejszy 320×640)
+      for (const [w, h] of [[390, 844], [320, 640]]) {
+        await page.setViewportSize({ width: w, height: h });
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+        await page.waitForTimeout(150);
+        const r = await page.locator('#btn-ratunek').boundingBox();
+        check(`bankructwo: przycisk bonusu widoczny bez przewijania @${w}×${h}`, r && r.y + r.height <= h, r ? `dół przycisku ${Math.round(r.y + r.height)}px` : '');
+      }
+      await page.setViewportSize({ width: 390, height: 844 });
+      check('bankructwo: „Graj teraz” schowane (grać i tak się nie da)', await page.isHidden('#cta-glowne'));
+      const badAnims = await nonCompositedAnimations(page);
+      check('bankructwo: poświata bonusu tylko transform/opacity', badAnims.length === 0, badAnims.join(' | '));
       await shot(page, 'bankructwo-390');
       await page.click('#btn-ratunek');
       await page.waitForSelector('.reward', { state: 'detached', timeout: 10_000 }).catch(() => {});
@@ -295,6 +408,12 @@ async function main() {
       await page.waitForSelector('.history__row', { timeout: 4000 }).catch(() => {});
       await page.waitForTimeout(450);
       check('historia gry pokazuje rundy', await page.locator('.history__row').count() > 0);
+      // atrapa: 14 rund, w tym 2 × medium i 2 × big; rundy 'none'/'small' nie dostają odznaki („Wygrana ×0” to był błąd)
+      const badges = await page.evaluate(() => ({
+        all: document.querySelectorAll('.history .tier').length,
+        none: document.querySelectorAll('.history .tier--none, .history .tier--small').length,
+      }));
+      check('historia: odznaki tylko dla wygranych ≥ 5× (bez „none”)', badges.all === 4 && badges.none === 0, JSON.stringify(badges));
       await shot(page, 'historia-390');
     }
     await context.close();
@@ -322,6 +441,12 @@ async function main() {
     await page.waitForTimeout(600);
     check('reduced motion: bez sekwencji, saldo od razu 10 000', (await page.locator('.reward').count()) === 0 && (await balanceText(page)) === '10 000');
     await shot(page, 'reduced-motion-390');
+    // wylogowanie: „Wyloguj” znika razem z menu — fokus ma trafić na „Zaloguj”, a nie spaść na <body>
+    await page.click('#btn-menu');
+    await page.click('#menu-wyloguj');
+    await page.waitForSelector('#btn-zaloguj:not([hidden])', { timeout: 4000 }).catch(() => {});
+    const afterLogout = await page.evaluate(() => document.activeElement?.id || document.activeElement?.tagName);
+    check('po wylogowaniu fokus na „Zaloguj”', afterLogout === 'btn-zaloguj', afterLogout);
     await context.close();
   }
 

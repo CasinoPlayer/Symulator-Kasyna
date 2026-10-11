@@ -94,14 +94,19 @@ def szew_petli(x: np.ndarray, okno: float = 0.02) -> dict:
     rms = np.sqrt(np.mean(x ** 2)) + 1e-12
     skok = np.abs(x[:, 0] - x[:, -1]).max()
     okno_h = np.hanning(w)
-    A = np.abs(np.fft.rfft(x[:, n - w:] * okno_h, axis=1)).mean(axis=0) + 1e-9
-    B = np.abs(np.fft.rfft(x[:, :w] * okno_h, axis=1)).mean(axis=0) + 1e-9
-    waga = (A + B) / (A + B).sum()
-    roznica = float(np.sum(waga * np.abs(20 * np.log10(A / B))))
+
+    def roznica_widm(przed, po):
+        A = np.abs(np.fft.rfft(przed * okno_h, axis=1)).mean(axis=0) + 1e-9
+        B = np.abs(np.fft.rfft(po * okno_h, axis=1)).mean(axis=0) + 1e-9
+        waga = (A + B) / (A + B).sum()
+        return float(np.sum(waga * np.abs(20 * np.log10(A / B))))
+
+    p = n // 2                                                     # odniesienie: ta sama miara w środku pętli
     return {
         "skok_db": dsp.na_db(skok / rms),
         "wsp_predykcji": float(e_szew / (e_tlo + 1e-12)),
-        "roznica_widma_db": roznica,
+        "roznica_widma_db": roznica_widm(x[:, n - w:], x[:, :w]),
+        "roznica_widma_srodek_db": roznica_widm(x[:, p - w:p], x[:, p:p + w]),
     }
 
 

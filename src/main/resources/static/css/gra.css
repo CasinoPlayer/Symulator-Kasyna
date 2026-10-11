@@ -127,8 +127,9 @@ body.game-page { overscroll-behavior: none; }
   padding: 4px 12px;
   line-height: 1.35;
   text-align: center;
-  white-space: normal;
+  white-space: nowrap;
 }
+@media (max-width: 420px) { .stage__note { font-size: var(--fs-2xs); } }
 
 /* Ekran ładowania (E20): emblemat, nazwa gry, pasek postępu, hasło. */
 .loader {
