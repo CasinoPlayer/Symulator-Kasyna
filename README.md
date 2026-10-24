@@ -3,6 +3,9 @@
 Symulator kasyna na wirtualne cebuliony: **Cebulowy 777**, **Złoty Faraon** i **Kryształowa Kaskada**.
 Spring Boot / Java 21 oblicza wyniki, a PixiJS odtwarza rundy, wygrane i bonusy w przeglądarce.
 
+**Wersja online: <https://cebulion-casino.onrender.com>** (Render.com, wdrażana automatycznie po każdym pushu na `main`;
+plan darmowy usypia usługę po ok. 15 minutach bez ruchu, więc pierwsze wejście po przerwie trwa ok. minuty).
+
 ## Szybki start
 
 - Bez IntelliJ i bez Mavena (Windows): dwuklik **`Uruchom-projekt.bat`**. Skrypt sam znajdzie Javę 21
@@ -19,8 +22,8 @@ GitHub Pages hostuje tylko statyczne strony, a Cebulion Casino to serwer Spring 
   `.devcontainer/devcontainer.json` instaluje Javę 21, sama uruchamia aplikację i otwiera port 8080 w przeglądarce
   (adres `*.app.github.dev`). Udostępnienie innym: zakładka *PORTS* → 8080 → *Port Visibility → Public*.
   Konto osobiste ma darmowy miesięczny limit godzin; nieużywany codespace usypia się sam.
-- **Render.com** (stały adres w internecie): *render.com → zaloguj przez GitHub → New → Blueprint →* to repozytorium
-  *→ Apply*. Render czyta `render.yaml`, buduje obraz z `Dockerfile` i wdraża każdy push na `main`. Plan darmowy
+- **Render.com** (stały adres w internecie, u nas: <https://cebulion-casino.onrender.com>):
+  *render.com → zaloguj przez GitHub → New → Blueprint →* to repozytorium *→ Apply*. Render czyta `render.yaml`, buduje obraz z `Dockerfile` i wdraża każdy push na `main`. Plan darmowy
   usypia usługę po ok. 15 minutach bez ruchu (pierwsze wejście budzi ją ok. minuty), a baza wraca wtedy do `data.sql`.
 - Testy backendu: `mvn -B verify -Dlab=1`.
 - Szczegóły profili, bazy i testów: [instrukcja uruchomienia](docs/obrona/00-uruchomienie.md).
