@@ -1,0 +1,24 @@
+// GitHub Codespaces: aplikacja w chmurze GitHuba, bez instalowania niczego na komputerze.
+// github.com → repozytorium → Code → Codespaces → Create codespace on main. Po zbudowaniu środowiska aplikacja
+// startuje sama (./mvnw spring-boot:run), a port 8080 otwiera się w przeglądarce pod adresem *.app.github.dev.
+// Udostępnienie innym: zakładka PORTS → port 8080 → Port Visibility → Public.
+{
+  "name": "Cebulion Casino",
+  "image": "mcr.microsoft.com/devcontainers/java:1-21-bookworm",
+  "forwardPorts": [8080],
+  "portsAttributes": {
+    "8080": {
+      "label": "Cebulion Casino",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  // raz, przy tworzeniu: Maven Wrapper pobiera Mavena i biblioteki, żeby pierwszy start był szybszy
+  "postCreateCommand": "./mvnw -B -ntp -q dependency:go-offline",
+  // przy każdym otwarciu codespace: start aplikacji w terminalu (zatrzymanie: Ctrl+C)
+  "postAttachCommand": "./mvnw -B -ntp spring-boot:run",
+  "customizations": {
+    "vscode": {
+      "extensions": ["vscjava.vscode-java-pack", "vmware.vscode-boot-dev-pack"]
+    }
+  }
+}

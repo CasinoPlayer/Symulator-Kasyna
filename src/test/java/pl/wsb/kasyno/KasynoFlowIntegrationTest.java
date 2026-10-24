@@ -199,17 +199,16 @@ class KasynoFlowIntegrationTest {
                 .andExpect(jsonPath("$.items[1].amount").value(-100))
                 .andExpect(jsonPath("$.items[2].type").value("WELCOME_BONUS"));
 
+        // w rankingu są też gracze pokazowi z data.sql (LAB 02), więc szukamy wpisu gracza po nicku
         mvc.perform(get("/api/leaderboard").param("type", "biggest-win"))
                 .andExpect(jsonPath("$[0].rank").value(1))
-                .andExpect(jsonPath("$[0].nick").value("Gracz_Testowy"))
-                .andExpect(jsonPath("$[0].value").value(2000))
-                .andExpect(jsonPath("$[0].gameCode").value("cebulowy-777"));
+                .andExpect(jsonPath("$[?(@.nick == 'Gracz_Testowy')].value").value(2000))
+                .andExpect(jsonPath("$[?(@.nick == 'Gracz_Testowy')].gameCode").value("cebulowy-777"));
         mvc.perform(get("/api/leaderboard").param("type", "balance"))
                 .andExpect(jsonPath("$[0].value").isNumber());
         mvc.perform(get("/api/feed/big-wins"))
-                .andExpect(jsonPath("$[0].nick").value("Gracz_Testowy"))
-                .andExpect(jsonPath("$[0].gameName").value("Cebulowy 777"))
-                .andExpect(jsonPath("$[0].tier").value("big"));
+                .andExpect(jsonPath("$[?(@.nick == 'Gracz_Testowy')].gameName").value("Cebulowy 777"))
+                .andExpect(jsonPath("$[?(@.nick == 'Gracz_Testowy')].tier").value("big"));
 
         mvc.perform(get("/api/reports/popular-games"))
                 .andExpect(jsonPath("$[0].gameCode").value("cebulowy-777"));

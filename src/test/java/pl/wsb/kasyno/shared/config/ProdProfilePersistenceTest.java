@@ -54,11 +54,15 @@ class ProdProfilePersistenceTest {
         Long playerId;
         BigDecimal balance;
         int accountsAfterFirstStart;
+        int roundsAfterFirstStart;
         try (ConfigurableApplicationContext first = startProd(dir, false)) {
             assertThat(count(first, "slot_machine")).isEqualTo(3);
             assertThat(count(first, "slot_symbol")).isPositive();
             accountsAfterFirstStart = count(first, "user_account");
             assertThat(accountsAfterFirstStart).isGreaterThanOrEqualTo(7);
+            // historia graczy pokazowych z data.sql (LAB 02); po restarcie nie może się podwoić
+            roundsAfterFirstStart = count(first, "spin_round");
+            assertThat(roundsAfterFirstStart).isGreaterThanOrEqualTo(3);
 
             playerId = first.getBean(LoginService.class).login("Trwaly_Gracz").playerId();
             first.getBean(SpinService.class).spin(new SpinCommand(playerId, "cebulowy-777", Money.of(100), "k1"));
@@ -68,7 +72,7 @@ class ProdProfilePersistenceTest {
         try (ConfigurableApplicationContext second = startProd(dir, false)) {
             assertThat(count(second, "slot_machine")).isEqualTo(3);
             assertThat(count(second, "user_account")).isEqualTo(accountsAfterFirstStart + 1);
-            assertThat(count(second, "spin_round")).isEqualTo(1);
+            assertThat(count(second, "spin_round")).isEqualTo(roundsAfterFirstStart + 1);
             assertThat(second.getBean(WalletFacade.class).balance(playerId)).isEqualByComparingTo(balance);
             assertThat(second.getBean(StarterDataLoader.class).loadIfEmpty()).isFalse();
         }

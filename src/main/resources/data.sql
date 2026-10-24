@@ -101,3 +101,90 @@ insert into slot_symbol (slot_machine_id, code, kind, weight, pays, sort_order) 
     ((select id from slot_machine where code = 'krysztalowa-kaskada'), 'cebula', 'NORMAL', 50, '5:4.5,6:6,7:7,8:9,9:12,10:14,12:30,15:60,20:180,25:600', 7),
     ((select id from slot_machine where code = 'krysztalowa-kaskada'), 'scatter', 'SCATTER', 24, '4:5,5:10,6:100', 8),
     ((select id from slot_machine where code = 'krysztalowa-kaskada'), 'mnoznik', 'MULTIPLIER', 128, null, 9);
+
+-- =====================================================================================================
+-- LAB 02 (R2.03): historia gry trzech graczy pokazowych, czyli kont zespołu. Każda tabela ma co najmniej 3 wiersze.
+-- Rundy są prawdziwe: silnik jest deterministyczny, więc ziarno (seed) i zakład wyznaczają wynik. Ziarna
+-- wybraliśmy tak jak w profilu demo (nagłówek X-Demo-Seed), a kwoty to dokładnie to, co silnik dla nich liczy.
+-- Pilnuje tego StarterDataConsistencyTest, który sprawdza też salda portfeli i statystyki graczy.
+-- result_json zostaje pusty: przebieg rundy silnik odtwarza z ziarna, a powtórka odpowiedzi po Idempotency-Key
+-- dotyczy tylko rund rozegranych przez API.
+-- Czasy liczone od chwili startu aplikacji, żeby lobby pokazywało świeże wygrane.
+-- =====================================================================================================
+
+-- spin_round: sześć rozliczonych rund (SETTLED); multiplier = total_win / bet, tier według progów WinTier
+insert into spin_round (user_id, slot_machine_id, bet, total_win, multiplier, tier, status, seed,
+                        result_json, idempotency_key, created_at, settled_at) values
+    ((select id from user_account where email = 's428425@student.wroclaw.merito.pl'),
+     (select id from slot_machine where code = 'cebulowy-777'),        100,     0,   0.00, 'NONE',  'SETTLED',   2,
+     null, null, current_timestamp - interval '55' minute, current_timestamp - interval '55' minute),
+    ((select id from user_account where email = 's428425@student.wroclaw.merito.pl'),
+     (select id from slot_machine where code = 'zloty-faraon'),        200,  8740,  43.70, 'MEGA',  'SETTLED',  53,
+     null, null, current_timestamp - interval '50' minute, current_timestamp - interval '50' minute),
+    ((select id from user_account where email = 's433776@student.wroclaw.merito.pl'),
+     (select id from slot_machine where code = 'krysztalowa-kaskada'), 100, 11870, 118.70, 'ULTRA', 'SETTLED', 308,
+     null, null, current_timestamp - interval '40' minute, current_timestamp - interval '40' minute),
+    ((select id from user_account where email = 's433776@student.wroclaw.merito.pl'),
+     (select id from slot_machine where code = 'cebulowy-777'),         50,   100,   2.00, 'SMALL', 'SETTLED',  25,
+     null, null, current_timestamp - interval '35' minute, current_timestamp - interval '35' minute),
+    ((select id from user_account where email = 's156704@student.wroclaw.merito.pl'),
+     (select id from slot_machine where code = 'zloty-faraon'),        400,     0,   0.00, 'NONE',  'SETTLED',   1,
+     null, null, current_timestamp - interval '25' minute, current_timestamp - interval '25' minute),
+    ((select id from user_account where email = 's156704@student.wroclaw.merito.pl'),
+     (select id from slot_machine where code = 'krysztalowa-kaskada'), 200,   440,   2.20, 'SMALL', 'SETTLED',   9,
+     null, null, current_timestamp - interval '20' minute, current_timestamp - interval '20' minute);
+
+-- wallet: portfel każdego gracza; saldo = suma kwot jego transakcji (sekcja niżej)
+insert into wallet (user_id, balance, version, updated_at, last_rescue_at) values
+    ((select id from user_account where email = 's428425@student.wroclaw.merito.pl'), 18440, 0, current_timestamp - interval '50' minute, null),
+    ((select id from user_account where email = 's433776@student.wroclaw.merito.pl'), 21820, 0, current_timestamp - interval '35' minute, null),
+    ((select id from user_account where email = 's156704@student.wroclaw.merito.pl'),  9840, 0, current_timestamp - interval '20' minute, null);
+
+-- wallet_transaction: bonus powitalny, zakłady (kwoty ujemne) i wygrane; balance_after = saldo po operacji
+insert into wallet_transaction (wallet_id, type, amount, balance_after, game_code, spin_round_id, created_at) values
+    ((select id from wallet where user_id = (select id from user_account where email = 's428425@student.wroclaw.merito.pl')),
+     'WELCOME_BONUS', 10000, 10000, null, null, current_timestamp - interval '60' minute),
+    ((select id from wallet where user_id = (select id from user_account where email = 's428425@student.wroclaw.merito.pl')),
+     'BET', -100, 9900, 'cebulowy-777', (select id from spin_round where seed = 2), current_timestamp - interval '55' minute),
+    ((select id from wallet where user_id = (select id from user_account where email = 's428425@student.wroclaw.merito.pl')),
+     'BET', -200, 9700, 'zloty-faraon', (select id from spin_round where seed = 53), current_timestamp - interval '50' minute),
+    ((select id from wallet where user_id = (select id from user_account where email = 's428425@student.wroclaw.merito.pl')),
+     'WIN', 8740, 18440, 'zloty-faraon', (select id from spin_round where seed = 53), current_timestamp - interval '50' minute),
+    ((select id from wallet where user_id = (select id from user_account where email = 's433776@student.wroclaw.merito.pl')),
+     'WELCOME_BONUS', 10000, 10000, null, null, current_timestamp - interval '45' minute),
+    ((select id from wallet where user_id = (select id from user_account where email = 's433776@student.wroclaw.merito.pl')),
+     'BET', -100, 9900, 'krysztalowa-kaskada', (select id from spin_round where seed = 308), current_timestamp - interval '40' minute),
+    ((select id from wallet where user_id = (select id from user_account where email = 's433776@student.wroclaw.merito.pl')),
+     'WIN', 11870, 21770, 'krysztalowa-kaskada', (select id from spin_round where seed = 308), current_timestamp - interval '40' minute),
+    ((select id from wallet where user_id = (select id from user_account where email = 's433776@student.wroclaw.merito.pl')),
+     'BET', -50, 21720, 'cebulowy-777', (select id from spin_round where seed = 25), current_timestamp - interval '35' minute),
+    ((select id from wallet where user_id = (select id from user_account where email = 's433776@student.wroclaw.merito.pl')),
+     'WIN', 100, 21820, 'cebulowy-777', (select id from spin_round where seed = 25), current_timestamp - interval '35' minute),
+    ((select id from wallet where user_id = (select id from user_account where email = 's156704@student.wroclaw.merito.pl')),
+     'WELCOME_BONUS', 10000, 10000, null, null, current_timestamp - interval '30' minute),
+    ((select id from wallet where user_id = (select id from user_account where email = 's156704@student.wroclaw.merito.pl')),
+     'BET', -400, 9600, 'zloty-faraon', (select id from spin_round where seed = 1), current_timestamp - interval '25' minute),
+    ((select id from wallet where user_id = (select id from user_account where email = 's156704@student.wroclaw.merito.pl')),
+     'BET', -200, 9400, 'krysztalowa-kaskada', (select id from spin_round where seed = 9), current_timestamp - interval '20' minute),
+    ((select id from wallet where user_id = (select id from user_account where email = 's156704@student.wroclaw.merito.pl')),
+     'WIN', 440, 9840, 'krysztalowa-kaskada', (select id from spin_round where seed = 9), current_timestamp - interval '20' minute);
+
+-- player_machine_stats: statystyki gracza na automacie (para gracz + automat), zgodne z rundami powyżej
+insert into player_machine_stats (user_id, slot_machine_id, spins, total_wagered, total_won, biggest_win,
+                                  biggest_win_at, last_played_at) values
+    ((select id from user_account where email = 's428425@student.wroclaw.merito.pl'),
+     (select id from slot_machine where code = 'cebulowy-777'),        1, 100,     0,     0, null, current_timestamp - interval '55' minute),
+    ((select id from user_account where email = 's428425@student.wroclaw.merito.pl'),
+     (select id from slot_machine where code = 'zloty-faraon'),        1, 200,  8740,  8740,
+     current_timestamp - interval '50' minute, current_timestamp - interval '50' minute),
+    ((select id from user_account where email = 's433776@student.wroclaw.merito.pl'),
+     (select id from slot_machine where code = 'krysztalowa-kaskada'), 1, 100, 11870, 11870,
+     current_timestamp - interval '40' minute, current_timestamp - interval '40' minute),
+    ((select id from user_account where email = 's433776@student.wroclaw.merito.pl'),
+     (select id from slot_machine where code = 'cebulowy-777'),        1,  50,   100,   100,
+     current_timestamp - interval '35' minute, current_timestamp - interval '35' minute),
+    ((select id from user_account where email = 's156704@student.wroclaw.merito.pl'),
+     (select id from slot_machine where code = 'zloty-faraon'),        1, 400,     0,     0, null, current_timestamp - interval '25' minute),
+    ((select id from user_account where email = 's156704@student.wroclaw.merito.pl'),
+     (select id from slot_machine where code = 'krysztalowa-kaskada'), 1, 200,   440,   440,
+     current_timestamp - interval '20' minute, current_timestamp - interval '20' minute);

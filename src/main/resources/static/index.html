@@ -251,12 +251,26 @@
                 <p>Nazwa projektu <code>kasyno</code> (pakiet <code>pl.wsb.kasyno</code>, klasa <code>KasynoApplication</code>,
                   <code>artifactId</code> <code>wdtb-2026-backend-kasyno</code>), wersja z numerami indeksów zespołu,
                   konta zespołu w <code>data.sql</code>, ta wizytówka oraz plan projektu (<code>docs/plan-projektu.md</code>).</p></li>
-              <li><span class="timeline__tag timeline__tag--next">Przed LAB 02</span>
-                <p>Lobby kasyna i logowanie: strona główna z trzema automatami, logowanie samą nazwą gracza z bonusem
-                  powitalnym 10&nbsp;000 cebulionów, bonus ratunkowy po bankructwie, ranking i ostatnie duże wygrane,
-                  wspólny wygląd (design system) w kolorach marki.</p></li>
+              <li><span class="timeline__tag">Gry</span>
+                <p>Trzy działające automaty w przeglądarce (PixiJS): <b>Cebulowy 777</b> z neonowym jackpotem,
+                  <b>Złoty Faraon</b> z darmowymi spinami i rozszerzającym się WILD oraz <b>Kryształowa Kaskada</b>
+                  z kaskadami i kulami mnożników. Animacje wygranych, banery BIG/MEGA/EPIC WIN i podglądy wideo gier.
+                  Wynik każdego spinu liczy serwer w Javie; RTP 95–96% potwierdzone symulacją milionów rund.</p></li>
+              <li><span class="timeline__tag">Dźwięk</span>
+                <p>Pełna oprawa dźwiękowa: 8 utworów muzycznych (lobby, każda gra, darmowe spiny, napięcie, wielka wygrana)
+                  i 51 efektów (kręcenie i zatrzymanie bębnów, wygrane, licznik, bonusy, bankructwo).
+                  Dźwięk włącza się i wyłącza w menu gracza.</p></li>
+              <li><span class="timeline__tag">Lobby</span>
+                <p>Logowanie samą nazwą gracza z bonusem powitalnym 10&nbsp;000 cebulionów, bonus ratunkowy po bankructwie,
+                  ranking i ostatnie duże wygrane na żywo, historia gry, portfel z historią transakcji i REST API
+                  z dokumentacją Swagger UI (<code>/swagger-ui.html</code>).</p></li>
+              <li><span class="timeline__tag">LAB 02</span>
+                <p>Encje JPA w pakietach <code>slots.entity</code> i <code>wallet.entity</code> (6 własnych tabel),
+                  klasa wbudowana <code>@Embeddable ReelGrid</code> (plansza automatu), enumy zapisane jako tekst
+                  (<code>@Enumerated(STRING)</code>) i dane startowe w każdej tabeli: historia gry kont zespołu
+                  policzona prawdziwym silnikiem gier i sprawdzana testem.</p></li>
             </ol>
-            <p class="muted">Na kolejnych laboratoriach dopisujemy tu kolejne punkty.</p>
+            <p class="muted">Wszystko działa: testy i reguły projektu są zielone w GitHub Actions. Na kolejnych laboratoriach dopisujemy tu kolejne punkty.</p>
           </article>
 
           <article class="card about-card about-tech" data-reveal>

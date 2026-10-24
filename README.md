@@ -10,6 +10,18 @@ Spring Boot / Java 21 oblicza wyniki, a PixiJS odtwarza rundy, wygrane i bonusy 
   i otworzy <http://localhost:8080>. Pierwsze uruchomienie pobiera biblioteki (kilka minut).
 - Java 21 i Maven 3.9+: `mvn spring-boot:run` (albo `mvnw.cmd spring-boot:run`), następnie <http://localhost:8080>.
 - Zaloguj się nowym nickiem (3–16 znaków); otrzymasz 10 000 wirtualnych cebulionów.
+
+### Bez uruchamiania lokalnie (w chmurze)
+
+GitHub Pages hostuje tylko statyczne strony, a Cebulion Casino to serwer Spring Boot z bazą, więc działa na jednym z dwóch sposobów:
+
+- **GitHub Codespaces** (w ramach GitHuba): *Code → Codespaces → Create codespace on main*. Konfiguracja
+  `.devcontainer/devcontainer.json` instaluje Javę 21, sama uruchamia aplikację i otwiera port 8080 w przeglądarce
+  (adres `*.app.github.dev`). Udostępnienie innym: zakładka *PORTS* → 8080 → *Port Visibility → Public*.
+  Konto osobiste ma darmowy miesięczny limit godzin; nieużywany codespace usypia się sam.
+- **Render.com** (stały adres w internecie): *render.com → zaloguj przez GitHub → New → Blueprint →* to repozytorium
+  *→ Apply*. Render czyta `render.yaml`, buduje obraz z `Dockerfile` i wdraża każdy push na `main`. Plan darmowy
+  usypia usługę po ok. 15 minutach bez ruchu (pierwsze wejście budzi ją ok. minuty), a baza wraca wtedy do `data.sql`.
 - Testy backendu: `mvn -B verify -Dlab=1`.
 - Szczegóły profili, bazy i testów: [instrukcja uruchomienia](docs/obrona/00-uruchomienie.md).
 - Budowa trzech automatów: [runtime gier](docs/projekt/10-runtime-gier.md).
