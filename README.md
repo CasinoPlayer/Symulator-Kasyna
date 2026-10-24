@@ -5,7 +5,10 @@ Spring Boot / Java 21 oblicza wyniki, a PixiJS odtwarza rundy, wygrane i bonusy 
 
 ## Szybki start
 
-- Java 21 i Maven 3.9+: `mvn spring-boot:run`, następnie <http://localhost:8080>.
+- Bez IntelliJ i bez Mavena (Windows): dwuklik **`Uruchom-projekt.bat`**. Skrypt sam znajdzie Javę 21
+  (albo zaproponuje instalację), uruchomi aplikację przez Maven Wrapper, pokaże konta zespołu z bazy
+  i otworzy <http://localhost:8080>. Pierwsze uruchomienie pobiera biblioteki (kilka minut).
+- Java 21 i Maven 3.9+: `mvn spring-boot:run` (albo `mvnw.cmd spring-boot:run`), następnie <http://localhost:8080>.
 - Zaloguj się nowym nickiem (3–16 znaków); otrzymasz 10 000 wirtualnych cebulionów.
 - Testy backendu: `mvn -B verify -Dlab=1`.
 - Szczegóły profili, bazy i testów: [instrukcja uruchomienia](docs/obrona/00-uruchomienie.md).

@@ -1,0 +1,5 @@
+# Skrypty Windows z końcami linii CRLF (także w paczce ZIP pobranej z GitHuba), skrypt powłoki mvnw z LF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+mvnw  text eol=lf
