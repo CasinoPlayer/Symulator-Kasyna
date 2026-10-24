@@ -22,3 +22,7 @@ art/zastepcze/
 # Raport jakości i pliki pośrednie pipeline'u grafiki (tools/art/przetworz.py) — odtwarzalne
 art/raport/
 art/robocze/
+
+# Materiały prowadzącego (wykłady, arkusze z danymi studentów) nie trafiają do repozytorium
+*.pptx
+*.xlsx
