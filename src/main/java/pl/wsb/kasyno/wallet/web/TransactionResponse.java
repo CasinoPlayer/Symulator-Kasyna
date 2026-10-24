@@ -1,7 +1,7 @@
 package pl.wsb.kasyno.wallet.web;
 
-import pl.wsb.kasyno.wallet.domain.TransactionType;
-import pl.wsb.kasyno.wallet.domain.WalletTransaction;
+import pl.wsb.kasyno.wallet.entity.TransactionType;
+import pl.wsb.kasyno.wallet.entity.WalletTransaction;
 
 import java.math.BigDecimal;
 import java.time.Instant;

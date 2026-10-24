@@ -1,14 +1,14 @@
 package pl.wsb.kasyno.slots.application.engine;
 
-import pl.wsb.kasyno.slots.domain.BetLevels;
-import pl.wsb.kasyno.slots.domain.EngineType;
-import pl.wsb.kasyno.slots.domain.Paylines;
-import pl.wsb.kasyno.slots.domain.Payouts;
-import pl.wsb.kasyno.slots.domain.ReelStrips;
-import pl.wsb.kasyno.slots.domain.SlotMachine;
-import pl.wsb.kasyno.slots.domain.SlotSymbol;
-import pl.wsb.kasyno.slots.domain.SymbolKind;
-import pl.wsb.kasyno.slots.domain.Volatility;
+import pl.wsb.kasyno.slots.entity.BetLevels;
+import pl.wsb.kasyno.slots.entity.EngineType;
+import pl.wsb.kasyno.slots.entity.Paylines;
+import pl.wsb.kasyno.slots.entity.Payouts;
+import pl.wsb.kasyno.slots.entity.ReelStrips;
+import pl.wsb.kasyno.slots.entity.SlotMachine;
+import pl.wsb.kasyno.slots.entity.SlotSymbol;
+import pl.wsb.kasyno.slots.entity.SymbolKind;
+import pl.wsb.kasyno.slots.entity.Volatility;
 
 import java.math.BigDecimal;
 import java.util.ArrayDeque;

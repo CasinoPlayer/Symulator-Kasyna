@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import pl.wsb.kasyno.shared.domain.Money;
-import pl.wsb.kasyno.slots.domain.WinTier;
+import pl.wsb.kasyno.slots.entity.WinTier;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

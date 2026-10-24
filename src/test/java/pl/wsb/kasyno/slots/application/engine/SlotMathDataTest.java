@@ -6,11 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import pl.wsb.kasyno.slots.domain.SlotMachine;
-import pl.wsb.kasyno.slots.domain.SlotMachineRepository;
-import pl.wsb.kasyno.slots.domain.SlotSymbol;
-import pl.wsb.kasyno.slots.domain.SlotSymbolRepository;
-import pl.wsb.kasyno.slots.domain.SymbolKind;
+import pl.wsb.kasyno.slots.entity.SlotMachine;
+import pl.wsb.kasyno.slots.entity.SlotMachineRepository;
+import pl.wsb.kasyno.slots.entity.SlotSymbol;
+import pl.wsb.kasyno.slots.entity.SlotSymbolRepository;
+import pl.wsb.kasyno.slots.entity.SymbolKind;
 
 import java.util.List;
 import java.util.stream.IntStream;

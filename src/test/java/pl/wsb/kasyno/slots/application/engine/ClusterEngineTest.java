@@ -3,7 +3,7 @@ package pl.wsb.kasyno.slots.application.engine;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import pl.wsb.kasyno.slots.application.engine.EngineFixtures.ScriptedRandom;
-import pl.wsb.kasyno.slots.domain.SlotMachine;
+import pl.wsb.kasyno.slots.entity.SlotMachine;
 
 import java.util.ArrayList;
 import java.util.List;

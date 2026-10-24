@@ -19,9 +19,9 @@ import pl.wsb.kasyno.slots.application.engine.GameMathProvider;
 import pl.wsb.kasyno.slots.application.engine.RandomSource;
 import pl.wsb.kasyno.slots.application.engine.RoundJson;
 import pl.wsb.kasyno.slots.application.engine.SlotEngineRegistry;
-import pl.wsb.kasyno.slots.domain.SlotMachineRepository;
-import pl.wsb.kasyno.slots.domain.SpinRoundRepository;
-import pl.wsb.kasyno.slots.domain.SpinStatus;
+import pl.wsb.kasyno.slots.entity.SlotMachineRepository;
+import pl.wsb.kasyno.slots.entity.SpinRoundRepository;
+import pl.wsb.kasyno.slots.entity.SpinStatus;
 import pl.wsb.kasyno.slots.web.SlotController;
 
 import java.util.HashSet;

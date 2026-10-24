@@ -1,6 +1,6 @@
 package pl.wsb.kasyno.slots.application.engine;
 
-import pl.wsb.kasyno.slots.domain.SymbolKind;
+import pl.wsb.kasyno.slots.entity.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.Arrays;

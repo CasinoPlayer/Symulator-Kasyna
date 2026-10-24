@@ -10,11 +10,11 @@ import pl.wsb.kasyno.slots.api.GameRtp;
 import pl.wsb.kasyno.slots.api.HourlyActivity;
 import pl.wsb.kasyno.slots.api.PlayerResult;
 import pl.wsb.kasyno.slots.api.SlotsFacade;
-import pl.wsb.kasyno.slots.domain.PlayerMachineStats;
-import pl.wsb.kasyno.slots.domain.PlayerMachineStatsRepository;
-import pl.wsb.kasyno.slots.domain.RoundSummary;
-import pl.wsb.kasyno.slots.domain.SpinRoundRepository;
-import pl.wsb.kasyno.slots.domain.SpinStatus;
+import pl.wsb.kasyno.slots.entity.PlayerMachineStats;
+import pl.wsb.kasyno.slots.entity.PlayerMachineStatsRepository;
+import pl.wsb.kasyno.slots.entity.RoundSummary;
+import pl.wsb.kasyno.slots.entity.SpinRoundRepository;
+import pl.wsb.kasyno.slots.entity.SpinStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;

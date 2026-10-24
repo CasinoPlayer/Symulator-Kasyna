@@ -180,12 +180,12 @@ erDiagram
 | Tabela | Encja | Rola |
 |---|---|---|
 | `user_account` | `account.domain.UserAccount` | konto z szablonu kursu; gracz = konto z rolą `USER` i technicznym e-mailem |
-| `wallet` | `wallet.domain.Wallet` | saldo; zmienia się tylko metodami encji (`credit`, `debitBet`, `rescue`) |
-| `wallet_transaction` | `wallet.domain.WalletTransaction` | „księga” bez edycji i usuwania: suma `amount` = saldo |
-| `slot_machine` | `slots.domain.SlotMachine` | konfiguracja gry (taśmy, linie, zakłady); dane z `data.sql` |
-| `slot_symbol` | `slots.domain.SlotSymbol` | symbole i wypłaty (1:N z automatem) |
-| `spin_round` | `slots.domain.SpinRound` | runda = jeden zakład; obiekt ze statusem (§ 6) |
-| `player_machine_stats` | `slots.domain.PlayerMachineStats` | relacja M:N gracz ↔ automat z atrybutami (spiny, obrót, rekord) |
+| `wallet` | `wallet.entity.Wallet` | saldo; zmienia się tylko metodami encji (`credit`, `debitBet`, `rescue`) |
+| `wallet_transaction` | `wallet.entity.WalletTransaction` | „księga” bez edycji i usuwania: suma `amount` = saldo |
+| `slot_machine` | `slots.entity.SlotMachine` | konfiguracja gry (taśmy, linie, zakłady); dane z `data.sql` |
+| `slot_symbol` | `slots.entity.SlotSymbol` | symbole i wypłaty (1:N z automatem) |
+| `spin_round` | `slots.entity.SpinRound` | runda = jeden zakład; obiekt ze statusem (§ 6) |
+| `player_machine_stats` | `slots.entity.PlayerMachineStats` | relacja M:N gracz ↔ automat z atrybutami (spiny, obrót, rekord) |
 
 **Dlaczego `player_machine_stats` to encja, a nie `@ManyToMany`:** `@ManyToMany` umie zapisać tylko „parę”, a nam
 potrzebne są liczby przy parze (spiny, obrót, rekord). Unikalna para `(user_id, slot_machine_id)` pilnuje, że dla

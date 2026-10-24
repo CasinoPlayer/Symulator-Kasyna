@@ -26,7 +26,7 @@ import pl.wsb.kasyno.slots.application.engine.SlotEngine;
 import pl.wsb.kasyno.slots.web.SlotController;
 import pl.wsb.kasyno.support.MutableClock;
 import pl.wsb.kasyno.wallet.api.WalletFacade;
-import pl.wsb.kasyno.wallet.domain.InsufficientFundsException;
+import pl.wsb.kasyno.wallet.entity.InsufficientFundsException;
 
 import java.math.BigDecimal;
 import java.time.Duration;

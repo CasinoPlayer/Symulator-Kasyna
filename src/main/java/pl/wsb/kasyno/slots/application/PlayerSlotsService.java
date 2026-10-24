@@ -4,10 +4,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.wsb.kasyno.slots.domain.PlayerMachineStats;
-import pl.wsb.kasyno.slots.domain.PlayerMachineStatsRepository;
-import pl.wsb.kasyno.slots.domain.RoundSummary;
-import pl.wsb.kasyno.slots.domain.SpinRoundRepository;
+import pl.wsb.kasyno.slots.entity.PlayerMachineStats;
+import pl.wsb.kasyno.slots.entity.PlayerMachineStatsRepository;
+import pl.wsb.kasyno.slots.entity.RoundSummary;
+import pl.wsb.kasyno.slots.entity.SpinRoundRepository;
 
 import java.util.List;
 

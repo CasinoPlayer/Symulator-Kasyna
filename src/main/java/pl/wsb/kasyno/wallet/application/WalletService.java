@@ -18,11 +18,11 @@ import pl.wsb.kasyno.wallet.api.BalanceLeader;
 import pl.wsb.kasyno.wallet.api.MinimumBetProvider;
 import pl.wsb.kasyno.wallet.api.WalletEconomy;
 import pl.wsb.kasyno.wallet.api.WalletFacade;
-import pl.wsb.kasyno.wallet.domain.TransactionType;
-import pl.wsb.kasyno.wallet.domain.Wallet;
-import pl.wsb.kasyno.wallet.domain.WalletRepository;
-import pl.wsb.kasyno.wallet.domain.WalletTransaction;
-import pl.wsb.kasyno.wallet.domain.WalletTransactionRepository;
+import pl.wsb.kasyno.wallet.entity.TransactionType;
+import pl.wsb.kasyno.wallet.entity.Wallet;
+import pl.wsb.kasyno.wallet.entity.WalletRepository;
+import pl.wsb.kasyno.wallet.entity.WalletTransaction;
+import pl.wsb.kasyno.wallet.entity.WalletTransactionRepository;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -119,7 +119,7 @@ public class WalletService implements WalletFacade, PlayerFundsProvider {
      * Bonus ratunkowy: gdy saldo spadło poniżej najmniejszego zakładu i minęło 10 minut od poprzedniego.
      *
      * @return przyznana kwota
-     * @throws pl.wsb.kasyno.wallet.domain.RescueNotAvailableException gdy bonus jest niedostępny
+     * @throws pl.wsb.kasyno.wallet.entity.RescueNotAvailableException gdy bonus jest niedostępny
      */
     public BigDecimal rescue(Long playerId) {
         Wallet wallet = lockedWallet(playerId);

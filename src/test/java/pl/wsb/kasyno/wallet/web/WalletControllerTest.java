@@ -17,10 +17,10 @@ import pl.wsb.kasyno.shared.domain.Money;
 import pl.wsb.kasyno.shared.web.PlayerSession;
 import pl.wsb.kasyno.support.TestData;
 import pl.wsb.kasyno.wallet.application.WalletService;
-import pl.wsb.kasyno.wallet.domain.RescueNotAvailableException;
-import pl.wsb.kasyno.wallet.domain.TransactionType;
-import pl.wsb.kasyno.wallet.domain.Wallet;
-import pl.wsb.kasyno.wallet.domain.WalletTransaction;
+import pl.wsb.kasyno.wallet.entity.RescueNotAvailableException;
+import pl.wsb.kasyno.wallet.entity.TransactionType;
+import pl.wsb.kasyno.wallet.entity.Wallet;
+import pl.wsb.kasyno.wallet.entity.WalletTransaction;
 
 import java.time.Instant;
 import java.util.List;

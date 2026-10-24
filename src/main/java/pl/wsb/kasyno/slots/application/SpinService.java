@@ -14,12 +14,12 @@ import pl.wsb.kasyno.slots.application.engine.SlotEngine;
 import pl.wsb.kasyno.slots.application.engine.SlotEngineRegistry;
 import pl.wsb.kasyno.slots.application.engine.SpinContext;
 import pl.wsb.kasyno.slots.application.engine.SpinOutcome;
-import pl.wsb.kasyno.slots.domain.GameNotFoundException;
-import pl.wsb.kasyno.slots.domain.InvalidBetException;
-import pl.wsb.kasyno.slots.domain.SlotMachine;
-import pl.wsb.kasyno.slots.domain.SlotMachineRepository;
-import pl.wsb.kasyno.slots.domain.SpinRound;
-import pl.wsb.kasyno.slots.domain.SpinRoundRepository;
+import pl.wsb.kasyno.slots.entity.GameNotFoundException;
+import pl.wsb.kasyno.slots.entity.InvalidBetException;
+import pl.wsb.kasyno.slots.entity.SlotMachine;
+import pl.wsb.kasyno.slots.entity.SlotMachineRepository;
+import pl.wsb.kasyno.slots.entity.SpinRound;
+import pl.wsb.kasyno.slots.entity.SpinRoundRepository;
 import pl.wsb.kasyno.wallet.api.WalletFacade;
 
 import java.math.BigDecimal;

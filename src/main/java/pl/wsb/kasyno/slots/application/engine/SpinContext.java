@@ -1,6 +1,6 @@
 package pl.wsb.kasyno.slots.application.engine;
 
-import pl.wsb.kasyno.slots.domain.SlotMachine;
+import pl.wsb.kasyno.slots.entity.SlotMachine;
 
 import java.math.BigDecimal;
 

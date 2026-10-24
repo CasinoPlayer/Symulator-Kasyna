@@ -1,7 +1,7 @@
 package pl.wsb.kasyno.slots.web;
 
-import pl.wsb.kasyno.slots.domain.SlotSymbol;
-import pl.wsb.kasyno.slots.domain.SymbolKind;
+import pl.wsb.kasyno.slots.entity.SlotSymbol;
+import pl.wsb.kasyno.slots.entity.SymbolKind;
 
 import java.math.BigDecimal;
 import java.util.Map;

@@ -30,13 +30,13 @@ metody zostaje.
 | dwa równoczesne logowania tą samą nową nazwą | `account/web/AuthController.java:56` | `KasynoFlowIntegrationTest.concurrentFirstLoginsCreateOneAccount` (`:340`) |
 | sesja serwerowa i ochrona przed *session fixation* | `shared/web/PlayerSession.java:28` | `AuthControllerTest.meWithSession` |
 | skąd kontroler wie, kto jest zalogowany (`@CurrentPlayer`) | `shared/web/CurrentPlayerArgumentResolver.java:29` | `AuthControllerTest.meWithoutSession` |
-| portfel: saldo nigdy ujemne | `wallet/domain/Wallet.java:91` | `WalletTest.neverNegative` (`:49`), `WalletServiceTest.debitNeverGoesNegative` |
-| blokada pesymistyczna `SELECT … FOR UPDATE` | `wallet/domain/WalletRepository.java:31` | `KasynoFlowIntegrationTest.concurrentSpinsNeverOverdraw` (`:270`) |
-| historia portfela (księga, suma = saldo) | `wallet/domain/WalletTransaction.java:32` | `WalletServiceTest.ledgerIsConsistent` (`:153`) |
-| bonus ratunkowy co 10 minut (zegar w testach) | `wallet/domain/Wallet.java:127`, `wallet/application/WalletService.java:124` | `WalletServiceTest.rescueCooldownUsesClock` (`:183`) |
+| portfel: saldo nigdy ujemne | `wallet/entity/Wallet.java:91` | `WalletTest.neverNegative` (`:49`), `WalletServiceTest.debitNeverGoesNegative` |
+| blokada pesymistyczna `SELECT … FOR UPDATE` | `wallet/entity/WalletRepository.java:31` | `KasynoFlowIntegrationTest.concurrentSpinsNeverOverdraw` (`:270`) |
+| historia portfela (księga, suma = saldo) | `wallet/entity/WalletTransaction.java:32` | `WalletServiceTest.ledgerIsConsistent` (`:153`) |
+| bonus ratunkowy co 10 minut (zegar w testach) | `wallet/entity/Wallet.java:127`, `wallet/application/WalletService.java:124` | `WalletServiceTest.rescueCooldownUsesClock` (`:183`) |
 | **spin — najważniejsza operacja** | `slots/application/SpinService.java:84` | `SpinServiceTest`, `SlotEnginesIntegrationTest.spinsFollowContract` |
 | idempotencja (`Idempotency-Key`) | `SpinService.java:95` (blokada) i `:149` (powtórka) | `SpinServiceTest.idempotencyIsCheckedUnderWalletLock` (`:226`), `KasynoFlowIntegrationTest.concurrentDuplicateSpinsAreReplayed` |
-| cykl życia rundy `STARTED → RESOLVED → SETTLED` | `slots/domain/SpinStatus.java:31`, `slots/domain/SpinRound.java:158` | `SpinRoundTest.transitionTable` (`:114`), `cannotSettleTwice` (`:59`) |
+| cykl życia rundy `STARTED → RESOLVED → SETTLED` | `slots/entity/SpinStatus.java:31`, `slots/entity/SpinRound.java:158` | `SpinRoundTest.transitionTable` (`:114`), `cannotSettleTwice` (`:59`) |
 | ziarno losowania, odtwarzalność | `slots/application/engine/SecureSeedGenerator.java:17`, `SplittableRandomSource.java:20` | `LinesEngineTest.replayFromSeed`, `ClusterEngineTest.replayFromSeed` |
 | silnik linii (S1, S2) | `slots/application/engine/LinesEngine.java:40`, ocena linii `:155` | `LinesEngineTest` (16 testów) |
 | silnik klastrów i kaskad (S3) | `slots/application/engine/ClusterEngine.java:50`, klastry `:140`, kaskada `:192` | `ClusterEngineTest` (8 testów) |
@@ -45,8 +45,8 @@ metody zostaje.
 | **RTP 95/96% — skąd wiemy** | `SlotMathMonteCarloTest` (`slots/application/engine/SlotMathMonteCarloTest.java:71–134`) | — (to jest test); opis: [`03-silnik-gier.md`](03-silnik-gier.md) |
 | format odpowiedzi spinu (kontrakt § 2.4) | `slots/application/SpinDocument.java:43`, kroki `engine/RoundStep.java:30` | `SpinDocumentTest`, `LinesEngineTest.jsonFormat` |
 | `X-Demo-Seed` tylko w profilu `demo` | `slots/web/SlotController.java:96`, `:114` | `DemoSeedIgnoredTest`, `DemoSeedAllowedTest`, `ProfilesTest.demoSeedOnlyInDemo` |
-| statystyki gracza na automacie (M:N z atrybutami) | `slots/domain/PlayerMachineStats.java:34`, `slots/application/StatsUpdater.java:38` | `LobbyBoardsListenerTest.statsUpdaterRequiresTransaction` |
-| 5 pytań inwestora (JPQL, `GROUP BY`, projekcje) | `slots/domain/SpinRoundRepository.java:55–86`, `PlayerMachineStatsRepository.java:28–46`, `wallet/domain/WalletRepository.java:40–52` | `InvestorQuestionsRepositoryTest` (`@DataJpaTest`), w tym `bigWinsFeedWithoutNPlusOne` (`:213`) |
+| statystyki gracza na automacie (M:N z atrybutami) | `slots/entity/PlayerMachineStats.java:34`, `slots/application/StatsUpdater.java:38` | `LobbyBoardsListenerTest.statsUpdaterRequiresTransaction` |
+| 5 pytań inwestora (JPQL, `GROUP BY`, projekcje) | `slots/entity/SpinRoundRepository.java:55–86`, `PlayerMachineStatsRepository.java:28–46`, `wallet/entity/WalletRepository.java:40–52` | `InvestorQuestionsRepositoryTest` (`@DataJpaTest`), w tym `bigWinsFeedWithoutNPlusOne` (`:213`) |
 | ranking i feed z pamięci podręcznej | `report/application/LobbyBoardsCache.java:80` | `LobbyBoardsCacheTest.invalidationDuringQueryIsNotCached` (`:75`) |
 | zdarzenia po commicie (`AFTER_COMMIT`) | `report/application/LobbyBoardsListener.java:59`, `:75` | `LobbyBoardsListenerTest.rollbackIsIgnored` (`:77`) |
 | zadania cykliczne `@Scheduled` | `report/application/EconomySnapshotJob.java:57`, `slots/application/IdempotencyKeyCleanup.java:53` | `EconomySnapshotJobTest`, `IdempotencyKeyCleanupTest`, `ProdProfilePersistenceTest.scheduledTasksRegistered` |
@@ -177,9 +177,9 @@ stack trace, zapis `BigDecimal` bez `.00`).
 
 ## 2. Backend: moduł `wallet` (portfel)
 
-### 2.1. `wallet.domain`
+### 2.1. `wallet.entity`
 
-**`Wallet`** (`wallet/domain/Wallet.java:38`) — encja z regułami (tabela `wallet`, `@OneToOne(LAZY)` do `UserAccount`).
+**`Wallet`** (`wallet/entity/Wallet.java:38`) — encja z regułami (tabela `wallet`, `@OneToOne(LAZY)` do `UserAccount`).
 * `credit(type, …)` (`:78`) — tylko `WIN` i `WELCOME_BONUS`; `debitBet` (`:91`) — **najpierw** sprawdza saldo
   (`InsufficientFundsException`), dopiero potem odejmuje; zwraca wpis `WalletTransaction` z kwotą ujemną.
 * `isBankrupt(minBet)` (`:104`), `rescueCooldownLeft` (`:109`), `canRescue` (`:118`), `rescue` (`:127`) — bonus ratunkowy
@@ -239,9 +239,9 @@ Test: `WalletControllerTest` (`@WebMvcTest`).
 
 Największy moduł: katalog gier, spin, silniki, statystyki gracza, zapytania raportowe.
 
-### 3.1. `slots.domain` — encje
+### 3.1. `slots.entity` — encje
 
-**`SlotMachine`** (`slots/domain/SlotMachine.java:31`) — konfiguracja gry (tabela `slot_machine`): `code` (unikalny,
+**`SlotMachine`** (`slots/entity/SlotMachine.java:31`) — konfiguracja gry (tabela `slot_machine`): `code` (unikalny,
 w adresie API), `engineType` (`LINES`/`CLUSTER`), `reels`/`rows`/`lines` (kolumny `reel_count`, `row_count`,
 `line_count`, bo `ROWS` to słowo zastrzeżone w SQL), `betLevels` (konwerter), `minBet`/`maxBet`, `targetRtp`,
 `volatility`, `features`, `active`, **`reelStrips`, `freeReelStrips`, `paylines`** (kolumny tekstowe z konwerterami),
@@ -264,7 +264,7 @@ unikalna para `(user_id, idempotency_key)` (`:43`) i dwa indeksy.
 ostatnia gra) zamiast `@ManyToMany`; unikalna para `(user_id, slot_machine_id)`. `record(bet, win, at)` (`:81`)
 dolicza rundę i ewentualny nowy rekord.
 
-### 3.2. `slots.domain` — obiekty wartości, enumy, wyjątki
+### 3.2. `slots.entity` — obiekty wartości, enumy, wyjątki
 
 | Klasa | Po co / ciekawostka |
 |---|---|
@@ -280,7 +280,7 @@ dolicza rundę i ewentualny nowy rekord.
 
 Testy: `SlotValueObjectsTest`, `ReelStripsAndPaylinesTest`.
 
-### 3.3. `slots.domain` — repozytoria
+### 3.3. `slots.entity` — repozytoria
 
 | Repozytorium | Najważniejsze zapytania |
 |---|---|

@@ -1,9 +1,9 @@
 package pl.wsb.kasyno.slots.web;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import pl.wsb.kasyno.slots.domain.EngineType;
-import pl.wsb.kasyno.slots.domain.SlotMachine;
-import pl.wsb.kasyno.slots.domain.Volatility;
+import pl.wsb.kasyno.slots.entity.EngineType;
+import pl.wsb.kasyno.slots.entity.SlotMachine;
+import pl.wsb.kasyno.slots.entity.Volatility;
 
 import java.math.BigDecimal;
 import java.util.List;

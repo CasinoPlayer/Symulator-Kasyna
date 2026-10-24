@@ -107,7 +107,7 @@ w bazie), `BigDecimal` w silniku (wolne testy Monte Carlo).
 odczytać saldo 100 i oba postawić 100 (*lost update*), a saldo zeszłoby poniżej zera.
 
 **Decyzja.** Każda zmiana salda pobiera portfel **z blokadą zapisu**: `@Lock(PESSIMISTIC_WRITE)` →
-`SELECT … FOR UPDATE` (`wallet/domain/WalletRepository.java:31–33`). Spin blokuje portfel **na samym początku**
+`SELECT … FOR UPDATE` (`wallet/entity/WalletRepository.java:31–33`). Spin blokuje portfel **na samym początku**
 (`WalletFacade.lockWallet`, `Propagation.MANDATORY`), więc wszystkie spiny jednego gracza wykonują się po kolei.
 `@Version` (blokada optymistyczna) zostaje drugim bezpiecznikiem. Gdy baza nie doczeka się blokady,
 `GlobalExceptionHandler.handleConcurrency` (`:88`) zwraca `409 CONCURRENT_REQUEST` z `Retry-After: 1`, a nie 500.
@@ -229,7 +229,7 @@ wspólny serwis „rejestracji” wołający oba moduły (rozmyta odpowiedzialno
   klucz obcy.
 
 **Alternatywy.** `@ElementCollection` / tabela `reel_stop(automat, bęben, pozycja, symbol)` — ok. 550 wierszy bez
-własnej logiki, siódma tabela, sortowanie po pozycji (uzasadnienie w Javadoc `ReelStrips`, `slots/domain/ReelStrips.java:17–27`).
+własnej logiki, siódma tabela, sortowanie po pozycji (uzasadnienie w Javadoc `ReelStrips`, `slots/entity/ReelStrips.java:17–27`).
 
 ---
 

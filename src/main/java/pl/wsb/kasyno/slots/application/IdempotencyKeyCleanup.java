@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import pl.wsb.kasyno.shared.config.CasinoProperties;
-import pl.wsb.kasyno.slots.domain.SpinRoundRepository;
+import pl.wsb.kasyno.slots.entity.SpinRoundRepository;
 
 import java.time.Clock;
 import java.time.Duration;

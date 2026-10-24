@@ -69,7 +69,7 @@ class ArchitectureTest {
     void slotsUsesWalletApiOnly() {
         noClasses().that().resideInAPackage("pl.wsb.kasyno.slots..")
                 .should().dependOnClassesThat().resideInAnyPackage(
-                        "pl.wsb.kasyno.wallet.domain..", "pl.wsb.kasyno.wallet.application..", "pl.wsb.kasyno.wallet.web..",
+                        "pl.wsb.kasyno.wallet.entity..", "pl.wsb.kasyno.wallet.application..", "pl.wsb.kasyno.wallet.web..",
                         "pl.wsb.kasyno.report..")
                 .check(classes);
     }
@@ -79,8 +79,8 @@ class ArchitectureTest {
     void reportUsesApisOnly() {
         noClasses().that().resideInAPackage("pl.wsb.kasyno.report..")
                 .should().dependOnClassesThat().resideInAnyPackage(
-                        "pl.wsb.kasyno.slots.domain..", "pl.wsb.kasyno.slots.application..",
-                        "pl.wsb.kasyno.wallet.domain..", "pl.wsb.kasyno.wallet.application..",
+                        "pl.wsb.kasyno.slots.entity..", "pl.wsb.kasyno.slots.application..",
+                        "pl.wsb.kasyno.wallet.entity..", "pl.wsb.kasyno.wallet.application..",
                         "pl.wsb.kasyno.account.domain..", "pl.wsb.kasyno.account.application..")
                 .check(classes);
     }
@@ -95,18 +95,19 @@ class ArchitectureTest {
     }
 
     @Test
-    @DisplayName("warstwa domain nie zależy od application ani web")
+    @DisplayName("warstwy entity i domain nie zależą od application ani web")
     void domainDoesNotDependOnUpperLayers() {
-        noClasses().that().resideInAPackage("..domain..")
+        noClasses().that().resideInAnyPackage("..entity..", "..domain..")
                 .should().dependOnClassesThat().resideInAnyPackage("..application..", "..web..")
                 .check(classes);
     }
 
     @Test
-    @DisplayName("kontrolery REST w pakietach web, encje w pakietach domain")
+    @DisplayName("kontrolery REST w pakietach web, encje w pakietach entity (gotowe UserAccount w account.domain)")
     void conventions() {
         classes().that().areAnnotatedWith(RestController.class).should().resideInAPackage("..web..").check(classes);
-        classes().that().areAnnotatedWith(Entity.class).should().resideInAPackage("..domain..").check(classes);
+        classes().that().areAnnotatedWith(Entity.class).and().doNotHaveSimpleName("UserAccount")
+                .should().resideInAPackage("..entity..").check(classes);
     }
 
     @Test
@@ -126,10 +127,10 @@ class ArchitectureTest {
     }
 
     @Test
-    @DisplayName("pakiety api (kontrakty modułów) nie odsłaniają encji ani innych klas z domain")
+    @DisplayName("pakiety api (kontrakty modułów) nie odsłaniają encji ani innych klas z entity i domain")
     void apiDoesNotExposeDomain() {
         noClasses().that().resideInAPackage("..api..")
-                .should().dependOnClassesThat().resideInAPackage("..domain..")
+                .should().dependOnClassesThat().resideInAnyPackage("..entity..", "..domain..")
                 .check(classes);
     }
 

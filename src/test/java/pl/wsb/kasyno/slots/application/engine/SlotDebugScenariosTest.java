@@ -8,7 +8,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import pl.wsb.kasyno.slots.application.SlotDebugScenarios;
-import pl.wsb.kasyno.slots.domain.SlotMachineRepository;
+import pl.wsb.kasyno.slots.entity.SlotMachineRepository;
 
 import java.util.Arrays;
 

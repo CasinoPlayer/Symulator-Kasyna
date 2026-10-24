@@ -22,21 +22,21 @@ import pl.wsb.kasyno.slots.api.HourlyActivity;
 import pl.wsb.kasyno.slots.api.PlayerResult;
 import pl.wsb.kasyno.slots.application.SlotCatalogService;
 import pl.wsb.kasyno.slots.application.SlotStatisticsService;
-import pl.wsb.kasyno.slots.domain.PlayerMachineStats;
-import pl.wsb.kasyno.slots.domain.PlayerMachineStatsRepository;
-import pl.wsb.kasyno.slots.domain.SlotMachine;
-import pl.wsb.kasyno.slots.domain.SlotMachineRepository;
-import pl.wsb.kasyno.slots.domain.RoundSummary;
-import pl.wsb.kasyno.slots.domain.SpinRound;
-import pl.wsb.kasyno.slots.domain.SpinRoundRepository;
-import pl.wsb.kasyno.slots.domain.SpinStatus;
-import pl.wsb.kasyno.slots.domain.WinTier;
+import pl.wsb.kasyno.slots.entity.PlayerMachineStats;
+import pl.wsb.kasyno.slots.entity.PlayerMachineStatsRepository;
+import pl.wsb.kasyno.slots.entity.SlotMachine;
+import pl.wsb.kasyno.slots.entity.SlotMachineRepository;
+import pl.wsb.kasyno.slots.entity.RoundSummary;
+import pl.wsb.kasyno.slots.entity.SpinRound;
+import pl.wsb.kasyno.slots.entity.SpinRoundRepository;
+import pl.wsb.kasyno.slots.entity.SpinStatus;
+import pl.wsb.kasyno.slots.entity.WinTier;
 import pl.wsb.kasyno.support.TestData;
 import pl.wsb.kasyno.wallet.api.BalanceLeader;
-import pl.wsb.kasyno.wallet.domain.TransactionType;
-import pl.wsb.kasyno.wallet.domain.Wallet;
-import pl.wsb.kasyno.wallet.domain.WalletRepository;
-import pl.wsb.kasyno.wallet.domain.WalletTransactionRepository;
+import pl.wsb.kasyno.wallet.entity.TransactionType;
+import pl.wsb.kasyno.wallet.entity.Wallet;
+import pl.wsb.kasyno.wallet.entity.WalletRepository;
+import pl.wsb.kasyno.wallet.entity.WalletTransactionRepository;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -87,9 +87,9 @@ class InvestorQuestionsRepositoryTest {
         kuba = em.persist(TestData.player("Kuba"));
         s1 = em.persist(TestData.cebulowy777());
         s3 = em.persist(TestData.kaskada());
-        unused = em.persist(new SlotMachine("zloty-faraon", "Złoty Faraon", pl.wsb.kasyno.slots.domain.EngineType.LINES,
-                5, 3, 20, pl.wsb.kasyno.slots.domain.BetLevels.parse("20,40"), new BigDecimal("96.00"),
-                pl.wsb.kasyno.slots.domain.Volatility.MEDIUM_HIGH, null));
+        unused = em.persist(new SlotMachine("zloty-faraon", "Złoty Faraon", pl.wsb.kasyno.slots.entity.EngineType.LINES,
+                5, 3, 20, pl.wsb.kasyno.slots.entity.BetLevels.parse("20,40"), new BigDecimal("96.00"),
+                pl.wsb.kasyno.slots.entity.Volatility.MEDIUM_HIGH, null));
     }
 
     /** Rozliczona runda (SETTLED) o podanym czasie. */

@@ -13,7 +13,7 @@ wypłat, taśmy, wagi i zmierzone liczby są w [`../projekt/07-gry-i-matematyka.
 | runda | jeden zakład = cała sekwencja: obrót, wygrane, kaskady, **wszystkie** darmowe spiny | `SpinRound`, `RoundResult` |
 | wygrana (`totalWin`) | suma wszystkich wygranych rundy (po limicie) | `RoundBuilder.totalWin` |
 | mnożnik rundy (`multiplier`) | `totalWin / bet`, 2 miejsca po przecinku | `SpinRound.resolve`, `SpinDocument.multiplier` |
-| poziom (`tier`) | `small` < 5× ≤ `medium` < 15× ≤ `big` < 30× ≤ `mega` < 60× ≤ `epic` < 100× ≤ `ultra` | `slots/domain/WinTier.java:33` |
+| poziom (`tier`) | `small` < 5× ≤ `medium` < 15× ≤ `big` < 30× ≤ `mega` < 60× ≤ `epic` < 100× ≤ `ultra` | `slots/entity/WinTier.java:33` |
 | RTP | *return to player*: suma wygranych / suma zakładów w długim okresie (np. 96 z każdych 100 cebulionów) | test `SlotMathMonteCarloTest` |
 | częstość trafień | jaki odsetek rund kończy się jakąkolwiek wygraną | j.w. |
 | zmienność (σ) | jak bardzo wygrane z rundy różnią się od średniej (w zakładach); duża σ = rzadkie, duże wygrane | j.w., 07 § 7 |
@@ -126,7 +126,7 @@ linii → zwalnia bęben 3; S2 — 2 scattery na dotychczasowych bębnach → zw
 **Klaster** = co najmniej 5 takich samych zwykłych symboli połączonych **bokami** (góra, dół, lewo, prawo; po skosie
 się nie liczy). `ClusterEngine.findClusters` (`engine/ClusterEngine.java:140–178`) przechodzi planszę przeszukiwaniem
 wszerz (BFS) z tablicą `visited`. Wypłata za rozmiar klastra × zakład całkowity; rozmiar większy niż próg w tabeli
-płaci jak najbliższy niższy próg (klaster 11 płaci jak 10 — `Payouts.forCluster`, `slots/domain/Payouts.java:77`).
+płaci jak najbliższy niższy próg (klaster 11 płaci jak 10 — `Payouts.forCluster`, `slots/entity/Payouts.java:77`).
 Scatter i kula mnożnika nie tworzą klastrów.
 
 ```mermaid

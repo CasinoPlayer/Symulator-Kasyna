@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ActiveProfiles;
 import pl.wsb.kasyno.account.application.LoginService;
 import pl.wsb.kasyno.shared.domain.Money;
-import pl.wsb.kasyno.slots.domain.SpinRoundRepository;
+import pl.wsb.kasyno.slots.entity.SpinRoundRepository;
 import pl.wsb.kasyno.support.MutableClock;
 
 import java.time.Duration;

@@ -6,9 +6,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import pl.wsb.kasyno.account.domain.UserAccountRepository;
 import pl.wsb.kasyno.slots.api.SpinCompleted;
-import pl.wsb.kasyno.slots.domain.PlayerMachineStats;
-import pl.wsb.kasyno.slots.domain.PlayerMachineStatsRepository;
-import pl.wsb.kasyno.slots.domain.SlotMachineRepository;
+import pl.wsb.kasyno.slots.entity.PlayerMachineStats;
+import pl.wsb.kasyno.slots.entity.PlayerMachineStatsRepository;
+import pl.wsb.kasyno.slots.entity.SlotMachineRepository;
 
 /**
  * Po każdej rozliczonej rundzie dolicza statystyki gracza na automacie ({@link PlayerMachineStats}).

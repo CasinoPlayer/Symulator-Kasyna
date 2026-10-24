@@ -93,7 +93,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=demo               # ratunek co m
 ## 3. Ściąga: Dominik Pacanowski — silniki gier, matematyka, LAB 03–04
 
 **Twój kod:** `slots/**` (zwłaszcza `slots/application/SpinService.java`, `slots/application/engine/**`,
-`slots/domain/*Repository.java`, `SpinRound`, `SpinStatus`), `report/application/InvestorReportService.java`,
+`slots/entity/*Repository.java`, `SpinRound`, `SpinStatus`), `report/application/InvestorReportService.java`,
 matematyka w `data.sql`. **Twoje testy:** `SpinServiceTest`, `SpinRoundTest`, `SlotValueObjectsTest`,
 `LinesEngineTest`, `ClusterEngineTest`, `GameMathTest`, `SlotMathDataTest`, `SlotMathMonteCarloTest`,
 `SlotEnginesIntegrationTest`, `InvestorQuestionsRepositoryTest`, `IdempotencyKeyCleanupTest`, `ArchitectureTest`.

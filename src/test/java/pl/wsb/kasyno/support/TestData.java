@@ -5,10 +5,10 @@ import pl.wsb.kasyno.account.domain.AccountRole;
 import pl.wsb.kasyno.account.domain.UserAccount;
 import pl.wsb.kasyno.shared.config.CasinoProperties;
 import pl.wsb.kasyno.shared.domain.Money;
-import pl.wsb.kasyno.slots.domain.BetLevels;
-import pl.wsb.kasyno.slots.domain.EngineType;
-import pl.wsb.kasyno.slots.domain.SlotMachine;
-import pl.wsb.kasyno.slots.domain.Volatility;
+import pl.wsb.kasyno.slots.entity.BetLevels;
+import pl.wsb.kasyno.slots.entity.EngineType;
+import pl.wsb.kasyno.slots.entity.SlotMachine;
+import pl.wsb.kasyno.slots.entity.Volatility;
 
 import java.math.BigDecimal;
 import java.time.Duration;

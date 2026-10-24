@@ -33,7 +33,7 @@ public interface WalletFacade {
      *
      * @param spinRoundId identyfikator rundy, której dotyczy zakład (może być {@code null})
      * @return saldo po operacji
-     * @throws pl.wsb.kasyno.wallet.domain.InsufficientFundsException gdy saldo jest za małe
+     * @throws pl.wsb.kasyno.wallet.entity.InsufficientFundsException gdy saldo jest za małe
      */
     BigDecimal debit(Long playerId, BigDecimal amount, String gameCode, Long spinRoundId);
 

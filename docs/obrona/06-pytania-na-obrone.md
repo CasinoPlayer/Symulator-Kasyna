@@ -53,15 +53,15 @@ RTP, liczba spinów), 5 pytań inwestora, cztery moduły.
 `PlayerMachineStats`: dwie relacje `@ManyToOne` (gracz, automat) + unikalna para `(user_id, slot_machine_id)` + liczby
 przy parze (spiny, obrót, wygrane, rekord, ostatnia gra). `@ManyToMany` umie zapisać tylko „samą parę”, bez atrybutów.
 Tabelę aktualizuje `StatsUpdater` po każdym spinie w tej samej transakcji.
-*Pokaż w kodzie:* `slots/domain/PlayerMachineStats.java:31–34`, `:81`; `slots/application/StatsUpdater.java:38`.
+*Pokaż w kodzie:* `slots/entity/PlayerMachineStats.java:31–34`, `:81`; `slots/application/StatsUpdater.java:38`.
 
 **5. Jakie jest 5 pytań inwestora i gdzie są zapytania?**
 (1) najpopularniejsze automaty w N dni, (2) rzeczywisty vs docelowy RTP, (3) liderzy: bilans i największa wygrana,
 (4) gracze „na zero” i cebuliony w obiegu, (5) godziny aktywności i średni zakład. Zapytania JPQL z `GROUP BY`
 i projekcjami `select new …` są w repozytoriach modułów-właścicieli danych, a `InvestorReportService` zbiera je przez
 fasady. Endpointy: `GET /api/reports/{popular-games, rtp, top-players, economy, peak-hours}`.
-*Pokaż w kodzie:* `slots/domain/SpinRoundRepository.java:55–86`, `slots/domain/PlayerMachineStatsRepository.java:28–46`,
-`wallet/domain/WalletRepository.java:47–52`, `report/application/InvestorReportService.java:34`; test
+*Pokaż w kodzie:* `slots/entity/SpinRoundRepository.java:55–86`, `slots/entity/PlayerMachineStatsRepository.java:28–46`,
+`wallet/entity/WalletRepository.java:47–52`, `report/application/InvestorReportService.java:34`; test
 `report/InvestorQuestionsRepositoryTest.java`.
 
 ## B. Spring i architektura
@@ -116,43 +116,43 @@ To jedno zapytanie o listę + po jednym zapytaniu o relację każdego elementu. 
 (`findActiveWithSymbols`, statystyki gracza) i projekcje `select new …Rekord(…)` z `join` (feed, historia, ranking sald).
 Test liczy zapytania licznikiem statystyk Hibernate: feed dużych wygranych to jedno zapytanie niezależnie od liczby
 wierszy.
-*Pokaż w kodzie:* `slots/domain/SlotMachineRepository.java:26`, `SpinRoundRepository.java:94–101`;
+*Pokaż w kodzie:* `slots/entity/SlotMachineRepository.java:26`, `SpinRoundRepository.java:94–101`;
 test `report/InvestorQuestionsRepositoryTest.java:213` (`bigWinsFeedWithoutNPlusOne`).
 
 **14. Dlaczego relacje są `LAZY` i co to `open-in-view=false`?**
 `LAZY`: powiązana encja ładuje się dopiero, gdy jest potrzebna (lista gier nie ciągnie symboli). `open-in-view=false`:
 sesja Hibernate nie trwa do końca żądania HTTP, więc leniwe ładowanie poza transakcją kończy się błędem — dlatego
 serwisy pobierają potrzebne dane `join fetch` i zamieniają encje na DTO jeszcze w transakcji.
-*Pokaż w kodzie:* `wallet/domain/Wallet.java:45`, `application.properties` (linia 33), `slots/application/PlayerSlotsService.java:23`.
+*Pokaż w kodzie:* `wallet/entity/Wallet.java:45`, `application.properties` (linia 33), `slots/application/PlayerSlotsService.java:23`.
 
 **15. Dlaczego enumy jako `EnumType.STRING`?**
 W bazie zapisujemy nazwę (`SETTLED`), a nie numer. Dopisanie nowej wartości w środku enuma przy `ORDINAL` zmieniłoby
 znaczenie starych wierszy.
-*Pokaż w kodzie:* `wallet/domain/TransactionType.java:3–6` (Javadoc), `slots/domain/SpinRound.java:77`.
+*Pokaż w kodzie:* `wallet/entity/TransactionType.java:3–6` (Javadoc), `slots/entity/SpinRound.java:77`.
 
 **16. Dlaczego kwoty to `BigDecimal` i jak je porównujecie?**
 `double` gubi grosze (`0.1 + 0.2 != 0.3`). W bazie `DECIMAL(19,2)`, w Javie skala 2 (`Money.normalize`), porównania
 przez `compareTo` (`equals` uwzględnia skalę: `10.0` ≠ `10.00`). Silnik gier liczy na `long` w setnych (szybkość), na
 granicy zamienia na `BigDecimal`.
-*Pokaż w kodzie:* `shared/domain/Money.java:23`, `slots/domain/BetLevels.java:61`, ADR-03.
+*Pokaż w kodzie:* `shared/domain/Money.java:23`, `slots/entity/BetLevels.java:61`, ADR-03.
 
 **17. Jakie rodzaje zapytań Spring Data pokazujecie?**
 Pochodne z nazwy (`findByEmail`, `findByActiveTrueOrderByIdAsc`), JPQL `@Query` z `GROUP BY` i projekcjami do rekordów,
 `Pageable` z osobnym `countQuery`, zapytanie z blokadą `@Lock(PESSIMISTIC_WRITE)` i modyfikujące `@Modifying` (UPDATE).
-*Pokaż w kodzie:* `wallet/domain/WalletRepository.java` (cały plik, Javadoc wymienia trzy rodzaje),
-`slots/domain/SpinRoundRepository.java:114` (`@Modifying`).
+*Pokaż w kodzie:* `wallet/entity/WalletRepository.java` (cały plik, Javadoc wymienia trzy rodzaje),
+`slots/entity/SpinRoundRepository.java:114` (`@Modifying`).
 
 **18. Po co kolumna `result_json` w `spin_round`?**
 To dokładnie odpowiedź, którą dostał gracz (dokument rundy). Powtórzone żądanie z tym samym `Idempotency-Key` zwraca ją
 bajt w bajt, a w razie sporu widać, co pokazała przeglądarka; razem z `seed` rundę można odtworzyć. Listy jej nie
 czytają (lekka projekcja `RoundSummary`).
-*Pokaż w kodzie:* `slots/domain/SpinRound.java:84–86`, `slots/application/SpinDocument.java:43`, `slots/domain/RoundSummary.java:27`.
+*Pokaż w kodzie:* `slots/entity/SpinRound.java:84–86`, `slots/application/SpinDocument.java:43`, `slots/entity/RoundSummary.java:27`.
 
 **19. Dlaczego taśmy bębnów i linie są w kolumnach tekstowych, a nie w osobnej tabeli?**
 Czytamy je zawsze w całości razem z automatem, kolejność jest częścią danych, a osobna tabela to ok. 550 wierszy bez
 własnej logiki. Kolumna tekstowa + `AttributeConverter` → niemodyfikowalny obiekt wartości (`ReelStrips`, `Paylines`,
 `BetLevels`, `Payouts`).
-*Pokaż w kodzie:* `slots/domain/ReelStrips.java:17–27` (Javadoc), `ReelStripsConverter.java`; ADR-08.
+*Pokaż w kodzie:* `slots/entity/ReelStrips.java:17–27` (Javadoc), `ReelStripsConverter.java`; ADR-08.
 
 ## D. Transakcje i współbieżność
 
@@ -168,7 +168,7 @@ Pierwszy wykonuje `lockWallet` → `SELECT … FOR UPDATE` i trzyma blokadę wie
 i po commicie widzi już nowe saldo. Nie da się wydać tych samych pieniędzy dwa razy. Test: 16 równoległych spinów po
 1000 przy saldzie 10 000 → dokładnie 10 udanych, saldo 0. Gdy baza nie doczeka się blokady — `409 CONCURRENT_REQUEST`
 z `Retry-After`, nie 500.
-*Pokaż w kodzie:* `SpinService.java:95`, `wallet/domain/WalletRepository.java:31–33`;
+*Pokaż w kodzie:* `SpinService.java:95`, `wallet/entity/WalletRepository.java:31–33`;
 test `KasynoFlowIntegrationTest.java:270`, `SlotControllerTest.java:154`.
 
 **22. A gdy gracz kliknie SPIN dwa razy i przeglądarka wyśle to samo żądanie (ten sam klucz)?**
@@ -187,7 +187,7 @@ Dodatkowo `SpinService` sprawdza, że saldo po rundzie zgadza się z wyliczonym,
 **24. Dlaczego blokada pesymistyczna, a nie tylko `@Version`?**
 Przy samej optymistycznej drugi spin dostałby wyjątek i klient musiałby ponawiać — przy podwójnym kliknięciu to częsty
 przypadek. Pesymistyczna ustawia spiny jednego gracza w kolejce, a `@Version` zostaje drugim bezpiecznikiem.
-*Pokaż w kodzie:* `wallet/domain/Wallet.java:32–34` (Javadoc), `:52`; ADR-04.
+*Pokaż w kodzie:* `wallet/entity/Wallet.java:32–34` (Javadoc), `:52`; ADR-04.
 
 **25. Co jeśli dwie osoby w tej samej chwili zarejestrują tę samą nową nazwę?**
 Obie mogą nie znaleźć konta i oba zapisy spróbują wstawić ten sam techniczny e-mail. Unikalny indeks w bazie odrzuci
@@ -349,7 +349,7 @@ Tam, gdzie relacja tworzyłaby cykl, już używamy identyfikatorów (`WalletTran
 `UserAccount` zostały, bo `account` jest modułem bazowym, z którego korzystają wszyscy, i ArchUnit to dopuszcza
 (`accountIsTheBase`). Jeśli reguły LAB 04 będą tego wymagać, zamienimy je na `Long playerId` — serwisy i tak operują
 identyfikatorami gracza.
-*Pokaż w kodzie:* `wallet/domain/WalletTransaction.java:25–27` (Javadoc), `ArchitectureTest.java:52`.
+*Pokaż w kodzie:* `wallet/entity/WalletTransaction.java:25–27` (Javadoc), `ArchitectureTest.java:52`.
 
 **48. Czy jest integracja z API innego zespołu (`RestClient`, zadanie dodatkowe LAB 06)?**
 Jeszcze nie — to zadanie dodatkowe, zależne od uzgodnienia z innym zespołem. Miejsce jest przewidziane konwencją

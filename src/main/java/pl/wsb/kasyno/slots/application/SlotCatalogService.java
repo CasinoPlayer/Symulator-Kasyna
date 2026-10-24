@@ -2,9 +2,9 @@ package pl.wsb.kasyno.slots.application;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.wsb.kasyno.slots.domain.GameNotFoundException;
-import pl.wsb.kasyno.slots.domain.SlotMachine;
-import pl.wsb.kasyno.slots.domain.SlotMachineRepository;
+import pl.wsb.kasyno.slots.entity.GameNotFoundException;
+import pl.wsb.kasyno.slots.entity.SlotMachine;
+import pl.wsb.kasyno.slots.entity.SlotMachineRepository;
 import pl.wsb.kasyno.wallet.api.MinimumBetProvider;
 
 import java.math.BigDecimal;

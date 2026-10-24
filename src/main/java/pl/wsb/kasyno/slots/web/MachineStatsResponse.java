@@ -1,6 +1,6 @@
 package pl.wsb.kasyno.slots.web;
 
-import pl.wsb.kasyno.slots.domain.PlayerMachineStats;
+import pl.wsb.kasyno.slots.entity.PlayerMachineStats;
 
 import java.math.BigDecimal;
 import java.time.Instant;

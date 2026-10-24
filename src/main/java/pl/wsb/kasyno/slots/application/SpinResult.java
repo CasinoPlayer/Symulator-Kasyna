@@ -1,7 +1,7 @@
 package pl.wsb.kasyno.slots.application;
 
-import pl.wsb.kasyno.slots.domain.SpinRound;
-import pl.wsb.kasyno.slots.domain.SpinStatus;
+import pl.wsb.kasyno.slots.entity.SpinRound;
+import pl.wsb.kasyno.slots.entity.SpinStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
