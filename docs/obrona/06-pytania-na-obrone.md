@@ -47,7 +47,7 @@ Sześć własnych tabel: `wallet`, `wallet_transaction`, `slot_machine`, `slot_s
 `player_machine_stats` (+ `user_account` z szablonu). Relacje: 1:1 (portfel–konto), 1:N (automat–symbole,
 portfel–operacje), M:N z atrybutami (gracz–automat), obiekt ze statusem (`spin_round`), wielkości mierzalne (kwoty,
 RTP, liczba spinów), 5 pytań inwestora, cztery moduły.
-*Pokaż w kodzie:* ERD w [`01-architektura.md`](01-architektura.md) § 3; encje w `*/domain/`.
+*Pokaż w kodzie:* ERD w [`01-architektura.md`](01-architektura.md) § 3; encje w `slots/entity/` i `wallet/entity/` (konto z szablonu w `account/domain/`).
 
 **4. Gdzie jest relacja wiele-do-wielu z atrybutami i dlaczego nie `@ManyToMany`?**
 `PlayerMachineStats`: dwie relacje `@ManyToOne` (gracz, automat) + unikalna para `(user_id, slot_machine_id)` + liczby
@@ -68,13 +68,13 @@ fasady. Endpointy: `GET /api/reports/{popular-games, rtp, top-players, economy, 
 
 **6. Jak zbudowana jest aplikacja?**
 Jeden proces Spring Boot. Cztery moduły (`account`, `wallet`, `slots`, `report`) + `shared`; w każdym warstwy `web`
-(kontrolery, DTO), `application` (serwisy, transakcje), `domain` (encje, repozytoria), `api` (publiczny kontrakt
+(kontrolery, DTO), `application` (serwisy, transakcje), `entity` (encje, repozytoria; od LAB 02 zamiast `domain`), `api` (publiczny kontrakt
 modułu). Front to pliki statyczne z tego samego serwera.
 *Pokaż w kodzie:* [`01-architektura.md`](01-architektura.md) § 1–2, mapa w [`02-przewodnik-po-kodzie.md`](02-przewodnik-po-kodzie.md) § 0.1.
 
 **7. Kto pilnuje, że warstwy i moduły nie są przemieszane?**
 Testy ArchUnit: brak cykli między modułami, `account` nie zależy od innych, `slots` używa portfela tylko przez `api`,
-`report` tylko przez `api`, `domain` nie zna `application`/`web`, kontrolery nie używają repozytoriów i nie zwracają
+`report` tylko przez `api`, `entity` i `domain` nie znają `application`/`web`, kontrolery nie używają repozytoriów i nie zwracają
 encji (także w `List<…>` i `PageResponse<…>`), `api` nie odsłania encji.
 *Pokaż w kodzie:* `ArchitectureTest.java:46–150`.
 

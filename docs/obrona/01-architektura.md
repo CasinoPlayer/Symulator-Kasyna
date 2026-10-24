@@ -12,7 +12,7 @@ flowchart TB
   subgraph APP["Spring Boot (jeden proces, port 8080)"]
     W["web<br/>@RestController, *Request / *Response (rekordy)<br/>GlobalExceptionHandler → ProblemDetail"]
     A["application<br/>serwisy (@Service, @Transactional), słuchacze zdarzeń,<br/>zadania @Scheduled, silniki gier (engine)"]
-    D["domain<br/>encje JPA, enumy, repozytoria Spring Data, wyjątki domenowe"]
+    D["entity (LAB 02, R2.02)<br/>encje JPA, @Embeddable, enumy, repozytoria Spring Data, wyjątki domenowe<br/>(gotowe konto UserAccount z szablonu: account.domain)"]
     API["api (w każdym module)<br/>fasady, rekordy, zdarzenia: publiczny kontrakt modułu"]
     S["shared<br/>config (CasinoProperties, profile, harmonogram, dane startowe),<br/>error (ErrorCode, CasinoException), web (sesja, nagłówki), domain (Money)"]
   end
@@ -30,8 +30,8 @@ flowchart TB
 |---|---|---|
 | web | `<moduł>.web` | kontrolery nie używają repozytoriów i nie zwracają encji, tylko DTO |
 | application | `<moduł>.application` | nie zna HTTP (nie zależy od `web`); tu są transakcje |
-| domain | `<moduł>.domain` | nie zależy od `application` ani `web`; encje pilnują własnych reguł (np. `Wallet`, `SpinRound`) |
-| api | `<moduł>.api` | nie odsłania encji (`domain`); tylko interfejsy, rekordy i zdarzenia |
+| entity | `<moduł>.entity` (konto z szablonu: `account.domain`) | nie zależy od `application` ani `web`; encje pilnują własnych reguł (np. `Wallet`, `SpinRound`) |
+| api | `<moduł>.api` | nie odsłania encji (`entity`, `domain`); tylko interfejsy, rekordy i zdarzenia |
 | shared | `shared.*` | nie zależy od żadnego modułu |
 
 **Dlaczego serwer rozstrzyga o wyniku.** Przeglądarka nie losuje i nie liczy wygranych: dostaje gotową rundę jako

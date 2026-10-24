@@ -73,8 +73,8 @@ metody zostaje.
 src/main/java/pl/wsb/kasyno/            146 plików Java
 ├── KasynoApplication                   start (R1.01)
 ├── account   api(6) application(4) domain(4) web(4)        konto z szablonu, logowanie nazwą, obiekt „player”
-├── wallet    api(5) application(1) domain(7) web(3)        saldo, księga operacji, bonusy, blokada
-├── slots     api(8) application(11) engine(23) domain(25) web(9)   automaty, spin, silniki gier, statystyki
+├── wallet    api(5) application(1) entity(7) web(3)        saldo, księga operacji, bonusy, blokada
+├── slots     api(8) application(11) engine(23) entity(26) web(9)   automaty, spin, silniki gier, statystyki
 ├── report    application(9) web(9)                         5 pytań inwestora, ranking, feed, migawka gospodarki
 └── shared    config(6) domain(1) error(4) web(6)           konfiguracja, błędy, sesja, kwoty
                                                             (w nawiasach: liczba plików w pakiecie)
@@ -86,7 +86,7 @@ src/test/java/pl/wsb/kasyno/            36 plików, ok. 260 przypadków testowyc
 src/test/java/pl/wsb/rules/             reguły prowadzącego (nie ruszamy)
 ```
 
-Zasady warstw (pilnuje `ArchitectureTest`): `web` → `application` → `domain`; inne moduły tylko przez `api`;
+Zasady warstw (pilnuje `ArchitectureTest`): `web` → `application` → `entity` (konto z szablonu: `account.domain`); inne moduły tylko przez `api`;
 `shared` nie zależy od żadnego modułu; kolejność modułów bez cykli: `account ← wallet ← slots ← report`. Szczegóły
 i diagram: [`01-architektura.md`](01-architektura.md) § 1–2.
 

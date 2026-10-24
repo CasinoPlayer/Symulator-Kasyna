@@ -21,7 +21,7 @@ do [`06-pytania-na-obrone.md`](06-pytania-na-obrone.md).
 2. **Jedna runda = jeden zakład**, cała sekwencja (z darmowymi spinami) w jednej transakcji (ADR-02).
 3. **Trasa spinu** w 8 krokach: [`02-przewodnik-po-kodzie.md`](02-przewodnik-po-kodzie.md) § 9 (klik → kontroler →
    `SpinService` → blokada → zakład → silnik → wypłata → zdarzenia → animacja).
-4. **Moduły i warstwy**: `account ← wallet ← slots ← report`, `web → application → domain`, `api` jako kontrakt;
+4. **Moduły i warstwy**: `account ← wallet ← slots ← report`, `web → application → entity`, `api` jako kontrakt;
    pilnuje `ArchitectureTest` (pyt. 6–9).
 5. **Uruchomienie**: IntelliJ albo `mvn spring-boot:run`, adresy (lobby, Swagger, H2), `mvn -B verify -Dlab=1`.
 6. **Znane ograniczenia** powiedziane wprost: logowanie samą nazwą, publiczne raporty, S2/S3 w toku po stronie frontu,
