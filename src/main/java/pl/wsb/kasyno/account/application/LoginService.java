@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.wsb.kasyno.account.api.PlayerRegistered;
 import pl.wsb.kasyno.account.domain.AccountRole;
 import pl.wsb.kasyno.account.domain.UserAccount;
-import pl.wsb.kasyno.account.domain.UserAccountRepository;
+import pl.wsb.kasyno.account.repository.UserAccountRepository;
 import pl.wsb.kasyno.shared.config.CasinoProperties;
 
 import java.math.BigDecimal;

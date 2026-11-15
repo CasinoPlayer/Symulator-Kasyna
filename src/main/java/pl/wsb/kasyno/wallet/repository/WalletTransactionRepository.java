@@ -1,5 +1,7 @@
-package pl.wsb.kasyno.wallet.entity;
+package pl.wsb.kasyno.wallet.repository;
 
+import pl.wsb.kasyno.wallet.entity.TransactionType;
+import pl.wsb.kasyno.wallet.entity.WalletTransaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

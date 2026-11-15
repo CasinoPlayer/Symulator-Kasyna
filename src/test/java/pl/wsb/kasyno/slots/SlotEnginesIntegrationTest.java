@@ -19,8 +19,8 @@ import pl.wsb.kasyno.slots.application.engine.GameMathProvider;
 import pl.wsb.kasyno.slots.application.engine.RandomSource;
 import pl.wsb.kasyno.slots.application.engine.RoundJson;
 import pl.wsb.kasyno.slots.application.engine.SlotEngineRegistry;
-import pl.wsb.kasyno.slots.entity.SlotMachineRepository;
-import pl.wsb.kasyno.slots.entity.SpinRoundRepository;
+import pl.wsb.kasyno.slots.repository.SlotMachineRepository;
+import pl.wsb.kasyno.slots.repository.SpinRoundRepository;
 import pl.wsb.kasyno.slots.entity.SpinStatus;
 import pl.wsb.kasyno.slots.web.SlotController;
 

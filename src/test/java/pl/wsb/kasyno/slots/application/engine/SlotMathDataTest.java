@@ -7,9 +7,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import pl.wsb.kasyno.slots.entity.SlotMachine;
-import pl.wsb.kasyno.slots.entity.SlotMachineRepository;
+import pl.wsb.kasyno.slots.repository.SlotMachineRepository;
 import pl.wsb.kasyno.slots.entity.SlotSymbol;
-import pl.wsb.kasyno.slots.entity.SlotSymbolRepository;
+import pl.wsb.kasyno.slots.repository.SlotSymbolRepository;
 import pl.wsb.kasyno.slots.entity.SymbolKind;
 
 import java.util.List;

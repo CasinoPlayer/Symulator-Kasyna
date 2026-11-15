@@ -2,7 +2,7 @@ package pl.wsb.kasyno.slots.application.engine;
 
 import org.springframework.stereotype.Component;
 import pl.wsb.kasyno.slots.entity.SlotMachine;
-import pl.wsb.kasyno.slots.entity.SlotSymbolRepository;
+import pl.wsb.kasyno.slots.repository.SlotSymbolRepository;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

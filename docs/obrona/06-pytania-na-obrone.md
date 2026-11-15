@@ -60,8 +60,8 @@ Tabelę aktualizuje `StatsUpdater` po każdym spinie w tej samej transakcji.
 (4) gracze „na zero” i cebuliony w obiegu, (5) godziny aktywności i średni zakład. Zapytania JPQL z `GROUP BY`
 i projekcjami `select new …` są w repozytoriach modułów-właścicieli danych, a `InvestorReportService` zbiera je przez
 fasady. Endpointy: `GET /api/reports/{popular-games, rtp, top-players, economy, peak-hours}`.
-*Pokaż w kodzie:* `slots/entity/SpinRoundRepository.java:55–86`, `slots/entity/PlayerMachineStatsRepository.java:28–46`,
-`wallet/entity/WalletRepository.java:47–52`, `report/application/InvestorReportService.java:34`; test
+*Pokaż w kodzie:* `slots/repository/SpinRoundRepository.java:58–89`, `slots/repository/PlayerMachineStatsRepository.java:29–47`,
+`wallet/repository/WalletRepository.java:48–53`, `report/application/InvestorReportService.java:34`; test
 `report/InvestorQuestionsRepositoryTest.java`.
 
 ## B. Spring i architektura
@@ -116,7 +116,7 @@ To jedno zapytanie o listę + po jednym zapytaniu o relację każdego elementu. 
 (`findActiveWithSymbols`, statystyki gracza) i projekcje `select new …Rekord(…)` z `join` (feed, historia, ranking sald).
 Test liczy zapytania licznikiem statystyk Hibernate: feed dużych wygranych to jedno zapytanie niezależnie od liczby
 wierszy.
-*Pokaż w kodzie:* `slots/entity/SlotMachineRepository.java:26`, `SpinRoundRepository.java:94–101`;
+*Pokaż w kodzie:* `slots/repository/SlotMachineRepository.java:27`, `SpinRoundRepository.java:97–104`;
 test `report/InvestorQuestionsRepositoryTest.java:213` (`bigWinsFeedWithoutNPlusOne`).
 
 **14. Dlaczego relacje są `LAZY` i co to `open-in-view=false`?**
@@ -139,8 +139,8 @@ granicy zamienia na `BigDecimal`.
 **17. Jakie rodzaje zapytań Spring Data pokazujecie?**
 Pochodne z nazwy (`findByEmail`, `findByActiveTrueOrderByIdAsc`), JPQL `@Query` z `GROUP BY` i projekcjami do rekordów,
 `Pageable` z osobnym `countQuery`, zapytanie z blokadą `@Lock(PESSIMISTIC_WRITE)` i modyfikujące `@Modifying` (UPDATE).
-*Pokaż w kodzie:* `wallet/entity/WalletRepository.java` (cały plik, Javadoc wymienia trzy rodzaje),
-`slots/entity/SpinRoundRepository.java:114` (`@Modifying`).
+*Pokaż w kodzie:* `wallet/repository/WalletRepository.java` (cały plik, Javadoc wymienia trzy rodzaje),
+`slots/repository/SpinRoundRepository.java:117` (`@Modifying`).
 
 **18. Po co kolumna `result_json` w `spin_round`?**
 To dokładnie odpowiedź, którą dostał gracz (dokument rundy). Powtórzone żądanie z tym samym `Idempotency-Key` zwraca ją
@@ -168,7 +168,7 @@ Pierwszy wykonuje `lockWallet` → `SELECT … FOR UPDATE` i trzyma blokadę wie
 i po commicie widzi już nowe saldo. Nie da się wydać tych samych pieniędzy dwa razy. Test: 16 równoległych spinów po
 1000 przy saldzie 10 000 → dokładnie 10 udanych, saldo 0. Gdy baza nie doczeka się blokady — `409 CONCURRENT_REQUEST`
 z `Retry-After`, nie 500.
-*Pokaż w kodzie:* `SpinService.java:95`, `wallet/entity/WalletRepository.java:31–33`;
+*Pokaż w kodzie:* `SpinService.java:95`, `wallet/repository/WalletRepository.java:32–34`;
 test `KasynoFlowIntegrationTest.java:270`, `SlotControllerTest.java:154`.
 
 **22. A gdy gracz kliknie SPIN dwa razy i przeglądarka wyśle to samo żądanie (ten sam klucz)?**

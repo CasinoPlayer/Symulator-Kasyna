@@ -1,5 +1,8 @@
-package pl.wsb.kasyno.slots.entity;
+package pl.wsb.kasyno.slots.repository;
 
+import pl.wsb.kasyno.slots.entity.RoundSummary;
+import pl.wsb.kasyno.slots.entity.SpinRound;
+import pl.wsb.kasyno.slots.entity.SpinStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

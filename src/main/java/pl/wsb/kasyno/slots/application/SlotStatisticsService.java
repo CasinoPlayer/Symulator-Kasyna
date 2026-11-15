@@ -11,9 +11,9 @@ import pl.wsb.kasyno.slots.api.HourlyActivity;
 import pl.wsb.kasyno.slots.api.PlayerResult;
 import pl.wsb.kasyno.slots.api.SlotsFacade;
 import pl.wsb.kasyno.slots.entity.PlayerMachineStats;
-import pl.wsb.kasyno.slots.entity.PlayerMachineStatsRepository;
+import pl.wsb.kasyno.slots.repository.PlayerMachineStatsRepository;
 import pl.wsb.kasyno.slots.entity.RoundSummary;
-import pl.wsb.kasyno.slots.entity.SpinRoundRepository;
+import pl.wsb.kasyno.slots.repository.SpinRoundRepository;
 import pl.wsb.kasyno.slots.entity.SpinStatus;
 
 import java.math.BigDecimal;

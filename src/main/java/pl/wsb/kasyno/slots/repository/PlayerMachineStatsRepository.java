@@ -1,5 +1,6 @@
-package pl.wsb.kasyno.slots.entity;
+package pl.wsb.kasyno.slots.repository;
 
+import pl.wsb.kasyno.slots.entity.PlayerMachineStats;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

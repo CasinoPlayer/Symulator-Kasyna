@@ -31,7 +31,7 @@ metody zostaje.
 | sesja serwerowa i ochrona przed *session fixation* | `shared/web/PlayerSession.java:28` | `AuthControllerTest.meWithSession` |
 | skąd kontroler wie, kto jest zalogowany (`@CurrentPlayer`) | `shared/web/CurrentPlayerArgumentResolver.java:29` | `AuthControllerTest.meWithoutSession` |
 | portfel: saldo nigdy ujemne | `wallet/entity/Wallet.java:91` | `WalletTest.neverNegative` (`:49`), `WalletServiceTest.debitNeverGoesNegative` |
-| blokada pesymistyczna `SELECT … FOR UPDATE` | `wallet/entity/WalletRepository.java:31` | `KasynoFlowIntegrationTest.concurrentSpinsNeverOverdraw` (`:270`) |
+| blokada pesymistyczna `SELECT … FOR UPDATE` | `wallet/repository/WalletRepository.java:32` | `KasynoFlowIntegrationTest.concurrentSpinsNeverOverdraw` (`:270`) |
 | historia portfela (księga, suma = saldo) | `wallet/entity/WalletTransaction.java:32` | `WalletServiceTest.ledgerIsConsistent` (`:153`) |
 | bonus ratunkowy co 10 minut (zegar w testach) | `wallet/entity/Wallet.java:127`, `wallet/application/WalletService.java:124` | `WalletServiceTest.rescueCooldownUsesClock` (`:183`) |
 | **spin — najważniejsza operacja** | `slots/application/SpinService.java:84` | `SpinServiceTest`, `SlotEnginesIntegrationTest.spinsFollowContract` |
@@ -46,7 +46,7 @@ metody zostaje.
 | format odpowiedzi spinu (kontrakt § 2.4) | `slots/application/SpinDocument.java:43`, kroki `engine/RoundStep.java:30` | `SpinDocumentTest`, `LinesEngineTest.jsonFormat` |
 | `X-Demo-Seed` tylko w profilu `demo` | `slots/web/SlotController.java:96`, `:114` | `DemoSeedIgnoredTest`, `DemoSeedAllowedTest`, `ProfilesTest.demoSeedOnlyInDemo` |
 | statystyki gracza na automacie (M:N z atrybutami) | `slots/entity/PlayerMachineStats.java:34`, `slots/application/StatsUpdater.java:38` | `LobbyBoardsListenerTest.statsUpdaterRequiresTransaction` |
-| 5 pytań inwestora (JPQL, `GROUP BY`, projekcje) | `slots/entity/SpinRoundRepository.java:55–86`, `PlayerMachineStatsRepository.java:28–46`, `wallet/entity/WalletRepository.java:40–52` | `InvestorQuestionsRepositoryTest` (`@DataJpaTest`), w tym `bigWinsFeedWithoutNPlusOne` (`:213`) |
+| 5 pytań inwestora (JPQL, `GROUP BY`, projekcje) | `slots/repository/SpinRoundRepository.java:58–89`, `PlayerMachineStatsRepository.java:29–47`, `wallet/repository/WalletRepository.java:41–53` | `InvestorQuestionsRepositoryTest` (`@DataJpaTest`), w tym `bigWinsFeedWithoutNPlusOne` (`:213`) |
 | ranking i feed z pamięci podręcznej | `report/application/LobbyBoardsCache.java:80` | `LobbyBoardsCacheTest.invalidationDuringQueryIsNotCached` (`:75`) |
 | zdarzenia po commicie (`AFTER_COMMIT`) | `report/application/LobbyBoardsListener.java:59`, `:75` | `LobbyBoardsListenerTest.rollbackIsIgnored` (`:77`) |
 | zadania cykliczne `@Scheduled` | `report/application/EconomySnapshotJob.java:57`, `slots/application/IdempotencyKeyCleanup.java:53` | `EconomySnapshotJobTest`, `IdempotencyKeyCleanupTest`, `ProdProfilePersistenceTest.scheduledTasksRegistered` |

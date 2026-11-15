@@ -1,5 +1,6 @@
-package pl.wsb.kasyno.wallet.entity;
+package pl.wsb.kasyno.wallet.repository;
 
+import pl.wsb.kasyno.wallet.entity.Wallet;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

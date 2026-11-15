@@ -125,16 +125,19 @@ JUnit 5 · Mockito · ArchUnit.
 pl.wsb.kasyno
 ├── KasynoApplication
 ├── account
-│   ├── domain          UserAccount, AccountRole (z szablonu), UserAccountRepository
+│   ├── domain          UserAccount, AccountRole (z szablonu)
+│   ├── repository      UserAccountRepository
 │   ├── application     LoginService   — nazwa → konto + portfel + bonus startowy
 │   └── web             AuthController, LoginRequest, PlayerResponse
 ├── wallet
-│   ├── domain          Wallet, WalletTransaction, TransactionType, repozytoria
+│   ├── entity          Wallet, WalletTransaction, TransactionType
+│   ├── repository      WalletRepository, WalletTransactionRepository
 │   ├── application     WalletService  — debit / credit / rescue (@Transactional)
 │   ├── api             WalletFacade, BalanceChanged (zdarzenie)
 │   └── web             WalletController
 ├── slots
-│   ├── domain          SlotMachine, SlotSymbol, SpinRound, SpinStatus, PlayerMachineStats, repozytoria
+│   ├── entity          SlotMachine, SlotSymbol, SpinRound, SpinStatus, PlayerMachineStats
+│   ├── repository      SlotMachineRepository, SlotSymbolRepository, SpinRoundRepository, PlayerMachineStatsRepository
 │   ├── application     SpinService, StatsUpdater
 │   │   └── engine      SlotEngine (interfejs) + 3 silniki, ReelStrip, Paytable, RandomSource
 │   ├── api             SlotsFacade, SpinCompleted (zdarzenie), SpinStep (kroki animacji)

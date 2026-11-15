@@ -107,7 +107,7 @@ w bazie), `BigDecimal` w silniku (wolne testy Monte Carlo).
 odczytać saldo 100 i oba postawić 100 (*lost update*), a saldo zeszłoby poniżej zera.
 
 **Decyzja.** Każda zmiana salda pobiera portfel **z blokadą zapisu**: `@Lock(PESSIMISTIC_WRITE)` →
-`SELECT … FOR UPDATE` (`wallet/entity/WalletRepository.java:31–33`). Spin blokuje portfel **na samym początku**
+`SELECT … FOR UPDATE` (`wallet/repository/WalletRepository.java:32–34`). Spin blokuje portfel **na samym początku**
 (`WalletFacade.lockWallet`, `Propagation.MANDATORY`), więc wszystkie spiny jednego gracza wykonują się po kolei.
 `@Version` (blokada optymistyczna) zostaje drugim bezpiecznikiem. Gdy baza nie doczeka się blokady,
 `GlobalExceptionHandler.handleConcurrency` (`:88`) zwraca `409 CONCURRENT_REQUEST` z `Retry-After: 1`, a nie 500.

@@ -8,7 +8,7 @@ import pl.wsb.kasyno.account.api.PlayerFundsProvider;
 import pl.wsb.kasyno.account.api.PlayerProfiles;
 import pl.wsb.kasyno.account.api.PlayerView;
 import pl.wsb.kasyno.account.domain.UserAccount;
-import pl.wsb.kasyno.account.domain.UserAccountRepository;
+import pl.wsb.kasyno.account.repository.UserAccountRepository;
 import pl.wsb.kasyno.shared.error.NotLoggedInException;
 
 import java.time.ZoneId;

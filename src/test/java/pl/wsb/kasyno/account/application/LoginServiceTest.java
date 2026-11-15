@@ -13,7 +13,7 @@ import pl.wsb.kasyno.account.api.PlayerRegistered;
 import pl.wsb.kasyno.account.domain.AccountRole;
 import pl.wsb.kasyno.account.domain.InvalidNickException;
 import pl.wsb.kasyno.account.domain.UserAccount;
-import pl.wsb.kasyno.account.domain.UserAccountRepository;
+import pl.wsb.kasyno.account.repository.UserAccountRepository;
 import pl.wsb.kasyno.shared.domain.Money;
 import pl.wsb.kasyno.support.TestData;
 

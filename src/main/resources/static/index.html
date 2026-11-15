@@ -273,6 +273,12 @@
                   klasa wbudowana <code>@Embeddable ReelGrid</code> (plansza automatu), enumy zapisane jako tekst
                   (<code>@Enumerated(STRING)</code>) i dane startowe w każdej tabeli: historia gry kont zespołu
                   policzona prawdziwym silnikiem gier i sprawdzana testem.</p></li>
+              <li><span class="timeline__tag">LAB 03</span>
+                <p>Skończony schemat bazy: wszystkie tabele połączone relacjami. <code>@ManyToOne</code> (np. symbol → automat,
+                  runda → gracz i automat), <code>@OneToMany(mappedBy)</code> (automat → symbole), <code>@OneToOne</code>
+                  (portfel ↔ konto gracza) i wiele-do-wielu przez encję łączącą <code>player_machine_stats</code>
+                  (gracz ↔ automat z własnymi statystykami). Każda relacja <code>LAZY</code>, repozytoria w pakietach
+                  <code>&lt;moduł&gt;.repository</code> z zapytaniem przez relację, diagram w <code>SCHEMAT.md</code>.</p></li>
             </ol>
             <p class="muted">Wszystko działa: testy i reguły projektu są zielone w GitHub Actions. Na kolejnych laboratoriach dopisujemy tu kolejne punkty.</p>
           </article>

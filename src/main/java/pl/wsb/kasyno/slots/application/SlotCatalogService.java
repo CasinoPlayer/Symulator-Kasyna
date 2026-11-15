@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.wsb.kasyno.slots.entity.GameNotFoundException;
 import pl.wsb.kasyno.slots.entity.SlotMachine;
-import pl.wsb.kasyno.slots.entity.SlotMachineRepository;
+import pl.wsb.kasyno.slots.repository.SlotMachineRepository;
 import pl.wsb.kasyno.wallet.api.MinimumBetProvider;
 
 import java.math.BigDecimal;

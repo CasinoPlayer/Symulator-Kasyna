@@ -1,5 +1,6 @@
-package pl.wsb.kasyno.account.domain;
+package pl.wsb.kasyno.account.repository;
 
+import pl.wsb.kasyno.account.domain.UserAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
