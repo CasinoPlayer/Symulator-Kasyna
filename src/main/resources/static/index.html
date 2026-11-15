@@ -279,6 +279,16 @@
                   (portfel ↔ konto gracza) i wiele-do-wielu przez encję łączącą <code>player_machine_stats</code>
                   (gracz ↔ automat z własnymi statystykami). Każda relacja <code>LAZY</code>, repozytoria w pakietach
                   <code>&lt;moduł&gt;.repository</code> z zapytaniem przez relację, diagram w <code>SCHEMAT.md</code>.</p></li>
+              <li><span class="timeline__tag">REST API</span>
+                <p>18 endpointów <code>/api/…</code> w 7 kontrolerach <code>@RestController</code> (pakiety <code>&lt;moduł&gt;.web</code>):
+                  logowanie, gracz, portfel, gry i spin, ranking, raporty inwestora. Odpowiedzi to rekordy DTO
+                  (<code>*Response</code>), walidacja <code>@Valid</code>, błędy w jednym formacie <code>ProblemDetail</code>
+                  (<code>@RestControllerAdvice</code>), stronicowanie historii, Swagger UI i plik <code>src/test/http/kasyno.http</code>.</p></li>
+              <li><span class="timeline__tag">Scheduler</span>
+                <p>Zadania cykliczne <code>@Scheduled</code> (włączone przez <code>@EnableScheduling</code>, harmonogram cron
+                  w <code>application.properties</code>): co godzinę migawka gospodarki kasyna w logu
+                  (<code>EconomySnapshotJob</code>) i sprzątanie kluczy <code>Idempotency-Key</code> starszych niż doba
+                  (<code>IdempotencyKeyCleanup</code>). W profilu <code>demo</code> migawka co minutę.</p></li>
             </ol>
             <p class="muted">Wszystko działa: testy i reguły projektu są zielone w GitHub Actions. Na kolejnych laboratoriach dopisujemy tu kolejne punkty.</p>
           </article>
