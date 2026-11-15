@@ -220,8 +220,11 @@ class KasynoFlowIntegrationTest {
         mvc.perform(get("/api/reports/economy"))
                 .andExpect(jsonPath("$.players").isNumber())
                 .andExpect(jsonPath("$.totalWelcomeBonus").isNumber());
+        // Rundy testu są o 12:00 (zegar testowy). Rundy pokazowe z data.sql mają czas „teraz minus 20–55 minut”,
+        // a raport zwraca godziny rosnąco, więc pierwsza pozycja zależy od pory uruchomienia testu.
+        // Sprawdzamy więc, że godzina 12 jest w raporcie, a nie że jest pierwsza.
         mvc.perform(get("/api/reports/peak-hours"))
-                .andExpect(jsonPath("$[0].hour").value(12));
+                .andExpect(jsonPath("$[?(@.hour == 12)]").isNotEmpty());
     }
 
     @Test
